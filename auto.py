@@ -85,5 +85,3 @@ for replace_policy in replacement:
         
         outfile.close()
             
-        break
-    break
