@@ -67,7 +67,7 @@ for replace_policy in replacement:
         
         #using new setting
         #:TODO call champsim
-        cmd = "./bin/champsim --warmup_instructions 20000000 --simulation_instructions 20000000 traces/410.bwaves-945B.champsimtrace.xz"
+        cmd = "./bin/champsim --warmup_instructions 200000000 --simulation_instructions 500000000 traces/410.bwaves-945B.champsimtrace.xz"
 
         combi_str = combi_str + replace_policy + '.log'
     
