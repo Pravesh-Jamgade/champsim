@@ -69,7 +69,7 @@ for replace_policy in replacement:
         #:TODO call champsim
         cmd = "./bin/champsim --warmup_instructions 20000000 --simulation_instructions 20000000 traces/410.bwaves-945B.champsimtrace.xz"
 
-        combi_str = combi_str + replace_policy
+        combi_str = combi_str + replace_policy + '.log'
     
         stat_file = os.path.join(curdir, combi_str)
         print("[output]",stat_file)
