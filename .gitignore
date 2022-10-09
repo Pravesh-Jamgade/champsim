@@ -13,3 +13,8 @@ obj/
 
 tracer/pin/obj-intel64/
 traces/
+
+doxydoc/
+.vscode/
+
+
