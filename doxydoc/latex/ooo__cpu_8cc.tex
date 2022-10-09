@@ -1,0 +1,61 @@
+\hypertarget{ooo__cpu_8cc}{}\doxysection{src/ooo\+\_\+cpu.cc File Reference}
+\label{ooo__cpu_8cc}\index{src/ooo\_cpu.cc@{src/ooo\_cpu.cc}}
+{\ttfamily \#include \char`\"{}ooo\+\_\+cpu.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include \char`\"{}cache.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}champsim.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}instruction.\+h\char`\"{}}\newline
+Include dependency graph for ooo\+\_\+cpu.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{ooo__cpu_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structinstr__reg__will__produce}{instr\+\_\+reg\+\_\+will\+\_\+produce}}
+\item 
+struct \mbox{\hyperlink{structinstr__mem__will__produce}{instr\+\_\+mem\+\_\+will\+\_\+produce}}
+\item 
+struct \mbox{\hyperlink{structsq__will__forward}{sq\+\_\+will\+\_\+forward}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{ooo__cpu_8cc_ad0a78b71cf2a8f88b901a1a532efd2ab}{D\+E\+A\+D\+L\+O\+C\+K\+\_\+\+C\+Y\+C\+LE}}~1000000
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{ooo__cpu_8cc_ab4fed54274903225c5f3de0058bea6b9}{warmup\+\_\+complete}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{ooo__cpu_8cc_a3311c0092a6c8dcbf1b903cdc6a8c51f}{M\+A\+X\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+NS}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{ooo__cpu_8cc_ad0a78b71cf2a8f88b901a1a532efd2ab}\label{ooo__cpu_8cc_ad0a78b71cf2a8f88b901a1a532efd2ab}} 
+\index{ooo\_cpu.cc@{ooo\_cpu.cc}!DEADLOCK\_CYCLE@{DEADLOCK\_CYCLE}}
+\index{DEADLOCK\_CYCLE@{DEADLOCK\_CYCLE}!ooo\_cpu.cc@{ooo\_cpu.cc}}
+\doxysubsubsection{\texorpdfstring{DEADLOCK\_CYCLE}{DEADLOCK\_CYCLE}}
+{\footnotesize\ttfamily \#define D\+E\+A\+D\+L\+O\+C\+K\+\_\+\+C\+Y\+C\+LE~1000000}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{ooo__cpu_8cc_a3311c0092a6c8dcbf1b903cdc6a8c51f}\label{ooo__cpu_8cc_a3311c0092a6c8dcbf1b903cdc6a8c51f}} 
+\index{ooo\_cpu.cc@{ooo\_cpu.cc}!MAX\_INSTR\_DESTINATIONS@{MAX\_INSTR\_DESTINATIONS}}
+\index{MAX\_INSTR\_DESTINATIONS@{MAX\_INSTR\_DESTINATIONS}!ooo\_cpu.cc@{ooo\_cpu.cc}}
+\doxysubsubsection{\texorpdfstring{MAX\_INSTR\_DESTINATIONS}{MAX\_INSTR\_DESTINATIONS}}
+{\footnotesize\ttfamily uint8\+\_\+t M\+A\+X\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+NS}
+
+\mbox{\Hypertarget{ooo__cpu_8cc_ab4fed54274903225c5f3de0058bea6b9}\label{ooo__cpu_8cc_ab4fed54274903225c5f3de0058bea6b9}} 
+\index{ooo\_cpu.cc@{ooo\_cpu.cc}!warmup\_complete@{warmup\_complete}}
+\index{warmup\_complete@{warmup\_complete}!ooo\_cpu.cc@{ooo\_cpu.cc}}
+\doxysubsubsection{\texorpdfstring{warmup\_complete}{warmup\_complete}}
+{\footnotesize\ttfamily uint8\+\_\+t warmup\+\_\+complete\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}}
+

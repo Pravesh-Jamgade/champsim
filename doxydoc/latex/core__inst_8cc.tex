@@ -1,0 +1,159 @@
+\hypertarget{core__inst_8cc}{}\doxysection{src/core\+\_\+inst.cc File Reference}
+\label{core__inst_8cc}\index{src/core\_inst.cc@{src/core\_inst.cc}}
+{\ttfamily \#include \char`\"{}cache.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}champsim.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dram\+\_\+controller.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}ooo\+\_\+cpu.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}ptw.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}vmem.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}operable.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}champsim\+\_\+constants.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$array$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+Include dependency graph for core\+\_\+inst.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{core__inst_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classVirtualMemory}{Virtual\+Memory}} \mbox{\hyperlink{core__inst_8cc_aa8bcff71bfb8ad26e2aefe5d0bdee3d8}{vmem}} (8589934592, 1$<$$<$ 12, 5, 1, 200)
+\item 
+\mbox{\hyperlink{classMEMORY__CONTROLLER}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}} \mbox{\hyperlink{core__inst_8cc_a1c4ae209403f4808719a39e5ca5706e3}{D\+R\+AM}} (1.\+25)
+\item 
+\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} \mbox{\hyperlink{core__inst_8cc_a55b89a911ac2466f5ef998f23cb1362d}{L\+LC}} (\char`\"{}L\+LC\char`\"{}, 1.\+0, 6, 2048, 16, 32, 32, 32, 64, 19, 1, 1, 1, L\+O\+G2\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE, 0, 0, 0, 5, \&\mbox{\hyperlink{main_8cc_a1e0301e172253aa713cf238f07e3102d}{D\+R\+AM}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)
+\item 
+\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} \mbox{\hyperlink{core__inst_8cc_a7d7ee9057e095d6495a8e638c74c00b3}{cpu0\+\_\+\+L2C}} (\char`\"{}cpu0\+\_\+\+L2C\char`\"{}, 1.\+0, 5, 1024, 8, 32, 32, 16, 32, 9, 1, 1, 1, L\+O\+G2\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE, 0, 0, 0, 5, \&\mbox{\hyperlink{core__inst_8cc_a55b89a911ac2466f5ef998f23cb1362d}{L\+LC}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)
+\item 
+\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} \mbox{\hyperlink{core__inst_8cc_a868ee0debd0939dd11f9044506bdf940}{cpu0\+\_\+\+L1D}} (\char`\"{}cpu0\+\_\+\+L1D\char`\"{}, 1.\+0, 4, 64, 12, 64, 64, 8, 16, 4, 1, 2, 2, L\+O\+G2\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE, 0, 1, 0, 5, \&\mbox{\hyperlink{core__inst_8cc_a7d7ee9057e095d6495a8e638c74c00b3}{cpu0\+\_\+\+L2C}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)
+\item 
+\mbox{\hyperlink{classPageTableWalker}{Page\+Table\+Walker}} \mbox{\hyperlink{core__inst_8cc_ab55ff3558a3ce237383504e6ebd37e28}{cpu0\+\_\+\+P\+TW}} (\char`\"{}cpu0\+\_\+\+P\+TW\char`\"{}, 0, 3, 1, 2, 1, 4, 2, 4, 4, 8, 16, 5, 2, 2, 0, \&cpu0\+\_\+\+L1D)
+\item 
+\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} \mbox{\hyperlink{core__inst_8cc_af3575ba058b9e0f78d11590a57d2508e}{cpu0\+\_\+\+S\+T\+LB}} (\char`\"{}cpu0\+\_\+\+S\+T\+LB\char`\"{}, 1.\+0, 2, 128, 12, 32, 32, 0, 16, 7, 1, 1, 1, L\+O\+G2\+\_\+\+P\+A\+G\+E\+\_\+\+S\+I\+ZE, 0, 0, 0, 5, \&\mbox{\hyperlink{core__inst_8cc_ab55ff3558a3ce237383504e6ebd37e28}{cpu0\+\_\+\+P\+TW}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)
+\item 
+\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} \mbox{\hyperlink{core__inst_8cc_a620dc65af72634227c96672473282c60}{cpu0\+\_\+\+L1I}} (\char`\"{}cpu0\+\_\+\+L1I\char`\"{}, 1.\+0, 1, 64, 8, 64, 64, 32, 8, 3, 1, 2, 2, L\+O\+G2\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE, 0, 1, 1, 5, \&\mbox{\hyperlink{core__inst_8cc_a7d7ee9057e095d6495a8e638c74c00b3}{cpu0\+\_\+\+L2C}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::\+C\+P\+U\+\_\+\+R\+E\+D\+I\+R\+E\+C\+T\+\_\+pprefetcher\+Dno\+\_\+instr\+\_\+, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)
+\item 
+\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} \mbox{\hyperlink{core__inst_8cc_a456ef8548a68093504f3a696e544c74f}{cpu0\+\_\+\+I\+T\+LB}} (\char`\"{}cpu0\+\_\+\+I\+T\+LB\char`\"{}, 1.\+0, 1, 16, 4, 16, 16, 0, 8, 0, 1, 2, 2, L\+O\+G2\+\_\+\+P\+A\+G\+E\+\_\+\+S\+I\+ZE, 0, 1, 1, 5, \&\mbox{\hyperlink{core__inst_8cc_af3575ba058b9e0f78d11590a57d2508e}{cpu0\+\_\+\+S\+T\+LB}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)
+\item 
+\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} \mbox{\hyperlink{core__inst_8cc_a1df4c71ff773abad0405fa68f863062d}{cpu0\+\_\+\+D\+T\+LB}} (\char`\"{}cpu0\+\_\+\+D\+T\+LB\char`\"{}, 1.\+0, 1, 16, 4, 16, 16, 0, 8, 0, 1, 2, 2, L\+O\+G2\+\_\+\+P\+A\+G\+E\+\_\+\+S\+I\+ZE, 0, 1, 0, 5, \&\mbox{\hyperlink{core__inst_8cc_af3575ba058b9e0f78d11590a57d2508e}{cpu0\+\_\+\+S\+T\+LB}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)
+\item 
+\mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}} \mbox{\hyperlink{core__inst_8cc_ab82aaf2c3740aa8ae228e595a4060c82}{cpu0}} (0, 1.\+0, 32, 8, 16, 64, 32, 32, 352, 128, 72, 6, 6, 6, 128, 4, 2, 2, 5, 1, 1, 1, 0, 0, \&\mbox{\hyperlink{core__inst_8cc_a456ef8548a68093504f3a696e544c74f}{cpu0\+\_\+\+I\+T\+LB}}, \&\mbox{\hyperlink{core__inst_8cc_a1df4c71ff773abad0405fa68f863062d}{cpu0\+\_\+\+D\+T\+LB}}, \&\mbox{\hyperlink{core__inst_8cc_a620dc65af72634227c96672473282c60}{cpu0\+\_\+\+L1I}}, \&\mbox{\hyperlink{core__inst_8cc_a868ee0debd0939dd11f9044506bdf940}{cpu0\+\_\+\+L1D}}, O3\+\_\+\+C\+P\+U\+::bpred\+\_\+t\+::bbranch\+Dbimodal, O3\+\_\+\+C\+P\+U\+::btb\+\_\+t\+::bbtb\+Dbasic\+\_\+btb, O3\+\_\+\+C\+P\+U\+::ipref\+\_\+t\+::pprefetcher\+Dno\+\_\+instr)
+\item 
+std\+::array$<$ \mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}} $\ast$, \mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}} $>$ \mbox{\hyperlink{core__inst_8cc_a30818f7144f8ea07a8844017e68a98ee}{ooo\+\_\+cpu}}
+\item 
+std\+::array$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, \mbox{\hyperlink{champsim__constants_8h_a583ed65d9dd7e3ab90cbfe21c9ed8aa9}{N\+U\+M\+\_\+\+C\+A\+C\+H\+ES}} $>$ \mbox{\hyperlink{core__inst_8cc_a3fd44c1a0fdadcb0499307952b226c94}{caches}}
+\item 
+std\+::array$<$ \mbox{\hyperlink{classchampsim_1_1operable}{champsim\+::operable}} $\ast$, \mbox{\hyperlink{champsim__constants_8h_af93f5a29fd87cf776fbbc5a84f3a051c}{N\+U\+M\+\_\+\+O\+P\+E\+R\+A\+B\+L\+ES}} $>$ \mbox{\hyperlink{core__inst_8cc_a94f5399bbe3109df7b8b6f57cfd4803d}{operables}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{core__inst_8cc_a3fd44c1a0fdadcb0499307952b226c94}\label{core__inst_8cc_a3fd44c1a0fdadcb0499307952b226c94}} 
+\index{core\_inst.cc@{core\_inst.cc}!caches@{caches}}
+\index{caches@{caches}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{caches}{caches}}
+{\footnotesize\ttfamily std\+::array$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, \mbox{\hyperlink{champsim__constants_8h_a583ed65d9dd7e3ab90cbfe21c9ed8aa9}{N\+U\+M\+\_\+\+C\+A\+C\+H\+ES}}$>$ caches}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\{}
+\DoxyCodeLine{\&\mbox{\hyperlink{core__inst_8cc_a55b89a911ac2466f5ef998f23cb1362d}{LLC}}, \&\mbox{\hyperlink{core__inst_8cc_a7d7ee9057e095d6495a8e638c74c00b3}{cpu0\_L2C}}, \&\mbox{\hyperlink{core__inst_8cc_a868ee0debd0939dd11f9044506bdf940}{cpu0\_L1D}}, \&\mbox{\hyperlink{core__inst_8cc_af3575ba058b9e0f78d11590a57d2508e}{cpu0\_STLB}}, \&\mbox{\hyperlink{core__inst_8cc_a620dc65af72634227c96672473282c60}{cpu0\_L1I}}, \&\mbox{\hyperlink{core__inst_8cc_a456ef8548a68093504f3a696e544c74f}{cpu0\_ITLB}}, \&\mbox{\hyperlink{core__inst_8cc_a1df4c71ff773abad0405fa68f863062d}{cpu0\_DTLB}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{core__inst_8cc_ab82aaf2c3740aa8ae228e595a4060c82}\label{core__inst_8cc_ab82aaf2c3740aa8ae228e595a4060c82}} 
+\index{core\_inst.cc@{core\_inst.cc}!cpu0@{cpu0}}
+\index{cpu0@{cpu0}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{cpu0}{cpu0}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}} cpu0(0, 1.\+0, 32, 8, 16, 64, 32, 32, 352, 128, 72, 6, 6, 6, 128, 4, 2, 2, 5, 1, 1, 1, 0, 0, \&\mbox{\hyperlink{core__inst_8cc_a456ef8548a68093504f3a696e544c74f}{cpu0\+\_\+\+I\+T\+LB}}, \&\mbox{\hyperlink{core__inst_8cc_a1df4c71ff773abad0405fa68f863062d}{cpu0\+\_\+\+D\+T\+LB}}, \&\mbox{\hyperlink{core__inst_8cc_a620dc65af72634227c96672473282c60}{cpu0\+\_\+\+L1I}}, \&\mbox{\hyperlink{core__inst_8cc_a868ee0debd0939dd11f9044506bdf940}{cpu0\+\_\+\+L1D}}, O3\+\_\+\+C\+P\+U\+::bpred\+\_\+t\+::bbranch\+Dbimodal, O3\+\_\+\+C\+P\+U\+::btb\+\_\+t\+::bbtb\+Dbasic\+\_\+btb, O3\+\_\+\+C\+P\+U\+::ipref\+\_\+t\+::pprefetcher\+Dno\+\_\+instr)}
+
+\mbox{\Hypertarget{core__inst_8cc_a1df4c71ff773abad0405fa68f863062d}\label{core__inst_8cc_a1df4c71ff773abad0405fa68f863062d}} 
+\index{core\_inst.cc@{core\_inst.cc}!cpu0\_DTLB@{cpu0\_DTLB}}
+\index{cpu0\_DTLB@{cpu0\_DTLB}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{cpu0\_DTLB}{cpu0\_DTLB}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} cpu0\+\_\+\+D\+T\+LB(\char`\"{}cpu0\+\_\+\+D\+T\+LB\char`\"{}, 1.\+0, 1, 16, 4, 16, 16, 0, 8, 0, 1, 2, 2, L\+O\+G2\+\_\+\+P\+A\+G\+E\+\_\+\+S\+I\+ZE, 0, 1, 0, 5, \&\mbox{\hyperlink{core__inst_8cc_af3575ba058b9e0f78d11590a57d2508e}{cpu0\+\_\+\+S\+T\+LB}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)}
+
+\mbox{\Hypertarget{core__inst_8cc_a456ef8548a68093504f3a696e544c74f}\label{core__inst_8cc_a456ef8548a68093504f3a696e544c74f}} 
+\index{core\_inst.cc@{core\_inst.cc}!cpu0\_ITLB@{cpu0\_ITLB}}
+\index{cpu0\_ITLB@{cpu0\_ITLB}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{cpu0\_ITLB}{cpu0\_ITLB}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} cpu0\+\_\+\+I\+T\+LB(\char`\"{}cpu0\+\_\+\+I\+T\+LB\char`\"{}, 1.\+0, 1, 16, 4, 16, 16, 0, 8, 0, 1, 2, 2, L\+O\+G2\+\_\+\+P\+A\+G\+E\+\_\+\+S\+I\+ZE, 0, 1, 1, 5, \&\mbox{\hyperlink{core__inst_8cc_af3575ba058b9e0f78d11590a57d2508e}{cpu0\+\_\+\+S\+T\+LB}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)}
+
+\mbox{\Hypertarget{core__inst_8cc_a868ee0debd0939dd11f9044506bdf940}\label{core__inst_8cc_a868ee0debd0939dd11f9044506bdf940}} 
+\index{core\_inst.cc@{core\_inst.cc}!cpu0\_L1D@{cpu0\_L1D}}
+\index{cpu0\_L1D@{cpu0\_L1D}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{cpu0\_L1D}{cpu0\_L1D}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} cpu0\+\_\+\+L1D(\char`\"{}cpu0\+\_\+\+L1D\char`\"{}, 1.\+0, 4, 64, 12, 64, 64, 8, 16, 4, 1, 2, 2, L\+O\+G2\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE, 0, 1, 0, 5, \&\mbox{\hyperlink{core__inst_8cc_a7d7ee9057e095d6495a8e638c74c00b3}{cpu0\+\_\+\+L2C}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)}
+
+\mbox{\Hypertarget{core__inst_8cc_a620dc65af72634227c96672473282c60}\label{core__inst_8cc_a620dc65af72634227c96672473282c60}} 
+\index{core\_inst.cc@{core\_inst.cc}!cpu0\_L1I@{cpu0\_L1I}}
+\index{cpu0\_L1I@{cpu0\_L1I}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{cpu0\_L1I}{cpu0\_L1I}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} cpu0\+\_\+\+L1I(\char`\"{}cpu0\+\_\+\+L1I\char`\"{}, 1.\+0, 1, 64, 8, 64, 64, 32, 8, 3, 1, 2, 2, L\+O\+G2\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE, 0, 1, 1, 5, \&\mbox{\hyperlink{core__inst_8cc_a7d7ee9057e095d6495a8e638c74c00b3}{cpu0\+\_\+\+L2C}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::\+C\+P\+U\+\_\+\+R\+E\+D\+I\+R\+E\+C\+T\+\_\+pprefetcher\+Dno\+\_\+instr\+\_\+, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)}
+
+\mbox{\Hypertarget{core__inst_8cc_a7d7ee9057e095d6495a8e638c74c00b3}\label{core__inst_8cc_a7d7ee9057e095d6495a8e638c74c00b3}} 
+\index{core\_inst.cc@{core\_inst.cc}!cpu0\_L2C@{cpu0\_L2C}}
+\index{cpu0\_L2C@{cpu0\_L2C}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{cpu0\_L2C}{cpu0\_L2C}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} cpu0\+\_\+\+L2C(\char`\"{}cpu0\+\_\+\+L2C\char`\"{}, 1.\+0, 5, 1024, 8, 32, 32, 16, 32, 9, 1, 1, 1, L\+O\+G2\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE, 0, 0, 0, 5, \&\mbox{\hyperlink{core__inst_8cc_a55b89a911ac2466f5ef998f23cb1362d}{L\+LC}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)}
+
+\mbox{\Hypertarget{core__inst_8cc_ab55ff3558a3ce237383504e6ebd37e28}\label{core__inst_8cc_ab55ff3558a3ce237383504e6ebd37e28}} 
+\index{core\_inst.cc@{core\_inst.cc}!cpu0\_PTW@{cpu0\_PTW}}
+\index{cpu0\_PTW@{cpu0\_PTW}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{cpu0\_PTW}{cpu0\_PTW}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classPageTableWalker}{Page\+Table\+Walker}} cpu0\+\_\+\+P\+TW(\char`\"{}cpu0\+\_\+\+P\+TW\char`\"{}, 0, 3, 1, 2, 1, 4, 2, 4, 4, 8, 16, 5, 2, 2, 0, \&cpu0\+\_\+\+L1D)}
+
+\mbox{\Hypertarget{core__inst_8cc_af3575ba058b9e0f78d11590a57d2508e}\label{core__inst_8cc_af3575ba058b9e0f78d11590a57d2508e}} 
+\index{core\_inst.cc@{core\_inst.cc}!cpu0\_STLB@{cpu0\_STLB}}
+\index{cpu0\_STLB@{cpu0\_STLB}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{cpu0\_STLB}{cpu0\_STLB}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} cpu0\+\_\+\+S\+T\+LB(\char`\"{}cpu0\+\_\+\+S\+T\+LB\char`\"{}, 1.\+0, 2, 128, 12, 32, 32, 0, 16, 7, 1, 1, 1, L\+O\+G2\+\_\+\+P\+A\+G\+E\+\_\+\+S\+I\+ZE, 0, 0, 0, 5, \&\mbox{\hyperlink{core__inst_8cc_ab55ff3558a3ce237383504e6ebd37e28}{cpu0\+\_\+\+P\+TW}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)}
+
+\mbox{\Hypertarget{core__inst_8cc_a1c4ae209403f4808719a39e5ca5706e3}\label{core__inst_8cc_a1c4ae209403f4808719a39e5ca5706e3}} 
+\index{core\_inst.cc@{core\_inst.cc}!DRAM@{DRAM}}
+\index{DRAM@{DRAM}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{DRAM}{DRAM}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classMEMORY__CONTROLLER}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}} D\+R\+AM(1.\+25)}
+
+\mbox{\Hypertarget{core__inst_8cc_a55b89a911ac2466f5ef998f23cb1362d}\label{core__inst_8cc_a55b89a911ac2466f5ef998f23cb1362d}} 
+\index{core\_inst.cc@{core\_inst.cc}!LLC@{LLC}}
+\index{LLC@{LLC}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{LLC}{LLC}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} L\+LC(\char`\"{}L\+LC\char`\"{}, 1.\+0, 6, 2048, 16, 32, 32, 32, 64, 19, 1, 1, 1, L\+O\+G2\+\_\+\+B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE, 0, 0, 0, 5, \&\mbox{\hyperlink{main_8cc_a1e0301e172253aa713cf238f07e3102d}{D\+R\+AM}}, C\+A\+C\+H\+E\+::pref\+\_\+t\+::pprefetcher\+Dno, C\+A\+C\+H\+E\+::repl\+\_\+t\+::rreplacement\+Dlru)}
+
+\mbox{\Hypertarget{core__inst_8cc_a30818f7144f8ea07a8844017e68a98ee}\label{core__inst_8cc_a30818f7144f8ea07a8844017e68a98ee}} 
+\index{core\_inst.cc@{core\_inst.cc}!ooo\_cpu@{ooo\_cpu}}
+\index{ooo\_cpu@{ooo\_cpu}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{ooo\_cpu}{ooo\_cpu}}
+{\footnotesize\ttfamily std\+::array$<$\mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}}$\ast$, \mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}$>$ ooo\+\_\+cpu}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\{}
+\DoxyCodeLine{\&\mbox{\hyperlink{core__inst_8cc_ab82aaf2c3740aa8ae228e595a4060c82}{cpu0}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{core__inst_8cc_a94f5399bbe3109df7b8b6f57cfd4803d}\label{core__inst_8cc_a94f5399bbe3109df7b8b6f57cfd4803d}} 
+\index{core\_inst.cc@{core\_inst.cc}!operables@{operables}}
+\index{operables@{operables}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{operables}{operables}}
+{\footnotesize\ttfamily std\+::array$<$\mbox{\hyperlink{classchampsim_1_1operable}{champsim\+::operable}}$\ast$, \mbox{\hyperlink{champsim__constants_8h_af93f5a29fd87cf776fbbc5a84f3a051c}{N\+U\+M\+\_\+\+O\+P\+E\+R\+A\+B\+L\+ES}}$>$ operables}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\{}
+\DoxyCodeLine{\&\mbox{\hyperlink{core__inst_8cc_ab82aaf2c3740aa8ae228e595a4060c82}{cpu0}}, \&\mbox{\hyperlink{core__inst_8cc_a55b89a911ac2466f5ef998f23cb1362d}{LLC}}, \&\mbox{\hyperlink{core__inst_8cc_a7d7ee9057e095d6495a8e638c74c00b3}{cpu0\_L2C}}, \&\mbox{\hyperlink{core__inst_8cc_a868ee0debd0939dd11f9044506bdf940}{cpu0\_L1D}}, \&\mbox{\hyperlink{core__inst_8cc_ab55ff3558a3ce237383504e6ebd37e28}{cpu0\_PTW}}, \&\mbox{\hyperlink{core__inst_8cc_af3575ba058b9e0f78d11590a57d2508e}{cpu0\_STLB}}, \&\mbox{\hyperlink{core__inst_8cc_a620dc65af72634227c96672473282c60}{cpu0\_L1I}}, \&\mbox{\hyperlink{core__inst_8cc_a456ef8548a68093504f3a696e544c74f}{cpu0\_ITLB}}, \&\mbox{\hyperlink{core__inst_8cc_a1df4c71ff773abad0405fa68f863062d}{cpu0\_DTLB}}, \&\mbox{\hyperlink{core__inst_8cc_a1c4ae209403f4808719a39e5ca5706e3}{DRAM}}}
+\DoxyCodeLine{\}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{core__inst_8cc_aa8bcff71bfb8ad26e2aefe5d0bdee3d8}\label{core__inst_8cc_aa8bcff71bfb8ad26e2aefe5d0bdee3d8}} 
+\index{core\_inst.cc@{core\_inst.cc}!vmem@{vmem}}
+\index{vmem@{vmem}!core\_inst.cc@{core\_inst.cc}}
+\doxysubsubsection{\texorpdfstring{vmem}{vmem}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classVirtualMemory}{Virtual\+Memory}} vmem(8589934592, 1$<$$<$ 12, 5, 1, 200)}
+

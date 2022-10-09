@@ -1,0 +1,187 @@
+\hypertarget{classPACKET}{}\doxysection{P\+A\+C\+K\+ET Class Reference}
+\label{classPACKET}\index{PACKET@{PACKET}}
+
+
+{\ttfamily \#include $<$block.\+h$>$}
+
+
+
+Collaboration diagram for P\+A\+C\+K\+ET\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPACKET__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classPACKET_a6399f4d2d0560035b596342b913d31fa}{scheduled}} = false
+\item 
+uint8\+\_\+t \mbox{\hyperlink{classPACKET_a56ebefa0bd34b301f93bd11b2cd59aa8}{asid}} \mbox{[}2\mbox{]} = \{std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max(), std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max()\}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{classPACKET_a6d71bcb1051f0342d809311919f3fa84}{type}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{classPACKET_ae037bad00dadd5921e7c3925e1706b84}{fill\+\_\+level}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{classPACKET_a43d5f59f72845c799eeef5960ccbeb95}{pf\+\_\+origin\+\_\+level}} = 0
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classPACKET_a5c8591a9a118438204e07361c193882a}{pf\+\_\+metadata}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classPACKET_a32be12de09cf5f841c8c59e2627ad548}{cpu}} = \mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classPACKET_a6c8129856f7bde5f3b3d3340bb4b2740}{address}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classPACKET_a17e471f05a8f4fa9a636c067a7e35d96}{v\+\_\+address}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classPACKET_a8183d6e80421014dea1c040d4269cfc8}{data}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classPACKET_ac8ff4f89dc6cd060d6be63ed9056cb12}{instr\+\_\+id}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classPACKET_a6b758cb3dda6c3108c5d78b39200129b}{ip}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classPACKET_a3177231e8dcdd53f30ca5f37a958a0c0}{event\+\_\+cycle}} = std\+::numeric\+\_\+limits$<$uint64\+\_\+t$>$\+::max()
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classPACKET_a64f61e6c2d73a56d5aa621e84bd889ca}{cycle\+\_\+enqueued}} = 0
+\item 
+std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator $>$ \mbox{\hyperlink{classPACKET_a7f6bed4669ce6b8b8429a01f38b21b5f}{lq\+\_\+index\+\_\+depend\+\_\+on\+\_\+me}} = \{\}
+\item 
+std\+::vector$<$ std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator $>$ \mbox{\hyperlink{classPACKET_a925c2d8b5bc38dcc5480ee188d42f347}{sq\+\_\+index\+\_\+depend\+\_\+on\+\_\+me}} = \{\}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator $>$ \mbox{\hyperlink{classPACKET_ae2c03124070d4fc1fb01568ad71d2395}{instr\+\_\+depend\+\_\+on\+\_\+me}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classMemoryRequestProducer}{Memory\+Request\+Producer}} $\ast$ $>$ \mbox{\hyperlink{classPACKET_a6a7ceafb4d60bd55c70aef9299ff7f70}{to\+\_\+return}}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{classPACKET_a2b64f47d77545551c38a8931b75ff0b6}{translation\+\_\+level}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{classPACKET_ada0975a032502fb99095fbc480cad3c9}{init\+\_\+translation\+\_\+level}} = 0
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classPACKET_a6c8129856f7bde5f3b3d3340bb4b2740}\label{classPACKET_a6c8129856f7bde5f3b3d3340bb4b2740}} 
+\index{PACKET@{PACKET}!address@{address}}
+\index{address@{address}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{address}{address}}
+{\footnotesize\ttfamily uint64\+\_\+t P\+A\+C\+K\+E\+T\+::address = 0}
+
+\mbox{\Hypertarget{classPACKET_a56ebefa0bd34b301f93bd11b2cd59aa8}\label{classPACKET_a56ebefa0bd34b301f93bd11b2cd59aa8}} 
+\index{PACKET@{PACKET}!asid@{asid}}
+\index{asid@{asid}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{asid}{asid}}
+{\footnotesize\ttfamily uint8\+\_\+t P\+A\+C\+K\+E\+T\+::asid\mbox{[}2\mbox{]} = \{std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max(), std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max()\}}
+
+\mbox{\Hypertarget{classPACKET_a32be12de09cf5f841c8c59e2627ad548}\label{classPACKET_a32be12de09cf5f841c8c59e2627ad548}} 
+\index{PACKET@{PACKET}!cpu@{cpu}}
+\index{cpu@{cpu}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{cpu}{cpu}}
+{\footnotesize\ttfamily uint32\+\_\+t P\+A\+C\+K\+E\+T\+::cpu = \mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}}
+
+\mbox{\Hypertarget{classPACKET_a64f61e6c2d73a56d5aa621e84bd889ca}\label{classPACKET_a64f61e6c2d73a56d5aa621e84bd889ca}} 
+\index{PACKET@{PACKET}!cycle\_enqueued@{cycle\_enqueued}}
+\index{cycle\_enqueued@{cycle\_enqueued}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{cycle\_enqueued}{cycle\_enqueued}}
+{\footnotesize\ttfamily uint64\+\_\+t P\+A\+C\+K\+E\+T\+::cycle\+\_\+enqueued = 0}
+
+\mbox{\Hypertarget{classPACKET_a8183d6e80421014dea1c040d4269cfc8}\label{classPACKET_a8183d6e80421014dea1c040d4269cfc8}} 
+\index{PACKET@{PACKET}!data@{data}}
+\index{data@{data}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{data}{data}}
+{\footnotesize\ttfamily uint64\+\_\+t P\+A\+C\+K\+E\+T\+::data = 0}
+
+\mbox{\Hypertarget{classPACKET_a3177231e8dcdd53f30ca5f37a958a0c0}\label{classPACKET_a3177231e8dcdd53f30ca5f37a958a0c0}} 
+\index{PACKET@{PACKET}!event\_cycle@{event\_cycle}}
+\index{event\_cycle@{event\_cycle}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{event\_cycle}{event\_cycle}}
+{\footnotesize\ttfamily uint64\+\_\+t P\+A\+C\+K\+E\+T\+::event\+\_\+cycle = std\+::numeric\+\_\+limits$<$uint64\+\_\+t$>$\+::max()}
+
+\mbox{\Hypertarget{classPACKET_ae037bad00dadd5921e7c3925e1706b84}\label{classPACKET_ae037bad00dadd5921e7c3925e1706b84}} 
+\index{PACKET@{PACKET}!fill\_level@{fill\_level}}
+\index{fill\_level@{fill\_level}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{fill\_level}{fill\_level}}
+{\footnotesize\ttfamily uint8\+\_\+t P\+A\+C\+K\+E\+T\+::fill\+\_\+level = 0}
+
+\mbox{\Hypertarget{classPACKET_ada0975a032502fb99095fbc480cad3c9}\label{classPACKET_ada0975a032502fb99095fbc480cad3c9}} 
+\index{PACKET@{PACKET}!init\_translation\_level@{init\_translation\_level}}
+\index{init\_translation\_level@{init\_translation\_level}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{init\_translation\_level}{init\_translation\_level}}
+{\footnotesize\ttfamily uint8\+\_\+t P\+A\+C\+K\+E\+T\+::init\+\_\+translation\+\_\+level = 0}
+
+\mbox{\Hypertarget{classPACKET_ae2c03124070d4fc1fb01568ad71d2395}\label{classPACKET_ae2c03124070d4fc1fb01568ad71d2395}} 
+\index{PACKET@{PACKET}!instr\_depend\_on\_me@{instr\_depend\_on\_me}}
+\index{instr\_depend\_on\_me@{instr\_depend\_on\_me}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{instr\_depend\_on\_me}{instr\_depend\_on\_me}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}$>$\+::iterator$>$ P\+A\+C\+K\+E\+T\+::instr\+\_\+depend\+\_\+on\+\_\+me}
+
+\mbox{\Hypertarget{classPACKET_ac8ff4f89dc6cd060d6be63ed9056cb12}\label{classPACKET_ac8ff4f89dc6cd060d6be63ed9056cb12}} 
+\index{PACKET@{PACKET}!instr\_id@{instr\_id}}
+\index{instr\_id@{instr\_id}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{instr\_id}{instr\_id}}
+{\footnotesize\ttfamily uint64\+\_\+t P\+A\+C\+K\+E\+T\+::instr\+\_\+id = 0}
+
+\mbox{\Hypertarget{classPACKET_a6b758cb3dda6c3108c5d78b39200129b}\label{classPACKET_a6b758cb3dda6c3108c5d78b39200129b}} 
+\index{PACKET@{PACKET}!ip@{ip}}
+\index{ip@{ip}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{ip}{ip}}
+{\footnotesize\ttfamily uint64\+\_\+t P\+A\+C\+K\+E\+T\+::ip = 0}
+
+\mbox{\Hypertarget{classPACKET_a7f6bed4669ce6b8b8429a01f38b21b5f}\label{classPACKET_a7f6bed4669ce6b8b8429a01f38b21b5f}} 
+\index{PACKET@{PACKET}!lq\_index\_depend\_on\_me@{lq\_index\_depend\_on\_me}}
+\index{lq\_index\_depend\_on\_me@{lq\_index\_depend\_on\_me}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{lq\_index\_depend\_on\_me}{lq\_index\_depend\_on\_me}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$\+::iterator$>$ P\+A\+C\+K\+E\+T\+::lq\+\_\+index\+\_\+depend\+\_\+on\+\_\+me = \{\}}
+
+\mbox{\Hypertarget{classPACKET_a5c8591a9a118438204e07361c193882a}\label{classPACKET_a5c8591a9a118438204e07361c193882a}} 
+\index{PACKET@{PACKET}!pf\_metadata@{pf\_metadata}}
+\index{pf\_metadata@{pf\_metadata}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{pf\_metadata}{pf\_metadata}}
+{\footnotesize\ttfamily uint32\+\_\+t P\+A\+C\+K\+E\+T\+::pf\+\_\+metadata}
+
+\mbox{\Hypertarget{classPACKET_a43d5f59f72845c799eeef5960ccbeb95}\label{classPACKET_a43d5f59f72845c799eeef5960ccbeb95}} 
+\index{PACKET@{PACKET}!pf\_origin\_level@{pf\_origin\_level}}
+\index{pf\_origin\_level@{pf\_origin\_level}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{pf\_origin\_level}{pf\_origin\_level}}
+{\footnotesize\ttfamily uint8\+\_\+t P\+A\+C\+K\+E\+T\+::pf\+\_\+origin\+\_\+level = 0}
+
+\mbox{\Hypertarget{classPACKET_a6399f4d2d0560035b596342b913d31fa}\label{classPACKET_a6399f4d2d0560035b596342b913d31fa}} 
+\index{PACKET@{PACKET}!scheduled@{scheduled}}
+\index{scheduled@{scheduled}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{scheduled}{scheduled}}
+{\footnotesize\ttfamily bool P\+A\+C\+K\+E\+T\+::scheduled = false}
+
+\mbox{\Hypertarget{classPACKET_a925c2d8b5bc38dcc5480ee188d42f347}\label{classPACKET_a925c2d8b5bc38dcc5480ee188d42f347}} 
+\index{PACKET@{PACKET}!sq\_index\_depend\_on\_me@{sq\_index\_depend\_on\_me}}
+\index{sq\_index\_depend\_on\_me@{sq\_index\_depend\_on\_me}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{sq\_index\_depend\_on\_me}{sq\_index\_depend\_on\_me}}
+{\footnotesize\ttfamily std\+::vector$<$std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$\+::iterator$>$ P\+A\+C\+K\+E\+T\+::sq\+\_\+index\+\_\+depend\+\_\+on\+\_\+me = \{\}}
+
+\mbox{\Hypertarget{classPACKET_a6a7ceafb4d60bd55c70aef9299ff7f70}\label{classPACKET_a6a7ceafb4d60bd55c70aef9299ff7f70}} 
+\index{PACKET@{PACKET}!to\_return@{to\_return}}
+\index{to\_return@{to\_return}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{to\_return}{to\_return}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classMemoryRequestProducer}{Memory\+Request\+Producer}}$\ast$$>$ P\+A\+C\+K\+E\+T\+::to\+\_\+return}
+
+\mbox{\Hypertarget{classPACKET_a2b64f47d77545551c38a8931b75ff0b6}\label{classPACKET_a2b64f47d77545551c38a8931b75ff0b6}} 
+\index{PACKET@{PACKET}!translation\_level@{translation\_level}}
+\index{translation\_level@{translation\_level}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{translation\_level}{translation\_level}}
+{\footnotesize\ttfamily uint8\+\_\+t P\+A\+C\+K\+E\+T\+::translation\+\_\+level = 0}
+
+\mbox{\Hypertarget{classPACKET_a6d71bcb1051f0342d809311919f3fa84}\label{classPACKET_a6d71bcb1051f0342d809311919f3fa84}} 
+\index{PACKET@{PACKET}!type@{type}}
+\index{type@{type}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{type}{type}}
+{\footnotesize\ttfamily uint8\+\_\+t P\+A\+C\+K\+E\+T\+::type = 0}
+
+\mbox{\Hypertarget{classPACKET_a17e471f05a8f4fa9a636c067a7e35d96}\label{classPACKET_a17e471f05a8f4fa9a636c067a7e35d96}} 
+\index{PACKET@{PACKET}!v\_address@{v\_address}}
+\index{v\_address@{v\_address}!PACKET@{PACKET}}
+\doxysubsubsection{\texorpdfstring{v\_address}{v\_address}}
+{\footnotesize\ttfamily uint64\+\_\+t P\+A\+C\+K\+E\+T\+::v\+\_\+address = 0}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{block_8h}{block.\+h}}\end{DoxyCompactItemize}

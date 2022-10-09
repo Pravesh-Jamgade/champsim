@@ -1,0 +1,596 @@
+\hypertarget{classchampsim_1_1circular__buffer}{}\doxysection{champsim\+::circular\+\_\+buffer$<$ T $>$ Class Template Reference}
+\label{classchampsim_1_1circular__buffer}\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+
+
+{\ttfamily \#include $<$circular\+\_\+buffer.\+hpp$>$}
+
+
+
+Collaboration diagram for champsim\+::circular\+\_\+buffer$<$ T $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}} = typename buffer\+\_\+t\+::value\+\_\+type
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} = typename buffer\+\_\+t\+::size\+\_\+type
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_a6b44774642cb93d139dd86136f7decec}{difference\+\_\+type}} = typename buffer\+\_\+t\+::difference\+\_\+type
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}{reference}} = \mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}} \&
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}{const\+\_\+reference}} = const \mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}} \&
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_a6615d2d6f9a035699a6092c00ea9f250}{pointer}} = \mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}} $\ast$
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_a3702b668ebf6d05878d84caf82b4db13}{const\+\_\+pointer}} = const \mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}} $\ast$
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}{iterator}} = \mbox{\hyperlink{classchampsim_1_1circular__buffer__iterator}{circular\+\_\+buffer\+\_\+iterator}}$<$ \mbox{\hyperlink{classchampsim_1_1circular__buffer}{circular\+\_\+buffer}}$<$ T $>$ $>$
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} = \mbox{\hyperlink{classchampsim_1_1circular__buffer__iterator}{circular\+\_\+buffer\+\_\+iterator}}$<$ const \mbox{\hyperlink{classchampsim_1_1circular__buffer}{circular\+\_\+buffer}}$<$ T $>$ $>$
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_ae18b63b53b1972e87eaa0e409e4d138e}{reverse\+\_\+iterator}} = std\+::reverse\+\_\+iterator$<$ \mbox{\hyperlink{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}{iterator}} $>$
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} = std\+::reverse\+\_\+iterator$<$ \mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} $>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a0a190ae361c3fe238332366d0dbcd660}{circular\+\_\+buffer}} (std\+::size\+\_\+t N)
+\item 
+constexpr \mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a405fa12dbcaf0564dda4987257b21654}{size}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a6cdfcacd729c60ff35017b5566dc3026}{occupancy}} () const noexcept
+\item 
+bool \mbox{\hyperlink{classchampsim_1_1circular__buffer_a354eab4358f5d1a63fb8178e0711c087}{empty}} () const noexcept
+\item 
+bool \mbox{\hyperlink{classchampsim_1_1circular__buffer_a38da70ed64d16f89aec6717de670a79d}{full}} () const noexcept
+\item 
+constexpr \mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a4473974ffa42abe50d88242cf6e61a26}{max\+\_\+size}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}{reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_ac77d97fc2ea51f0ec1fdcce6ffe17b1c}{front}} ()
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}{reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_af347084f8598e22c0a220f7244ed0240}{back}} ()
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a6e9ad198cd5d553f5c9843c3c435ba17}{front}} () const
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a52cd8b97a0f06e115833ff19ff549fab}{back}} () const
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}{iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a4284d993f93c809284de9fc5808f02f4}{begin}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}{iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_ac42408ef45fda69289f5d9426a54539a}{end}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_af59aa20431eacaaf2fb01daee891f8f6}{begin}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a5d458f388149409a9a59675f74a19988}{end}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_aa72e49f7e9c7111d3502f0dc45be26e7}{cbegin}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a2a2bb43ac6320ce7a8be160772d40d52}{cend}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae18b63b53b1972e87eaa0e409e4d138e}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a353a10adac047c6dceb1dcaaa7dc7db5}{rbegin}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae18b63b53b1972e87eaa0e409e4d138e}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a4f06fcd7c3d27ac390d9ce5a6958b90e}{rend}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a0c8356ce803efd12489589ec76828f8d}{rbegin}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_adf66285e152991290196d89fd86783b9}{rend}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_aef4a54508ad71ad3cf2ea0bbe032f392}{crbegin}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_ad51d614f198565d7cb637ac53a80aff7}{crend}} () const noexcept
+\item 
+void \mbox{\hyperlink{classchampsim_1_1circular__buffer_a38a422f64397b59694b37c10073bfd61}{clear}} ()
+\item 
+void \mbox{\hyperlink{classchampsim_1_1circular__buffer_aa7b5ff6facba0486daebe230943a3dda}{push\+\_\+back}} (const T \&item)
+\item 
+void \mbox{\hyperlink{classchampsim_1_1circular__buffer_ae26ad8832cc5e09527198282af49efe4}{push\+\_\+back}} (const T \&\&item)
+\item 
+void \mbox{\hyperlink{classchampsim_1_1circular__buffer_a49c52938d296faec5f6b470765cbd791}{pop\+\_\+front}} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Types}
+\begin{DoxyCompactItemize}
+\item 
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer_a869b6660470799808f5d623097dd3672}{buffer\+\_\+t}} = std\+::vector$<$ T $>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}{reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_ab42e58b5ff41d6fb2f7dde086678c029}{operator\mbox{[}$\,$\mbox{]}}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} n)
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a11b8bc921497d60e8639f804f4118bfa}{operator\mbox{[}$\,$\mbox{]}}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} n) const
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static \mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a625ec239d504344d73594bd20225464c}{circ\+\_\+inc}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} base, \mbox{\hyperlink{classchampsim_1_1circular__buffer_a6b44774642cb93d139dd86136f7decec}{difference\+\_\+type}} inc, const \mbox{\hyperlink{classchampsim_1_1circular__buffer}{circular\+\_\+buffer}}$<$ T $>$ \&buf)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+friend \mbox{\hyperlink{classchampsim_1_1circular__buffer_afc33c9979370e978fcb3a0cba7708235}{iterator}}
+\item 
+friend \mbox{\hyperlink{classchampsim_1_1circular__buffer_ad482872ab534e5b39e05fdb9207e52bc}{const\+\_\+iterator}}
+\item 
+friend \mbox{\hyperlink{classchampsim_1_1circular__buffer_ae56314b2879cb04d0d2742886185921b}{reverse\+\_\+iterator}}
+\item 
+friend \mbox{\hyperlink{classchampsim_1_1circular__buffer_a395c10193a6d9a3d5cc5bcb94e7f949f}{const\+\_\+reverse\+\_\+iterator}}
+\item 
+const \mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_abb638c3b2b9adf5feb55ca826752bb33}{sz\+\_\+}}
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a869b6660470799808f5d623097dd3672}{buffer\+\_\+t}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_aabeb147bb1708dc7f9e05067959f52c1}{entry\+\_\+}} = \{\}
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_ad1c44278f88b3a308e6c4ff799fdb401}{head\+\_\+}} = 0
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer_a32ad763ad64df2b4460c84b76447aa93}{tail\+\_\+}} = 0
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a869b6660470799808f5d623097dd3672}\label{classchampsim_1_1circular__buffer_a869b6660470799808f5d623097dd3672}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!buffer\_t@{buffer\_t}}
+\index{buffer\_t@{buffer\_t}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{buffer\_t}{buffer\_t}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a869b6660470799808f5d623097dd3672}{buffer\+\_\+t}} =  std\+::vector$<$T$>$\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}\label{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!const\_iterator@{const\_iterator}}
+\index{const\_iterator@{const\_iterator}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_iterator}{const\_iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} =  \mbox{\hyperlink{classchampsim_1_1circular__buffer__iterator}{circular\+\_\+buffer\+\_\+iterator}}$<$const \mbox{\hyperlink{classchampsim_1_1circular__buffer}{circular\+\_\+buffer}}$<$T$>$ $>$}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a3702b668ebf6d05878d84caf82b4db13}\label{classchampsim_1_1circular__buffer_a3702b668ebf6d05878d84caf82b4db13}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!const\_pointer@{const\_pointer}}
+\index{const\_pointer@{const\_pointer}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_pointer}{const\_pointer}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a3702b668ebf6d05878d84caf82b4db13}{const\+\_\+pointer}} =  const \mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}}$\ast$}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}\label{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!const\_reference@{const\_reference}}
+\index{const\_reference@{const\_reference}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_reference}{const\_reference}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}{const\+\_\+reference}} =  const \mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}}\&}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}\label{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!const\_reverse\_iterator@{const\_reverse\_iterator}}
+\index{const\_reverse\_iterator@{const\_reverse\_iterator}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_reverse\_iterator}{const\_reverse\_iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} =  std\+::reverse\+\_\+iterator$<$\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}}$>$}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a6b44774642cb93d139dd86136f7decec}\label{classchampsim_1_1circular__buffer_a6b44774642cb93d139dd86136f7decec}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!difference\_type@{difference\_type}}
+\index{difference\_type@{difference\_type}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{difference\_type}{difference\_type}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a6b44774642cb93d139dd86136f7decec}{difference\+\_\+type}} =  typename buffer\+\_\+t\+::difference\+\_\+type}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}\label{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!iterator@{iterator}}
+\index{iterator@{iterator}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{iterator}{iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}{iterator}} =  \mbox{\hyperlink{classchampsim_1_1circular__buffer__iterator}{circular\+\_\+buffer\+\_\+iterator}}$<$\mbox{\hyperlink{classchampsim_1_1circular__buffer}{circular\+\_\+buffer}}$<$T$>$ $>$}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a6615d2d6f9a035699a6092c00ea9f250}\label{classchampsim_1_1circular__buffer_a6615d2d6f9a035699a6092c00ea9f250}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!pointer@{pointer}}
+\index{pointer@{pointer}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{pointer}{pointer}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a6615d2d6f9a035699a6092c00ea9f250}{pointer}} =  \mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}}$\ast$}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}\label{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!reference@{reference}}
+\index{reference@{reference}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{reference}{reference}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}{reference}} =  \mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}}\&}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ae18b63b53b1972e87eaa0e409e4d138e}\label{classchampsim_1_1circular__buffer_ae18b63b53b1972e87eaa0e409e4d138e}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!reverse\_iterator@{reverse\_iterator}}
+\index{reverse\_iterator@{reverse\_iterator}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{reverse\_iterator}{reverse\_iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae18b63b53b1972e87eaa0e409e4d138e}{reverse\+\_\+iterator}} =  std\+::reverse\+\_\+iterator$<$\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}{iterator}}$>$}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}\label{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!size\_type@{size\_type}}
+\index{size\_type@{size\_type}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{size\_type}{size\_type}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} =  typename buffer\+\_\+t\+::size\+\_\+type}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}\label{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!value\_type@{value\_type}}
+\index{value\_type@{value\_type}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{value\_type}{value\_type}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a14eddf454372a75a32ea0adfbed1c310}{value\+\_\+type}} =  typename buffer\+\_\+t\+::value\+\_\+type}
+
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a0a190ae361c3fe238332366d0dbcd660}\label{classchampsim_1_1circular__buffer_a0a190ae361c3fe238332366d0dbcd660}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!circular\_buffer@{circular\_buffer}}
+\index{circular\_buffer@{circular\_buffer}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{circular\_buffer()}{circular\_buffer()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer}{circular\+\_\+buffer}} (\begin{DoxyParamCaption}\item[{std\+::size\+\_\+t}]{N }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [explicit]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_af347084f8598e22c0a220f7244ed0240}\label{classchampsim_1_1circular__buffer_af347084f8598e22c0a220f7244ed0240}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!back@{back}}
+\index{back@{back}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{back()}{back()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}{reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::back (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a52cd8b97a0f06e115833ff19ff549fab}\label{classchampsim_1_1circular__buffer_a52cd8b97a0f06e115833ff19ff549fab}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!back@{back}}
+\index{back@{back}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{back()}{back()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::back (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_af59aa20431eacaaf2fb01daee891f8f6}\label{classchampsim_1_1circular__buffer_af59aa20431eacaaf2fb01daee891f8f6}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!begin@{begin}}
+\index{begin@{begin}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{begin()}{begin()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::begin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a4284d993f93c809284de9fc5808f02f4}\label{classchampsim_1_1circular__buffer_a4284d993f93c809284de9fc5808f02f4}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!begin@{begin}}
+\index{begin@{begin}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{begin()}{begin()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}{iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::begin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_a4284d993f93c809284de9fc5808f02f4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_aa72e49f7e9c7111d3502f0dc45be26e7}\label{classchampsim_1_1circular__buffer_aa72e49f7e9c7111d3502f0dc45be26e7}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!cbegin@{cbegin}}
+\index{cbegin@{cbegin}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{cbegin()}{cbegin()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::cbegin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a2a2bb43ac6320ce7a8be160772d40d52}\label{classchampsim_1_1circular__buffer_a2a2bb43ac6320ce7a8be160772d40d52}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!cend@{cend}}
+\index{cend@{cend}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{cend()}{cend()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::cend (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a625ec239d504344d73594bd20225464c}\label{classchampsim_1_1circular__buffer_a625ec239d504344d73594bd20225464c}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!circ\_inc@{circ\_inc}}
+\index{circ\_inc@{circ\_inc}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{circ\_inc()}{circ\_inc()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+auto \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::circ\+\_\+inc (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}}}]{base,  }\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer_a6b44774642cb93d139dd86136f7decec}{difference\+\_\+type}}}]{inc,  }\item[{const \mbox{\hyperlink{classchampsim_1_1circular__buffer}{circular\+\_\+buffer}}$<$ T $>$ \&}]{buf }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}, {\ttfamily [protected]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_a625ec239d504344d73594bd20225464c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a38a422f64397b59694b37c10073bfd61}\label{classchampsim_1_1circular__buffer_a38a422f64397b59694b37c10073bfd61}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!clear@{clear}}
+\index{clear@{clear}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_aef4a54508ad71ad3cf2ea0bbe032f392}\label{classchampsim_1_1circular__buffer_aef4a54508ad71ad3cf2ea0bbe032f392}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!crbegin@{crbegin}}
+\index{crbegin@{crbegin}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{crbegin()}{crbegin()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::crbegin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ad51d614f198565d7cb637ac53a80aff7}\label{classchampsim_1_1circular__buffer_ad51d614f198565d7cb637ac53a80aff7}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!crend@{crend}}
+\index{crend@{crend}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{crend()}{crend()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::crend (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a354eab4358f5d1a63fb8178e0711c087}\label{classchampsim_1_1circular__buffer_a354eab4358f5d1a63fb8178e0711c087}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!empty@{empty}}
+\index{empty@{empty}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{empty()}{empty()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::empty (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_a354eab4358f5d1a63fb8178e0711c087_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a5d458f388149409a9a59675f74a19988}\label{classchampsim_1_1circular__buffer_a5d458f388149409a9a59675f74a19988}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!end@{end}}
+\index{end@{end}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{end()}{end()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::end (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=190pt]{classchampsim_1_1circular__buffer_a5d458f388149409a9a59675f74a19988_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ac42408ef45fda69289f5d9426a54539a}\label{classchampsim_1_1circular__buffer_ac42408ef45fda69289f5d9426a54539a}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!end@{end}}
+\index{end@{end}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{end()}{end()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}{iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::end (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_ac42408ef45fda69289f5d9426a54539a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ac77d97fc2ea51f0ec1fdcce6ffe17b1c}\label{classchampsim_1_1circular__buffer_ac77d97fc2ea51f0ec1fdcce6ffe17b1c}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!front@{front}}
+\index{front@{front}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{front()}{front()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}{reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::front (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_ac77d97fc2ea51f0ec1fdcce6ffe17b1c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a6e9ad198cd5d553f5c9843c3c435ba17}\label{classchampsim_1_1circular__buffer_a6e9ad198cd5d553f5c9843c3c435ba17}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!front@{front}}
+\index{front@{front}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{front()}{front()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::front (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a38da70ed64d16f89aec6717de670a79d}\label{classchampsim_1_1circular__buffer_a38da70ed64d16f89aec6717de670a79d}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!full@{full}}
+\index{full@{full}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{full()}{full()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::full (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_a38da70ed64d16f89aec6717de670a79d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a4473974ffa42abe50d88242cf6e61a26}\label{classchampsim_1_1circular__buffer_a4473974ffa42abe50d88242cf6e61a26}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!max\_size@{max\_size}}
+\index{max\_size@{max\_size}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{max\_size()}{max\_size()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+constexpr \mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::max\+\_\+size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [constexpr]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a6cdfcacd729c60ff35017b5566dc3026}\label{classchampsim_1_1circular__buffer_a6cdfcacd729c60ff35017b5566dc3026}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!occupancy@{occupancy}}
+\index{occupancy@{occupancy}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{occupancy()}{occupancy()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::occupancy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_a6cdfcacd729c60ff35017b5566dc3026_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ab42e58b5ff41d6fb2f7dde086678c029}\label{classchampsim_1_1circular__buffer_ab42e58b5ff41d6fb2f7dde086678c029}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!operator\mbox{[}\mbox{]}@{operator[]}}
+\index{operator\mbox{[}\mbox{]}@{operator[]}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{operator[]()}{operator[]()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a811b328c4f837f455b5f3b56d2ba286a}{reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::operator\mbox{[}$\,$\mbox{]} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}}}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_ab42e58b5ff41d6fb2f7dde086678c029_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a11b8bc921497d60e8639f804f4118bfa}\label{classchampsim_1_1circular__buffer_a11b8bc921497d60e8639f804f4118bfa}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!operator\mbox{[}\mbox{]}@{operator[]}}
+\index{operator\mbox{[}\mbox{]}@{operator[]}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{operator[]()}{operator[]()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a07a213427a262d78405032be036699ca}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::operator\mbox{[}$\,$\mbox{]} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}}}]{n }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a49c52938d296faec5f6b470765cbd791}\label{classchampsim_1_1circular__buffer_a49c52938d296faec5f6b470765cbd791}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!pop\_front@{pop\_front}}
+\index{pop\_front@{pop\_front}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{pop\_front()}{pop\_front()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::pop\+\_\+front (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_a49c52938d296faec5f6b470765cbd791_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ae26ad8832cc5e09527198282af49efe4}\label{classchampsim_1_1circular__buffer_ae26ad8832cc5e09527198282af49efe4}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!push\_back@{push\_back}}
+\index{push\_back@{push\_back}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{push\_back()}{push\_back()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::push\+\_\+back (\begin{DoxyParamCaption}\item[{const T \&\&}]{item }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_aa7b5ff6facba0486daebe230943a3dda}\label{classchampsim_1_1circular__buffer_aa7b5ff6facba0486daebe230943a3dda}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!push\_back@{push\_back}}
+\index{push\_back@{push\_back}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{push\_back()}{push\_back()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::push\+\_\+back (\begin{DoxyParamCaption}\item[{const T \&}]{item }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_aa7b5ff6facba0486daebe230943a3dda_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a0c8356ce803efd12489589ec76828f8d}\label{classchampsim_1_1circular__buffer_a0c8356ce803efd12489589ec76828f8d}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!rbegin@{rbegin}}
+\index{rbegin@{rbegin}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rbegin()}{rbegin()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::rbegin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a353a10adac047c6dceb1dcaaa7dc7db5}\label{classchampsim_1_1circular__buffer_a353a10adac047c6dceb1dcaaa7dc7db5}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!rbegin@{rbegin}}
+\index{rbegin@{rbegin}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rbegin()}{rbegin()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae18b63b53b1972e87eaa0e409e4d138e}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::rbegin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_adf66285e152991290196d89fd86783b9}\label{classchampsim_1_1circular__buffer_adf66285e152991290196d89fd86783b9}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!rend@{rend}}
+\index{rend@{rend}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rend()}{rend()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::rend (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a4f06fcd7c3d27ac390d9ce5a6958b90e}\label{classchampsim_1_1circular__buffer_a4f06fcd7c3d27ac390d9ce5a6958b90e}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!rend@{rend}}
+\index{rend@{rend}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rend()}{rend()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae18b63b53b1972e87eaa0e409e4d138e}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::rend (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_a4f06fcd7c3d27ac390d9ce5a6958b90e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a405fa12dbcaf0564dda4987257b21654}\label{classchampsim_1_1circular__buffer_a405fa12dbcaf0564dda4987257b21654}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!size@{size}}
+\index{size@{size}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+constexpr \mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [constexpr]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1circular__buffer_a405fa12dbcaf0564dda4987257b21654_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ad482872ab534e5b39e05fdb9207e52bc}\label{classchampsim_1_1circular__buffer_ad482872ab534e5b39e05fdb9207e52bc}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!const\_iterator@{const\_iterator}}
+\index{const\_iterator@{const\_iterator}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_iterator}{const\_iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+friend \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_ad5a429205ff7a69fc4f62bdb5456b9fa}{const\+\_\+iterator}}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a395c10193a6d9a3d5cc5bcb94e7f949f}\label{classchampsim_1_1circular__buffer_a395c10193a6d9a3d5cc5bcb94e7f949f}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!const\_reverse\_iterator@{const\_reverse\_iterator}}
+\index{const\_reverse\_iterator@{const\_reverse\_iterator}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_reverse\_iterator}{const\_reverse\_iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+friend \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_a068c2b27e1cca4a61cbce5e01c7d1701}{const\+\_\+reverse\+\_\+iterator}}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_aabeb147bb1708dc7f9e05067959f52c1}\label{classchampsim_1_1circular__buffer_aabeb147bb1708dc7f9e05067959f52c1}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!entry\_@{entry\_}}
+\index{entry\_@{entry\_}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{entry\_}{entry\_}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a869b6660470799808f5d623097dd3672}{buffer\+\_\+t}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::entry\+\_\+ = \{\}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ad1c44278f88b3a308e6c4ff799fdb401}\label{classchampsim_1_1circular__buffer_ad1c44278f88b3a308e6c4ff799fdb401}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!head\_@{head\_}}
+\index{head\_@{head\_}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{head\_}{head\_}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::head\+\_\+ = 0\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_afc33c9979370e978fcb3a0cba7708235}\label{classchampsim_1_1circular__buffer_afc33c9979370e978fcb3a0cba7708235}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!iterator@{iterator}}
+\index{iterator@{iterator}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{iterator}{iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+friend \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae15a2330893fbb49e74047c7460973d1}{iterator}}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_ae56314b2879cb04d0d2742886185921b}\label{classchampsim_1_1circular__buffer_ae56314b2879cb04d0d2742886185921b}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!reverse\_iterator@{reverse\_iterator}}
+\index{reverse\_iterator@{reverse\_iterator}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{reverse\_iterator}{reverse\_iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+friend \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1circular__buffer_ae18b63b53b1972e87eaa0e409e4d138e}{reverse\+\_\+iterator}}\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_abb638c3b2b9adf5feb55ca826752bb33}\label{classchampsim_1_1circular__buffer_abb638c3b2b9adf5feb55ca826752bb33}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!sz\_@{sz\_}}
+\index{sz\_@{sz\_}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{sz\_}{sz\_}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+const \mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::sz\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classchampsim_1_1circular__buffer_a32ad763ad64df2b4460c84b76447aa93}\label{classchampsim_1_1circular__buffer_a32ad763ad64df2b4460c84b76447aa93}} 
+\index{champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}!tail\_@{tail\_}}
+\index{tail\_@{tail\_}!champsim::circular\_buffer$<$ T $>$@{champsim::circular\_buffer$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{tail\_}{tail\_}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1circular__buffer_a21094940456bfef693971ab1cac53212}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ T $>$\+::tail\+\_\+ = 0\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{circular__buffer_8hpp}{circular\+\_\+buffer.\+hpp}}\end{DoxyCompactItemize}

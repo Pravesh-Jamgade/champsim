@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['match_5faddr_1304',['match_addr',['../structsq__will__forward.html#accee4e133e64882f6723501604b5c85d',1,'sq_will_forward']]],
+  ['match_5fid_1305',['match_id',['../structsq__will__forward.html#a8a20572ae50c74ad06fb06e0d3ff85c3',1,'sq_will_forward']]],
+  ['match_5fmem_1306',['match_mem',['../structinstr__mem__will__produce.html#a91b65cbdd0953d3e31ff02c99896037e',1,'instr_mem_will_produce']]],
+  ['match_5foffset_5fbits_1307',['match_offset_bits',['../classCACHE.html#a099df667e7b83c3503aa7b39b6628344',1,'CACHE']]],
+  ['match_5freg_1308',['match_reg',['../structinstr__reg__will__produce.html#afc409f58c387bf0194807d821d384a86',1,'instr_reg_will_produce']]],
+  ['max_5fconf_1309',['MAX_CONF',['../kpcp_8cc.html#a3ec6090ff1f07ad9c2db891b30cdf504',1,'kpcp.cc']]],
+  ['max_5ffill_1310',['MAX_FILL',['../classPageTableWalker.html#a61571e96026d03a847d7ca37544e790d',1,'PageTableWalker']]],
+  ['max_5finstr_5fdestinations_1311',['MAX_INSTR_DESTINATIONS',['../main_8cc.html#a3311c0092a6c8dcbf1b903cdc6a8c51f',1,'MAX_INSTR_DESTINATIONS():&#160;main.cc'],['../ooo__cpu_8cc.html#a3311c0092a6c8dcbf1b903cdc6a8c51f',1,'MAX_INSTR_DESTINATIONS():&#160;main.cc']]],
+  ['max_5fread_1312',['MAX_READ',['../classCACHE.html#aff5c662edde640ae7dab1d486c0017a9',1,'CACHE::MAX_READ()'],['../classPageTableWalker.html#a2861ebea95f1da63d11f995c084941eb',1,'PageTableWalker::MAX_READ()']]],
+  ['max_5fweight_1313',['max_weight',['../classperceptron.html#af36fd147ee9076fc7ac479cc81a641ea',1,'perceptron']]],
+  ['max_5fwrite_1314',['MAX_WRITE',['../classCACHE.html#a34669fff18abc8d277e4c14d14b3c03b',1,'CACHE']]],
+  ['memory_5finstrs_5fdepend_5fon_5fme_1315',['memory_instrs_depend_on_me',['../structooo__model__instr.html#a2842aac23a15f1b46f5447092b6bf658',1,'ooo_model_instr']]],
+  ['min_5fdram_5fwrites_5fper_5fswitch_1316',['MIN_DRAM_WRITES_PER_SWITCH',['../dram__controller_8h.html#a19aaf08b61d29de03ef0e9fb1c6f3ddd',1,'dram_controller.h']]],
+  ['min_5fweight_1317',['min_weight',['../classperceptron.html#a873d1222355c555621add2b6f107f38f',1,'perceptron']]],
+  ['minor_5ffault_5fpenalty_1318',['minor_fault_penalty',['../classVirtualMemory.html#af27b8103c6bfb1d9947d663fc45368c8',1,'VirtualMemory']]],
+  ['mshr_1319',['MSHR',['../classCACHE.html#ae2ccabdb54408cb3a759a519a45ae9ab',1,'CACHE::MSHR()'],['../classPageTableWalker.html#a380a24f7cddb508e06cac7480e861378',1,'PageTableWalker::MSHR()']]],
+  ['mshr_5fsize_1320',['MSHR_SIZE',['../classCACHE.html#a1fe14de255f47173f84d1f82b0078bd9',1,'CACHE::MSHR_SIZE()'],['../classPageTableWalker.html#a10b2a3d34169b8a2e037e1bf32ea5f76',1,'PageTableWalker::MSHR_SIZE()']]],
+  ['my_5flast_5fprediction_1321',['my_last_prediction',['../gshare_8cc.html#a1b890efb6a011853bfcd8b8ea2c71473',1,'gshare.cc']]]
+];

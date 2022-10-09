@@ -1,0 +1,124 @@
+\hypertarget{instruction_8h}{}\doxysection{inc/instruction.h File Reference}
+\label{instruction_8h}\index{inc/instruction.h@{inc/instruction.h}}
+{\ttfamily \#include $<$array$>$}\newline
+{\ttfamily \#include $<$cstdint$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$limits$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include \char`\"{}circular\+\_\+buffer.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}trace\+\_\+instruction.\+h\char`\"{}}\newline
+Include dependency graph for instruction.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{instruction_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{instruction_8h__dep__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{instruction_8h_ad8757c9d88c41c541647c6e462d91251}{R\+E\+G\+\_\+\+S\+T\+A\+C\+K\+\_\+\+P\+O\+I\+N\+T\+ER}}~6
+\item 
+\#define \mbox{\hyperlink{instruction_8h_a4c5d46219c3489fefbabe1fcba800bad}{R\+E\+G\+\_\+\+F\+L\+A\+GS}}~25
+\item 
+\#define \mbox{\hyperlink{instruction_8h_a345abd58b1e5158e207bb47e06a5c995}{R\+E\+G\+\_\+\+I\+N\+S\+T\+R\+U\+C\+T\+I\+O\+N\+\_\+\+P\+O\+I\+N\+T\+ER}}~26
+\item 
+\#define \mbox{\hyperlink{instruction_8h_abf3e55377e87629e32a51045cdca0340}{N\+O\+T\+\_\+\+B\+R\+A\+N\+CH}}~0
+\item 
+\#define \mbox{\hyperlink{instruction_8h_a8ad5cbc0c0555bc7bc8028a62960ffc2}{B\+R\+A\+N\+C\+H\+\_\+\+D\+I\+R\+E\+C\+T\+\_\+\+J\+U\+MP}}~1
+\item 
+\#define \mbox{\hyperlink{instruction_8h_acab3e612e7bdd4d87724c22d18aeff41}{B\+R\+A\+N\+C\+H\+\_\+\+I\+N\+D\+I\+R\+E\+CT}}~2
+\item 
+\#define \mbox{\hyperlink{instruction_8h_a1be56476a94c113afd8db79cc5868d2c}{B\+R\+A\+N\+C\+H\+\_\+\+C\+O\+N\+D\+I\+T\+I\+O\+N\+AL}}~3
+\item 
+\#define \mbox{\hyperlink{instruction_8h_a268b60517363c10bd9ecfdb6870e0f67}{B\+R\+A\+N\+C\+H\+\_\+\+D\+I\+R\+E\+C\+T\+\_\+\+C\+A\+LL}}~4
+\item 
+\#define \mbox{\hyperlink{instruction_8h_aba68d78e9db676804bfabae8881e0008}{B\+R\+A\+N\+C\+H\+\_\+\+I\+N\+D\+I\+R\+E\+C\+T\+\_\+\+C\+A\+LL}}~5
+\item 
+\#define \mbox{\hyperlink{instruction_8h_ae9e421dfd5976a9e4d179e1d4f9475f6}{B\+R\+A\+N\+C\+H\+\_\+\+R\+E\+T\+U\+RN}}~6
+\item 
+\#define \mbox{\hyperlink{instruction_8h_adc9cf1aefba55aed0e7cacc006d08cbd}{B\+R\+A\+N\+C\+H\+\_\+\+O\+T\+H\+ER}}~7
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{instruction_8h_a1be56476a94c113afd8db79cc5868d2c}\label{instruction_8h_a1be56476a94c113afd8db79cc5868d2c}} 
+\index{instruction.h@{instruction.h}!BRANCH\_CONDITIONAL@{BRANCH\_CONDITIONAL}}
+\index{BRANCH\_CONDITIONAL@{BRANCH\_CONDITIONAL}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{BRANCH\_CONDITIONAL}{BRANCH\_CONDITIONAL}}
+{\footnotesize\ttfamily \#define B\+R\+A\+N\+C\+H\+\_\+\+C\+O\+N\+D\+I\+T\+I\+O\+N\+AL~3}
+
+\mbox{\Hypertarget{instruction_8h_a268b60517363c10bd9ecfdb6870e0f67}\label{instruction_8h_a268b60517363c10bd9ecfdb6870e0f67}} 
+\index{instruction.h@{instruction.h}!BRANCH\_DIRECT\_CALL@{BRANCH\_DIRECT\_CALL}}
+\index{BRANCH\_DIRECT\_CALL@{BRANCH\_DIRECT\_CALL}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{BRANCH\_DIRECT\_CALL}{BRANCH\_DIRECT\_CALL}}
+{\footnotesize\ttfamily \#define B\+R\+A\+N\+C\+H\+\_\+\+D\+I\+R\+E\+C\+T\+\_\+\+C\+A\+LL~4}
+
+\mbox{\Hypertarget{instruction_8h_a8ad5cbc0c0555bc7bc8028a62960ffc2}\label{instruction_8h_a8ad5cbc0c0555bc7bc8028a62960ffc2}} 
+\index{instruction.h@{instruction.h}!BRANCH\_DIRECT\_JUMP@{BRANCH\_DIRECT\_JUMP}}
+\index{BRANCH\_DIRECT\_JUMP@{BRANCH\_DIRECT\_JUMP}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{BRANCH\_DIRECT\_JUMP}{BRANCH\_DIRECT\_JUMP}}
+{\footnotesize\ttfamily \#define B\+R\+A\+N\+C\+H\+\_\+\+D\+I\+R\+E\+C\+T\+\_\+\+J\+U\+MP~1}
+
+\mbox{\Hypertarget{instruction_8h_acab3e612e7bdd4d87724c22d18aeff41}\label{instruction_8h_acab3e612e7bdd4d87724c22d18aeff41}} 
+\index{instruction.h@{instruction.h}!BRANCH\_INDIRECT@{BRANCH\_INDIRECT}}
+\index{BRANCH\_INDIRECT@{BRANCH\_INDIRECT}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{BRANCH\_INDIRECT}{BRANCH\_INDIRECT}}
+{\footnotesize\ttfamily \#define B\+R\+A\+N\+C\+H\+\_\+\+I\+N\+D\+I\+R\+E\+CT~2}
+
+\mbox{\Hypertarget{instruction_8h_aba68d78e9db676804bfabae8881e0008}\label{instruction_8h_aba68d78e9db676804bfabae8881e0008}} 
+\index{instruction.h@{instruction.h}!BRANCH\_INDIRECT\_CALL@{BRANCH\_INDIRECT\_CALL}}
+\index{BRANCH\_INDIRECT\_CALL@{BRANCH\_INDIRECT\_CALL}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{BRANCH\_INDIRECT\_CALL}{BRANCH\_INDIRECT\_CALL}}
+{\footnotesize\ttfamily \#define B\+R\+A\+N\+C\+H\+\_\+\+I\+N\+D\+I\+R\+E\+C\+T\+\_\+\+C\+A\+LL~5}
+
+\mbox{\Hypertarget{instruction_8h_adc9cf1aefba55aed0e7cacc006d08cbd}\label{instruction_8h_adc9cf1aefba55aed0e7cacc006d08cbd}} 
+\index{instruction.h@{instruction.h}!BRANCH\_OTHER@{BRANCH\_OTHER}}
+\index{BRANCH\_OTHER@{BRANCH\_OTHER}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{BRANCH\_OTHER}{BRANCH\_OTHER}}
+{\footnotesize\ttfamily \#define B\+R\+A\+N\+C\+H\+\_\+\+O\+T\+H\+ER~7}
+
+\mbox{\Hypertarget{instruction_8h_ae9e421dfd5976a9e4d179e1d4f9475f6}\label{instruction_8h_ae9e421dfd5976a9e4d179e1d4f9475f6}} 
+\index{instruction.h@{instruction.h}!BRANCH\_RETURN@{BRANCH\_RETURN}}
+\index{BRANCH\_RETURN@{BRANCH\_RETURN}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{BRANCH\_RETURN}{BRANCH\_RETURN}}
+{\footnotesize\ttfamily \#define B\+R\+A\+N\+C\+H\+\_\+\+R\+E\+T\+U\+RN~6}
+
+\mbox{\Hypertarget{instruction_8h_abf3e55377e87629e32a51045cdca0340}\label{instruction_8h_abf3e55377e87629e32a51045cdca0340}} 
+\index{instruction.h@{instruction.h}!NOT\_BRANCH@{NOT\_BRANCH}}
+\index{NOT\_BRANCH@{NOT\_BRANCH}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{NOT\_BRANCH}{NOT\_BRANCH}}
+{\footnotesize\ttfamily \#define N\+O\+T\+\_\+\+B\+R\+A\+N\+CH~0}
+
+\mbox{\Hypertarget{instruction_8h_a4c5d46219c3489fefbabe1fcba800bad}\label{instruction_8h_a4c5d46219c3489fefbabe1fcba800bad}} 
+\index{instruction.h@{instruction.h}!REG\_FLAGS@{REG\_FLAGS}}
+\index{REG\_FLAGS@{REG\_FLAGS}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{REG\_FLAGS}{REG\_FLAGS}}
+{\footnotesize\ttfamily \#define R\+E\+G\+\_\+\+F\+L\+A\+GS~25}
+
+\mbox{\Hypertarget{instruction_8h_a345abd58b1e5158e207bb47e06a5c995}\label{instruction_8h_a345abd58b1e5158e207bb47e06a5c995}} 
+\index{instruction.h@{instruction.h}!REG\_INSTRUCTION\_POINTER@{REG\_INSTRUCTION\_POINTER}}
+\index{REG\_INSTRUCTION\_POINTER@{REG\_INSTRUCTION\_POINTER}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{REG\_INSTRUCTION\_POINTER}{REG\_INSTRUCTION\_POINTER}}
+{\footnotesize\ttfamily \#define R\+E\+G\+\_\+\+I\+N\+S\+T\+R\+U\+C\+T\+I\+O\+N\+\_\+\+P\+O\+I\+N\+T\+ER~26}
+
+\mbox{\Hypertarget{instruction_8h_ad8757c9d88c41c541647c6e462d91251}\label{instruction_8h_ad8757c9d88c41c541647c6e462d91251}} 
+\index{instruction.h@{instruction.h}!REG\_STACK\_POINTER@{REG\_STACK\_POINTER}}
+\index{REG\_STACK\_POINTER@{REG\_STACK\_POINTER}!instruction.h@{instruction.h}}
+\doxysubsubsection{\texorpdfstring{REG\_STACK\_POINTER}{REG\_STACK\_POINTER}}
+{\footnotesize\ttfamily \#define R\+E\+G\+\_\+\+S\+T\+A\+C\+K\+\_\+\+P\+O\+I\+N\+T\+ER~6}
+

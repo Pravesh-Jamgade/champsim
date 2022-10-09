@@ -1,0 +1,8 @@
+<map id="O3_CPU::fetch_instruction" name="O3_CPU::fetch_instruction">
+<area shape="rect" id="node1" title=" " alt="" coords="5,101,196,127"/>
+<area shape="rect" id="node2" href="$classchampsim_1_1circular__buffer.html#a4284d993f93c809284de9fc5808f02f4" title=" " alt="" coords="278,5,425,47"/>
+<area shape="rect" id="node3" href="$classO3__CPU.html#a0b51101e5765592b1395f732d3f6fb91" title=" " alt="" coords="244,71,459,98"/>
+<area shape="rect" id="node5" href="$classchampsim_1_1circular__buffer.html#a354eab4358f5d1a63fb8178e0711c087" title=" " alt="" coords="278,123,425,164"/>
+<area shape="rect" id="node6" href="$classchampsim_1_1circular__buffer.html#ac42408ef45fda69289f5d9426a54539a" title=" " alt="" coords="278,188,425,229"/>
+<area shape="rect" id="node4" href="$classMemoryRequestConsumer.html#adffc84de8306e1e78f595c312ff8edfd" title=" " alt="" coords="507,64,701,105"/>
+</map>

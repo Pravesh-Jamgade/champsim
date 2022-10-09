@@ -1,0 +1,107 @@
+\hypertarget{structLSQ__ENTRY}{}\doxysection{L\+S\+Q\+\_\+\+E\+N\+T\+RY Struct Reference}
+\label{structLSQ__ENTRY}\index{LSQ\_ENTRY@{LSQ\_ENTRY}}
+
+
+{\ttfamily \#include $<$block.\+h$>$}
+
+
+
+Collaboration diagram for L\+S\+Q\+\_\+\+E\+N\+T\+RY\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{structLSQ__ENTRY__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structLSQ__ENTRY_a78344ead03777424cceece783b3ae751}{instr\+\_\+id}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structLSQ__ENTRY_ae30918748ab0bf06591ea380fe0537ec}{producer\+\_\+id}} = std\+::numeric\+\_\+limits$<$uint64\+\_\+t$>$\+::max()
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structLSQ__ENTRY_a8dddcebafa71f0020fb39b4bdb34c34c}{virtual\+\_\+address}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structLSQ__ENTRY_ab3a1aeb6ac0e7bb4c1d20b2eaba6ff6f}{physical\+\_\+address}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structLSQ__ENTRY_a102fb6f96e4f49735b71605b5f663183}{ip}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structLSQ__ENTRY_a7f20fb70df664c49a03e3bf0fbb01d22}{event\+\_\+cycle}} = 0
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator \mbox{\hyperlink{structLSQ__ENTRY_aaf04cfdd9dad9a6c638391d565ebda4b}{rob\+\_\+index}}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structLSQ__ENTRY_aef4c795dad6ee53acb73989f12238cb1}{translated}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structLSQ__ENTRY_ab903ea059f2c76195f40f6060422af1f}{fetched}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structLSQ__ENTRY_ac4052c7ceae495d9c7c846d3eec2fdb5}{asid}} \mbox{[}2\mbox{]} = \{std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max(), std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max()\}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{structLSQ__ENTRY_ac4052c7ceae495d9c7c846d3eec2fdb5}\label{structLSQ__ENTRY_ac4052c7ceae495d9c7c846d3eec2fdb5}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!asid@{asid}}
+\index{asid@{asid}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{asid}{asid}}
+{\footnotesize\ttfamily uint8\+\_\+t L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::asid\mbox{[}2\mbox{]} = \{std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max(), std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max()\}}
+
+\mbox{\Hypertarget{structLSQ__ENTRY_a7f20fb70df664c49a03e3bf0fbb01d22}\label{structLSQ__ENTRY_a7f20fb70df664c49a03e3bf0fbb01d22}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!event\_cycle@{event\_cycle}}
+\index{event\_cycle@{event\_cycle}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{event\_cycle}{event\_cycle}}
+{\footnotesize\ttfamily uint64\+\_\+t L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::event\+\_\+cycle = 0}
+
+\mbox{\Hypertarget{structLSQ__ENTRY_ab903ea059f2c76195f40f6060422af1f}\label{structLSQ__ENTRY_ab903ea059f2c76195f40f6060422af1f}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!fetched@{fetched}}
+\index{fetched@{fetched}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{fetched}{fetched}}
+{\footnotesize\ttfamily uint8\+\_\+t L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::fetched = 0}
+
+\mbox{\Hypertarget{structLSQ__ENTRY_a78344ead03777424cceece783b3ae751}\label{structLSQ__ENTRY_a78344ead03777424cceece783b3ae751}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!instr\_id@{instr\_id}}
+\index{instr\_id@{instr\_id}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{instr\_id}{instr\_id}}
+{\footnotesize\ttfamily uint64\+\_\+t L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::instr\+\_\+id = 0}
+
+\mbox{\Hypertarget{structLSQ__ENTRY_a102fb6f96e4f49735b71605b5f663183}\label{structLSQ__ENTRY_a102fb6f96e4f49735b71605b5f663183}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!ip@{ip}}
+\index{ip@{ip}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{ip}{ip}}
+{\footnotesize\ttfamily uint64\+\_\+t L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::ip = 0}
+
+\mbox{\Hypertarget{structLSQ__ENTRY_ab3a1aeb6ac0e7bb4c1d20b2eaba6ff6f}\label{structLSQ__ENTRY_ab3a1aeb6ac0e7bb4c1d20b2eaba6ff6f}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!physical\_address@{physical\_address}}
+\index{physical\_address@{physical\_address}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{physical\_address}{physical\_address}}
+{\footnotesize\ttfamily uint64\+\_\+t L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::physical\+\_\+address = 0}
+
+\mbox{\Hypertarget{structLSQ__ENTRY_ae30918748ab0bf06591ea380fe0537ec}\label{structLSQ__ENTRY_ae30918748ab0bf06591ea380fe0537ec}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!producer\_id@{producer\_id}}
+\index{producer\_id@{producer\_id}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{producer\_id}{producer\_id}}
+{\footnotesize\ttfamily uint64\+\_\+t L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::producer\+\_\+id = std\+::numeric\+\_\+limits$<$uint64\+\_\+t$>$\+::max()}
+
+\mbox{\Hypertarget{structLSQ__ENTRY_aaf04cfdd9dad9a6c638391d565ebda4b}\label{structLSQ__ENTRY_aaf04cfdd9dad9a6c638391d565ebda4b}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!rob\_index@{rob\_index}}
+\index{rob\_index@{rob\_index}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{rob\_index}{rob\_index}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}$>$\+::iterator L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::rob\+\_\+index}
+
+\mbox{\Hypertarget{structLSQ__ENTRY_aef4c795dad6ee53acb73989f12238cb1}\label{structLSQ__ENTRY_aef4c795dad6ee53acb73989f12238cb1}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!translated@{translated}}
+\index{translated@{translated}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{translated}{translated}}
+{\footnotesize\ttfamily uint8\+\_\+t L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::translated = 0}
+
+\mbox{\Hypertarget{structLSQ__ENTRY_a8dddcebafa71f0020fb39b4bdb34c34c}\label{structLSQ__ENTRY_a8dddcebafa71f0020fb39b4bdb34c34c}} 
+\index{LSQ\_ENTRY@{LSQ\_ENTRY}!virtual\_address@{virtual\_address}}
+\index{virtual\_address@{virtual\_address}!LSQ\_ENTRY@{LSQ\_ENTRY}}
+\doxysubsubsection{\texorpdfstring{virtual\_address}{virtual\_address}}
+{\footnotesize\ttfamily uint64\+\_\+t L\+S\+Q\+\_\+\+E\+N\+T\+R\+Y\+::virtual\+\_\+address = 0}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{block_8h}{block.\+h}}\end{DoxyCompactItemize}

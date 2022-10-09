@@ -1,0 +1,188 @@
+\hypertarget{classtracereader}{}\doxysection{tracereader Class Reference}
+\label{classtracereader}\index{tracereader@{tracereader}}
+
+
+{\ttfamily \#include $<$tracereader.\+h$>$}
+
+
+
+Inheritance diagram for tracereader\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classtracereader__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for tracereader\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=326pt]{classtracereader__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classtracereader_ab668ea34c00bd5722d5400fa2d5d00de}{tracereader}} (const \mbox{\hyperlink{classtracereader}{tracereader}} \&other)=delete
+\item 
+\mbox{\hyperlink{classtracereader_ab2cde69a015ab2c3904bf9b996da14b6}{tracereader}} (uint8\+\_\+t \mbox{\hyperlink{classtracereader_a09ec0ebb3427660e85e5489453489db5}{cpu}}, std\+::string \+\_\+ts)
+\item 
+\mbox{\hyperlink{classtracereader_af300cc187e4a8aa1ae0e4cb0b7534c69}{$\sim$tracereader}} ()
+\item 
+void \mbox{\hyperlink{classtracereader_accf840347080a26838e2769daace1970}{open}} (std\+::string \mbox{\hyperlink{classtracereader_a07c1fc97759d50f2436d1aea552a86f1}{trace\+\_\+string}})
+\item 
+void \mbox{\hyperlink{classtracereader_a8ec39bd95e3ee0a0c2bca8b1786cb84a}{close}} ()
+\item 
+{\footnotesize template$<$typename T $>$ }\\\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} \mbox{\hyperlink{classtracereader_ad990e15fec4e973addb74c0a57d36fce}{read\+\_\+single\+\_\+instr}} ()
+\item 
+virtual \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} \mbox{\hyperlink{classtracereader_a39722ed0b4eabea5514c99e92901757b}{get}} ()=0
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+F\+I\+LE $\ast$ \mbox{\hyperlink{classtracereader_a666b5becac199274f786edf6825395ac}{trace\+\_\+file}} = N\+U\+LL
+\item 
+uint8\+\_\+t \mbox{\hyperlink{classtracereader_a09ec0ebb3427660e85e5489453489db5}{cpu}}
+\item 
+std\+::string \mbox{\hyperlink{classtracereader_ab0071cb2a45dde87419ca8121ffc5217}{cmd\+\_\+fmtstr}}
+\item 
+std\+::string \mbox{\hyperlink{classtracereader_a1444c9963a96f8e1cb94e8a7f731d121}{decomp\+\_\+program}}
+\item 
+std\+::string \mbox{\hyperlink{classtracereader_a07c1fc97759d50f2436d1aea552a86f1}{trace\+\_\+string}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classtracereader_ab668ea34c00bd5722d5400fa2d5d00de}\label{classtracereader_ab668ea34c00bd5722d5400fa2d5d00de}} 
+\index{tracereader@{tracereader}!tracereader@{tracereader}}
+\index{tracereader@{tracereader}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{tracereader()}{tracereader()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily tracereader\+::tracereader (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classtracereader}{tracereader}} \&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [delete]}}
+
+\mbox{\Hypertarget{classtracereader_ab2cde69a015ab2c3904bf9b996da14b6}\label{classtracereader_ab2cde69a015ab2c3904bf9b996da14b6}} 
+\index{tracereader@{tracereader}!tracereader@{tracereader}}
+\index{tracereader@{tracereader}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{tracereader()}{tracereader()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily tracereader\+::tracereader (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu,  }\item[{std\+::string}]{\+\_\+ts }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classtracereader_ab2cde69a015ab2c3904bf9b996da14b6_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classtracereader_af300cc187e4a8aa1ae0e4cb0b7534c69}\label{classtracereader_af300cc187e4a8aa1ae0e4cb0b7534c69}} 
+\index{tracereader@{tracereader}!````~tracereader@{$\sim$tracereader}}
+\index{````~tracereader@{$\sim$tracereader}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{$\sim$tracereader()}{~tracereader()}}
+{\footnotesize\ttfamily tracereader\+::$\sim$tracereader (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classtracereader_af300cc187e4a8aa1ae0e4cb0b7534c69_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classtracereader_a8ec39bd95e3ee0a0c2bca8b1786cb84a}\label{classtracereader_a8ec39bd95e3ee0a0c2bca8b1786cb84a}} 
+\index{tracereader@{tracereader}!close@{close}}
+\index{close@{close}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{close()}{close()}}
+{\footnotesize\ttfamily void tracereader\+::close (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classtracereader_a8ec39bd95e3ee0a0c2bca8b1786cb84a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classtracereader_a39722ed0b4eabea5514c99e92901757b}\label{classtracereader_a39722ed0b4eabea5514c99e92901757b}} 
+\index{tracereader@{tracereader}!get@{get}}
+\index{get@{get}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{get()}{get()}}
+{\footnotesize\ttfamily virtual \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} tracereader\+::get (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classinput__tracereader_a1b1867fec2ba0028ada124a50f658e78}{input\+\_\+tracereader}}, and \mbox{\hyperlink{classcloudsuite__tracereader_ab9265c89b405c10f33713437718a40ca}{cloudsuite\+\_\+tracereader}}.
+
+\mbox{\Hypertarget{classtracereader_accf840347080a26838e2769daace1970}\label{classtracereader_accf840347080a26838e2769daace1970}} 
+\index{tracereader@{tracereader}!open@{open}}
+\index{open@{open}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{open()}{open()}}
+{\footnotesize\ttfamily void tracereader\+::open (\begin{DoxyParamCaption}\item[{std\+::string}]{trace\+\_\+string }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classtracereader_accf840347080a26838e2769daace1970_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classtracereader_ad990e15fec4e973addb74c0a57d36fce}\label{classtracereader_ad990e15fec4e973addb74c0a57d36fce}} 
+\index{tracereader@{tracereader}!read\_single\_instr@{read\_single\_instr}}
+\index{read\_single\_instr@{read\_single\_instr}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{read\_single\_instr()}{read\_single\_instr()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} tracereader\+::read\+\_\+single\+\_\+instr}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classtracereader_ad990e15fec4e973addb74c0a57d36fce_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classtracereader_ab0071cb2a45dde87419ca8121ffc5217}\label{classtracereader_ab0071cb2a45dde87419ca8121ffc5217}} 
+\index{tracereader@{tracereader}!cmd\_fmtstr@{cmd\_fmtstr}}
+\index{cmd\_fmtstr@{cmd\_fmtstr}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{cmd\_fmtstr}{cmd\_fmtstr}}
+{\footnotesize\ttfamily std\+::string tracereader\+::cmd\+\_\+fmtstr\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classtracereader_a09ec0ebb3427660e85e5489453489db5}\label{classtracereader_a09ec0ebb3427660e85e5489453489db5}} 
+\index{tracereader@{tracereader}!cpu@{cpu}}
+\index{cpu@{cpu}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{cpu}{cpu}}
+{\footnotesize\ttfamily uint8\+\_\+t tracereader\+::cpu\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classtracereader_a1444c9963a96f8e1cb94e8a7f731d121}\label{classtracereader_a1444c9963a96f8e1cb94e8a7f731d121}} 
+\index{tracereader@{tracereader}!decomp\_program@{decomp\_program}}
+\index{decomp\_program@{decomp\_program}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{decomp\_program}{decomp\_program}}
+{\footnotesize\ttfamily std\+::string tracereader\+::decomp\+\_\+program\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classtracereader_a666b5becac199274f786edf6825395ac}\label{classtracereader_a666b5becac199274f786edf6825395ac}} 
+\index{tracereader@{tracereader}!trace\_file@{trace\_file}}
+\index{trace\_file@{trace\_file}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{trace\_file}{trace\_file}}
+{\footnotesize\ttfamily F\+I\+LE$\ast$ tracereader\+::trace\+\_\+file = N\+U\+LL\hspace{0.3cm}{\ttfamily [protected]}}
+
+\mbox{\Hypertarget{classtracereader_a07c1fc97759d50f2436d1aea552a86f1}\label{classtracereader_a07c1fc97759d50f2436d1aea552a86f1}} 
+\index{tracereader@{tracereader}!trace\_string@{trace\_string}}
+\index{trace\_string@{trace\_string}!tracereader@{tracereader}}
+\doxysubsubsection{\texorpdfstring{trace\_string}{trace\_string}}
+{\footnotesize\ttfamily std\+::string tracereader\+::trace\+\_\+string\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{tracereader_8h}{tracereader.\+h}}\item 
+src/\mbox{\hyperlink{tracereader_8cc}{tracereader.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,114 @@
+\hypertarget{drrip_8cc}{}\doxysection{replacement/drrip/drrip.cc File Reference}
+\label{drrip_8cc}\index{replacement/drrip/drrip.cc@{replacement/drrip/drrip.cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$map$>$}\newline
+{\ttfamily \#include $<$utility$>$}\newline
+{\ttfamily \#include \char`\"{}cache.\+h\char`\"{}}\newline
+Include dependency graph for drrip.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{drrip_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{drrip_8cc_a6afba9fdb9405a75fc47917265ce51a3}{max\+R\+R\+PV}}~3
+\item 
+\#define \mbox{\hyperlink{drrip_8cc_adbdccbcfb51275102f59212295b9fb12}{N\+U\+M\+\_\+\+P\+O\+L\+I\+CY}}~2
+\item 
+\#define \mbox{\hyperlink{drrip_8cc_a9112498b2c771aea64793074315f86a8}{S\+D\+M\+\_\+\+S\+I\+ZE}}~32
+\item 
+\#define \mbox{\hyperlink{drrip_8cc_a2c1fe9aad197e28cd3aa2b971dda82c1}{T\+O\+T\+A\+L\+\_\+\+S\+D\+M\+\_\+\+S\+E\+TS}}~\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}$\ast$ \mbox{\hyperlink{drrip_8cc_adbdccbcfb51275102f59212295b9fb12}{N\+U\+M\+\_\+\+P\+O\+L\+I\+CY}}$\ast$ \mbox{\hyperlink{drrip_8cc_a9112498b2c771aea64793074315f86a8}{S\+D\+M\+\_\+\+S\+I\+ZE}}
+\item 
+\#define \mbox{\hyperlink{drrip_8cc_adf022421a581930e2233760fcd2cc8fc}{B\+I\+P\+\_\+\+M\+AX}}~32
+\item 
+\#define \mbox{\hyperlink{drrip_8cc_a58efaef77b0efdd7d3359515923a32b2}{P\+S\+E\+L\+\_\+\+W\+I\+D\+TH}}~10
+\item 
+\#define \mbox{\hyperlink{drrip_8cc_a3ce0d5b10a490007564efc00967437b3}{P\+S\+E\+L\+\_\+\+M\+AX}}~((1 $<$$<$ \mbox{\hyperlink{drrip_8cc_a58efaef77b0efdd7d3359515923a32b2}{P\+S\+E\+L\+\_\+\+W\+I\+D\+TH}}) -\/ 1)
+\item 
+\#define \mbox{\hyperlink{drrip_8cc_a96c49d6d9b85c113f051600155c49433}{P\+S\+E\+L\+\_\+\+T\+H\+RS}}~\mbox{\hyperlink{drrip_8cc_a3ce0d5b10a490007564efc00967437b3}{P\+S\+E\+L\+\_\+\+M\+AX}} / 2
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+std\+::map$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, unsigned $>$ \mbox{\hyperlink{drrip_8cc_a3723f6af2fbfaa67fd54909ce5942487}{bip\+\_\+counter}}
+\item 
+std\+::map$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, std\+::vector$<$ std\+::size\+\_\+t $>$ $>$ \mbox{\hyperlink{drrip_8cc_ae65427ff0d7835d486235cb30e1f74c0}{rand\+\_\+sets}}
+\item 
+std\+::map$<$ std\+::pair$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, std\+::size\+\_\+t $>$, unsigned $>$ \mbox{\hyperlink{drrip_8cc_af1429bb51ced643c3b5170915b78d4b0}{P\+S\+EL}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{drrip_8cc_adf022421a581930e2233760fcd2cc8fc}\label{drrip_8cc_adf022421a581930e2233760fcd2cc8fc}} 
+\index{drrip.cc@{drrip.cc}!BIP\_MAX@{BIP\_MAX}}
+\index{BIP\_MAX@{BIP\_MAX}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{BIP\_MAX}{BIP\_MAX}}
+{\footnotesize\ttfamily \#define B\+I\+P\+\_\+\+M\+AX~32}
+
+\mbox{\Hypertarget{drrip_8cc_a6afba9fdb9405a75fc47917265ce51a3}\label{drrip_8cc_a6afba9fdb9405a75fc47917265ce51a3}} 
+\index{drrip.cc@{drrip.cc}!maxRRPV@{maxRRPV}}
+\index{maxRRPV@{maxRRPV}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{maxRRPV}{maxRRPV}}
+{\footnotesize\ttfamily \#define max\+R\+R\+PV~3}
+
+\mbox{\Hypertarget{drrip_8cc_adbdccbcfb51275102f59212295b9fb12}\label{drrip_8cc_adbdccbcfb51275102f59212295b9fb12}} 
+\index{drrip.cc@{drrip.cc}!NUM\_POLICY@{NUM\_POLICY}}
+\index{NUM\_POLICY@{NUM\_POLICY}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{NUM\_POLICY}{NUM\_POLICY}}
+{\footnotesize\ttfamily \#define N\+U\+M\+\_\+\+P\+O\+L\+I\+CY~2}
+
+\mbox{\Hypertarget{drrip_8cc_a3ce0d5b10a490007564efc00967437b3}\label{drrip_8cc_a3ce0d5b10a490007564efc00967437b3}} 
+\index{drrip.cc@{drrip.cc}!PSEL\_MAX@{PSEL\_MAX}}
+\index{PSEL\_MAX@{PSEL\_MAX}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{PSEL\_MAX}{PSEL\_MAX}}
+{\footnotesize\ttfamily \#define P\+S\+E\+L\+\_\+\+M\+AX~((1 $<$$<$ \mbox{\hyperlink{drrip_8cc_a58efaef77b0efdd7d3359515923a32b2}{P\+S\+E\+L\+\_\+\+W\+I\+D\+TH}}) -\/ 1)}
+
+\mbox{\Hypertarget{drrip_8cc_a96c49d6d9b85c113f051600155c49433}\label{drrip_8cc_a96c49d6d9b85c113f051600155c49433}} 
+\index{drrip.cc@{drrip.cc}!PSEL\_THRS@{PSEL\_THRS}}
+\index{PSEL\_THRS@{PSEL\_THRS}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{PSEL\_THRS}{PSEL\_THRS}}
+{\footnotesize\ttfamily \#define P\+S\+E\+L\+\_\+\+T\+H\+RS~\mbox{\hyperlink{drrip_8cc_a3ce0d5b10a490007564efc00967437b3}{P\+S\+E\+L\+\_\+\+M\+AX}} / 2}
+
+\mbox{\Hypertarget{drrip_8cc_a58efaef77b0efdd7d3359515923a32b2}\label{drrip_8cc_a58efaef77b0efdd7d3359515923a32b2}} 
+\index{drrip.cc@{drrip.cc}!PSEL\_WIDTH@{PSEL\_WIDTH}}
+\index{PSEL\_WIDTH@{PSEL\_WIDTH}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{PSEL\_WIDTH}{PSEL\_WIDTH}}
+{\footnotesize\ttfamily \#define P\+S\+E\+L\+\_\+\+W\+I\+D\+TH~10}
+
+\mbox{\Hypertarget{drrip_8cc_a9112498b2c771aea64793074315f86a8}\label{drrip_8cc_a9112498b2c771aea64793074315f86a8}} 
+\index{drrip.cc@{drrip.cc}!SDM\_SIZE@{SDM\_SIZE}}
+\index{SDM\_SIZE@{SDM\_SIZE}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{SDM\_SIZE}{SDM\_SIZE}}
+{\footnotesize\ttfamily \#define S\+D\+M\+\_\+\+S\+I\+ZE~32}
+
+\mbox{\Hypertarget{drrip_8cc_a2c1fe9aad197e28cd3aa2b971dda82c1}\label{drrip_8cc_a2c1fe9aad197e28cd3aa2b971dda82c1}} 
+\index{drrip.cc@{drrip.cc}!TOTAL\_SDM\_SETS@{TOTAL\_SDM\_SETS}}
+\index{TOTAL\_SDM\_SETS@{TOTAL\_SDM\_SETS}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{TOTAL\_SDM\_SETS}{TOTAL\_SDM\_SETS}}
+{\footnotesize\ttfamily \#define T\+O\+T\+A\+L\+\_\+\+S\+D\+M\+\_\+\+S\+E\+TS~\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}$\ast$ \mbox{\hyperlink{drrip_8cc_adbdccbcfb51275102f59212295b9fb12}{N\+U\+M\+\_\+\+P\+O\+L\+I\+CY}}$\ast$ \mbox{\hyperlink{drrip_8cc_a9112498b2c771aea64793074315f86a8}{S\+D\+M\+\_\+\+S\+I\+ZE}}}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{drrip_8cc_a3723f6af2fbfaa67fd54909ce5942487}\label{drrip_8cc_a3723f6af2fbfaa67fd54909ce5942487}} 
+\index{drrip.cc@{drrip.cc}!bip\_counter@{bip\_counter}}
+\index{bip\_counter@{bip\_counter}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{bip\_counter}{bip\_counter}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, unsigned$>$ bip\+\_\+counter}
+
+\mbox{\Hypertarget{drrip_8cc_af1429bb51ced643c3b5170915b78d4b0}\label{drrip_8cc_af1429bb51ced643c3b5170915b78d4b0}} 
+\index{drrip.cc@{drrip.cc}!PSEL@{PSEL}}
+\index{PSEL@{PSEL}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{PSEL}{PSEL}}
+{\footnotesize\ttfamily std\+::map$<$std\+::pair$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, std\+::size\+\_\+t$>$, unsigned$>$ P\+S\+EL}
+
+\mbox{\Hypertarget{drrip_8cc_ae65427ff0d7835d486235cb30e1f74c0}\label{drrip_8cc_ae65427ff0d7835d486235cb30e1f74c0}} 
+\index{drrip.cc@{drrip.cc}!rand\_sets@{rand\_sets}}
+\index{rand\_sets@{rand\_sets}!drrip.cc@{drrip.cc}}
+\doxysubsubsection{\texorpdfstring{rand\_sets}{rand\_sets}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, std\+::vector$<$std\+::size\+\_\+t$>$ $>$ rand\+\_\+sets}
+

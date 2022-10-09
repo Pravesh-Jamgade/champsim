@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['tables_1446',['tables',['../hashed__perceptron_8cc.html#a96d9bf9e8a1d2d0d79bd2728a680991c',1,'hashed_perceptron.cc']]],
+  ['tag_1447',['tag',['../classSIGNATURE__TABLE.html#ad7863e5b213ec7e8c9c36f8e61d227d3',1,'SIGNATURE_TABLE::tag()'],['../classBLOCK.html#aa641e57c6f560758863e2ca58056d5e3',1,'BLOCK::tag()'],['../classSIGNATURE__TABLE.html#a788f0bf7a2d5f5a2deb0220e4cf8b3d6',1,'SIGNATURE_TABLE::tag()']]],
+  ['tail_5f_1448',['tail_',['../classchampsim_1_1circular__buffer.html#a32ad763ad64df2b4460c84b76447aa93',1,'champsim::circular_buffer']]],
+  ['target_1449',['target',['../structBASIC__BTB__ENTRY.html#aaa3aa3ebb41170583d95d0cba49dc6c8',1,'BASIC_BTB_ENTRY']]],
+  ['tc_1450',['tc',['../hashed__perceptron_8cc.html#a6cd656d57cc393b5bc7b410b18110bc1',1,'hashed_perceptron.cc']]],
+  ['tcas_1451',['tCAS',['../classMEMORY__CONTROLLER.html#a3de6be61df6326fef91e62046be94914',1,'MEMORY_CONTROLLER']]],
+  ['theta_1452',['THETA',['../perceptron_8cc.html#ac38183986f01b5e17592b28a00b765a4',1,'THETA():&#160;perceptron.cc'],['../hashed__perceptron_8cc.html#a34440442bba710fa115e3cdf537a7b0f',1,'theta():&#160;hashed_perceptron.cc']]],
+  ['to_5freturn_1453',['to_return',['../classPACKET.html#a6a7ceafb4d60bd55c70aef9299ff7f70',1,'PACKET']]],
+  ['total_5fbranch_5ftypes_1454',['total_branch_types',['../classO3__CPU.html#a1abc2dc1642902fd35290184ccb25ede',1,'O3_CPU']]],
+  ['total_5fmiss_5flatency_1455',['total_miss_latency',['../classCACHE.html#a3e709d395e143ac6024c65c2621bcd7a',1,'CACHE::total_miss_latency()'],['../classPageTableWalker.html#a583d22e9dec2b9dad6703d7e0e7e6431',1,'PageTableWalker::total_miss_latency()']]],
+  ['total_5frob_5foccupancy_5fat_5fbranch_5fmispredict_1456',['total_rob_occupancy_at_branch_mispredict',['../classO3__CPU.html#a6a0fca8e9f5754bb50eb3c23d41b5609',1,'O3_CPU']]],
+  ['trace_5ffile_1457',['trace_file',['../classtracereader.html#a666b5becac199274f786edf6825395ac',1,'tracereader']]],
+  ['trace_5fstring_1458',['trace_string',['../classtracereader.html#a07c1fc97759d50f2436d1aea552a86f1',1,'tracereader']]],
+  ['traces_1459',['traces',['../main_8cc.html#a69502d7cd64325f2d275b0e0d80bdeea',1,'main.cc']]],
+  ['tracker_5fsets_1460',['TRACKER_SETS',['../ip__stride_8cc.html#aca8fc162159e3bd5dcebc8f1732d3ab5',1,'ip_stride.cc']]],
+  ['tracker_5fways_1461',['TRACKER_WAYS',['../ip__stride_8cc.html#ad4e680248222a9faf5a06212f36fd8da',1,'ip_stride.cc']]],
+  ['trackers_1462',['trackers',['../ip__stride_8cc.html#a6882c1a09095f7d9a5534a12e09b908b',1,'ip_stride.cc']]],
+  ['translated_1463',['translated',['../structLSQ__ENTRY.html#aef4c795dad6ee53acb73989f12238cb1',1,'LSQ_ENTRY::translated()'],['../structooo__model__instr.html#ad09ed28c7f68bfd63d74829f078ab882',1,'ooo_model_instr::translated()']]],
+  ['translation_5flevel_1464',['translation_level',['../classPACKET.html#a2b64f47d77545551c38a8931b75ff0b6',1,'PACKET']]],
+  ['trcd_1465',['tRCD',['../classMEMORY__CONTROLLER.html#a065e8e2f9312e84bb6d7e43d0897ab7a',1,'MEMORY_CONTROLLER']]],
+  ['trp_1466',['tRP',['../classMEMORY__CONTROLLER.html#aa5407d75476b7758e1efdcb5869e8828',1,'MEMORY_CONTROLLER']]],
+  ['type_1467',['type',['../classPACKET.html#a6d71bcb1051f0342d809311919f3fa84',1,'PACKET::type()'],['../classSAMPLER__class.html#abd2c93e1dbbf02ef8dab42d321c186bc',1,'SAMPLER_class::type()']]]
+];

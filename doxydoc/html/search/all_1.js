@@ -1,0 +1,17 @@
+var searchData=
+[
+  ['access_5fmap_1',['access_map',['../structl2c__va__ampm__lite__region__t.html#a4c1c95f086d0dbc19633340e0d625868',1,'l2c_va_ampm_lite_region_t']]],
+  ['active_5frequest_2',['active_request',['../structDRAM__CHANNEL.html#a33cbb2f8fa7ed795904c62a46e9c14df',1,'DRAM_CHANNEL']]],
+  ['add_5fload_5fqueue_3',['add_load_queue',['../classO3__CPU.html#a80d01da310133393c7cc0e4eec950e7f',1,'O3_CPU']]],
+  ['add_5fmshr_4',['add_mshr',['../classCACHE.html#a14a2a1ab2682c4e568df6bf4d4f0cc49',1,'CACHE']]],
+  ['add_5fpq_5',['add_pq',['../classCACHE.html#a454c927d233980dfd687da97c304963b',1,'CACHE::add_pq()'],['../classMEMORY__CONTROLLER.html#a821681d21c4e9efc8c0980fe4a1ac6ed',1,'MEMORY_CONTROLLER::add_pq()'],['../classMemoryRequestConsumer.html#a64d59e661926c0150ad3041626c10fa2',1,'MemoryRequestConsumer::add_pq()'],['../classPageTableWalker.html#a7bb664d96660c2cbbad88ccdf8b5f44e',1,'PageTableWalker::add_pq()']]],
+  ['add_5frq_6',['add_rq',['../classCACHE.html#adf224173f8b35bc386945586b9f3b972',1,'CACHE::add_rq()'],['../classMEMORY__CONTROLLER.html#a2706f6755d4ededc12ac6e72f8155821',1,'MEMORY_CONTROLLER::add_rq()'],['../classMemoryRequestConsumer.html#adffc84de8306e1e78f595c312ff8edfd',1,'MemoryRequestConsumer::add_rq()'],['../classPageTableWalker.html#a5addb4e1e3ce4fa0973c988ad8690013',1,'PageTableWalker::add_rq()']]],
+  ['add_5fstore_5fqueue_7',['add_store_queue',['../classO3__CPU.html#ace76d4c4bb699ef5ac00805dcad6d4d9',1,'O3_CPU']]],
+  ['add_5fwq_8',['add_wq',['../classCACHE.html#a13e065d074bb30fdc57411b6bbfb14a1',1,'CACHE::add_wq()'],['../classMEMORY__CONTROLLER.html#a777b7bc61dcbec23fdde5b6c06ed49dc',1,'MEMORY_CONTROLLER::add_wq()'],['../classMemoryRequestConsumer.html#a1af8f6159f3f318bf204926269e2d07e',1,'MemoryRequestConsumer::add_wq()'],['../classPageTableWalker.html#a7c59db1c6d6f974f953c1e368cccc3ad',1,'PageTableWalker::add_wq()']]],
+  ['address_9',['address',['../classPACKET.html#a6c8129856f7bde5f3b3d3340bb4b2740',1,'PACKET::address()'],['../classBLOCK.html#a7d4fd549ede854f564aa5e4ccb23ac46',1,'BLOCK::address()'],['../structO3__CPU_1_1dib__entry__t.html#a4b48fe0ce8883902b07a15025e2d2714',1,'O3_CPU::dib_entry_t::address()'],['../structlookahead__entry.html#a8215e4636de3ff3e60930f528cb4d294',1,'lookahead_entry::address()'],['../classSAMPLER__class.html#a77bf287739769f9035566b3ce8356ffe',1,'SAMPLER_class::address()']]],
+  ['all_5fsimulation_5fcomplete_10',['all_simulation_complete',['../main_8cc.html#a8a6c2db12a8111f1cac02e52c83e8a39',1,'main.cc']]],
+  ['all_5fwarmup_5fcomplete_11',['all_warmup_complete',['../dram__controller_8cc.html#a288edcff66ad3c6f62ce2bf7219e2239',1,'all_warmup_complete():&#160;main.cc'],['../main_8cc.html#a288edcff66ad3c6f62ce2bf7219e2239',1,'all_warmup_complete():&#160;main.cc']]],
+  ['always_5ftaken_12',['always_taken',['../structBASIC__BTB__ENTRY.html#a37774f15278b873db8b074fa72c7d0cd',1,'BASIC_BTB_ENTRY']]],
+  ['argument_5ftype_13',['argument_type',['../structis__valid.html#a4068682b281482db004d7ff40e392524',1,'is_valid::argument_type()'],['../structeq__addr.html#ac916060785a55d98232ceb4808f65602',1,'eq_addr::argument_type()']]],
+  ['asid_14',['asid',['../classPACKET.html#a56ebefa0bd34b301f93bd11b2cd59aa8',1,'PACKET::asid()'],['../structLSQ__ENTRY.html#ac4052c7ceae495d9c7c846d3eec2fdb5',1,'LSQ_ENTRY::asid()'],['../structooo__model__instr.html#a85571016a3258fe4f12d9ee22645972b',1,'ooo_model_instr::asid()'],['../structcloudsuite__instr.html#a1cd85b86ec978f85202fffde36edd569',1,'cloudsuite_instr::asid()']]]
+];

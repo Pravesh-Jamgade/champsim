@@ -1,0 +1,67 @@
+\hypertarget{ip__stride_8cc}{}\doxysection{prefetcher/ip\+\_\+stride/ip\+\_\+stride.cc File Reference}
+\label{ip__stride_8cc}\index{prefetcher/ip\_stride/ip\_stride.cc@{prefetcher/ip\_stride/ip\_stride.cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$array$>$}\newline
+{\ttfamily \#include $<$map$>$}\newline
+{\ttfamily \#include \char`\"{}cache.\+h\char`\"{}}\newline
+Include dependency graph for ip\+\_\+stride.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{ip__stride_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structtracker__entry}{tracker\+\_\+entry}}
+\item 
+struct \mbox{\hyperlink{structlookahead__entry}{lookahead\+\_\+entry}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+constexpr int \mbox{\hyperlink{ip__stride_8cc_a3335cc7d5da0400a912d60b3d8654a41}{P\+R\+E\+F\+E\+T\+C\+H\+\_\+\+D\+E\+G\+R\+EE}} = 3
+\item 
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{ip__stride_8cc_aca8fc162159e3bd5dcebc8f1732d3ab5}{T\+R\+A\+C\+K\+E\+R\+\_\+\+S\+E\+TS}} = 256
+\item 
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{ip__stride_8cc_ad4e680248222a9faf5a06212f36fd8da}{T\+R\+A\+C\+K\+E\+R\+\_\+\+W\+A\+YS}} = 4
+\item 
+std\+::map$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, \mbox{\hyperlink{structlookahead__entry}{lookahead\+\_\+entry}} $>$ \mbox{\hyperlink{ip__stride_8cc_af61ad513728298bece4be3b395ffd684}{lookahead}}
+\item 
+std\+::map$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, std\+::array$<$ \mbox{\hyperlink{structtracker__entry}{tracker\+\_\+entry}}, \mbox{\hyperlink{ip__stride_8cc_aca8fc162159e3bd5dcebc8f1732d3ab5}{T\+R\+A\+C\+K\+E\+R\+\_\+\+S\+E\+TS}} $\ast$\mbox{\hyperlink{ip__stride_8cc_ad4e680248222a9faf5a06212f36fd8da}{T\+R\+A\+C\+K\+E\+R\+\_\+\+W\+A\+YS}} $>$ $>$ \mbox{\hyperlink{ip__stride_8cc_a6882c1a09095f7d9a5534a12e09b908b}{trackers}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{ip__stride_8cc_af61ad513728298bece4be3b395ffd684}\label{ip__stride_8cc_af61ad513728298bece4be3b395ffd684}} 
+\index{ip\_stride.cc@{ip\_stride.cc}!lookahead@{lookahead}}
+\index{lookahead@{lookahead}!ip\_stride.cc@{ip\_stride.cc}}
+\doxysubsubsection{\texorpdfstring{lookahead}{lookahead}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, \mbox{\hyperlink{structlookahead__entry}{lookahead\+\_\+entry}}$>$ lookahead}
+
+\mbox{\Hypertarget{ip__stride_8cc_a3335cc7d5da0400a912d60b3d8654a41}\label{ip__stride_8cc_a3335cc7d5da0400a912d60b3d8654a41}} 
+\index{ip\_stride.cc@{ip\_stride.cc}!PREFETCH\_DEGREE@{PREFETCH\_DEGREE}}
+\index{PREFETCH\_DEGREE@{PREFETCH\_DEGREE}!ip\_stride.cc@{ip\_stride.cc}}
+\doxysubsubsection{\texorpdfstring{PREFETCH\_DEGREE}{PREFETCH\_DEGREE}}
+{\footnotesize\ttfamily constexpr int P\+R\+E\+F\+E\+T\+C\+H\+\_\+\+D\+E\+G\+R\+EE = 3\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{ip__stride_8cc_aca8fc162159e3bd5dcebc8f1732d3ab5}\label{ip__stride_8cc_aca8fc162159e3bd5dcebc8f1732d3ab5}} 
+\index{ip\_stride.cc@{ip\_stride.cc}!TRACKER\_SETS@{TRACKER\_SETS}}
+\index{TRACKER\_SETS@{TRACKER\_SETS}!ip\_stride.cc@{ip\_stride.cc}}
+\doxysubsubsection{\texorpdfstring{TRACKER\_SETS}{TRACKER\_SETS}}
+{\footnotesize\ttfamily constexpr std\+::size\+\_\+t T\+R\+A\+C\+K\+E\+R\+\_\+\+S\+E\+TS = 256\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{ip__stride_8cc_ad4e680248222a9faf5a06212f36fd8da}\label{ip__stride_8cc_ad4e680248222a9faf5a06212f36fd8da}} 
+\index{ip\_stride.cc@{ip\_stride.cc}!TRACKER\_WAYS@{TRACKER\_WAYS}}
+\index{TRACKER\_WAYS@{TRACKER\_WAYS}!ip\_stride.cc@{ip\_stride.cc}}
+\doxysubsubsection{\texorpdfstring{TRACKER\_WAYS}{TRACKER\_WAYS}}
+{\footnotesize\ttfamily constexpr std\+::size\+\_\+t T\+R\+A\+C\+K\+E\+R\+\_\+\+W\+A\+YS = 4\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{ip__stride_8cc_a6882c1a09095f7d9a5534a12e09b908b}\label{ip__stride_8cc_a6882c1a09095f7d9a5534a12e09b908b}} 
+\index{ip\_stride.cc@{ip\_stride.cc}!trackers@{trackers}}
+\index{trackers@{trackers}!ip\_stride.cc@{ip\_stride.cc}}
+\doxysubsubsection{\texorpdfstring{trackers}{trackers}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, std\+::array$<$\mbox{\hyperlink{structtracker__entry}{tracker\+\_\+entry}}, \mbox{\hyperlink{ip__stride_8cc_aca8fc162159e3bd5dcebc8f1732d3ab5}{T\+R\+A\+C\+K\+E\+R\+\_\+\+S\+E\+TS}} $\ast$ \mbox{\hyperlink{ip__stride_8cc_ad4e680248222a9faf5a06212f36fd8da}{T\+R\+A\+C\+K\+E\+R\+\_\+\+W\+A\+YS}}$>$ $>$ trackers}
+

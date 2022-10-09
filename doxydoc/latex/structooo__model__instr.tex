@@ -1,0 +1,289 @@
+\hypertarget{structooo__model__instr}{}\doxysection{ooo\+\_\+model\+\_\+instr Struct Reference}
+\label{structooo__model__instr}\index{ooo\_model\_instr@{ooo\_model\_instr}}
+
+
+{\ttfamily \#include $<$instruction.\+h$>$}
+
+
+
+Collaboration diagram for ooo\+\_\+model\+\_\+instr\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{structooo__model__instr__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structooo__model__instr_aec27b12bea7294031e05b2347677d92a}{ooo\+\_\+model\+\_\+instr}} ()=default
+\item 
+\mbox{\hyperlink{structooo__model__instr_a56ef18cba4c70a282986c24b68dddd43}{ooo\+\_\+model\+\_\+instr}} (uint8\+\_\+t cpu, \mbox{\hyperlink{structinput__instr}{input\+\_\+instr}} instr)
+\item 
+\mbox{\hyperlink{structooo__model__instr_a84cd01cde170afdfd639b9fc877b43e4}{ooo\+\_\+model\+\_\+instr}} (uint8\+\_\+t cpu, \mbox{\hyperlink{structcloudsuite__instr}{cloudsuite\+\_\+instr}} instr)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structooo__model__instr_a1668314797c4d0a2baa293c5e3738b07}{instr\+\_\+id}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structooo__model__instr_adee00e8f2b132d4dad40d9b3949fe6c3}{ip}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structooo__model__instr_a3c41dca2123d4ec1ed636431bc8a4d99}{event\+\_\+cycle}} = 0
+\item 
+bool \mbox{\hyperlink{structooo__model__instr_a30efbb0958ad22698d02b8bde02eb799}{is\+\_\+branch}} = 0
+\item 
+bool \mbox{\hyperlink{structooo__model__instr_ac542b7328d4549cfdb95c0fc9c162b9c}{is\+\_\+memory}} = 0
+\item 
+bool \mbox{\hyperlink{structooo__model__instr_a15687625d88bef5513fc2847eed4028b}{branch\+\_\+taken}} = 0
+\item 
+bool \mbox{\hyperlink{structooo__model__instr_a5bb3dca8dac45274093019c0fb97e326}{branch\+\_\+mispredicted}} = 0
+\item 
+bool \mbox{\hyperlink{structooo__model__instr_a72f2106c9c7ec026bdf94b0fa8cb2ff7}{source\+\_\+added}} \mbox{[}\mbox{\hyperlink{trace__instruction_8h_a0e0288f38894fdce596a5c80a3bce3de}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+O\+U\+R\+C\+ES}}\mbox{]} = \{\}
+\item 
+bool \mbox{\hyperlink{structooo__model__instr_a1f3b26ae17787ad02631f8fd99d32ccf}{destination\+\_\+added}} \mbox{[}\mbox{\hyperlink{trace__instruction_8h_a64023e08ebb6f5a2e4a44bc006fcf22f}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+N\+S\+\_\+\+S\+P\+A\+RC}}\mbox{]} = \{\}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structooo__model__instr_a85571016a3258fe4f12d9ee22645972b}{asid}} \mbox{[}2\mbox{]} = \{std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max(), std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max()\}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structooo__model__instr_a2cf0be4cb76f77cbc597bc23380e5f2c}{branch\+\_\+type}} = \mbox{\hyperlink{instruction_8h_abf3e55377e87629e32a51045cdca0340}{N\+O\+T\+\_\+\+B\+R\+A\+N\+CH}}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structooo__model__instr_a010e6d832c34a26a7649d043cac44556}{branch\+\_\+target}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structooo__model__instr_ad09ed28c7f68bfd63d74829f078ab882}{translated}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structooo__model__instr_aa7457a995366ce46847ad5c4229faaff}{fetched}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structooo__model__instr_ad473765c5108771022e78f1cb3b78143}{decoded}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structooo__model__instr_a6930be39239cd5298d531fe536b3e79f}{scheduled}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structooo__model__instr_a0f6b971bcbee1855b8b453172dad26ed}{executed}} = 0
+\item 
+int \mbox{\hyperlink{structooo__model__instr_a38aa4837a733384f58e186e235487632}{num\+\_\+reg\+\_\+ops}} = 0
+\item 
+int \mbox{\hyperlink{structooo__model__instr_aa953f3b1a5e8685f24fd952de0ed8b9e}{num\+\_\+mem\+\_\+ops}} = 0
+\item 
+int \mbox{\hyperlink{structooo__model__instr_acfcd2354271678083f05190b8382ac49}{num\+\_\+reg\+\_\+dependent}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structooo__model__instr_af59a31df36595cb26771fc7af55f37b0}{destination\+\_\+registers}} \mbox{[}\mbox{\hyperlink{trace__instruction_8h_a64023e08ebb6f5a2e4a44bc006fcf22f}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+N\+S\+\_\+\+S\+P\+A\+RC}}\mbox{]} = \{\}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{structooo__model__instr_a27f3bddcff63bc91201c58fcf2cc1e60}{source\+\_\+registers}} \mbox{[}\mbox{\hyperlink{trace__instruction_8h_a0e0288f38894fdce596a5c80a3bce3de}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+O\+U\+R\+C\+ES}}\mbox{]} = \{\}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator $>$ \mbox{\hyperlink{structooo__model__instr_a5ce82ce7ba3b1355f9b2707595d73991}{registers\+\_\+instrs\+\_\+depend\+\_\+on\+\_\+me}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator $>$ \mbox{\hyperlink{structooo__model__instr_a2842aac23a15f1b46f5447092b6bf658}{memory\+\_\+instrs\+\_\+depend\+\_\+on\+\_\+me}}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structooo__model__instr_a5650c0f4a63131d3e8494785dae09012}{instruction\+\_\+pa}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structooo__model__instr_ae35b638774a17bf44fcae408899b7bfa}{destination\+\_\+memory}} \mbox{[}\mbox{\hyperlink{trace__instruction_8h_a64023e08ebb6f5a2e4a44bc006fcf22f}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+N\+S\+\_\+\+S\+P\+A\+RC}}\mbox{]} = \{\}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structooo__model__instr_af7595b61b8d0a15212361b509c05ef57}{source\+\_\+memory}} \mbox{[}\mbox{\hyperlink{trace__instruction_8h_a0e0288f38894fdce596a5c80a3bce3de}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+O\+U\+R\+C\+ES}}\mbox{]} = \{\}
+\item 
+std\+::array$<$ std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator, \mbox{\hyperlink{trace__instruction_8h_a0e0288f38894fdce596a5c80a3bce3de}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+O\+U\+R\+C\+ES}} $>$ \mbox{\hyperlink{structooo__model__instr_a5af3e793abf47165681dd669e65873ca}{lq\+\_\+index}} = \{\}
+\item 
+std\+::array$<$ std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator, \mbox{\hyperlink{trace__instruction_8h_a64023e08ebb6f5a2e4a44bc006fcf22f}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+N\+S\+\_\+\+S\+P\+A\+RC}} $>$ \mbox{\hyperlink{structooo__model__instr_aa11c8a5523e8307198a3871184a20685}{sq\+\_\+index}} = \{\}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{structooo__model__instr_aec27b12bea7294031e05b2347677d92a}\label{structooo__model__instr_aec27b12bea7294031e05b2347677d92a}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!ooo\_model\_instr@{ooo\_model\_instr}}
+\index{ooo\_model\_instr@{ooo\_model\_instr}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{ooo\_model\_instr()}{ooo\_model\_instr()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily ooo\+\_\+model\+\_\+instr\+::ooo\+\_\+model\+\_\+instr (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+\mbox{\Hypertarget{structooo__model__instr_a56ef18cba4c70a282986c24b68dddd43}\label{structooo__model__instr_a56ef18cba4c70a282986c24b68dddd43}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!ooo\_model\_instr@{ooo\_model\_instr}}
+\index{ooo\_model\_instr@{ooo\_model\_instr}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{ooo\_model\_instr()}{ooo\_model\_instr()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily ooo\+\_\+model\+\_\+instr\+::ooo\+\_\+model\+\_\+instr (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu,  }\item[{\mbox{\hyperlink{structinput__instr}{input\+\_\+instr}}}]{instr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{structooo__model__instr_a84cd01cde170afdfd639b9fc877b43e4}\label{structooo__model__instr_a84cd01cde170afdfd639b9fc877b43e4}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!ooo\_model\_instr@{ooo\_model\_instr}}
+\index{ooo\_model\_instr@{ooo\_model\_instr}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{ooo\_model\_instr()}{ooo\_model\_instr()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily ooo\+\_\+model\+\_\+instr\+::ooo\+\_\+model\+\_\+instr (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu,  }\item[{\mbox{\hyperlink{structcloudsuite__instr}{cloudsuite\+\_\+instr}}}]{instr }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{structooo__model__instr_a85571016a3258fe4f12d9ee22645972b}\label{structooo__model__instr_a85571016a3258fe4f12d9ee22645972b}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!asid@{asid}}
+\index{asid@{asid}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{asid}{asid}}
+{\footnotesize\ttfamily uint8\+\_\+t ooo\+\_\+model\+\_\+instr\+::asid\mbox{[}2\mbox{]} = \{std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max(), std\+::numeric\+\_\+limits$<$uint8\+\_\+t$>$\+::max()\}}
+
+\mbox{\Hypertarget{structooo__model__instr_a5bb3dca8dac45274093019c0fb97e326}\label{structooo__model__instr_a5bb3dca8dac45274093019c0fb97e326}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!branch\_mispredicted@{branch\_mispredicted}}
+\index{branch\_mispredicted@{branch\_mispredicted}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{branch\_mispredicted}{branch\_mispredicted}}
+{\footnotesize\ttfamily bool ooo\+\_\+model\+\_\+instr\+::branch\+\_\+mispredicted = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a15687625d88bef5513fc2847eed4028b}\label{structooo__model__instr_a15687625d88bef5513fc2847eed4028b}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!branch\_taken@{branch\_taken}}
+\index{branch\_taken@{branch\_taken}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{branch\_taken}{branch\_taken}}
+{\footnotesize\ttfamily bool ooo\+\_\+model\+\_\+instr\+::branch\+\_\+taken = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a010e6d832c34a26a7649d043cac44556}\label{structooo__model__instr_a010e6d832c34a26a7649d043cac44556}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!branch\_target@{branch\_target}}
+\index{branch\_target@{branch\_target}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{branch\_target}{branch\_target}}
+{\footnotesize\ttfamily uint64\+\_\+t ooo\+\_\+model\+\_\+instr\+::branch\+\_\+target = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a2cf0be4cb76f77cbc597bc23380e5f2c}\label{structooo__model__instr_a2cf0be4cb76f77cbc597bc23380e5f2c}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!branch\_type@{branch\_type}}
+\index{branch\_type@{branch\_type}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{branch\_type}{branch\_type}}
+{\footnotesize\ttfamily uint8\+\_\+t ooo\+\_\+model\+\_\+instr\+::branch\+\_\+type = \mbox{\hyperlink{instruction_8h_abf3e55377e87629e32a51045cdca0340}{N\+O\+T\+\_\+\+B\+R\+A\+N\+CH}}}
+
+\mbox{\Hypertarget{structooo__model__instr_ad473765c5108771022e78f1cb3b78143}\label{structooo__model__instr_ad473765c5108771022e78f1cb3b78143}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!decoded@{decoded}}
+\index{decoded@{decoded}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{decoded}{decoded}}
+{\footnotesize\ttfamily uint8\+\_\+t ooo\+\_\+model\+\_\+instr\+::decoded = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a1f3b26ae17787ad02631f8fd99d32ccf}\label{structooo__model__instr_a1f3b26ae17787ad02631f8fd99d32ccf}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!destination\_added@{destination\_added}}
+\index{destination\_added@{destination\_added}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{destination\_added}{destination\_added}}
+{\footnotesize\ttfamily bool ooo\+\_\+model\+\_\+instr\+::destination\+\_\+added\mbox{[}\mbox{\hyperlink{trace__instruction_8h_a64023e08ebb6f5a2e4a44bc006fcf22f}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+N\+S\+\_\+\+S\+P\+A\+RC}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{structooo__model__instr_ae35b638774a17bf44fcae408899b7bfa}\label{structooo__model__instr_ae35b638774a17bf44fcae408899b7bfa}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!destination\_memory@{destination\_memory}}
+\index{destination\_memory@{destination\_memory}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{destination\_memory}{destination\_memory}}
+{\footnotesize\ttfamily uint64\+\_\+t ooo\+\_\+model\+\_\+instr\+::destination\+\_\+memory\mbox{[}\mbox{\hyperlink{trace__instruction_8h_a64023e08ebb6f5a2e4a44bc006fcf22f}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+N\+S\+\_\+\+S\+P\+A\+RC}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{structooo__model__instr_af59a31df36595cb26771fc7af55f37b0}\label{structooo__model__instr_af59a31df36595cb26771fc7af55f37b0}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!destination\_registers@{destination\_registers}}
+\index{destination\_registers@{destination\_registers}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{destination\_registers}{destination\_registers}}
+{\footnotesize\ttfamily uint8\+\_\+t ooo\+\_\+model\+\_\+instr\+::destination\+\_\+registers\mbox{[}\mbox{\hyperlink{trace__instruction_8h_a64023e08ebb6f5a2e4a44bc006fcf22f}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+N\+S\+\_\+\+S\+P\+A\+RC}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{structooo__model__instr_a3c41dca2123d4ec1ed636431bc8a4d99}\label{structooo__model__instr_a3c41dca2123d4ec1ed636431bc8a4d99}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!event\_cycle@{event\_cycle}}
+\index{event\_cycle@{event\_cycle}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{event\_cycle}{event\_cycle}}
+{\footnotesize\ttfamily uint64\+\_\+t ooo\+\_\+model\+\_\+instr\+::event\+\_\+cycle = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a0f6b971bcbee1855b8b453172dad26ed}\label{structooo__model__instr_a0f6b971bcbee1855b8b453172dad26ed}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!executed@{executed}}
+\index{executed@{executed}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{executed}{executed}}
+{\footnotesize\ttfamily uint8\+\_\+t ooo\+\_\+model\+\_\+instr\+::executed = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_aa7457a995366ce46847ad5c4229faaff}\label{structooo__model__instr_aa7457a995366ce46847ad5c4229faaff}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!fetched@{fetched}}
+\index{fetched@{fetched}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{fetched}{fetched}}
+{\footnotesize\ttfamily uint8\+\_\+t ooo\+\_\+model\+\_\+instr\+::fetched = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a1668314797c4d0a2baa293c5e3738b07}\label{structooo__model__instr_a1668314797c4d0a2baa293c5e3738b07}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!instr\_id@{instr\_id}}
+\index{instr\_id@{instr\_id}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{instr\_id}{instr\_id}}
+{\footnotesize\ttfamily uint64\+\_\+t ooo\+\_\+model\+\_\+instr\+::instr\+\_\+id = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a5650c0f4a63131d3e8494785dae09012}\label{structooo__model__instr_a5650c0f4a63131d3e8494785dae09012}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!instruction\_pa@{instruction\_pa}}
+\index{instruction\_pa@{instruction\_pa}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{instruction\_pa}{instruction\_pa}}
+{\footnotesize\ttfamily uint64\+\_\+t ooo\+\_\+model\+\_\+instr\+::instruction\+\_\+pa = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_adee00e8f2b132d4dad40d9b3949fe6c3}\label{structooo__model__instr_adee00e8f2b132d4dad40d9b3949fe6c3}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!ip@{ip}}
+\index{ip@{ip}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{ip}{ip}}
+{\footnotesize\ttfamily uint64\+\_\+t ooo\+\_\+model\+\_\+instr\+::ip = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a30efbb0958ad22698d02b8bde02eb799}\label{structooo__model__instr_a30efbb0958ad22698d02b8bde02eb799}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!is\_branch@{is\_branch}}
+\index{is\_branch@{is\_branch}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{is\_branch}{is\_branch}}
+{\footnotesize\ttfamily bool ooo\+\_\+model\+\_\+instr\+::is\+\_\+branch = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_ac542b7328d4549cfdb95c0fc9c162b9c}\label{structooo__model__instr_ac542b7328d4549cfdb95c0fc9c162b9c}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!is\_memory@{is\_memory}}
+\index{is\_memory@{is\_memory}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{is\_memory}{is\_memory}}
+{\footnotesize\ttfamily bool ooo\+\_\+model\+\_\+instr\+::is\+\_\+memory = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a5af3e793abf47165681dd669e65873ca}\label{structooo__model__instr_a5af3e793abf47165681dd669e65873ca}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!lq\_index@{lq\_index}}
+\index{lq\_index@{lq\_index}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{lq\_index}{lq\_index}}
+{\footnotesize\ttfamily std\+::array$<$std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$\+::iterator, \mbox{\hyperlink{trace__instruction_8h_a0e0288f38894fdce596a5c80a3bce3de}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+O\+U\+R\+C\+ES}}$>$ ooo\+\_\+model\+\_\+instr\+::lq\+\_\+index = \{\}}
+
+\mbox{\Hypertarget{structooo__model__instr_a2842aac23a15f1b46f5447092b6bf658}\label{structooo__model__instr_a2842aac23a15f1b46f5447092b6bf658}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!memory\_instrs\_depend\_on\_me@{memory\_instrs\_depend\_on\_me}}
+\index{memory\_instrs\_depend\_on\_me@{memory\_instrs\_depend\_on\_me}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{memory\_instrs\_depend\_on\_me}{memory\_instrs\_depend\_on\_me}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}$>$\+::iterator$>$ ooo\+\_\+model\+\_\+instr\+::memory\+\_\+instrs\+\_\+depend\+\_\+on\+\_\+me}
+
+\mbox{\Hypertarget{structooo__model__instr_aa953f3b1a5e8685f24fd952de0ed8b9e}\label{structooo__model__instr_aa953f3b1a5e8685f24fd952de0ed8b9e}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!num\_mem\_ops@{num\_mem\_ops}}
+\index{num\_mem\_ops@{num\_mem\_ops}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{num\_mem\_ops}{num\_mem\_ops}}
+{\footnotesize\ttfamily int ooo\+\_\+model\+\_\+instr\+::num\+\_\+mem\+\_\+ops = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_acfcd2354271678083f05190b8382ac49}\label{structooo__model__instr_acfcd2354271678083f05190b8382ac49}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!num\_reg\_dependent@{num\_reg\_dependent}}
+\index{num\_reg\_dependent@{num\_reg\_dependent}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{num\_reg\_dependent}{num\_reg\_dependent}}
+{\footnotesize\ttfamily int ooo\+\_\+model\+\_\+instr\+::num\+\_\+reg\+\_\+dependent = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a38aa4837a733384f58e186e235487632}\label{structooo__model__instr_a38aa4837a733384f58e186e235487632}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!num\_reg\_ops@{num\_reg\_ops}}
+\index{num\_reg\_ops@{num\_reg\_ops}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{num\_reg\_ops}{num\_reg\_ops}}
+{\footnotesize\ttfamily int ooo\+\_\+model\+\_\+instr\+::num\+\_\+reg\+\_\+ops = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a5ce82ce7ba3b1355f9b2707595d73991}\label{structooo__model__instr_a5ce82ce7ba3b1355f9b2707595d73991}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!registers\_instrs\_depend\_on\_me@{registers\_instrs\_depend\_on\_me}}
+\index{registers\_instrs\_depend\_on\_me@{registers\_instrs\_depend\_on\_me}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{registers\_instrs\_depend\_on\_me}{registers\_instrs\_depend\_on\_me}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}$>$\+::iterator$>$ ooo\+\_\+model\+\_\+instr\+::registers\+\_\+instrs\+\_\+depend\+\_\+on\+\_\+me}
+
+\mbox{\Hypertarget{structooo__model__instr_a6930be39239cd5298d531fe536b3e79f}\label{structooo__model__instr_a6930be39239cd5298d531fe536b3e79f}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!scheduled@{scheduled}}
+\index{scheduled@{scheduled}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{scheduled}{scheduled}}
+{\footnotesize\ttfamily uint8\+\_\+t ooo\+\_\+model\+\_\+instr\+::scheduled = 0}
+
+\mbox{\Hypertarget{structooo__model__instr_a72f2106c9c7ec026bdf94b0fa8cb2ff7}\label{structooo__model__instr_a72f2106c9c7ec026bdf94b0fa8cb2ff7}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!source\_added@{source\_added}}
+\index{source\_added@{source\_added}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{source\_added}{source\_added}}
+{\footnotesize\ttfamily bool ooo\+\_\+model\+\_\+instr\+::source\+\_\+added\mbox{[}\mbox{\hyperlink{trace__instruction_8h_a0e0288f38894fdce596a5c80a3bce3de}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+O\+U\+R\+C\+ES}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{structooo__model__instr_af7595b61b8d0a15212361b509c05ef57}\label{structooo__model__instr_af7595b61b8d0a15212361b509c05ef57}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!source\_memory@{source\_memory}}
+\index{source\_memory@{source\_memory}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{source\_memory}{source\_memory}}
+{\footnotesize\ttfamily uint64\+\_\+t ooo\+\_\+model\+\_\+instr\+::source\+\_\+memory\mbox{[}\mbox{\hyperlink{trace__instruction_8h_a0e0288f38894fdce596a5c80a3bce3de}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+O\+U\+R\+C\+ES}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{structooo__model__instr_a27f3bddcff63bc91201c58fcf2cc1e60}\label{structooo__model__instr_a27f3bddcff63bc91201c58fcf2cc1e60}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!source\_registers@{source\_registers}}
+\index{source\_registers@{source\_registers}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{source\_registers}{source\_registers}}
+{\footnotesize\ttfamily uint8\+\_\+t ooo\+\_\+model\+\_\+instr\+::source\+\_\+registers\mbox{[}\mbox{\hyperlink{trace__instruction_8h_a0e0288f38894fdce596a5c80a3bce3de}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+O\+U\+R\+C\+ES}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{structooo__model__instr_aa11c8a5523e8307198a3871184a20685}\label{structooo__model__instr_aa11c8a5523e8307198a3871184a20685}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!sq\_index@{sq\_index}}
+\index{sq\_index@{sq\_index}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{sq\_index}{sq\_index}}
+{\footnotesize\ttfamily std\+::array$<$std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$\+::iterator, \mbox{\hyperlink{trace__instruction_8h_a64023e08ebb6f5a2e4a44bc006fcf22f}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+N\+S\+\_\+\+S\+P\+A\+RC}}$>$ ooo\+\_\+model\+\_\+instr\+::sq\+\_\+index = \{\}}
+
+\mbox{\Hypertarget{structooo__model__instr_ad09ed28c7f68bfd63d74829f078ab882}\label{structooo__model__instr_ad09ed28c7f68bfd63d74829f078ab882}} 
+\index{ooo\_model\_instr@{ooo\_model\_instr}!translated@{translated}}
+\index{translated@{translated}!ooo\_model\_instr@{ooo\_model\_instr}}
+\doxysubsubsection{\texorpdfstring{translated}{translated}}
+{\footnotesize\ttfamily uint8\+\_\+t ooo\+\_\+model\+\_\+instr\+::translated = 0}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{instruction_8h}{instruction.\+h}}\end{DoxyCompactItemize}

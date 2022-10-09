@@ -1,0 +1,101 @@
+\hypertarget{perceptron_8cc}{}\doxysection{branch/perceptron/perceptron.cc File Reference}
+\label{perceptron_8cc}\index{branch/perceptron/perceptron.cc@{branch/perceptron/perceptron.cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$array$>$}\newline
+{\ttfamily \#include $<$bitset$>$}\newline
+{\ttfamily \#include $<$deque$>$}\newline
+{\ttfamily \#include $<$map$>$}\newline
+{\ttfamily \#include \char`\"{}ooo\+\_\+cpu.\+h\char`\"{}}\newline
+Include dependency graph for perceptron.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{perceptron_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classperceptron}{perceptron$<$ T, H\+I\+S\+T\+L\+E\+N, B\+I\+T\+S $>$}}
+\item 
+struct \mbox{\hyperlink{structperceptron__state}{perceptron\+\_\+state}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY}} = 24
+\item 
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{perceptron_8cc_a4415c0beeb5b72cbc8619adff7b293c4}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+B\+I\+TS}} = 8
+\item 
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{perceptron_8cc_a56c4f7f5221fb9df187e72d0219342a8}{N\+U\+M\+\_\+\+P\+E\+R\+C\+E\+P\+T\+R\+O\+NS}} = 163
+\item 
+constexpr int \mbox{\hyperlink{perceptron_8cc_ac38183986f01b5e17592b28a00b765a4}{T\+H\+E\+TA}} = 1.\+93 $\ast$ \mbox{\hyperlink{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY}} + 14
+\item 
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{perceptron_8cc_a6c6ef618a04f6b3464cd96b272a48078}{N\+U\+M\+\_\+\+U\+P\+D\+A\+T\+E\+\_\+\+E\+N\+T\+R\+I\+ES}} = 100
+\item 
+std\+::map$<$ \mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}} $\ast$, std\+::array$<$ \mbox{\hyperlink{classperceptron}{perceptron}}$<$ int, \mbox{\hyperlink{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY}}, \mbox{\hyperlink{perceptron_8cc_a4415c0beeb5b72cbc8619adff7b293c4}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+B\+I\+TS}} $>$, \mbox{\hyperlink{perceptron_8cc_a56c4f7f5221fb9df187e72d0219342a8}{N\+U\+M\+\_\+\+P\+E\+R\+C\+E\+P\+T\+R\+O\+NS}} $>$ $>$ \mbox{\hyperlink{perceptron_8cc_ab49644ba00e0c8cf307f02d8f424f4bf}{perceptrons}}
+\item 
+std\+::map$<$ \mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}} $\ast$, std\+::deque$<$ \mbox{\hyperlink{structperceptron__state}{perceptron\+\_\+state}} $>$ $>$ \mbox{\hyperlink{perceptron_8cc_afa5902b6723b2eb8861dab729100c3e2}{perceptron\+\_\+state\+\_\+buf}}
+\item 
+std\+::map$<$ \mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}} $\ast$, std\+::bitset$<$ \mbox{\hyperlink{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY}} $>$ $>$ \mbox{\hyperlink{perceptron_8cc_a47425c0fccb02d466621d63a7a850792}{spec\+\_\+global\+\_\+history}}
+\item 
+std\+::map$<$ \mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}} $\ast$, std\+::bitset$<$ \mbox{\hyperlink{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY}} $>$ $>$ \mbox{\hyperlink{perceptron_8cc_a869b7be51d9cf07a0702941349928286}{global\+\_\+history}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{perceptron_8cc_a869b7be51d9cf07a0702941349928286}\label{perceptron_8cc_a869b7be51d9cf07a0702941349928286}} 
+\index{perceptron.cc@{perceptron.cc}!global\_history@{global\_history}}
+\index{global\_history@{global\_history}!perceptron.cc@{perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{global\_history}{global\_history}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}}$\ast$, std\+::bitset$<$\mbox{\hyperlink{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY}}$>$ $>$ global\+\_\+history}
+
+\mbox{\Hypertarget{perceptron_8cc_a56c4f7f5221fb9df187e72d0219342a8}\label{perceptron_8cc_a56c4f7f5221fb9df187e72d0219342a8}} 
+\index{perceptron.cc@{perceptron.cc}!NUM\_PERCEPTRONS@{NUM\_PERCEPTRONS}}
+\index{NUM\_PERCEPTRONS@{NUM\_PERCEPTRONS}!perceptron.cc@{perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{NUM\_PERCEPTRONS}{NUM\_PERCEPTRONS}}
+{\footnotesize\ttfamily constexpr std\+::size\+\_\+t N\+U\+M\+\_\+\+P\+E\+R\+C\+E\+P\+T\+R\+O\+NS = 163\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{perceptron_8cc_a6c6ef618a04f6b3464cd96b272a48078}\label{perceptron_8cc_a6c6ef618a04f6b3464cd96b272a48078}} 
+\index{perceptron.cc@{perceptron.cc}!NUM\_UPDATE\_ENTRIES@{NUM\_UPDATE\_ENTRIES}}
+\index{NUM\_UPDATE\_ENTRIES@{NUM\_UPDATE\_ENTRIES}!perceptron.cc@{perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{NUM\_UPDATE\_ENTRIES}{NUM\_UPDATE\_ENTRIES}}
+{\footnotesize\ttfamily constexpr std\+::size\+\_\+t N\+U\+M\+\_\+\+U\+P\+D\+A\+T\+E\+\_\+\+E\+N\+T\+R\+I\+ES = 100\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{perceptron_8cc_a4415c0beeb5b72cbc8619adff7b293c4}\label{perceptron_8cc_a4415c0beeb5b72cbc8619adff7b293c4}} 
+\index{perceptron.cc@{perceptron.cc}!PERCEPTRON\_BITS@{PERCEPTRON\_BITS}}
+\index{PERCEPTRON\_BITS@{PERCEPTRON\_BITS}!perceptron.cc@{perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{PERCEPTRON\_BITS}{PERCEPTRON\_BITS}}
+{\footnotesize\ttfamily constexpr std\+::size\+\_\+t P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+B\+I\+TS = 8\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}\label{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}} 
+\index{perceptron.cc@{perceptron.cc}!PERCEPTRON\_HISTORY@{PERCEPTRON\_HISTORY}}
+\index{PERCEPTRON\_HISTORY@{PERCEPTRON\_HISTORY}!perceptron.cc@{perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{PERCEPTRON\_HISTORY}{PERCEPTRON\_HISTORY}}
+{\footnotesize\ttfamily constexpr std\+::size\+\_\+t P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY = 24\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{perceptron_8cc_afa5902b6723b2eb8861dab729100c3e2}\label{perceptron_8cc_afa5902b6723b2eb8861dab729100c3e2}} 
+\index{perceptron.cc@{perceptron.cc}!perceptron\_state\_buf@{perceptron\_state\_buf}}
+\index{perceptron\_state\_buf@{perceptron\_state\_buf}!perceptron.cc@{perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{perceptron\_state\_buf}{perceptron\_state\_buf}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}}$\ast$, std\+::deque$<$\mbox{\hyperlink{structperceptron__state}{perceptron\+\_\+state}}$>$ $>$ perceptron\+\_\+state\+\_\+buf}
+
+\mbox{\Hypertarget{perceptron_8cc_ab49644ba00e0c8cf307f02d8f424f4bf}\label{perceptron_8cc_ab49644ba00e0c8cf307f02d8f424f4bf}} 
+\index{perceptron.cc@{perceptron.cc}!perceptrons@{perceptrons}}
+\index{perceptrons@{perceptrons}!perceptron.cc@{perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{perceptrons}{perceptrons}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}}$\ast$, std\+::array$<$\mbox{\hyperlink{classperceptron}{perceptron}}$<$int, \mbox{\hyperlink{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY}}, \mbox{\hyperlink{perceptron_8cc_a4415c0beeb5b72cbc8619adff7b293c4}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+B\+I\+TS}}$>$, \mbox{\hyperlink{perceptron_8cc_a56c4f7f5221fb9df187e72d0219342a8}{N\+U\+M\+\_\+\+P\+E\+R\+C\+E\+P\+T\+R\+O\+NS}}$>$ $>$ perceptrons}
+
+\mbox{\Hypertarget{perceptron_8cc_a47425c0fccb02d466621d63a7a850792}\label{perceptron_8cc_a47425c0fccb02d466621d63a7a850792}} 
+\index{perceptron.cc@{perceptron.cc}!spec\_global\_history@{spec\_global\_history}}
+\index{spec\_global\_history@{spec\_global\_history}!perceptron.cc@{perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{spec\_global\_history}{spec\_global\_history}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}}$\ast$, std\+::bitset$<$\mbox{\hyperlink{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY}}$>$ $>$ spec\+\_\+global\+\_\+history}
+
+\mbox{\Hypertarget{perceptron_8cc_ac38183986f01b5e17592b28a00b765a4}\label{perceptron_8cc_ac38183986f01b5e17592b28a00b765a4}} 
+\index{perceptron.cc@{perceptron.cc}!THETA@{THETA}}
+\index{THETA@{THETA}!perceptron.cc@{perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{THETA}{THETA}}
+{\footnotesize\ttfamily constexpr int T\+H\+E\+TA = 1.\+93 $\ast$ \mbox{\hyperlink{perceptron_8cc_af3b7e6beaffa2bf8a84dd64b9834c590}{P\+E\+R\+C\+E\+P\+T\+R\+O\+N\+\_\+\+H\+I\+S\+T\+O\+RY}} + 14\hspace{0.3cm}{\ttfamily [constexpr]}}
+

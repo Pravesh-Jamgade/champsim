@@ -1,0 +1,181 @@
+\hypertarget{classVirtualMemory}{}\doxysection{Virtual\+Memory Class Reference}
+\label{classVirtualMemory}\index{VirtualMemory@{VirtualMemory}}
+
+
+{\ttfamily \#include $<$vmem.\+h$>$}
+
+
+
+Collaboration diagram for Virtual\+Memory\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classVirtualMemory__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classVirtualMemory_a13be2e2f1b8f859ef67174d692030f3f}{Virtual\+Memory}} (uint64\+\_\+t capacity, uint64\+\_\+t pg\+\_\+size, uint32\+\_\+t page\+\_\+table\+\_\+levels, uint64\+\_\+t random\+\_\+seed, uint64\+\_\+t \mbox{\hyperlink{classVirtualMemory_af27b8103c6bfb1d9947d663fc45368c8}{minor\+\_\+fault\+\_\+penalty}})
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classVirtualMemory_ace0b225c0c12d1eefd4dc7a08afe85ff}{shamt}} (uint32\+\_\+t level) const
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classVirtualMemory_ae44f73d5347bb64b35babb9b3e0327c8}{get\+\_\+offset}} (uint64\+\_\+t vaddr, uint32\+\_\+t level) const
+\item 
+std\+::pair$<$ uint64\+\_\+t, bool $>$ \mbox{\hyperlink{classVirtualMemory_aad676e49e348cc88d9158da21b0a9f13}{va\+\_\+to\+\_\+pa}} (uint32\+\_\+t cpu\+\_\+num, uint64\+\_\+t vaddr)
+\item 
+std\+::pair$<$ uint64\+\_\+t, bool $>$ \mbox{\hyperlink{classVirtualMemory_a59183ff8efa9073dca9c09be54673f8a}{get\+\_\+pte\+\_\+pa}} (uint32\+\_\+t cpu\+\_\+num, uint64\+\_\+t vaddr, uint32\+\_\+t level)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const uint64\+\_\+t \mbox{\hyperlink{classVirtualMemory_af27b8103c6bfb1d9947d663fc45368c8}{minor\+\_\+fault\+\_\+penalty}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classVirtualMemory_a5856345acd48848c8a12bac61cf80032}{pt\+\_\+levels}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classVirtualMemory_a236aabe5ffe2e23b3c5906c798ab5106}{page\+\_\+size}}
+\item 
+std\+::deque$<$ uint64\+\_\+t $>$ \mbox{\hyperlink{classVirtualMemory_a060cf245f2db4342d45e980436deb62a}{ppage\+\_\+free\+\_\+list}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classVirtualMemory_a13be2e2f1b8f859ef67174d692030f3f}\label{classVirtualMemory_a13be2e2f1b8f859ef67174d692030f3f}} 
+\index{VirtualMemory@{VirtualMemory}!VirtualMemory@{VirtualMemory}}
+\index{VirtualMemory@{VirtualMemory}!VirtualMemory@{VirtualMemory}}
+\doxysubsubsection{\texorpdfstring{VirtualMemory()}{VirtualMemory()}}
+{\footnotesize\ttfamily Virtual\+Memory\+::\+Virtual\+Memory (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{capacity,  }\item[{uint64\+\_\+t}]{pg\+\_\+size,  }\item[{uint32\+\_\+t}]{page\+\_\+table\+\_\+levels,  }\item[{uint64\+\_\+t}]{random\+\_\+seed,  }\item[{uint64\+\_\+t}]{minor\+\_\+fault\+\_\+penalty }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=315pt]{classVirtualMemory_a13be2e2f1b8f859ef67174d692030f3f_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classVirtualMemory_ae44f73d5347bb64b35babb9b3e0327c8}\label{classVirtualMemory_ae44f73d5347bb64b35babb9b3e0327c8}} 
+\index{VirtualMemory@{VirtualMemory}!get\_offset@{get\_offset}}
+\index{get\_offset@{get\_offset}!VirtualMemory@{VirtualMemory}}
+\doxysubsubsection{\texorpdfstring{get\_offset()}{get\_offset()}}
+{\footnotesize\ttfamily uint64\+\_\+t Virtual\+Memory\+::get\+\_\+offset (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{vaddr,  }\item[{uint32\+\_\+t}]{level }\end{DoxyParamCaption}) const}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classVirtualMemory_ae44f73d5347bb64b35babb9b3e0327c8_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classVirtualMemory_ae44f73d5347bb64b35babb9b3e0327c8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classVirtualMemory_a59183ff8efa9073dca9c09be54673f8a}\label{classVirtualMemory_a59183ff8efa9073dca9c09be54673f8a}} 
+\index{VirtualMemory@{VirtualMemory}!get\_pte\_pa@{get\_pte\_pa}}
+\index{get\_pte\_pa@{get\_pte\_pa}!VirtualMemory@{VirtualMemory}}
+\doxysubsubsection{\texorpdfstring{get\_pte\_pa()}{get\_pte\_pa()}}
+{\footnotesize\ttfamily std\+::pair$<$ uint64\+\_\+t, bool $>$ Virtual\+Memory\+::get\+\_\+pte\+\_\+pa (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{cpu\+\_\+num,  }\item[{uint64\+\_\+t}]{vaddr,  }\item[{uint32\+\_\+t}]{level }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classVirtualMemory_a59183ff8efa9073dca9c09be54673f8a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classVirtualMemory_a59183ff8efa9073dca9c09be54673f8a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classVirtualMemory_ace0b225c0c12d1eefd4dc7a08afe85ff}\label{classVirtualMemory_ace0b225c0c12d1eefd4dc7a08afe85ff}} 
+\index{VirtualMemory@{VirtualMemory}!shamt@{shamt}}
+\index{shamt@{shamt}!VirtualMemory@{VirtualMemory}}
+\doxysubsubsection{\texorpdfstring{shamt()}{shamt()}}
+{\footnotesize\ttfamily uint64\+\_\+t Virtual\+Memory\+::shamt (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{level }\end{DoxyParamCaption}) const}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=273pt]{classVirtualMemory_ace0b225c0c12d1eefd4dc7a08afe85ff_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classVirtualMemory_ace0b225c0c12d1eefd4dc7a08afe85ff_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classVirtualMemory_aad676e49e348cc88d9158da21b0a9f13}\label{classVirtualMemory_aad676e49e348cc88d9158da21b0a9f13}} 
+\index{VirtualMemory@{VirtualMemory}!va\_to\_pa@{va\_to\_pa}}
+\index{va\_to\_pa@{va\_to\_pa}!VirtualMemory@{VirtualMemory}}
+\doxysubsubsection{\texorpdfstring{va\_to\_pa()}{va\_to\_pa()}}
+{\footnotesize\ttfamily std\+::pair$<$ uint64\+\_\+t, bool $>$ Virtual\+Memory\+::va\+\_\+to\+\_\+pa (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{cpu\+\_\+num,  }\item[{uint64\+\_\+t}]{vaddr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classVirtualMemory_aad676e49e348cc88d9158da21b0a9f13_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classVirtualMemory_aad676e49e348cc88d9158da21b0a9f13_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classVirtualMemory_af27b8103c6bfb1d9947d663fc45368c8}\label{classVirtualMemory_af27b8103c6bfb1d9947d663fc45368c8}} 
+\index{VirtualMemory@{VirtualMemory}!minor\_fault\_penalty@{minor\_fault\_penalty}}
+\index{minor\_fault\_penalty@{minor\_fault\_penalty}!VirtualMemory@{VirtualMemory}}
+\doxysubsubsection{\texorpdfstring{minor\_fault\_penalty}{minor\_fault\_penalty}}
+{\footnotesize\ttfamily const uint64\+\_\+t Virtual\+Memory\+::minor\+\_\+fault\+\_\+penalty}
+
+\mbox{\Hypertarget{classVirtualMemory_a236aabe5ffe2e23b3c5906c798ab5106}\label{classVirtualMemory_a236aabe5ffe2e23b3c5906c798ab5106}} 
+\index{VirtualMemory@{VirtualMemory}!page\_size@{page\_size}}
+\index{page\_size@{page\_size}!VirtualMemory@{VirtualMemory}}
+\doxysubsubsection{\texorpdfstring{page\_size}{page\_size}}
+{\footnotesize\ttfamily const uint32\+\_\+t Virtual\+Memory\+::page\+\_\+size}
+
+\mbox{\Hypertarget{classVirtualMemory_a060cf245f2db4342d45e980436deb62a}\label{classVirtualMemory_a060cf245f2db4342d45e980436deb62a}} 
+\index{VirtualMemory@{VirtualMemory}!ppage\_free\_list@{ppage\_free\_list}}
+\index{ppage\_free\_list@{ppage\_free\_list}!VirtualMemory@{VirtualMemory}}
+\doxysubsubsection{\texorpdfstring{ppage\_free\_list}{ppage\_free\_list}}
+{\footnotesize\ttfamily std\+::deque$<$uint64\+\_\+t$>$ Virtual\+Memory\+::ppage\+\_\+free\+\_\+list}
+
+\mbox{\Hypertarget{classVirtualMemory_a5856345acd48848c8a12bac61cf80032}\label{classVirtualMemory_a5856345acd48848c8a12bac61cf80032}} 
+\index{VirtualMemory@{VirtualMemory}!pt\_levels@{pt\_levels}}
+\index{pt\_levels@{pt\_levels}!VirtualMemory@{VirtualMemory}}
+\doxysubsubsection{\texorpdfstring{pt\_levels}{pt\_levels}}
+{\footnotesize\ttfamily const uint32\+\_\+t Virtual\+Memory\+::pt\+\_\+levels}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{vmem_8h}{vmem.\+h}}\item 
+src/\mbox{\hyperlink{vmem_8cc}{vmem.\+cc}}\end{DoxyCompactItemize}

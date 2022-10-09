@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['cache_947',['CACHE',['../classCACHE.html#a87a69b3971e5b0760910c57b05680f51',1,'CACHE']]],
+  ['cachebus_948',['CacheBus',['../classCacheBus.html#a7c61f1cfe5c8e46ad06256faf322a352',1,'CacheBus']]],
+  ['cbegin_949',['cbegin',['../classchampsim_1_1circular__buffer.html#aa72e49f7e9c7111d3502f0dc45be26e7',1,'champsim::circular_buffer::cbegin()'],['../classchampsim_1_1delay__queue.html#ab2bc7f4a683e59fa11d7068a651aa586',1,'champsim::delay_queue::cbegin()']]],
+  ['ceil_950',['ceil',['../namespacedetail.html#a9454e017825f39e50c67a93fe6ea4cd7',1,'detail']]],
+  ['cend_951',['cend',['../classchampsim_1_1circular__buffer.html#a2a2bb43ac6320ce7a8be160772d40d52',1,'champsim::circular_buffer::cend()'],['../classchampsim_1_1delay__queue.html#aa62a9f4fa8cdd503a1ecb233cd83b485',1,'champsim::delay_queue::cend()']]],
+  ['cend_5fready_952',['cend_ready',['../classchampsim_1_1delay__queue.html#a437fc24177f24c2b31153ec273cb176e',1,'champsim::delay_queue']]],
+  ['check_953',['check',['../classPREFETCH__FILTER.html#af040867b5b03b687959dcea93184ed67',1,'PREFETCH_FILTER']]],
+  ['check_5fdependency_954',['check_dependency',['../classO3__CPU.html#a0f01d6b078a319b06a90f20782044b45',1,'O3_CPU']]],
+  ['check_5fdib_955',['check_dib',['../classO3__CPU.html#a672d6845de1502b1e89a9f453fe1c12d',1,'O3_CPU']]],
+  ['check_5fentry_956',['check_entry',['../classGLOBAL__REGISTER.html#a1f105f1c95d3dbbb95a04cb7876eebda',1,'GLOBAL_REGISTER']]],
+  ['check_5fhit_957',['check_hit',['../classPagingStructureCache.html#ab2803014394bd3eb6138ca41b3fea4df',1,'PagingStructureCache']]],
+  ['check_5fsame_5fpage_958',['check_same_page',['../kpcp_8cc.html#a4238efdd733520123b811cdfea5be8a2',1,'kpcp.cc']]],
+  ['circ_5finc_959',['circ_inc',['../classchampsim_1_1circular__buffer.html#a625ec239d504344d73594bd20225464c',1,'champsim::circular_buffer']]],
+  ['circular_5fbuffer_960',['circular_buffer',['../classchampsim_1_1circular__buffer.html#a0a190ae361c3fe238332366d0dbcd660',1,'champsim::circular_buffer']]],
+  ['circular_5fbuffer_5fiterator_961',['circular_buffer_iterator',['../classchampsim_1_1circular__buffer__iterator.html#ad242bbabb940b0e7d83dce3dc0fbda93',1,'champsim::circular_buffer_iterator::circular_buffer_iterator()'],['../classchampsim_1_1circular__buffer__iterator.html#a1aa399a4a021f61a12419c9eb72bda0d',1,'champsim::circular_buffer_iterator::circular_buffer_iterator(cbuf_type *buf, typename cbuf_type::size_type pos)'],['../classchampsim_1_1circular__buffer__iterator.html#acf1bfcc5a448927812ff82c222a5c17e',1,'champsim::circular_buffer_iterator::circular_buffer_iterator(const circular_buffer_iterator&lt; typename std::remove_const&lt; T &gt;::type &gt; &amp;other)']]],
+  ['clear_962',['clear',['../classchampsim_1_1circular__buffer.html#a38a422f64397b59694b37c10073bfd61',1,'champsim::circular_buffer::clear()'],['../classchampsim_1_1delay__queue.html#a3cfbcb24bc9209b7752cef9b94f6b0d2',1,'champsim::delay_queue::clear()']]],
+  ['close_963',['close',['../classtracereader.html#a8ec39bd95e3ee0a0c2bca8b1786cb84a',1,'tracereader']]],
+  ['cloudsuite_5ftracereader_964',['cloudsuite_tracereader',['../classcloudsuite__tracereader.html#a26eb5b562df3037100ce384804e73c5b',1,'cloudsuite_tracereader']]],
+  ['complete_5finflight_5finstruction_965',['complete_inflight_instruction',['../classO3__CPU.html#ab971ee3a75071bb5ff5a3267e281ac4d',1,'O3_CPU']]],
+  ['crbegin_966',['crbegin',['../classchampsim_1_1circular__buffer.html#aef4a54508ad71ad3cf2ea0bbe032f392',1,'champsim::circular_buffer::crbegin()'],['../classchampsim_1_1delay__queue.html#abad420ef478637a48f91d5e7d24f41f2',1,'champsim::delay_queue::crbegin()']]],
+  ['crend_967',['crend',['../classchampsim_1_1circular__buffer.html#ad51d614f198565d7cb637ac53a80aff7',1,'champsim::circular_buffer::crend()'],['../classchampsim_1_1delay__queue.html#ab50192841a887715fa5f1b2b9e11f451',1,'champsim::delay_queue::crend()']]],
+  ['crend_5fready_968',['crend_ready',['../classchampsim_1_1delay__queue.html#a09ae59adea7d8ed4889ef180867b3e9e',1,'champsim::delay_queue']]]
+];

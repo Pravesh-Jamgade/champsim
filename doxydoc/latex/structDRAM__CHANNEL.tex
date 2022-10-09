@@ -1,0 +1,131 @@
+\hypertarget{structDRAM__CHANNEL}{}\doxysection{D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+EL Struct Reference}
+\label{structDRAM__CHANNEL}\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+
+
+{\ttfamily \#include $<$dram\+\_\+controller.\+h$>$}
+
+
+
+Collaboration diagram for D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+EL\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{structDRAM__CHANNEL__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $>$ \mbox{\hyperlink{structDRAM__CHANNEL_a032ce0b4074449778afdbfad30c85173}{WQ}} \{\mbox{\hyperlink{champsim__constants_8h_ad2fc6120efa8f4ef57903e88c18efbd3}{D\+R\+A\+M\+\_\+\+W\+Q\+\_\+\+S\+I\+ZE}}\}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $>$ \mbox{\hyperlink{structDRAM__CHANNEL_a85872ce66c19bac017cc232751bdbac2}{RQ}} \{\mbox{\hyperlink{champsim__constants_8h_ad3ef3f6927c6b30ef8c2ba89cddfbec6}{D\+R\+A\+M\+\_\+\+R\+Q\+\_\+\+S\+I\+ZE}}\}
+\item 
+std\+::array$<$ \mbox{\hyperlink{structBANK__REQUEST}{B\+A\+N\+K\+\_\+\+R\+E\+Q\+U\+E\+ST}}, \mbox{\hyperlink{champsim__constants_8h_a34669e5de56bed50463044926485978a}{D\+R\+A\+M\+\_\+\+R\+A\+N\+KS}} $\ast$\mbox{\hyperlink{champsim__constants_8h_a33ae4161e09f4660d999cc15f5f02fa8}{D\+R\+A\+M\+\_\+\+B\+A\+N\+KS}} $>$ \mbox{\hyperlink{structDRAM__CHANNEL_ae4735382c05c76c4b15b86cdf2b3d123}{bank\+\_\+request}} = \{\}
+\item 
+std\+::array$<$ \mbox{\hyperlink{structBANK__REQUEST}{B\+A\+N\+K\+\_\+\+R\+E\+Q\+U\+E\+ST}}, \mbox{\hyperlink{champsim__constants_8h_a34669e5de56bed50463044926485978a}{D\+R\+A\+M\+\_\+\+R\+A\+N\+KS}} $\ast$\mbox{\hyperlink{champsim__constants_8h_a33ae4161e09f4660d999cc15f5f02fa8}{D\+R\+A\+M\+\_\+\+B\+A\+N\+KS}} $>$\+::iterator \mbox{\hyperlink{structDRAM__CHANNEL_a33cbb2f8fa7ed795904c62a46e9c14df}{active\+\_\+request}} = std\+::end(\mbox{\hyperlink{structDRAM__CHANNEL_ae4735382c05c76c4b15b86cdf2b3d123}{bank\+\_\+request}})
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structDRAM__CHANNEL_a3fbffc59ee1a1dc0b6c9d736a07b26cf}{dbus\+\_\+cycle\+\_\+available}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structDRAM__CHANNEL_ab8e3663c30336ef14f6c5b5ebfe34f6b}{dbus\+\_\+cycle\+\_\+congested}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{structDRAM__CHANNEL_a4306c93b40eb8c54043ff16c7a838901}{dbus\+\_\+count\+\_\+congested}} = 0
+\item 
+bool \mbox{\hyperlink{structDRAM__CHANNEL_afa9535ac94eaaff7c9ca410f08649fbb}{write\+\_\+mode}} = false
+\item 
+unsigned \mbox{\hyperlink{structDRAM__CHANNEL_ad06f8b53c3703002a70e6c777566cb63}{W\+Q\+\_\+\+R\+O\+W\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+H\+IT}} = 0
+\item 
+unsigned \mbox{\hyperlink{structDRAM__CHANNEL_a9857eb71b24c8b0eae5379d9efd50791}{W\+Q\+\_\+\+R\+O\+W\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+M\+I\+SS}} = 0
+\item 
+unsigned \mbox{\hyperlink{structDRAM__CHANNEL_ac73919eb714d520614d3797d13fec27d}{R\+Q\+\_\+\+R\+O\+W\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+H\+IT}} = 0
+\item 
+unsigned \mbox{\hyperlink{structDRAM__CHANNEL_ac205d73e17fe65a0de517fc3f9004864}{R\+Q\+\_\+\+R\+O\+W\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+M\+I\+SS}} = 0
+\item 
+unsigned \mbox{\hyperlink{structDRAM__CHANNEL_a12bcdc6272ac5d95b69230501ef10cbe}{W\+Q\+\_\+\+F\+U\+LL}} = 0
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{structDRAM__CHANNEL_a33cbb2f8fa7ed795904c62a46e9c14df}\label{structDRAM__CHANNEL_a33cbb2f8fa7ed795904c62a46e9c14df}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!active\_request@{active\_request}}
+\index{active\_request@{active\_request}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{active\_request}{active\_request}}
+{\footnotesize\ttfamily std\+::array$<$\mbox{\hyperlink{structBANK__REQUEST}{B\+A\+N\+K\+\_\+\+R\+E\+Q\+U\+E\+ST}}, \mbox{\hyperlink{champsim__constants_8h_a34669e5de56bed50463044926485978a}{D\+R\+A\+M\+\_\+\+R\+A\+N\+KS}}$\ast$ \mbox{\hyperlink{champsim__constants_8h_a33ae4161e09f4660d999cc15f5f02fa8}{D\+R\+A\+M\+\_\+\+B\+A\+N\+KS}}$>$\+::iterator D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::active\+\_\+request = std\+::end(\mbox{\hyperlink{structDRAM__CHANNEL_ae4735382c05c76c4b15b86cdf2b3d123}{bank\+\_\+request}})}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_ae4735382c05c76c4b15b86cdf2b3d123}\label{structDRAM__CHANNEL_ae4735382c05c76c4b15b86cdf2b3d123}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!bank\_request@{bank\_request}}
+\index{bank\_request@{bank\_request}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{bank\_request}{bank\_request}}
+{\footnotesize\ttfamily std\+::array$<$\mbox{\hyperlink{structBANK__REQUEST}{B\+A\+N\+K\+\_\+\+R\+E\+Q\+U\+E\+ST}}, \mbox{\hyperlink{champsim__constants_8h_a34669e5de56bed50463044926485978a}{D\+R\+A\+M\+\_\+\+R\+A\+N\+KS}}$\ast$ \mbox{\hyperlink{champsim__constants_8h_a33ae4161e09f4660d999cc15f5f02fa8}{D\+R\+A\+M\+\_\+\+B\+A\+N\+KS}}$>$ D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::bank\+\_\+request = \{\}}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_a4306c93b40eb8c54043ff16c7a838901}\label{structDRAM__CHANNEL_a4306c93b40eb8c54043ff16c7a838901}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!dbus\_count\_congested@{dbus\_count\_congested}}
+\index{dbus\_count\_congested@{dbus\_count\_congested}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{dbus\_count\_congested}{dbus\_count\_congested}}
+{\footnotesize\ttfamily uint64\+\_\+t D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::dbus\+\_\+count\+\_\+congested = 0}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_a3fbffc59ee1a1dc0b6c9d736a07b26cf}\label{structDRAM__CHANNEL_a3fbffc59ee1a1dc0b6c9d736a07b26cf}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!dbus\_cycle\_available@{dbus\_cycle\_available}}
+\index{dbus\_cycle\_available@{dbus\_cycle\_available}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{dbus\_cycle\_available}{dbus\_cycle\_available}}
+{\footnotesize\ttfamily uint64\+\_\+t D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::dbus\+\_\+cycle\+\_\+available = 0}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_ab8e3663c30336ef14f6c5b5ebfe34f6b}\label{structDRAM__CHANNEL_ab8e3663c30336ef14f6c5b5ebfe34f6b}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!dbus\_cycle\_congested@{dbus\_cycle\_congested}}
+\index{dbus\_cycle\_congested@{dbus\_cycle\_congested}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{dbus\_cycle\_congested}{dbus\_cycle\_congested}}
+{\footnotesize\ttfamily uint64\+\_\+t D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::dbus\+\_\+cycle\+\_\+congested = 0}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_a85872ce66c19bac017cc232751bdbac2}\label{structDRAM__CHANNEL_a85872ce66c19bac017cc232751bdbac2}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!RQ@{RQ}}
+\index{RQ@{RQ}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{RQ}{RQ}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}}$>$ D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::\+RQ \{\mbox{\hyperlink{champsim__constants_8h_ad3ef3f6927c6b30ef8c2ba89cddfbec6}{D\+R\+A\+M\+\_\+\+R\+Q\+\_\+\+S\+I\+ZE}}\}}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_ac73919eb714d520614d3797d13fec27d}\label{structDRAM__CHANNEL_ac73919eb714d520614d3797d13fec27d}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!RQ\_ROW\_BUFFER\_HIT@{RQ\_ROW\_BUFFER\_HIT}}
+\index{RQ\_ROW\_BUFFER\_HIT@{RQ\_ROW\_BUFFER\_HIT}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{RQ\_ROW\_BUFFER\_HIT}{RQ\_ROW\_BUFFER\_HIT}}
+{\footnotesize\ttfamily unsigned D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::\+R\+Q\+\_\+\+R\+O\+W\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+H\+IT = 0}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_ac205d73e17fe65a0de517fc3f9004864}\label{structDRAM__CHANNEL_ac205d73e17fe65a0de517fc3f9004864}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!RQ\_ROW\_BUFFER\_MISS@{RQ\_ROW\_BUFFER\_MISS}}
+\index{RQ\_ROW\_BUFFER\_MISS@{RQ\_ROW\_BUFFER\_MISS}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{RQ\_ROW\_BUFFER\_MISS}{RQ\_ROW\_BUFFER\_MISS}}
+{\footnotesize\ttfamily unsigned D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::\+R\+Q\+\_\+\+R\+O\+W\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+M\+I\+SS = 0}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_a032ce0b4074449778afdbfad30c85173}\label{structDRAM__CHANNEL_a032ce0b4074449778afdbfad30c85173}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!WQ@{WQ}}
+\index{WQ@{WQ}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{WQ}{WQ}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}}$>$ D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::\+WQ \{\mbox{\hyperlink{champsim__constants_8h_ad2fc6120efa8f4ef57903e88c18efbd3}{D\+R\+A\+M\+\_\+\+W\+Q\+\_\+\+S\+I\+ZE}}\}}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_a12bcdc6272ac5d95b69230501ef10cbe}\label{structDRAM__CHANNEL_a12bcdc6272ac5d95b69230501ef10cbe}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!WQ\_FULL@{WQ\_FULL}}
+\index{WQ\_FULL@{WQ\_FULL}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{WQ\_FULL}{WQ\_FULL}}
+{\footnotesize\ttfamily unsigned D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::\+W\+Q\+\_\+\+F\+U\+LL = 0}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_ad06f8b53c3703002a70e6c777566cb63}\label{structDRAM__CHANNEL_ad06f8b53c3703002a70e6c777566cb63}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!WQ\_ROW\_BUFFER\_HIT@{WQ\_ROW\_BUFFER\_HIT}}
+\index{WQ\_ROW\_BUFFER\_HIT@{WQ\_ROW\_BUFFER\_HIT}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{WQ\_ROW\_BUFFER\_HIT}{WQ\_ROW\_BUFFER\_HIT}}
+{\footnotesize\ttfamily unsigned D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::\+W\+Q\+\_\+\+R\+O\+W\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+H\+IT = 0}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_a9857eb71b24c8b0eae5379d9efd50791}\label{structDRAM__CHANNEL_a9857eb71b24c8b0eae5379d9efd50791}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!WQ\_ROW\_BUFFER\_MISS@{WQ\_ROW\_BUFFER\_MISS}}
+\index{WQ\_ROW\_BUFFER\_MISS@{WQ\_ROW\_BUFFER\_MISS}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{WQ\_ROW\_BUFFER\_MISS}{WQ\_ROW\_BUFFER\_MISS}}
+{\footnotesize\ttfamily unsigned D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::\+W\+Q\+\_\+\+R\+O\+W\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+\+M\+I\+SS = 0}
+
+\mbox{\Hypertarget{structDRAM__CHANNEL_afa9535ac94eaaff7c9ca410f08649fbb}\label{structDRAM__CHANNEL_afa9535ac94eaaff7c9ca410f08649fbb}} 
+\index{DRAM\_CHANNEL@{DRAM\_CHANNEL}!write\_mode@{write\_mode}}
+\index{write\_mode@{write\_mode}!DRAM\_CHANNEL@{DRAM\_CHANNEL}}
+\doxysubsubsection{\texorpdfstring{write\_mode}{write\_mode}}
+{\footnotesize\ttfamily bool D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+::write\+\_\+mode = false}
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{dram__controller_8h}{dram\+\_\+controller.\+h}}\end{DoxyCompactItemize}

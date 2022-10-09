@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['name_1322',['NAME',['../classCACHE.html#a677946ec359a5d63efb5fca5d8f796cd',1,'CACHE::NAME()'],['../classPageTableWalker.html#aacd471bf55e06b98f309dd3805b31f9c',1,'PageTableWalker::NAME()']]],
+  ['next_5fprint_5finstruction_1323',['next_print_instruction',['../classO3__CPU.html#ad4bf4f900d6e82f7cd5b1241f78d3f80',1,'O3_CPU']]],
+  ['not_5fenough_5fconf_1324',['not_enough_conf',['../kpcp_8cc.html#afa29d5b4d8ba23d0d6bf4fe55617d544',1,'kpcp.cc']]],
+  ['num_5fbranch_1325',['num_branch',['../classO3__CPU.html#a12eca07a6d1b4c68802d0560ed9521ac',1,'O3_CPU']]],
+  ['num_5finstr_5fdestinations_1326',['NUM_INSTR_DESTINATIONS',['../trace__instruction_8h.html#a27b4eb73b09fa14bcceccab20c4d4051',1,'trace_instruction.h']]],
+  ['num_5finstr_5fdestinations_5fsparc_1327',['NUM_INSTR_DESTINATIONS_SPARC',['../trace__instruction_8h.html#a64023e08ebb6f5a2e4a44bc006fcf22f',1,'trace_instruction.h']]],
+  ['num_5finstr_5fsources_1328',['NUM_INSTR_SOURCES',['../trace__instruction_8h.html#a0e0288f38894fdce596a5c80a3bce3de',1,'trace_instruction.h']]],
+  ['num_5fmem_5fops_1329',['num_mem_ops',['../structooo__model__instr.html#aa953f3b1a5e8685f24fd952de0ed8b9e',1,'ooo_model_instr']]],
+  ['num_5fperceptrons_1330',['NUM_PERCEPTRONS',['../perceptron_8cc.html#a56c4f7f5221fb9df187e72d0219342a8',1,'perceptron.cc']]],
+  ['num_5fpf_1331',['num_pf',['../kpcp_8cc.html#a6fa00fb63336488a97a2eed3352649d5',1,'kpcp.cc']]],
+  ['num_5freg_5fdependent_1332',['num_reg_dependent',['../structooo__model__instr.html#acfcd2354271678083f05190b8382ac49',1,'ooo_model_instr']]],
+  ['num_5freg_5fops_1333',['num_reg_ops',['../structooo__model__instr.html#a38aa4837a733384f58e186e235487632',1,'ooo_model_instr']]],
+  ['num_5fretired_1334',['num_retired',['../classO3__CPU.html#af038f22c02b6f1dabc6de5319faf5aea',1,'O3_CPU']]],
+  ['num_5fset_1335',['NUM_SET',['../classCACHE.html#a27f929e7499b4380bb1eb137789ecc15',1,'CACHE']]],
+  ['num_5fupdate_5fentries_1336',['NUM_UPDATE_ENTRIES',['../perceptron_8cc.html#a6c6ef618a04f6b3464cd96b272a48078',1,'perceptron.cc']]],
+  ['num_5fway_1337',['NUM_WAY',['../classCACHE.html#ab1d55261a8d0cf765fd90115c9a59679',1,'CACHE']]]
+];

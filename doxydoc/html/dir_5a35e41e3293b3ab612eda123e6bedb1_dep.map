@@ -1,0 +1,20 @@
+<map id="prefetcher" name="prefetcher">
+<area shape="rect" id="node2" href="dir_ec8d15e735f45b9dcecf500e2c777099.html" title="ip_stride" alt="" coords="807,27,886,75"/>
+<area shape="rect" id="node10" href="dir_bfccd401955b95cf8c75461437045ac0.html" title="inc" alt="" coords="425,123,497,171"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000009_000007.html" title="1" alt="" coords="512,143,521,158"/>
+<area shape="rect" id="node3" href="dir_c990d3c7539326139b47a705c581cdcf.html" title="kpcp" alt="" coords="711,27,783,75"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000010_000007.html" title="2" alt="" coords="512,138,522,153"/>
+<area shape="rect" id="node4" href="dir_ee0a3a698da08db3b86dd15a41fb40e7.html" title="next_line" alt="" coords="604,27,687,75"/>
+<area shape="rect" id="edge8-headlabel" href="dir_000011_000007.html" title="1" alt="" coords="513,124,523,138"/>
+<area shape="rect" id="node5" href="dir_eea87e3e1e38851f53aa655465338b73.html" title="next_line_instr" alt="" coords="462,27,581,75"/>
+<area shape="rect" id="edge7-headlabel" href="dir_000012_000007.html" title="1" alt="" coords="488,105,498,119"/>
+<area shape="rect" id="node6" href="dir_e8097cf218d4ebec5177921c51fe4f7b.html" title="no" alt="" coords="365,27,437,75"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000013_000007.html" title="1" alt="" coords="439,95,449,110"/>
+<area shape="rect" id="node7" href="dir_a0c68b667ce17182e9a4a72c66048415.html" title="no_instr" alt="" coords="267,27,341,75"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000014_000007.html" title="1" alt="" coords="408,103,418,117"/>
+<area shape="rect" id="node8" href="dir_f78961c61c6a0858d168d2032937e110.html" title="spp_dev" alt="" coords="166,27,242,75"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000015_000007.html" title="1" alt="" coords="405,119,414,133"/>
+<area shape="rect" id="node9" href="dir_873163e862fe352eba78fd1e68c93f5c.html" title="va_ampm_lite" alt="" coords="27,27,141,75"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000016_000007.html" title="1" alt="" coords="404,123,413,138"/>
+<area shape="rect" id="clust1" href="dir_5a35e41e3293b3ab612eda123e6bedb1.html" alt="" coords="16,16,1011,85"/>
+</map>

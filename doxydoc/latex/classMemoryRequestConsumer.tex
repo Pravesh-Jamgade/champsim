@@ -1,0 +1,162 @@
+\hypertarget{classMemoryRequestConsumer}{}\doxysection{Memory\+Request\+Consumer Class Reference}
+\label{classMemoryRequestConsumer}\index{MemoryRequestConsumer@{MemoryRequestConsumer}}
+
+
+{\ttfamily \#include $<$memory\+\_\+class.\+h$>$}
+
+
+
+Inheritance diagram for Memory\+Request\+Consumer\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMemoryRequestConsumer__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Memory\+Request\+Consumer\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=245pt]{classMemoryRequestConsumer__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual int \mbox{\hyperlink{classMemoryRequestConsumer_adffc84de8306e1e78f595c312ff8edfd}{add\+\_\+rq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet)=0
+\item 
+virtual int \mbox{\hyperlink{classMemoryRequestConsumer_a1af8f6159f3f318bf204926269e2d07e}{add\+\_\+wq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet)=0
+\item 
+virtual int \mbox{\hyperlink{classMemoryRequestConsumer_a64d59e661926c0150ad3041626c10fa2}{add\+\_\+pq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet)=0
+\item 
+virtual uint32\+\_\+t \mbox{\hyperlink{classMemoryRequestConsumer_a44af5bdfa7aa133c0b9f167a5c1c5797}{get\+\_\+occupancy}} (uint8\+\_\+t queue\+\_\+type, uint64\+\_\+t address)=0
+\item 
+virtual uint32\+\_\+t \mbox{\hyperlink{classMemoryRequestConsumer_a644b9e3366e45e6db2dafbf19720bdea}{get\+\_\+size}} (uint8\+\_\+t queue\+\_\+type, uint64\+\_\+t address)=0
+\item 
+\mbox{\hyperlink{classMemoryRequestConsumer_a74a29760774ed07b5006a8fe2b6c18d1}{Memory\+Request\+Consumer}} (unsigned \mbox{\hyperlink{classMemoryRequestConsumer_a93263647de08b7203dab91693de2bcd7}{fill\+\_\+level}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const unsigned \mbox{\hyperlink{classMemoryRequestConsumer_a93263647de08b7203dab91693de2bcd7}{fill\+\_\+level}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classMemoryRequestConsumer_a74a29760774ed07b5006a8fe2b6c18d1}\label{classMemoryRequestConsumer_a74a29760774ed07b5006a8fe2b6c18d1}} 
+\index{MemoryRequestConsumer@{MemoryRequestConsumer}!MemoryRequestConsumer@{MemoryRequestConsumer}}
+\index{MemoryRequestConsumer@{MemoryRequestConsumer}!MemoryRequestConsumer@{MemoryRequestConsumer}}
+\doxysubsubsection{\texorpdfstring{MemoryRequestConsumer()}{MemoryRequestConsumer()}}
+{\footnotesize\ttfamily Memory\+Request\+Consumer\+::\+Memory\+Request\+Consumer (\begin{DoxyParamCaption}\item[{unsigned}]{fill\+\_\+level }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [explicit]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classMemoryRequestConsumer_a64d59e661926c0150ad3041626c10fa2}\label{classMemoryRequestConsumer_a64d59e661926c0150ad3041626c10fa2}} 
+\index{MemoryRequestConsumer@{MemoryRequestConsumer}!add\_pq@{add\_pq}}
+\index{add\_pq@{add\_pq}!MemoryRequestConsumer@{MemoryRequestConsumer}}
+\doxysubsubsection{\texorpdfstring{add\_pq()}{add\_pq()}}
+{\footnotesize\ttfamily virtual int Memory\+Request\+Consumer\+::add\+\_\+pq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classMEMORY__CONTROLLER_a821681d21c4e9efc8c0980fe4a1ac6ed}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}}, \mbox{\hyperlink{classCACHE_a454c927d233980dfd687da97c304963b}{C\+A\+C\+HE}}, and \mbox{\hyperlink{classPageTableWalker_a7bb664d96660c2cbbad88ccdf8b5f44e}{Page\+Table\+Walker}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMemoryRequestConsumer_a64d59e661926c0150ad3041626c10fa2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMemoryRequestConsumer_adffc84de8306e1e78f595c312ff8edfd}\label{classMemoryRequestConsumer_adffc84de8306e1e78f595c312ff8edfd}} 
+\index{MemoryRequestConsumer@{MemoryRequestConsumer}!add\_rq@{add\_rq}}
+\index{add\_rq@{add\_rq}!MemoryRequestConsumer@{MemoryRequestConsumer}}
+\doxysubsubsection{\texorpdfstring{add\_rq()}{add\_rq()}}
+{\footnotesize\ttfamily virtual int Memory\+Request\+Consumer\+::add\+\_\+rq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classMEMORY__CONTROLLER_a2706f6755d4ededc12ac6e72f8155821}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}}, \mbox{\hyperlink{classCACHE_adf224173f8b35bc386945586b9f3b972}{C\+A\+C\+HE}}, and \mbox{\hyperlink{classPageTableWalker_a5addb4e1e3ce4fa0973c988ad8690013}{Page\+Table\+Walker}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMemoryRequestConsumer_adffc84de8306e1e78f595c312ff8edfd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMemoryRequestConsumer_a1af8f6159f3f318bf204926269e2d07e}\label{classMemoryRequestConsumer_a1af8f6159f3f318bf204926269e2d07e}} 
+\index{MemoryRequestConsumer@{MemoryRequestConsumer}!add\_wq@{add\_wq}}
+\index{add\_wq@{add\_wq}!MemoryRequestConsumer@{MemoryRequestConsumer}}
+\doxysubsubsection{\texorpdfstring{add\_wq()}{add\_wq()}}
+{\footnotesize\ttfamily virtual int Memory\+Request\+Consumer\+::add\+\_\+wq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classMEMORY__CONTROLLER_a777b7bc61dcbec23fdde5b6c06ed49dc}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}}, \mbox{\hyperlink{classCACHE_a13e065d074bb30fdc57411b6bbfb14a1}{C\+A\+C\+HE}}, and \mbox{\hyperlink{classPageTableWalker_a7c59db1c6d6f974f953c1e368cccc3ad}{Page\+Table\+Walker}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMemoryRequestConsumer_a1af8f6159f3f318bf204926269e2d07e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMemoryRequestConsumer_a44af5bdfa7aa133c0b9f167a5c1c5797}\label{classMemoryRequestConsumer_a44af5bdfa7aa133c0b9f167a5c1c5797}} 
+\index{MemoryRequestConsumer@{MemoryRequestConsumer}!get\_occupancy@{get\_occupancy}}
+\index{get\_occupancy@{get\_occupancy}!MemoryRequestConsumer@{MemoryRequestConsumer}}
+\doxysubsubsection{\texorpdfstring{get\_occupancy()}{get\_occupancy()}}
+{\footnotesize\ttfamily virtual uint32\+\_\+t Memory\+Request\+Consumer\+::get\+\_\+occupancy (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{queue\+\_\+type,  }\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classMEMORY__CONTROLLER_a493a889c57e872d3f3af97de6eeabfc5}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}}, \mbox{\hyperlink{classPageTableWalker_ab93c537f9e7ae059b2247d811f528425}{Page\+Table\+Walker}}, and \mbox{\hyperlink{classCACHE_a91073baf7efb407f68b2ded06ecaa717}{C\+A\+C\+HE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMemoryRequestConsumer_a44af5bdfa7aa133c0b9f167a5c1c5797_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMemoryRequestConsumer_a644b9e3366e45e6db2dafbf19720bdea}\label{classMemoryRequestConsumer_a644b9e3366e45e6db2dafbf19720bdea}} 
+\index{MemoryRequestConsumer@{MemoryRequestConsumer}!get\_size@{get\_size}}
+\index{get\_size@{get\_size}!MemoryRequestConsumer@{MemoryRequestConsumer}}
+\doxysubsubsection{\texorpdfstring{get\_size()}{get\_size()}}
+{\footnotesize\ttfamily virtual uint32\+\_\+t Memory\+Request\+Consumer\+::get\+\_\+size (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{queue\+\_\+type,  }\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+
+Implemented in \mbox{\hyperlink{classMEMORY__CONTROLLER_a2dc7e699fa828c39b3d99eda8803740f}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}}, \mbox{\hyperlink{classPageTableWalker_ab9fee4027d1e730177b3c1443c005c64}{Page\+Table\+Walker}}, and \mbox{\hyperlink{classCACHE_a6a36d5bdaf6dd5664d936cb7156b4320}{C\+A\+C\+HE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMemoryRequestConsumer_a644b9e3366e45e6db2dafbf19720bdea_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classMemoryRequestConsumer_a93263647de08b7203dab91693de2bcd7}\label{classMemoryRequestConsumer_a93263647de08b7203dab91693de2bcd7}} 
+\index{MemoryRequestConsumer@{MemoryRequestConsumer}!fill\_level@{fill\_level}}
+\index{fill\_level@{fill\_level}!MemoryRequestConsumer@{MemoryRequestConsumer}}
+\doxysubsubsection{\texorpdfstring{fill\_level}{fill\_level}}
+{\footnotesize\ttfamily const unsigned Memory\+Request\+Consumer\+::fill\+\_\+level}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{memory__class_8h}{memory\+\_\+class.\+h}}\end{DoxyCompactItemize}

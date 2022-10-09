@@ -1,0 +1,97 @@
+\hypertarget{ship_8cc}{}\doxysection{replacement/ship/ship.cc File Reference}
+\label{ship_8cc}\index{replacement/ship/ship.cc@{replacement/ship/ship.cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$array$>$}\newline
+{\ttfamily \#include $<$map$>$}\newline
+{\ttfamily \#include $<$utility$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include \char`\"{}cache.\+h\char`\"{}}\newline
+Include dependency graph for ship.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{ship_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classSAMPLER__class}{S\+A\+M\+P\+L\+E\+R\+\_\+class}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{ship_8cc_a6afba9fdb9405a75fc47917265ce51a3}{max\+R\+R\+PV}}~3
+\item 
+\#define \mbox{\hyperlink{ship_8cc_a3e358e95bc29d5ec5f29d9e889ec9102}{S\+H\+C\+T\+\_\+\+S\+I\+ZE}}~16384
+\item 
+\#define \mbox{\hyperlink{ship_8cc_af60a3acf726439d06b1b440425315670}{S\+H\+C\+T\+\_\+\+P\+R\+I\+ME}}~16381
+\item 
+\#define \mbox{\hyperlink{ship_8cc_a13eac0b9f6e450e367483abeaaae623f}{S\+A\+M\+P\+L\+E\+R\+\_\+\+S\+ET}}~(256 $\ast$ \mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}})
+\item 
+\#define \mbox{\hyperlink{ship_8cc_a9fb7f1b6a17bb9ac131baabc2c1b4455}{S\+H\+C\+T\+\_\+\+M\+AX}}~7
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+std\+::map$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, std\+::vector$<$ std\+::size\+\_\+t $>$ $>$ \mbox{\hyperlink{ship_8cc_ae65427ff0d7835d486235cb30e1f74c0}{rand\+\_\+sets}}
+\item 
+std\+::map$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, std\+::vector$<$ \mbox{\hyperlink{classSAMPLER__class}{S\+A\+M\+P\+L\+E\+R\+\_\+class}} $>$ $>$ \mbox{\hyperlink{ship_8cc_aef35d1b4ababa1a67198b37095bd5d32}{sampler}}
+\item 
+std\+::map$<$ std\+::pair$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, std\+::size\+\_\+t $>$, std\+::array$<$ unsigned, \mbox{\hyperlink{ship_8cc_a3e358e95bc29d5ec5f29d9e889ec9102}{S\+H\+C\+T\+\_\+\+S\+I\+ZE}} $>$ $>$ \mbox{\hyperlink{ship_8cc_a2a7a5829db0d200d4d8704fc95c4a3a7}{S\+H\+CT}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{ship_8cc_a6afba9fdb9405a75fc47917265ce51a3}\label{ship_8cc_a6afba9fdb9405a75fc47917265ce51a3}} 
+\index{ship.cc@{ship.cc}!maxRRPV@{maxRRPV}}
+\index{maxRRPV@{maxRRPV}!ship.cc@{ship.cc}}
+\doxysubsubsection{\texorpdfstring{maxRRPV}{maxRRPV}}
+{\footnotesize\ttfamily \#define max\+R\+R\+PV~3}
+
+\mbox{\Hypertarget{ship_8cc_a13eac0b9f6e450e367483abeaaae623f}\label{ship_8cc_a13eac0b9f6e450e367483abeaaae623f}} 
+\index{ship.cc@{ship.cc}!SAMPLER\_SET@{SAMPLER\_SET}}
+\index{SAMPLER\_SET@{SAMPLER\_SET}!ship.cc@{ship.cc}}
+\doxysubsubsection{\texorpdfstring{SAMPLER\_SET}{SAMPLER\_SET}}
+{\footnotesize\ttfamily \#define S\+A\+M\+P\+L\+E\+R\+\_\+\+S\+ET~(256 $\ast$ \mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}})}
+
+\mbox{\Hypertarget{ship_8cc_a9fb7f1b6a17bb9ac131baabc2c1b4455}\label{ship_8cc_a9fb7f1b6a17bb9ac131baabc2c1b4455}} 
+\index{ship.cc@{ship.cc}!SHCT\_MAX@{SHCT\_MAX}}
+\index{SHCT\_MAX@{SHCT\_MAX}!ship.cc@{ship.cc}}
+\doxysubsubsection{\texorpdfstring{SHCT\_MAX}{SHCT\_MAX}}
+{\footnotesize\ttfamily \#define S\+H\+C\+T\+\_\+\+M\+AX~7}
+
+\mbox{\Hypertarget{ship_8cc_af60a3acf726439d06b1b440425315670}\label{ship_8cc_af60a3acf726439d06b1b440425315670}} 
+\index{ship.cc@{ship.cc}!SHCT\_PRIME@{SHCT\_PRIME}}
+\index{SHCT\_PRIME@{SHCT\_PRIME}!ship.cc@{ship.cc}}
+\doxysubsubsection{\texorpdfstring{SHCT\_PRIME}{SHCT\_PRIME}}
+{\footnotesize\ttfamily \#define S\+H\+C\+T\+\_\+\+P\+R\+I\+ME~16381}
+
+\mbox{\Hypertarget{ship_8cc_a3e358e95bc29d5ec5f29d9e889ec9102}\label{ship_8cc_a3e358e95bc29d5ec5f29d9e889ec9102}} 
+\index{ship.cc@{ship.cc}!SHCT\_SIZE@{SHCT\_SIZE}}
+\index{SHCT\_SIZE@{SHCT\_SIZE}!ship.cc@{ship.cc}}
+\doxysubsubsection{\texorpdfstring{SHCT\_SIZE}{SHCT\_SIZE}}
+{\footnotesize\ttfamily \#define S\+H\+C\+T\+\_\+\+S\+I\+ZE~16384}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{ship_8cc_ae65427ff0d7835d486235cb30e1f74c0}\label{ship_8cc_ae65427ff0d7835d486235cb30e1f74c0}} 
+\index{ship.cc@{ship.cc}!rand\_sets@{rand\_sets}}
+\index{rand\_sets@{rand\_sets}!ship.cc@{ship.cc}}
+\doxysubsubsection{\texorpdfstring{rand\_sets}{rand\_sets}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, std\+::vector$<$std\+::size\+\_\+t$>$ $>$ rand\+\_\+sets}
+
+\mbox{\Hypertarget{ship_8cc_aef35d1b4ababa1a67198b37095bd5d32}\label{ship_8cc_aef35d1b4ababa1a67198b37095bd5d32}} 
+\index{ship.cc@{ship.cc}!sampler@{sampler}}
+\index{sampler@{sampler}!ship.cc@{ship.cc}}
+\doxysubsubsection{\texorpdfstring{sampler}{sampler}}
+{\footnotesize\ttfamily std\+::map$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, std\+::vector$<$\mbox{\hyperlink{classSAMPLER__class}{S\+A\+M\+P\+L\+E\+R\+\_\+class}}$>$ $>$ sampler}
+
+\mbox{\Hypertarget{ship_8cc_a2a7a5829db0d200d4d8704fc95c4a3a7}\label{ship_8cc_a2a7a5829db0d200d4d8704fc95c4a3a7}} 
+\index{ship.cc@{ship.cc}!SHCT@{SHCT}}
+\index{SHCT@{SHCT}!ship.cc@{ship.cc}}
+\doxysubsubsection{\texorpdfstring{SHCT}{SHCT}}
+{\footnotesize\ttfamily std\+::map$<$std\+::pair$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, std\+::size\+\_\+t$>$, std\+::array$<$unsigned, \mbox{\hyperlink{ship_8cc_a3e358e95bc29d5ec5f29d9e889ec9102}{S\+H\+C\+T\+\_\+\+S\+I\+ZE}}$>$ $>$ S\+H\+CT}
+

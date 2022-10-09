@@ -1,0 +1,85 @@
+\hypertarget{gshare_8cc}{}\doxysection{branch/gshare/gshare.cc File Reference}
+\label{gshare_8cc}\index{branch/gshare/gshare.cc@{branch/gshare/gshare.cc}}
+{\ttfamily \#include \char`\"{}ooo\+\_\+cpu.\+h\char`\"{}}\newline
+Include dependency graph for gshare.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{gshare_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{gshare_8cc_a7fb3643f4eb914738ee3d318ab2b8daa}{G\+L\+O\+B\+A\+L\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+L\+E\+N\+G\+TH}}~14
+\item 
+\#define \mbox{\hyperlink{gshare_8cc_aa8ba9b4949005254c92061f85fb8ac42}{G\+L\+O\+B\+A\+L\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+M\+A\+SK}}~(1 $<$$<$ \mbox{\hyperlink{gshare_8cc_a7fb3643f4eb914738ee3d318ab2b8daa}{G\+L\+O\+B\+A\+L\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+L\+E\+N\+G\+TH}}) -\/ 1
+\item 
+\#define \mbox{\hyperlink{gshare_8cc_ac02d9e330a9c4875f33e5876fa98a40d}{G\+S\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}}~16384
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+unsigned int \mbox{\hyperlink{gshare_8cc_ab54930a9c6e0668217ef2dca4b8b36dd}{gs\+\_\+table\+\_\+hash}} (uint64\+\_\+t ip, int bh\+\_\+vector)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{gshare_8cc_a3414a5489ae391148661fc23f0f4c16f}{branch\+\_\+history\+\_\+vector}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}
+\item 
+int \mbox{\hyperlink{gshare_8cc_a99c37d7e32032945c73a263c45c5ba8e}{gs\+\_\+history\+\_\+table}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{gshare_8cc_ac02d9e330a9c4875f33e5876fa98a40d}{G\+S\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}}\mbox{]}
+\item 
+int \mbox{\hyperlink{gshare_8cc_a1b890efb6a011853bfcd8b8ea2c71473}{my\+\_\+last\+\_\+prediction}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{gshare_8cc_a7fb3643f4eb914738ee3d318ab2b8daa}\label{gshare_8cc_a7fb3643f4eb914738ee3d318ab2b8daa}} 
+\index{gshare.cc@{gshare.cc}!GLOBAL\_HISTORY\_LENGTH@{GLOBAL\_HISTORY\_LENGTH}}
+\index{GLOBAL\_HISTORY\_LENGTH@{GLOBAL\_HISTORY\_LENGTH}!gshare.cc@{gshare.cc}}
+\doxysubsubsection{\texorpdfstring{GLOBAL\_HISTORY\_LENGTH}{GLOBAL\_HISTORY\_LENGTH}}
+{\footnotesize\ttfamily \#define G\+L\+O\+B\+A\+L\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+L\+E\+N\+G\+TH~14}
+
+\mbox{\Hypertarget{gshare_8cc_aa8ba9b4949005254c92061f85fb8ac42}\label{gshare_8cc_aa8ba9b4949005254c92061f85fb8ac42}} 
+\index{gshare.cc@{gshare.cc}!GLOBAL\_HISTORY\_MASK@{GLOBAL\_HISTORY\_MASK}}
+\index{GLOBAL\_HISTORY\_MASK@{GLOBAL\_HISTORY\_MASK}!gshare.cc@{gshare.cc}}
+\doxysubsubsection{\texorpdfstring{GLOBAL\_HISTORY\_MASK}{GLOBAL\_HISTORY\_MASK}}
+{\footnotesize\ttfamily \#define G\+L\+O\+B\+A\+L\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+M\+A\+SK~(1 $<$$<$ \mbox{\hyperlink{gshare_8cc_a7fb3643f4eb914738ee3d318ab2b8daa}{G\+L\+O\+B\+A\+L\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+L\+E\+N\+G\+TH}}) -\/ 1}
+
+\mbox{\Hypertarget{gshare_8cc_ac02d9e330a9c4875f33e5876fa98a40d}\label{gshare_8cc_ac02d9e330a9c4875f33e5876fa98a40d}} 
+\index{gshare.cc@{gshare.cc}!GS\_HISTORY\_TABLE\_SIZE@{GS\_HISTORY\_TABLE\_SIZE}}
+\index{GS\_HISTORY\_TABLE\_SIZE@{GS\_HISTORY\_TABLE\_SIZE}!gshare.cc@{gshare.cc}}
+\doxysubsubsection{\texorpdfstring{GS\_HISTORY\_TABLE\_SIZE}{GS\_HISTORY\_TABLE\_SIZE}}
+{\footnotesize\ttfamily \#define G\+S\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE~16384}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{gshare_8cc_ab54930a9c6e0668217ef2dca4b8b36dd}\label{gshare_8cc_ab54930a9c6e0668217ef2dca4b8b36dd}} 
+\index{gshare.cc@{gshare.cc}!gs\_table\_hash@{gs\_table\_hash}}
+\index{gs\_table\_hash@{gs\_table\_hash}!gshare.cc@{gshare.cc}}
+\doxysubsubsection{\texorpdfstring{gs\_table\_hash()}{gs\_table\_hash()}}
+{\footnotesize\ttfamily unsigned int gs\+\_\+table\+\_\+hash (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{ip,  }\item[{int}]{bh\+\_\+vector }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{gshare_8cc_a3414a5489ae391148661fc23f0f4c16f}\label{gshare_8cc_a3414a5489ae391148661fc23f0f4c16f}} 
+\index{gshare.cc@{gshare.cc}!branch\_history\_vector@{branch\_history\_vector}}
+\index{branch\_history\_vector@{branch\_history\_vector}!gshare.cc@{gshare.cc}}
+\doxysubsubsection{\texorpdfstring{branch\_history\_vector}{branch\_history\_vector}}
+{\footnotesize\ttfamily int branch\+\_\+history\+\_\+vector\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}}
+
+\mbox{\Hypertarget{gshare_8cc_a99c37d7e32032945c73a263c45c5ba8e}\label{gshare_8cc_a99c37d7e32032945c73a263c45c5ba8e}} 
+\index{gshare.cc@{gshare.cc}!gs\_history\_table@{gs\_history\_table}}
+\index{gs\_history\_table@{gs\_history\_table}!gshare.cc@{gshare.cc}}
+\doxysubsubsection{\texorpdfstring{gs\_history\_table}{gs\_history\_table}}
+{\footnotesize\ttfamily int gs\+\_\+history\+\_\+table\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{gshare_8cc_ac02d9e330a9c4875f33e5876fa98a40d}{G\+S\+\_\+\+H\+I\+S\+T\+O\+R\+Y\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}}\mbox{]}}
+
+\mbox{\Hypertarget{gshare_8cc_a1b890efb6a011853bfcd8b8ea2c71473}\label{gshare_8cc_a1b890efb6a011853bfcd8b8ea2c71473}} 
+\index{gshare.cc@{gshare.cc}!my\_last\_prediction@{my\_last\_prediction}}
+\index{my\_last\_prediction@{my\_last\_prediction}!gshare.cc@{gshare.cc}}
+\doxysubsubsection{\texorpdfstring{my\_last\_prediction}{my\_last\_prediction}}
+{\footnotesize\ttfamily int my\+\_\+last\+\_\+prediction\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}}
+

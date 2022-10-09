@@ -1,0 +1,563 @@
+\hypertarget{classchampsim_1_1delay__queue}{}\doxysection{champsim\+::delay\+\_\+queue$<$ T $>$ Class Template Reference}
+\label{classchampsim_1_1delay__queue}\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+
+
+{\ttfamily \#include $<$delay\+\_\+queue.\+hpp$>$}
+
+
+
+Collaboration diagram for champsim\+::delay\+\_\+queue$<$ T $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=244pt]{classchampsim_1_1delay__queue__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}} = T
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}{size\+\_\+type}} = std\+::size\+\_\+t
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_af3ed60837536f681091ea4b0115870a5}{difference\+\_\+type}} = std\+::ptrdiff\+\_\+t
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}{reference}} = \mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}} \&
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_a658492ee3033f662591612cd1b3030ed}{const\+\_\+reference}} = const \mbox{\hyperlink{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}{reference}}
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_a0444a582c667c417c2b612e06adf90fe}{pointer}} = \mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}} $\ast$
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_a08b4e54f58eefdc1cf4f39ec64cc294f}{const\+\_\+pointer}} = const \mbox{\hyperlink{classchampsim_1_1delay__queue_a0444a582c667c417c2b612e06adf90fe}{pointer}}
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}} = typename \mbox{\hyperlink{classchampsim_1_1circular__buffer}{buffer\+\_\+t}}$<$ \mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}} $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}}
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} = typename \mbox{\hyperlink{classchampsim_1_1circular__buffer}{buffer\+\_\+t}}$<$ \mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}} $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}}
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}{reverse\+\_\+iterator}} = std\+::reverse\+\_\+iterator$<$ \mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}} $>$
+\item 
+using \mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} = std\+::reverse\+\_\+iterator$<$ \mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} $>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a7edc84ec33f93d5d33ce0cf0833ebc73}{delay\+\_\+queue}} (std\+::size\+\_\+t \mbox{\hyperlink{classchampsim_1_1delay__queue_a2c608acaa1dc059cfeae0516674935a8}{size}}, unsigned latency)
+\item 
+constexpr \mbox{\hyperlink{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a2c608acaa1dc059cfeae0516674935a8}{size}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a366e56d56432dafd550dd2955df8caf4}{occupancy}} () const noexcept
+\item 
+bool \mbox{\hyperlink{classchampsim_1_1delay__queue_a6f379e60606da1ecfeb2494a709fdb12}{empty}} () const noexcept
+\item 
+bool \mbox{\hyperlink{classchampsim_1_1delay__queue_a685e92a33f848518ef53fd1bcd5a6272}{full}} () const noexcept
+\item 
+bool \mbox{\hyperlink{classchampsim_1_1delay__queue_ab844aab9cffc5b0784a6f29a906ced0c}{has\+\_\+ready}} () const noexcept
+\item 
+constexpr \mbox{\hyperlink{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1delay__queue_affb58b7d3b52973d62063f94d369255c}{max\+\_\+size}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}{reference}} \mbox{\hyperlink{classchampsim_1_1delay__queue_ac806a291f9ae6ceba544376a695fefec}{front}} ()
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}{reference}} \mbox{\hyperlink{classchampsim_1_1delay__queue_af14af47540e42393e3e957a8875171f6}{back}} ()
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a658492ee3033f662591612cd1b3030ed}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a765029ccefa4cb908f76ba43587ad016}{front}} () const
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a658492ee3033f662591612cd1b3030ed}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a5df1769b5d7a1ba8e92fda2248797b5d}{back}} () const
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_abe6a4658ec0a6987ae9610f9b87fab19}{begin}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_af16e6a18929504107111b8f6c39324bf}{end}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a2d67b1f65a2c5802232657c0f78333ee}{end\+\_\+ready}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a16aca2ef969f61b8fa702a7b08b11568}{begin}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a784754605c3f58995ab9eb30086bdebe}{end}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_acc5c9e926d48b3d2696b45a8ce212432}{end\+\_\+ready}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_ab2bc7f4a683e59fa11d7068a651aa586}{cbegin}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_aa62a9f4fa8cdd503a1ecb233cd83b485}{cend}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a437fc24177f24c2b31153ec273cb176e}{cend\+\_\+ready}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_aa64b561a944bca33955b2bbba4f3d9a4}{rbegin}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a0ef633d8f825da93c6a7f531468dc035}{rend}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a60ffd3938d758062cb035044521792a2}{rend\+\_\+ready}} () noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_aaf8d5f7753bb8ead705c138226531197}{rbegin}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_ab895906197c7dc2c0a7ce579100732fd}{rend}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_abcb30f08e2222c7944fc61482111fbf4}{rend\+\_\+ready}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_abad420ef478637a48f91d5e7d24f41f2}{crbegin}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_ab50192841a887715fa5f1b2b9e11f451}{crend}} () const noexcept
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue_a09ae59adea7d8ed4889ef180867b3e9e}{crend\+\_\+ready}} () const noexcept
+\item 
+void \mbox{\hyperlink{classchampsim_1_1delay__queue_a3cfbcb24bc9209b7752cef9b94f6b0d2}{clear}} ()
+\item 
+void \mbox{\hyperlink{classchampsim_1_1delay__queue_ab3eb47d6c14dfeb11ba322e95033a8a4}{push\+\_\+back}} (const T \&item)
+\item 
+void \mbox{\hyperlink{classchampsim_1_1delay__queue_a3bfeb578c77687c2a7f5bac1834515cb}{push\+\_\+back}} (const T \&\&item)
+\item 
+void \mbox{\hyperlink{classchampsim_1_1delay__queue_ad01ac40e6fc982c6c691de14d65f9d79}{pop\+\_\+front}} ()
+\item 
+void \mbox{\hyperlink{classchampsim_1_1delay__queue_a851751302a46c88c57424357efa4915d}{push\+\_\+back\+\_\+ready}} (const T \&item)
+\item 
+void \mbox{\hyperlink{classchampsim_1_1delay__queue_ab0365186d4451642a30cdb5262e40e2a}{push\+\_\+back\+\_\+ready}} (const T \&\&item)
+\item 
+void \mbox{\hyperlink{classchampsim_1_1delay__queue_acfaf6cfe8d267dd20aab8ba61db17b86}{operate}} ()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}\label{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!const\_iterator@{const\_iterator}}
+\index{const\_iterator@{const\_iterator}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_iterator}{const\_iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} =  typename \mbox{\hyperlink{classchampsim_1_1circular__buffer}{buffer\+\_\+t}}$<$\mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}}$>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a08b4e54f58eefdc1cf4f39ec64cc294f}\label{classchampsim_1_1delay__queue_a08b4e54f58eefdc1cf4f39ec64cc294f}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!const\_pointer@{const\_pointer}}
+\index{const\_pointer@{const\_pointer}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_pointer}{const\_pointer}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a08b4e54f58eefdc1cf4f39ec64cc294f}{const\+\_\+pointer}} =  const \mbox{\hyperlink{classchampsim_1_1delay__queue_a0444a582c667c417c2b612e06adf90fe}{pointer}}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a658492ee3033f662591612cd1b3030ed}\label{classchampsim_1_1delay__queue_a658492ee3033f662591612cd1b3030ed}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!const\_reference@{const\_reference}}
+\index{const\_reference@{const\_reference}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_reference}{const\_reference}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a658492ee3033f662591612cd1b3030ed}{const\+\_\+reference}} =  const \mbox{\hyperlink{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}{reference}}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}\label{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!const\_reverse\_iterator@{const\_reverse\_iterator}}
+\index{const\_reverse\_iterator@{const\_reverse\_iterator}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{const\_reverse\_iterator}{const\_reverse\_iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} =  std\+::reverse\+\_\+iterator$<$\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}}$>$}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_af3ed60837536f681091ea4b0115870a5}\label{classchampsim_1_1delay__queue_af3ed60837536f681091ea4b0115870a5}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!difference\_type@{difference\_type}}
+\index{difference\_type@{difference\_type}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{difference\_type}{difference\_type}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_af3ed60837536f681091ea4b0115870a5}{difference\+\_\+type}} =  std\+::ptrdiff\+\_\+t}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}\label{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!iterator@{iterator}}
+\index{iterator@{iterator}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{iterator}{iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}} =  typename \mbox{\hyperlink{classchampsim_1_1circular__buffer}{buffer\+\_\+t}}$<$\mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}}$>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a0444a582c667c417c2b612e06adf90fe}\label{classchampsim_1_1delay__queue_a0444a582c667c417c2b612e06adf90fe}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!pointer@{pointer}}
+\index{pointer@{pointer}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{pointer}{pointer}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a0444a582c667c417c2b612e06adf90fe}{pointer}} =  \mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}}$\ast$}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}\label{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!reference@{reference}}
+\index{reference@{reference}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{reference}{reference}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}{reference}} =  \mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}}\&}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}\label{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!reverse\_iterator@{reverse\_iterator}}
+\index{reverse\_iterator@{reverse\_iterator}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{reverse\_iterator}{reverse\_iterator}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}{reverse\+\_\+iterator}} =  std\+::reverse\+\_\+iterator$<$\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}}$>$}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}\label{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!size\_type@{size\_type}}
+\index{size\_type@{size\_type}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{size\_type}{size\_type}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}{size\+\_\+type}} =  std\+::size\+\_\+t}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}\label{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!value\_type@{value\_type}}
+\index{value\_type@{value\_type}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{value\_type}{value\_type}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+using \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue_aaf628f2b312ea23e1a3081a22dafef24}{value\+\_\+type}} =  T}
+
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a7edc84ec33f93d5d33ce0cf0833ebc73}\label{classchampsim_1_1delay__queue_a7edc84ec33f93d5d33ce0cf0833ebc73}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!delay\_queue@{delay\_queue}}
+\index{delay\_queue@{delay\_queue}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{delay\_queue()}{delay\_queue()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::\mbox{\hyperlink{classchampsim_1_1delay__queue}{delay\+\_\+queue}} (\begin{DoxyParamCaption}\item[{std\+::size\+\_\+t}]{size,  }\item[{unsigned}]{latency }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_af14af47540e42393e3e957a8875171f6}\label{classchampsim_1_1delay__queue_af14af47540e42393e3e957a8875171f6}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!back@{back}}
+\index{back@{back}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{back()}{back()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}{reference}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::back (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a5df1769b5d7a1ba8e92fda2248797b5d}\label{classchampsim_1_1delay__queue_a5df1769b5d7a1ba8e92fda2248797b5d}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!back@{back}}
+\index{back@{back}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{back()}{back()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a658492ee3033f662591612cd1b3030ed}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::back (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a16aca2ef969f61b8fa702a7b08b11568}\label{classchampsim_1_1delay__queue_a16aca2ef969f61b8fa702a7b08b11568}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!begin@{begin}}
+\index{begin@{begin}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{begin()}{begin()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::begin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_abe6a4658ec0a6987ae9610f9b87fab19}\label{classchampsim_1_1delay__queue_abe6a4658ec0a6987ae9610f9b87fab19}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!begin@{begin}}
+\index{begin@{begin}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{begin()}{begin()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::begin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_abe6a4658ec0a6987ae9610f9b87fab19_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_ab2bc7f4a683e59fa11d7068a651aa586}\label{classchampsim_1_1delay__queue_ab2bc7f4a683e59fa11d7068a651aa586}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!cbegin@{cbegin}}
+\index{cbegin@{cbegin}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{cbegin()}{cbegin()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::cbegin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_aa62a9f4fa8cdd503a1ecb233cd83b485}\label{classchampsim_1_1delay__queue_aa62a9f4fa8cdd503a1ecb233cd83b485}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!cend@{cend}}
+\index{cend@{cend}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{cend()}{cend()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::cend (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a437fc24177f24c2b31153ec273cb176e}\label{classchampsim_1_1delay__queue_a437fc24177f24c2b31153ec273cb176e}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!cend\_ready@{cend\_ready}}
+\index{cend\_ready@{cend\_ready}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{cend\_ready()}{cend\_ready()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::cend\+\_\+ready (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a3cfbcb24bc9209b7752cef9b94f6b0d2}\label{classchampsim_1_1delay__queue_a3cfbcb24bc9209b7752cef9b94f6b0d2}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!clear@{clear}}
+\index{clear@{clear}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{clear()}{clear()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::clear (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_abad420ef478637a48f91d5e7d24f41f2}\label{classchampsim_1_1delay__queue_abad420ef478637a48f91d5e7d24f41f2}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!crbegin@{crbegin}}
+\index{crbegin@{crbegin}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{crbegin()}{crbegin()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::crbegin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_ab50192841a887715fa5f1b2b9e11f451}\label{classchampsim_1_1delay__queue_ab50192841a887715fa5f1b2b9e11f451}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!crend@{crend}}
+\index{crend@{crend}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{crend()}{crend()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::crend (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a09ae59adea7d8ed4889ef180867b3e9e}\label{classchampsim_1_1delay__queue_a09ae59adea7d8ed4889ef180867b3e9e}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!crend\_ready@{crend\_ready}}
+\index{crend\_ready@{crend\_ready}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{crend\_ready()}{crend\_ready()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::crend\+\_\+ready (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a6f379e60606da1ecfeb2494a709fdb12}\label{classchampsim_1_1delay__queue_a6f379e60606da1ecfeb2494a709fdb12}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!empty@{empty}}
+\index{empty@{empty}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{empty()}{empty()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::empty (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_a6f379e60606da1ecfeb2494a709fdb12_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a784754605c3f58995ab9eb30086bdebe}\label{classchampsim_1_1delay__queue_a784754605c3f58995ab9eb30086bdebe}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!end@{end}}
+\index{end@{end}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{end()}{end()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::end (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_af16e6a18929504107111b8f6c39324bf}\label{classchampsim_1_1delay__queue_af16e6a18929504107111b8f6c39324bf}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!end@{end}}
+\index{end@{end}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{end()}{end()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::end (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_af16e6a18929504107111b8f6c39324bf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_acc5c9e926d48b3d2696b45a8ce212432}\label{classchampsim_1_1delay__queue_acc5c9e926d48b3d2696b45a8ce212432}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!end\_ready@{end\_ready}}
+\index{end\_ready@{end\_ready}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{end\_ready()}{end\_ready()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a8a11a0e896c0b5e4adb21309a8746351}{const\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::end\+\_\+ready (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a2d67b1f65a2c5802232657c0f78333ee}\label{classchampsim_1_1delay__queue_a2d67b1f65a2c5802232657c0f78333ee}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!end\_ready@{end\_ready}}
+\index{end\_ready@{end\_ready}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{end\_ready()}{end\_ready()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a407f8e061417d251a153a3c587551e69}{iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::end\+\_\+ready (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_a2d67b1f65a2c5802232657c0f78333ee_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_ac806a291f9ae6ceba544376a695fefec}\label{classchampsim_1_1delay__queue_ac806a291f9ae6ceba544376a695fefec}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!front@{front}}
+\index{front@{front}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{front()}{front()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a61a0461cda0863b098d671a24b088c6a}{reference}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::front (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_ac806a291f9ae6ceba544376a695fefec_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a765029ccefa4cb908f76ba43587ad016}\label{classchampsim_1_1delay__queue_a765029ccefa4cb908f76ba43587ad016}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!front@{front}}
+\index{front@{front}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{front()}{front()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a658492ee3033f662591612cd1b3030ed}{const\+\_\+reference}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::front (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a685e92a33f848518ef53fd1bcd5a6272}\label{classchampsim_1_1delay__queue_a685e92a33f848518ef53fd1bcd5a6272}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!full@{full}}
+\index{full@{full}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{full()}{full()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::full (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_a685e92a33f848518ef53fd1bcd5a6272_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_ab844aab9cffc5b0784a6f29a906ced0c}\label{classchampsim_1_1delay__queue_ab844aab9cffc5b0784a6f29a906ced0c}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!has\_ready@{has\_ready}}
+\index{has\_ready@{has\_ready}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{has\_ready()}{has\_ready()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+bool \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::has\+\_\+ready (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_ab844aab9cffc5b0784a6f29a906ced0c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_affb58b7d3b52973d62063f94d369255c}\label{classchampsim_1_1delay__queue_affb58b7d3b52973d62063f94d369255c}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!max\_size@{max\_size}}
+\index{max\_size@{max\_size}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{max\_size()}{max\_size()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+constexpr \mbox{\hyperlink{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::max\+\_\+size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [constexpr]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a366e56d56432dafd550dd2955df8caf4}\label{classchampsim_1_1delay__queue_a366e56d56432dafd550dd2955df8caf4}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!occupancy@{occupancy}}
+\index{occupancy@{occupancy}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{occupancy()}{occupancy()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::occupancy (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_a366e56d56432dafd550dd2955df8caf4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_acfaf6cfe8d267dd20aab8ba61db17b86}\label{classchampsim_1_1delay__queue_acfaf6cfe8d267dd20aab8ba61db17b86}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!operate@{operate}}
+\index{operate@{operate}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{operate()}{operate()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::operate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_acfaf6cfe8d267dd20aab8ba61db17b86_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_ad01ac40e6fc982c6c691de14d65f9d79}\label{classchampsim_1_1delay__queue_ad01ac40e6fc982c6c691de14d65f9d79}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!pop\_front@{pop\_front}}
+\index{pop\_front@{pop\_front}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{pop\_front()}{pop\_front()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::pop\+\_\+front (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_ad01ac40e6fc982c6c691de14d65f9d79_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a3bfeb578c77687c2a7f5bac1834515cb}\label{classchampsim_1_1delay__queue_a3bfeb578c77687c2a7f5bac1834515cb}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!push\_back@{push\_back}}
+\index{push\_back@{push\_back}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{push\_back()}{push\_back()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::push\+\_\+back (\begin{DoxyParamCaption}\item[{const T \&\&}]{item }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_ab3eb47d6c14dfeb11ba322e95033a8a4}\label{classchampsim_1_1delay__queue_ab3eb47d6c14dfeb11ba322e95033a8a4}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!push\_back@{push\_back}}
+\index{push\_back@{push\_back}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{push\_back()}{push\_back()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::push\+\_\+back (\begin{DoxyParamCaption}\item[{const T \&}]{item }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_ab3eb47d6c14dfeb11ba322e95033a8a4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_ab0365186d4451642a30cdb5262e40e2a}\label{classchampsim_1_1delay__queue_ab0365186d4451642a30cdb5262e40e2a}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!push\_back\_ready@{push\_back\_ready}}
+\index{push\_back\_ready@{push\_back\_ready}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{push\_back\_ready()}{push\_back\_ready()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::push\+\_\+back\+\_\+ready (\begin{DoxyParamCaption}\item[{const T \&\&}]{item }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a851751302a46c88c57424357efa4915d}\label{classchampsim_1_1delay__queue_a851751302a46c88c57424357efa4915d}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!push\_back\_ready@{push\_back\_ready}}
+\index{push\_back\_ready@{push\_back\_ready}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{push\_back\_ready()}{push\_back\_ready()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+void \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::push\+\_\+back\+\_\+ready (\begin{DoxyParamCaption}\item[{const T \&}]{item }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_a851751302a46c88c57424357efa4915d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_aaf8d5f7753bb8ead705c138226531197}\label{classchampsim_1_1delay__queue_aaf8d5f7753bb8ead705c138226531197}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!rbegin@{rbegin}}
+\index{rbegin@{rbegin}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rbegin()}{rbegin()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::rbegin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_aa64b561a944bca33955b2bbba4f3d9a4}\label{classchampsim_1_1delay__queue_aa64b561a944bca33955b2bbba4f3d9a4}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!rbegin@{rbegin}}
+\index{rbegin@{rbegin}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rbegin()}{rbegin()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::rbegin (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_ab895906197c7dc2c0a7ce579100732fd}\label{classchampsim_1_1delay__queue_ab895906197c7dc2c0a7ce579100732fd}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!rend@{rend}}
+\index{rend@{rend}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rend()}{rend()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::rend (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a0ef633d8f825da93c6a7f531468dc035}\label{classchampsim_1_1delay__queue_a0ef633d8f825da93c6a7f531468dc035}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!rend@{rend}}
+\index{rend@{rend}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rend()}{rend()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::rend (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_abcb30f08e2222c7944fc61482111fbf4}\label{classchampsim_1_1delay__queue_abcb30f08e2222c7944fc61482111fbf4}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!rend\_ready@{rend\_ready}}
+\index{rend\_ready@{rend\_ready}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rend\_ready()}{rend\_ready()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_af6a3306142aeddda8ad73b52a53b2e40}{const\+\_\+reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::rend\+\_\+ready (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a60ffd3938d758062cb035044521792a2}\label{classchampsim_1_1delay__queue_a60ffd3938d758062cb035044521792a2}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!rend\_ready@{rend\_ready}}
+\index{rend\_ready@{rend\_ready}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{rend\_ready()}{rend\_ready()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+\mbox{\hyperlink{classchampsim_1_1delay__queue_acd18f7c52300915ea854a3d2590a1239}{reverse\+\_\+iterator}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::rend\+\_\+ready (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [noexcept]}}
+
+\mbox{\Hypertarget{classchampsim_1_1delay__queue_a2c608acaa1dc059cfeae0516674935a8}\label{classchampsim_1_1delay__queue_a2c608acaa1dc059cfeae0516674935a8}} 
+\index{champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}!size@{size}}
+\index{size@{size}!champsim::delay\_queue$<$ T $>$@{champsim::delay\_queue$<$ T $>$}}
+\doxysubsubsection{\texorpdfstring{size()}{size()}}
+{\footnotesize\ttfamily template$<$typename T $>$ \\
+constexpr \mbox{\hyperlink{classchampsim_1_1delay__queue_a02d7f8c4f0a48aa17c499c626d161b40}{size\+\_\+type}} \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ T $>$\+::size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [constexpr]}, {\ttfamily [noexcept]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classchampsim_1_1delay__queue_a2c608acaa1dc059cfeae0516674935a8_icgraph}
+\end{center}
+\end{figure}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{delay__queue_8hpp}{delay\+\_\+queue.\+hpp}}\end{DoxyCompactItemize}

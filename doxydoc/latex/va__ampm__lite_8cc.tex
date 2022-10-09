@@ -1,0 +1,330 @@
+\hypertarget{va__ampm__lite_8cc}{}\doxysection{prefetcher/va\+\_\+ampm\+\_\+lite/va\+\_\+ampm\+\_\+lite.cc File Reference}
+\label{va__ampm__lite_8cc}\index{prefetcher/va\_ampm\_lite/va\_ampm\_lite.cc@{prefetcher/va\_ampm\_lite/va\_ampm\_lite.cc}}
+{\ttfamily \#include \char`\"{}cache.\+h\char`\"{}}\newline
+Include dependency graph for va\+\_\+ampm\+\_\+lite.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structl2c__va__ampm__lite__region__t}{l2c\+\_\+va\+\_\+ampm\+\_\+lite\+\_\+region\+\_\+t}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{va__ampm__lite_8cc_af05eb5556ec784844c31cac028dcf82d}{L2\+C\+\_\+\+V\+A\+\_\+\+A\+M\+P\+M\+\_\+\+L\+I\+T\+E\+\_\+\+R\+E\+G\+I\+O\+N\+\_\+\+C\+O\+U\+NT}}~128
+\item 
+\#define \mbox{\hyperlink{va__ampm__lite_8cc_a7498e2e8da93873a55f5854c1627a929}{L2\+C\+\_\+\+V\+A\+\_\+\+A\+M\+P\+M\+\_\+\+L\+I\+T\+E\+\_\+\+M\+A\+X\+\_\+\+D\+I\+S\+T\+A\+N\+CE}}~256
+\item 
+\#define \mbox{\hyperlink{va__ampm__lite_8cc_ac3f0bd514d33cd4fa05a853a408fd421}{L2\+C\+\_\+\+V\+A\+\_\+\+A\+M\+P\+M\+\_\+\+L\+I\+T\+E\+\_\+\+P\+R\+E\+F\+E\+T\+C\+H\+\_\+\+D\+E\+G\+R\+EE}}~2
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{va__ampm__lite_8cc_ab56ba6619019f3561fc6133ca63f86fc}{l2c\+\_\+prefetch}} (\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$cache, uint64\+\_\+t ip, uint64\+\_\+t base\+\_\+addr, uint64\+\_\+t pf\+\_\+addr, int pf\+\_\+fill\+\_\+level, int pf\+\_\+metadata)
+\item 
+void \mbox{\hyperlink{va__ampm__lite_8cc_ac3e396303e4203ad7279bfdf1835267e}{va\+\_\+ampm\+\_\+allocate\+\_\+region}} (int region\+\_\+index, uint64\+\_\+t allocate\+\_\+vpn)
+\item 
+int \mbox{\hyperlink{va__ampm__lite_8cc_ac6478bb7c2e7f3fe15b1d43f7f759ed7}{va\+\_\+ampm\+\_\+find\+\_\+region}} (uint64\+\_\+t search\+\_\+vpn)
+\item 
+int \mbox{\hyperlink{va__ampm__lite_8cc_aecba0f0e86835ad7effef64e4272aa4e}{va\+\_\+ampm\+\_\+get\+\_\+lru\+\_\+region}} ()
+\item 
+bool \mbox{\hyperlink{va__ampm__lite_8cc_a40eba05aa24018c91ad306ad8fa5157a}{va\+\_\+ampm\+\_\+check\+\_\+access}} (int region\+\_\+index, int region\+\_\+offset)
+\item 
+void \mbox{\hyperlink{va__ampm__lite_8cc_a2ffff20dad3f834860a6b26bc959fd9f}{va\+\_\+ampm\+\_\+set\+\_\+access}} (int region\+\_\+index, int region\+\_\+offset)
+\item 
+void \mbox{\hyperlink{va__ampm__lite_8cc_a7d6aef07b2dc718cb910122ff3d9a237}{va\+\_\+ampm\+\_\+reset\+\_\+access}} (int region\+\_\+index, int region\+\_\+offset)
+\item 
+bool \mbox{\hyperlink{va__ampm__lite_8cc_ac386b967bf334d2b5c9662bd4026e797}{va\+\_\+ampm\+\_\+check\+\_\+prefetch}} (int region\+\_\+index, int region\+\_\+offset)
+\item 
+void \mbox{\hyperlink{va__ampm__lite_8cc_afe5d91d24109f4ef07f216473d048fdd}{va\+\_\+ampm\+\_\+set\+\_\+prefetch}} (int region\+\_\+index, int region\+\_\+offset)
+\item 
+void \mbox{\hyperlink{va__ampm__lite_8cc_a3b8816b16612fe4e5526e6af52518dcd}{va\+\_\+ampm\+\_\+reset\+\_\+prefetch}} (int region\+\_\+index, int region\+\_\+offset)
+\item 
+bool \mbox{\hyperlink{va__ampm__lite_8cc_a1bb4100d39b217e031dd70cc713a372f}{va\+\_\+ampm\+\_\+check\+\_\+cl\+\_\+access}} (uint64\+\_\+t v\+\_\+addr)
+\item 
+void \mbox{\hyperlink{va__ampm__lite_8cc_acd619704a97dc3853d52602eecf1eb72}{va\+\_\+ampm\+\_\+set\+\_\+cl\+\_\+access}} (uint64\+\_\+t v\+\_\+addr)
+\item 
+void \mbox{\hyperlink{va__ampm__lite_8cc_a2a031441020e701b172134a42db3043d}{va\+\_\+ampm\+\_\+reset\+\_\+cl\+\_\+access}} (uint64\+\_\+t v\+\_\+addr)
+\item 
+bool \mbox{\hyperlink{va__ampm__lite_8cc_a8235dd7be04e702ef79bbe8622ee78b1}{va\+\_\+ampm\+\_\+check\+\_\+cl\+\_\+prefetch}} (uint64\+\_\+t v\+\_\+addr)
+\item 
+void \mbox{\hyperlink{va__ampm__lite_8cc_ab8b0f1fc9fe2702957b50a5d8ffdc91d}{va\+\_\+ampm\+\_\+set\+\_\+cl\+\_\+prefetch}} (uint64\+\_\+t v\+\_\+addr)
+\item 
+void \mbox{\hyperlink{va__ampm__lite_8cc_adf7296eb26ff1c0891fcfc081c005896}{va\+\_\+ampm\+\_\+reset\+\_\+cl\+\_\+prefetch}} (uint64\+\_\+t v\+\_\+addr)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structl2c__va__ampm__lite__region__t}{l2c\+\_\+va\+\_\+ampm\+\_\+lite\+\_\+region\+\_\+t}} \mbox{\hyperlink{va__ampm__lite_8cc_af66493a5683c8627f00317d7f5240d14}{l2c\+\_\+va\+\_\+ampm\+\_\+lite\+\_\+regions}} \mbox{[}\mbox{\hyperlink{va__ampm__lite_8cc_af05eb5556ec784844c31cac028dcf82d}{L2\+C\+\_\+\+V\+A\+\_\+\+A\+M\+P\+M\+\_\+\+L\+I\+T\+E\+\_\+\+R\+E\+G\+I\+O\+N\+\_\+\+C\+O\+U\+NT}}\mbox{]}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{va__ampm__lite_8cc_a762a99698e12622cf66bafb8e69c54d1}{l2c\+\_\+va\+\_\+ampm\+\_\+lite\+\_\+region\+\_\+lru}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{va__ampm__lite_8cc_a7498e2e8da93873a55f5854c1627a929}\label{va__ampm__lite_8cc_a7498e2e8da93873a55f5854c1627a929}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!L2C\_VA\_AMPM\_LITE\_MAX\_DISTANCE@{L2C\_VA\_AMPM\_LITE\_MAX\_DISTANCE}}
+\index{L2C\_VA\_AMPM\_LITE\_MAX\_DISTANCE@{L2C\_VA\_AMPM\_LITE\_MAX\_DISTANCE}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{L2C\_VA\_AMPM\_LITE\_MAX\_DISTANCE}{L2C\_VA\_AMPM\_LITE\_MAX\_DISTANCE}}
+{\footnotesize\ttfamily \#define L2\+C\+\_\+\+V\+A\+\_\+\+A\+M\+P\+M\+\_\+\+L\+I\+T\+E\+\_\+\+M\+A\+X\+\_\+\+D\+I\+S\+T\+A\+N\+CE~256}
+
+\mbox{\Hypertarget{va__ampm__lite_8cc_ac3f0bd514d33cd4fa05a853a408fd421}\label{va__ampm__lite_8cc_ac3f0bd514d33cd4fa05a853a408fd421}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!L2C\_VA\_AMPM\_LITE\_PREFETCH\_DEGREE@{L2C\_VA\_AMPM\_LITE\_PREFETCH\_DEGREE}}
+\index{L2C\_VA\_AMPM\_LITE\_PREFETCH\_DEGREE@{L2C\_VA\_AMPM\_LITE\_PREFETCH\_DEGREE}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{L2C\_VA\_AMPM\_LITE\_PREFETCH\_DEGREE}{L2C\_VA\_AMPM\_LITE\_PREFETCH\_DEGREE}}
+{\footnotesize\ttfamily \#define L2\+C\+\_\+\+V\+A\+\_\+\+A\+M\+P\+M\+\_\+\+L\+I\+T\+E\+\_\+\+P\+R\+E\+F\+E\+T\+C\+H\+\_\+\+D\+E\+G\+R\+EE~2}
+
+\mbox{\Hypertarget{va__ampm__lite_8cc_af05eb5556ec784844c31cac028dcf82d}\label{va__ampm__lite_8cc_af05eb5556ec784844c31cac028dcf82d}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!L2C\_VA\_AMPM\_LITE\_REGION\_COUNT@{L2C\_VA\_AMPM\_LITE\_REGION\_COUNT}}
+\index{L2C\_VA\_AMPM\_LITE\_REGION\_COUNT@{L2C\_VA\_AMPM\_LITE\_REGION\_COUNT}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{L2C\_VA\_AMPM\_LITE\_REGION\_COUNT}{L2C\_VA\_AMPM\_LITE\_REGION\_COUNT}}
+{\footnotesize\ttfamily \#define L2\+C\+\_\+\+V\+A\+\_\+\+A\+M\+P\+M\+\_\+\+L\+I\+T\+E\+\_\+\+R\+E\+G\+I\+O\+N\+\_\+\+C\+O\+U\+NT~128}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{va__ampm__lite_8cc_ab56ba6619019f3561fc6133ca63f86fc}\label{va__ampm__lite_8cc_ab56ba6619019f3561fc6133ca63f86fc}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!l2c\_prefetch@{l2c\_prefetch}}
+\index{l2c\_prefetch@{l2c\_prefetch}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{l2c\_prefetch()}{l2c\_prefetch()}}
+{\footnotesize\ttfamily int l2c\+\_\+prefetch (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$}]{cache,  }\item[{uint64\+\_\+t}]{ip,  }\item[{uint64\+\_\+t}]{base\+\_\+addr,  }\item[{uint64\+\_\+t}]{pf\+\_\+addr,  }\item[{int}]{pf\+\_\+fill\+\_\+level,  }\item[{int}]{pf\+\_\+metadata }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_ab56ba6619019f3561fc6133ca63f86fc_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_ac3e396303e4203ad7279bfdf1835267e}\label{va__ampm__lite_8cc_ac3e396303e4203ad7279bfdf1835267e}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_allocate\_region@{va\_ampm\_allocate\_region}}
+\index{va\_ampm\_allocate\_region@{va\_ampm\_allocate\_region}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_allocate\_region()}{va\_ampm\_allocate\_region()}}
+{\footnotesize\ttfamily void va\+\_\+ampm\+\_\+allocate\+\_\+region (\begin{DoxyParamCaption}\item[{int}]{region\+\_\+index,  }\item[{uint64\+\_\+t}]{allocate\+\_\+vpn }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_ac3e396303e4203ad7279bfdf1835267e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_a40eba05aa24018c91ad306ad8fa5157a}\label{va__ampm__lite_8cc_a40eba05aa24018c91ad306ad8fa5157a}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_check\_access@{va\_ampm\_check\_access}}
+\index{va\_ampm\_check\_access@{va\_ampm\_check\_access}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_check\_access()}{va\_ampm\_check\_access()}}
+{\footnotesize\ttfamily bool va\+\_\+ampm\+\_\+check\+\_\+access (\begin{DoxyParamCaption}\item[{int}]{region\+\_\+index,  }\item[{int}]{region\+\_\+offset }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_a40eba05aa24018c91ad306ad8fa5157a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_a1bb4100d39b217e031dd70cc713a372f}\label{va__ampm__lite_8cc_a1bb4100d39b217e031dd70cc713a372f}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_check\_cl\_access@{va\_ampm\_check\_cl\_access}}
+\index{va\_ampm\_check\_cl\_access@{va\_ampm\_check\_cl\_access}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_check\_cl\_access()}{va\_ampm\_check\_cl\_access()}}
+{\footnotesize\ttfamily bool va\+\_\+ampm\+\_\+check\+\_\+cl\+\_\+access (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{v\+\_\+addr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_a1bb4100d39b217e031dd70cc713a372f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_a8235dd7be04e702ef79bbe8622ee78b1}\label{va__ampm__lite_8cc_a8235dd7be04e702ef79bbe8622ee78b1}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_check\_cl\_prefetch@{va\_ampm\_check\_cl\_prefetch}}
+\index{va\_ampm\_check\_cl\_prefetch@{va\_ampm\_check\_cl\_prefetch}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_check\_cl\_prefetch()}{va\_ampm\_check\_cl\_prefetch()}}
+{\footnotesize\ttfamily bool va\+\_\+ampm\+\_\+check\+\_\+cl\+\_\+prefetch (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{v\+\_\+addr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_a8235dd7be04e702ef79bbe8622ee78b1_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_ac386b967bf334d2b5c9662bd4026e797}\label{va__ampm__lite_8cc_ac386b967bf334d2b5c9662bd4026e797}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_check\_prefetch@{va\_ampm\_check\_prefetch}}
+\index{va\_ampm\_check\_prefetch@{va\_ampm\_check\_prefetch}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_check\_prefetch()}{va\_ampm\_check\_prefetch()}}
+{\footnotesize\ttfamily bool va\+\_\+ampm\+\_\+check\+\_\+prefetch (\begin{DoxyParamCaption}\item[{int}]{region\+\_\+index,  }\item[{int}]{region\+\_\+offset }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_ac386b967bf334d2b5c9662bd4026e797_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_ac6478bb7c2e7f3fe15b1d43f7f759ed7}\label{va__ampm__lite_8cc_ac6478bb7c2e7f3fe15b1d43f7f759ed7}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_find\_region@{va\_ampm\_find\_region}}
+\index{va\_ampm\_find\_region@{va\_ampm\_find\_region}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_find\_region()}{va\_ampm\_find\_region()}}
+{\footnotesize\ttfamily int va\+\_\+ampm\+\_\+find\+\_\+region (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{search\+\_\+vpn }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_ac6478bb7c2e7f3fe15b1d43f7f759ed7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_aecba0f0e86835ad7effef64e4272aa4e}\label{va__ampm__lite_8cc_aecba0f0e86835ad7effef64e4272aa4e}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_get\_lru\_region@{va\_ampm\_get\_lru\_region}}
+\index{va\_ampm\_get\_lru\_region@{va\_ampm\_get\_lru\_region}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_get\_lru\_region()}{va\_ampm\_get\_lru\_region()}}
+{\footnotesize\ttfamily int va\+\_\+ampm\+\_\+get\+\_\+lru\+\_\+region (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_aecba0f0e86835ad7effef64e4272aa4e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_a7d6aef07b2dc718cb910122ff3d9a237}\label{va__ampm__lite_8cc_a7d6aef07b2dc718cb910122ff3d9a237}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_reset\_access@{va\_ampm\_reset\_access}}
+\index{va\_ampm\_reset\_access@{va\_ampm\_reset\_access}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_reset\_access()}{va\_ampm\_reset\_access()}}
+{\footnotesize\ttfamily void va\+\_\+ampm\+\_\+reset\+\_\+access (\begin{DoxyParamCaption}\item[{int}]{region\+\_\+index,  }\item[{int}]{region\+\_\+offset }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_a7d6aef07b2dc718cb910122ff3d9a237_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_a2a031441020e701b172134a42db3043d}\label{va__ampm__lite_8cc_a2a031441020e701b172134a42db3043d}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_reset\_cl\_access@{va\_ampm\_reset\_cl\_access}}
+\index{va\_ampm\_reset\_cl\_access@{va\_ampm\_reset\_cl\_access}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_reset\_cl\_access()}{va\_ampm\_reset\_cl\_access()}}
+{\footnotesize\ttfamily void va\+\_\+ampm\+\_\+reset\+\_\+cl\+\_\+access (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{v\+\_\+addr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_a2a031441020e701b172134a42db3043d_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_adf7296eb26ff1c0891fcfc081c005896}\label{va__ampm__lite_8cc_adf7296eb26ff1c0891fcfc081c005896}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_reset\_cl\_prefetch@{va\_ampm\_reset\_cl\_prefetch}}
+\index{va\_ampm\_reset\_cl\_prefetch@{va\_ampm\_reset\_cl\_prefetch}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_reset\_cl\_prefetch()}{va\_ampm\_reset\_cl\_prefetch()}}
+{\footnotesize\ttfamily void va\+\_\+ampm\+\_\+reset\+\_\+cl\+\_\+prefetch (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{v\+\_\+addr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_adf7296eb26ff1c0891fcfc081c005896_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_a3b8816b16612fe4e5526e6af52518dcd}\label{va__ampm__lite_8cc_a3b8816b16612fe4e5526e6af52518dcd}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_reset\_prefetch@{va\_ampm\_reset\_prefetch}}
+\index{va\_ampm\_reset\_prefetch@{va\_ampm\_reset\_prefetch}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_reset\_prefetch()}{va\_ampm\_reset\_prefetch()}}
+{\footnotesize\ttfamily void va\+\_\+ampm\+\_\+reset\+\_\+prefetch (\begin{DoxyParamCaption}\item[{int}]{region\+\_\+index,  }\item[{int}]{region\+\_\+offset }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_a3b8816b16612fe4e5526e6af52518dcd_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_a2ffff20dad3f834860a6b26bc959fd9f}\label{va__ampm__lite_8cc_a2ffff20dad3f834860a6b26bc959fd9f}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_set\_access@{va\_ampm\_set\_access}}
+\index{va\_ampm\_set\_access@{va\_ampm\_set\_access}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_set\_access()}{va\_ampm\_set\_access()}}
+{\footnotesize\ttfamily void va\+\_\+ampm\+\_\+set\+\_\+access (\begin{DoxyParamCaption}\item[{int}]{region\+\_\+index,  }\item[{int}]{region\+\_\+offset }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_a2ffff20dad3f834860a6b26bc959fd9f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_acd619704a97dc3853d52602eecf1eb72}\label{va__ampm__lite_8cc_acd619704a97dc3853d52602eecf1eb72}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_set\_cl\_access@{va\_ampm\_set\_cl\_access}}
+\index{va\_ampm\_set\_cl\_access@{va\_ampm\_set\_cl\_access}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_set\_cl\_access()}{va\_ampm\_set\_cl\_access()}}
+{\footnotesize\ttfamily void va\+\_\+ampm\+\_\+set\+\_\+cl\+\_\+access (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{v\+\_\+addr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_acd619704a97dc3853d52602eecf1eb72_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_ab8b0f1fc9fe2702957b50a5d8ffdc91d}\label{va__ampm__lite_8cc_ab8b0f1fc9fe2702957b50a5d8ffdc91d}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_set\_cl\_prefetch@{va\_ampm\_set\_cl\_prefetch}}
+\index{va\_ampm\_set\_cl\_prefetch@{va\_ampm\_set\_cl\_prefetch}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_set\_cl\_prefetch()}{va\_ampm\_set\_cl\_prefetch()}}
+{\footnotesize\ttfamily void va\+\_\+ampm\+\_\+set\+\_\+cl\+\_\+prefetch (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{v\+\_\+addr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_ab8b0f1fc9fe2702957b50a5d8ffdc91d_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{va__ampm__lite_8cc_afe5d91d24109f4ef07f216473d048fdd}\label{va__ampm__lite_8cc_afe5d91d24109f4ef07f216473d048fdd}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!va\_ampm\_set\_prefetch@{va\_ampm\_set\_prefetch}}
+\index{va\_ampm\_set\_prefetch@{va\_ampm\_set\_prefetch}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{va\_ampm\_set\_prefetch()}{va\_ampm\_set\_prefetch()}}
+{\footnotesize\ttfamily void va\+\_\+ampm\+\_\+set\+\_\+prefetch (\begin{DoxyParamCaption}\item[{int}]{region\+\_\+index,  }\item[{int}]{region\+\_\+offset }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{va__ampm__lite_8cc_afe5d91d24109f4ef07f216473d048fdd_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{va__ampm__lite_8cc_a762a99698e12622cf66bafb8e69c54d1}\label{va__ampm__lite_8cc_a762a99698e12622cf66bafb8e69c54d1}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!l2c\_va\_ampm\_lite\_region\_lru@{l2c\_va\_ampm\_lite\_region\_lru}}
+\index{l2c\_va\_ampm\_lite\_region\_lru@{l2c\_va\_ampm\_lite\_region\_lru}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{l2c\_va\_ampm\_lite\_region\_lru}{l2c\_va\_ampm\_lite\_region\_lru}}
+{\footnotesize\ttfamily uint64\+\_\+t l2c\+\_\+va\+\_\+ampm\+\_\+lite\+\_\+region\+\_\+lru}
+
+\mbox{\Hypertarget{va__ampm__lite_8cc_af66493a5683c8627f00317d7f5240d14}\label{va__ampm__lite_8cc_af66493a5683c8627f00317d7f5240d14}} 
+\index{va\_ampm\_lite.cc@{va\_ampm\_lite.cc}!l2c\_va\_ampm\_lite\_regions@{l2c\_va\_ampm\_lite\_regions}}
+\index{l2c\_va\_ampm\_lite\_regions@{l2c\_va\_ampm\_lite\_regions}!va\_ampm\_lite.cc@{va\_ampm\_lite.cc}}
+\doxysubsubsection{\texorpdfstring{l2c\_va\_ampm\_lite\_regions}{l2c\_va\_ampm\_lite\_regions}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structl2c__va__ampm__lite__region__t}{l2c\+\_\+va\+\_\+ampm\+\_\+lite\+\_\+region\+\_\+t}} l2c\+\_\+va\+\_\+ampm\+\_\+lite\+\_\+regions\mbox{[}\mbox{\hyperlink{va__ampm__lite_8cc_af05eb5556ec784844c31cac028dcf82d}{L2\+C\+\_\+\+V\+A\+\_\+\+A\+M\+P\+M\+\_\+\+L\+I\+T\+E\+\_\+\+R\+E\+G\+I\+O\+N\+\_\+\+C\+O\+U\+NT}}\mbox{]}}
+

@@ -1,0 +1,198 @@
+\hypertarget{classSIGNATURE__TABLE}{}\doxysection{S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+LE Class Reference}
+\label{classSIGNATURE__TABLE}\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+
+
+{\ttfamily \#include $<$kpcp.\+h$>$}
+
+
+
+Collaboration diagram for S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+LE\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=310pt]{classSIGNATURE__TABLE__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classSIGNATURE__TABLE_a51f38d11910111960907e7123be30677}{S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+LE}} ()
+\item 
+\mbox{\hyperlink{classSIGNATURE__TABLE_a51f38d11910111960907e7123be30677}{S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+LE}} ()
+\item 
+void \mbox{\hyperlink{classSIGNATURE__TABLE_abdacb4b56b21bfa2baea19f2c972f857}{read\+\_\+and\+\_\+update\+\_\+sig}} (uint64\+\_\+t page, uint32\+\_\+t page\+\_\+offset, uint32\+\_\+t \&last\+\_\+sig, uint32\+\_\+t \&curr\+\_\+sig, int32\+\_\+t \&\mbox{\hyperlink{classSIGNATURE__TABLE_a4619bf2e450da34e1d19e99c08429f7c}{delta}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_a0dae6f27a6606322ccb8ebe38b54d288}{valid}}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_ad7863e5b213ec7e8c9c36f8e61d227d3}{tag}}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_aad19c074fd86ba4101203ecbd261856f}{last\+\_\+block}}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_ae039fe5d69ea81909e9b46096db20432}{signature}}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_af834801bb65189891c2f28732afc9628}{lru}}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_af17548c9474461090e748459a304259b}{l2\+\_\+pf}} \mbox{[}64\mbox{]}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_a8fd3a3e5e127a79941e269a69687c0c2}{used}} \mbox{[}64\mbox{]}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_a4619bf2e450da34e1d19e99c08429f7c}{delta}} \mbox{[}64\mbox{]}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_af4fa223f849c9e6ebbdebe6f0b2ecfc9}{depth}} \mbox{[}64\mbox{]}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_a693d99c779e5b4687136504096666e7a}{dirty}} \mbox{[}64\mbox{]}
+\item 
+int \mbox{\hyperlink{classSIGNATURE__TABLE_a5e462cefc0327c61437396f1ee08d5d7}{first\+\_\+hit}}
+\item 
+bool \mbox{\hyperlink{classSIGNATURE__TABLE_a8f444041ca41b41705fa7f5db66046f4}{valid}} \mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classSIGNATURE__TABLE_a788f0bf7a2d5f5a2deb0220e4cf8b3d6}{tag}} \mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classSIGNATURE__TABLE_a2211ef54d6c2e6897e926d9165f2faef}{last\+\_\+offset}} \mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classSIGNATURE__TABLE_a423deb92d025eb14796f1aff773f5858}{sig}} \mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classSIGNATURE__TABLE_ae6e6394d9516749f70447aa15603c543}{lru}} \mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a51f38d11910111960907e7123be30677}\label{classSIGNATURE__TABLE_a51f38d11910111960907e7123be30677}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{SIGNATURE\_TABLE()}{SIGNATURE\_TABLE()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::\+S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+LE (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a51f38d11910111960907e7123be30677}\label{classSIGNATURE__TABLE_a51f38d11910111960907e7123be30677}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{SIGNATURE\_TABLE()}{SIGNATURE\_TABLE()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::\+S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+LE (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classSIGNATURE__TABLE_abdacb4b56b21bfa2baea19f2c972f857}\label{classSIGNATURE__TABLE_abdacb4b56b21bfa2baea19f2c972f857}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!read\_and\_update\_sig@{read\_and\_update\_sig}}
+\index{read\_and\_update\_sig@{read\_and\_update\_sig}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{read\_and\_update\_sig()}{read\_and\_update\_sig()}}
+{\footnotesize\ttfamily void S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::read\+\_\+and\+\_\+update\+\_\+sig (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{page,  }\item[{uint32\+\_\+t}]{page\+\_\+offset,  }\item[{uint32\+\_\+t \&}]{last\+\_\+sig,  }\item[{uint32\+\_\+t \&}]{curr\+\_\+sig,  }\item[{int32\+\_\+t \&}]{delta }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classSIGNATURE__TABLE_abdacb4b56b21bfa2baea19f2c972f857_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a4619bf2e450da34e1d19e99c08429f7c}\label{classSIGNATURE__TABLE_a4619bf2e450da34e1d19e99c08429f7c}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!delta@{delta}}
+\index{delta@{delta}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{delta}{delta}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::delta\mbox{[}64\mbox{]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_af4fa223f849c9e6ebbdebe6f0b2ecfc9}\label{classSIGNATURE__TABLE_af4fa223f849c9e6ebbdebe6f0b2ecfc9}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!depth@{depth}}
+\index{depth@{depth}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{depth}{depth}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::depth\mbox{[}64\mbox{]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a693d99c779e5b4687136504096666e7a}\label{classSIGNATURE__TABLE_a693d99c779e5b4687136504096666e7a}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!dirty@{dirty}}
+\index{dirty@{dirty}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{dirty}{dirty}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::dirty\mbox{[}64\mbox{]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a5e462cefc0327c61437396f1ee08d5d7}\label{classSIGNATURE__TABLE_a5e462cefc0327c61437396f1ee08d5d7}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!first\_hit@{first\_hit}}
+\index{first\_hit@{first\_hit}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{first\_hit}{first\_hit}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::first\+\_\+hit}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_af17548c9474461090e748459a304259b}\label{classSIGNATURE__TABLE_af17548c9474461090e748459a304259b}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!l2\_pf@{l2\_pf}}
+\index{l2\_pf@{l2\_pf}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{l2\_pf}{l2\_pf}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::l2\+\_\+pf\mbox{[}64\mbox{]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_aad19c074fd86ba4101203ecbd261856f}\label{classSIGNATURE__TABLE_aad19c074fd86ba4101203ecbd261856f}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!last\_block@{last\_block}}
+\index{last\_block@{last\_block}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{last\_block}{last\_block}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::last\+\_\+block}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a2211ef54d6c2e6897e926d9165f2faef}\label{classSIGNATURE__TABLE_a2211ef54d6c2e6897e926d9165f2faef}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!last\_offset@{last\_offset}}
+\index{last\_offset@{last\_offset}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{last\_offset}{last\_offset}}
+{\footnotesize\ttfamily uint32\+\_\+t S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::last\+\_\+offset\mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_af834801bb65189891c2f28732afc9628}\label{classSIGNATURE__TABLE_af834801bb65189891c2f28732afc9628}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!lru@{lru}}
+\index{lru@{lru}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{lru}{lru}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::lru}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_ae6e6394d9516749f70447aa15603c543}\label{classSIGNATURE__TABLE_ae6e6394d9516749f70447aa15603c543}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!lru@{lru}}
+\index{lru@{lru}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{lru}{lru}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily uint32\+\_\+t S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::lru\mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a423deb92d025eb14796f1aff773f5858}\label{classSIGNATURE__TABLE_a423deb92d025eb14796f1aff773f5858}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!sig@{sig}}
+\index{sig@{sig}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{sig}{sig}}
+{\footnotesize\ttfamily uint32\+\_\+t S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::sig\mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_ae039fe5d69ea81909e9b46096db20432}\label{classSIGNATURE__TABLE_ae039fe5d69ea81909e9b46096db20432}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!signature@{signature}}
+\index{signature@{signature}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{signature}{signature}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::signature}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_ad7863e5b213ec7e8c9c36f8e61d227d3}\label{classSIGNATURE__TABLE_ad7863e5b213ec7e8c9c36f8e61d227d3}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!tag@{tag}}
+\index{tag@{tag}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{tag}{tag}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::tag}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a788f0bf7a2d5f5a2deb0220e4cf8b3d6}\label{classSIGNATURE__TABLE_a788f0bf7a2d5f5a2deb0220e4cf8b3d6}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!tag@{tag}}
+\index{tag@{tag}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{tag}{tag}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily uint32\+\_\+t S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::tag\mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a8fd3a3e5e127a79941e269a69687c0c2}\label{classSIGNATURE__TABLE_a8fd3a3e5e127a79941e269a69687c0c2}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!used@{used}}
+\index{used@{used}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{used}{used}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::used\mbox{[}64\mbox{]}}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a0dae6f27a6606322ccb8ebe38b54d288}\label{classSIGNATURE__TABLE_a0dae6f27a6606322ccb8ebe38b54d288}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!valid@{valid}}
+\index{valid@{valid}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{valid}{valid}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily int S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::valid}
+
+\mbox{\Hypertarget{classSIGNATURE__TABLE_a8f444041ca41b41705fa7f5db66046f4}\label{classSIGNATURE__TABLE_a8f444041ca41b41705fa7f5db66046f4}} 
+\index{SIGNATURE\_TABLE@{SIGNATURE\_TABLE}!valid@{valid}}
+\index{valid@{valid}!SIGNATURE\_TABLE@{SIGNATURE\_TABLE}}
+\doxysubsubsection{\texorpdfstring{valid}{valid}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily bool S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+T\+A\+B\+L\+E\+::valid\mbox{[}\mbox{\hyperlink{spp__dev_8h_a793c7c0b97d5cc406f476c4fc3c59043}{S\+T\+\_\+\+S\+ET}}\mbox{]}\mbox{[}\mbox{\hyperlink{spp__dev_8h_af7f231cf10eaf0d05522e8bb0794ea05}{S\+T\+\_\+\+W\+AY}}\mbox{]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{kpcp_8h}{kpcp.\+h}}\item 
+prefetcher/spp\+\_\+dev/\mbox{\hyperlink{spp__dev_8h}{spp\+\_\+dev.\+h}}\item 
+prefetcher/spp\+\_\+dev/\mbox{\hyperlink{spp__dev_8cc}{spp\+\_\+dev.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['packet_5fdep_5fmerge_1069',['packet_dep_merge',['../block_8h.html#a6d2f74a9d6e3bc4de1dda18cb8aba222',1,'block.h']]],
+  ['pagetablewalker_1070',['PageTableWalker',['../classPageTableWalker.html#a1bf6d71f0955cdc829f2727c7092b272',1,'PageTableWalker']]],
+  ['pagingstructurecache_1071',['PagingStructureCache',['../classPagingStructureCache.html#a8becb38db025785e2152bec180a40294',1,'PagingStructureCache']]],
+  ['pattern_5ftable_1072',['PATTERN_TABLE',['../classPATTERN__TABLE.html#a411740fee15e20be14c7558b0d0e0d4c',1,'PATTERN_TABLE::PATTERN_TABLE()'],['../classPATTERN__TABLE.html#a411740fee15e20be14c7558b0d0e0d4c',1,'PATTERN_TABLE::PATTERN_TABLE()']]],
+  ['peek_5fbasic_5fbtb_5fras_1073',['peek_basic_btb_ras',['../basic__btb_8cc.html#aa5d93e583c80ab35437fe7c1a2da7c29',1,'basic_btb.cc']]],
+  ['pf_5fbuffer_1074',['PF_buffer',['../classPF__buffer.html#a19231ded7fa54fd4bd9cff464e073fa4',1,'PF_buffer']]],
+  ['pf_5fcheck_1075',['PF_check',['../kpcp_8cc.html#a719921f31bd8d82d052840cbc31762e3',1,'kpcp.cc']]],
+  ['pop_5fbasic_5fbtb_5fras_1076',['pop_basic_btb_ras',['../basic__btb_8cc.html#a50bfdd4b0c05d4a0d42ac05245bf223f',1,'basic_btb.cc']]],
+  ['pop_5ffront_1077',['pop_front',['../classchampsim_1_1circular__buffer.html#a49c52938d296faec5f6b470765cbd791',1,'champsim::circular_buffer::pop_front()'],['../classchampsim_1_1delay__queue.html#ad01ac40e6fc982c6c691de14d65f9d79',1,'champsim::delay_queue::pop_front()']]],
+  ['predict_1078',['predict',['../classperceptron.html#ae313dfd17bf39e582c973d0ac0a5e2c3',1,'perceptron']]],
+  ['prefetch_5fcode_5fline_1079',['prefetch_code_line',['../classO3__CPU.html#a8d924a30dbe9ffb3cbdbee347076a03f',1,'O3_CPU']]],
+  ['prefetch_5ffilter_1080',['PREFETCH_FILTER',['../classPREFETCH__FILTER.html#a3bd3e01d00b621385663898e4fb98abb',1,'PREFETCH_FILTER']]],
+  ['prefetch_5fline_1081',['prefetch_line',['../classCACHE.html#aa64044841983110bb83e1823c77e4ca5',1,'CACHE::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata)'],['../classCACHE.html#a21e31b7bc30707c7020397e3b710493e',1,'CACHE::prefetch_line(uint64_t ip, uint64_t base_addr, uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata)']]],
+  ['print_5fbranch_5fstats_1082',['print_branch_stats',['../main_8cc.html#a65063ae5fa0ce59d41ef68ba677ea0f7',1,'main.cc']]],
+  ['print_5fdeadlock_1083',['print_deadlock',['../classCACHE.html#aaab1fd23d8a1c4dafab1d69c6c9f46b2',1,'CACHE::print_deadlock()'],['../classO3__CPU.html#ab0ccd72a6b7cc16f69924f70cf24ac69',1,'O3_CPU::print_deadlock()'],['../classchampsim_1_1operable.html#a19019841fc4b9a0cb245552c1425bece',1,'champsim::operable::print_deadlock()'],['../classPageTableWalker.html#ac898f14d9b8b6cd2c2ebfba73ced68b0',1,'PageTableWalker::print_deadlock()']]],
+  ['print_5fdram_5fstats_1084',['print_dram_stats',['../main_8cc.html#a020519d99b79c00341f7a5c03f7e4654',1,'main.cc']]],
+  ['print_5froi_5fstats_1085',['print_roi_stats',['../main_8cc.html#a3e16b39c5b82afc11abc8caab955c75a',1,'main.cc']]],
+  ['print_5fsim_5fstats_1086',['print_sim_stats',['../main_8cc.html#af71f2597b67c620b85fe19c7ea98e521',1,'main.cc']]],
+  ['promote_5fto_5fdecode_1087',['promote_to_decode',['../classO3__CPU.html#a1cde4d45f29b6f676c393edf64ab0b28',1,'O3_CPU']]],
+  ['push_5fback_1088',['push_back',['../classchampsim_1_1circular__buffer.html#aa7b5ff6facba0486daebe230943a3dda',1,'champsim::circular_buffer::push_back(const T &amp;item)'],['../classchampsim_1_1circular__buffer.html#ae26ad8832cc5e09527198282af49efe4',1,'champsim::circular_buffer::push_back(const T &amp;&amp;item)'],['../classchampsim_1_1delay__queue.html#ab3eb47d6c14dfeb11ba322e95033a8a4',1,'champsim::delay_queue::push_back(const T &amp;item)'],['../classchampsim_1_1delay__queue.html#a3bfeb578c77687c2a7f5bac1834515cb',1,'champsim::delay_queue::push_back(const T &amp;&amp;item)']]],
+  ['push_5fback_5fready_1089',['push_back_ready',['../classchampsim_1_1delay__queue.html#a851751302a46c88c57424357efa4915d',1,'champsim::delay_queue::push_back_ready(const T &amp;item)'],['../classchampsim_1_1delay__queue.html#ab0365186d4451642a30cdb5262e40e2a',1,'champsim::delay_queue::push_back_ready(const T &amp;&amp;item)']]],
+  ['push_5fbasic_5fbtb_5fras_1090',['push_basic_btb_ras',['../basic__btb_8cc.html#aea3a8e3f9a0042c7893ea3358fd97cc4',1,'basic_btb.cc']]]
+];

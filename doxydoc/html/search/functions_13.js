@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['va_5fampm_5fallocate_5fregion_1117',['va_ampm_allocate_region',['../va__ampm__lite_8cc.html#ac3e396303e4203ad7279bfdf1835267e',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5fcheck_5faccess_1118',['va_ampm_check_access',['../va__ampm__lite_8cc.html#a40eba05aa24018c91ad306ad8fa5157a',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5fcheck_5fcl_5faccess_1119',['va_ampm_check_cl_access',['../va__ampm__lite_8cc.html#a1bb4100d39b217e031dd70cc713a372f',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5fcheck_5fcl_5fprefetch_1120',['va_ampm_check_cl_prefetch',['../va__ampm__lite_8cc.html#a8235dd7be04e702ef79bbe8622ee78b1',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5fcheck_5fprefetch_1121',['va_ampm_check_prefetch',['../va__ampm__lite_8cc.html#ac386b967bf334d2b5c9662bd4026e797',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5ffind_5fregion_1122',['va_ampm_find_region',['../va__ampm__lite_8cc.html#ac6478bb7c2e7f3fe15b1d43f7f759ed7',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5fget_5flru_5fregion_1123',['va_ampm_get_lru_region',['../va__ampm__lite_8cc.html#aecba0f0e86835ad7effef64e4272aa4e',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5freset_5faccess_1124',['va_ampm_reset_access',['../va__ampm__lite_8cc.html#a7d6aef07b2dc718cb910122ff3d9a237',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5freset_5fcl_5faccess_1125',['va_ampm_reset_cl_access',['../va__ampm__lite_8cc.html#a2a031441020e701b172134a42db3043d',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5freset_5fcl_5fprefetch_1126',['va_ampm_reset_cl_prefetch',['../va__ampm__lite_8cc.html#adf7296eb26ff1c0891fcfc081c005896',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5freset_5fprefetch_1127',['va_ampm_reset_prefetch',['../va__ampm__lite_8cc.html#a3b8816b16612fe4e5526e6af52518dcd',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5fset_5faccess_1128',['va_ampm_set_access',['../va__ampm__lite_8cc.html#a2ffff20dad3f834860a6b26bc959fd9f',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5fset_5fcl_5faccess_1129',['va_ampm_set_cl_access',['../va__ampm__lite_8cc.html#acd619704a97dc3853d52602eecf1eb72',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5fset_5fcl_5fprefetch_1130',['va_ampm_set_cl_prefetch',['../va__ampm__lite_8cc.html#ab8b0f1fc9fe2702957b50a5d8ffdc91d',1,'va_ampm_lite.cc']]],
+  ['va_5fampm_5fset_5fprefetch_1131',['va_ampm_set_prefetch',['../va__ampm__lite_8cc.html#afe5d91d24109f4ef07f216473d048fdd',1,'va_ampm_lite.cc']]],
+  ['va_5fto_5fpa_1132',['va_to_pa',['../classVirtualMemory.html#aad676e49e348cc88d9158da21b0a9f13',1,'VirtualMemory']]],
+  ['va_5ftranslate_5fprefetches_1133',['va_translate_prefetches',['../classCACHE.html#aa33e09ded50f809c3bb1ae5d55fd0ef0',1,'CACHE']]],
+  ['virtualmemory_1134',['VirtualMemory',['../classVirtualMemory.html#a13be2e2f1b8f859ef67174d692030f3f',1,'VirtualMemory']]]
+];

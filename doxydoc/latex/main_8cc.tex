@@ -1,0 +1,327 @@
+\hypertarget{main_8cc}{}\doxysection{src/main.cc File Reference}
+\label{main_8cc}\index{src/main.cc@{src/main.cc}}
+{\ttfamily \#include $<$algorithm$>$}\newline
+{\ttfamily \#include $<$array$>$}\newline
+{\ttfamily \#include $<$fstream$>$}\newline
+{\ttfamily \#include $<$functional$>$}\newline
+{\ttfamily \#include $<$getopt.\+h$>$}\newline
+{\ttfamily \#include $<$iomanip$>$}\newline
+{\ttfamily \#include $<$signal.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$vector$>$}\newline
+{\ttfamily \#include \char`\"{}cache.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}champsim.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}champsim\+\_\+constants.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}dram\+\_\+controller.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}ooo\+\_\+cpu.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}operable.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}tracereader.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}vmem.\+h\char`\"{}}\newline
+Include dependency graph for main.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{main_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{main_8cc_a03a4d89b4e4d2cc7ba4f98bf58e7f35b}{record\+\_\+roi\+\_\+stats}} (uint32\+\_\+t cpu, \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$cache)
+\item 
+void \mbox{\hyperlink{main_8cc_a3e16b39c5b82afc11abc8caab955c75a}{print\+\_\+roi\+\_\+stats}} (uint32\+\_\+t cpu, \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$cache)
+\item 
+void \mbox{\hyperlink{main_8cc_af71f2597b67c620b85fe19c7ea98e521}{print\+\_\+sim\+\_\+stats}} (uint32\+\_\+t cpu, \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$cache)
+\item 
+void \mbox{\hyperlink{main_8cc_a65063ae5fa0ce59d41ef68ba677ea0f7}{print\+\_\+branch\+\_\+stats}} ()
+\item 
+void \mbox{\hyperlink{main_8cc_a020519d99b79c00341f7a5c03f7e4654}{print\+\_\+dram\+\_\+stats}} ()
+\item 
+void \mbox{\hyperlink{main_8cc_aaebeec0b6e8068c7851c2224f5c84dda}{reset\+\_\+cache\+\_\+stats}} (uint32\+\_\+t cpu, \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$cache)
+\item 
+void \mbox{\hyperlink{main_8cc_aacd80d75dde79f0992fcf4bed0ad781a}{finish\+\_\+warmup}} ()
+\item 
+void \mbox{\hyperlink{main_8cc_a3b527c56ed133ee6815bfbc625e757af}{signal\+\_\+handler}} (int signal)
+\item 
+int \mbox{\hyperlink{main_8cc_a3c04138a5bfe5d72780bb7e82a18e627}{main}} (int argc, char $\ast$$\ast$argv)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8cc_ab4fed54274903225c5f3de0058bea6b9}{warmup\+\_\+complete}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]} = \{\}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8cc_a99d4241617bbe65cc308537d90093185}{simulation\+\_\+complete}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]} = \{\}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8cc_a288edcff66ad3c6f62ce2bf7219e2239}{all\+\_\+warmup\+\_\+complete}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8cc_a8a6c2db12a8111f1cac02e52c83e8a39}{all\+\_\+simulation\+\_\+complete}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8cc_a3311c0092a6c8dcbf1b903cdc6a8c51f}{M\+A\+X\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+NS}} = \mbox{\hyperlink{trace__instruction_8h_a27b4eb73b09fa14bcceccab20c4d4051}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+NS}}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8cc_a8f0e86d63f158621b9df4dcff0713417}{knob\+\_\+cloudsuite}} = 0
+\item 
+uint8\+\_\+t \mbox{\hyperlink{main_8cc_afbeba368b5ccbdac870b9052c15950f6}{knob\+\_\+low\+\_\+bandwidth}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{main_8cc_a42598f6b609c9b775cc2daa4da35e053}{warmup\+\_\+instructions}} = 1000000
+\item 
+uint64\+\_\+t \mbox{\hyperlink{main_8cc_a8d7b8ab8c868a509bb3348202f21ff96}{simulation\+\_\+instructions}} = 10000000
+\item 
+auto \mbox{\hyperlink{main_8cc_ae79d771c5e4a335205a8e6ba68677e2f}{start\+\_\+time}} = time(N\+U\+LL)
+\item 
+\mbox{\hyperlink{structchampsim_1_1deprecated__clock__cycle}{champsim\+::deprecated\+\_\+clock\+\_\+cycle}} \mbox{\hyperlink{main_8cc_a1a4fea00fe004ad1ef53f486c417cc5e}{current\+\_\+core\+\_\+cycle}}
+\item 
+\mbox{\hyperlink{classMEMORY__CONTROLLER}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}} \mbox{\hyperlink{main_8cc_a1e0301e172253aa713cf238f07e3102d}{D\+R\+AM}}
+\item 
+\mbox{\hyperlink{classVirtualMemory}{Virtual\+Memory}} \mbox{\hyperlink{main_8cc_a27bc99bc899255d210a545263135c2b2}{vmem}}
+\item 
+std\+::array$<$ \mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}} $\ast$, \mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}} $>$ \mbox{\hyperlink{main_8cc_a30818f7144f8ea07a8844017e68a98ee}{ooo\+\_\+cpu}}
+\item 
+std\+::array$<$ \mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$, \mbox{\hyperlink{champsim__constants_8h_a583ed65d9dd7e3ab90cbfe21c9ed8aa9}{N\+U\+M\+\_\+\+C\+A\+C\+H\+ES}} $>$ \mbox{\hyperlink{main_8cc_a3fd44c1a0fdadcb0499307952b226c94}{caches}}
+\item 
+std\+::array$<$ \mbox{\hyperlink{classchampsim_1_1operable}{champsim\+::operable}} $\ast$, \mbox{\hyperlink{champsim__constants_8h_af93f5a29fd87cf776fbbc5a84f3a051c}{N\+U\+M\+\_\+\+O\+P\+E\+R\+A\+B\+L\+ES}} $>$ \mbox{\hyperlink{main_8cc_a94f5399bbe3109df7b8b6f57cfd4803d}{operables}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classtracereader}{tracereader}} $\ast$ $>$ \mbox{\hyperlink{main_8cc_a69502d7cd64325f2d275b0e0d80bdeea}{traces}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{main_8cc_aacd80d75dde79f0992fcf4bed0ad781a}\label{main_8cc_aacd80d75dde79f0992fcf4bed0ad781a}} 
+\index{main.cc@{main.cc}!finish\_warmup@{finish\_warmup}}
+\index{finish\_warmup@{finish\_warmup}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{finish\_warmup()}{finish\_warmup()}}
+{\footnotesize\ttfamily void finish\+\_\+warmup (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{main_8cc_aacd80d75dde79f0992fcf4bed0ad781a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=246pt]{main_8cc_aacd80d75dde79f0992fcf4bed0ad781a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{main_8cc_a3c04138a5bfe5d72780bb7e82a18e627}\label{main_8cc_a3c04138a5bfe5d72780bb7e82a18e627}} 
+\index{main.cc@{main.cc}!main@{main}}
+\index{main@{main}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$$\ast$}]{argv }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{main_8cc_a3c04138a5bfe5d72780bb7e82a18e627_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{main_8cc_a65063ae5fa0ce59d41ef68ba677ea0f7}\label{main_8cc_a65063ae5fa0ce59d41ef68ba677ea0f7}} 
+\index{main.cc@{main.cc}!print\_branch\_stats@{print\_branch\_stats}}
+\index{print\_branch\_stats@{print\_branch\_stats}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{print\_branch\_stats()}{print\_branch\_stats()}}
+{\footnotesize\ttfamily void print\+\_\+branch\+\_\+stats (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=264pt]{main_8cc_a65063ae5fa0ce59d41ef68ba677ea0f7_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{main_8cc_a020519d99b79c00341f7a5c03f7e4654}\label{main_8cc_a020519d99b79c00341f7a5c03f7e4654}} 
+\index{main.cc@{main.cc}!print\_dram\_stats@{print\_dram\_stats}}
+\index{print\_dram\_stats@{print\_dram\_stats}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{print\_dram\_stats()}{print\_dram\_stats()}}
+{\footnotesize\ttfamily void print\+\_\+dram\+\_\+stats (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=256pt]{main_8cc_a020519d99b79c00341f7a5c03f7e4654_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{main_8cc_a3e16b39c5b82afc11abc8caab955c75a}\label{main_8cc_a3e16b39c5b82afc11abc8caab955c75a}} 
+\index{main.cc@{main.cc}!print\_roi\_stats@{print\_roi\_stats}}
+\index{print\_roi\_stats@{print\_roi\_stats}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{print\_roi\_stats()}{print\_roi\_stats()}}
+{\footnotesize\ttfamily void print\+\_\+roi\+\_\+stats (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{cpu,  }\item[{\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$}]{cache }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=243pt]{main_8cc_a3e16b39c5b82afc11abc8caab955c75a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{main_8cc_af71f2597b67c620b85fe19c7ea98e521}\label{main_8cc_af71f2597b67c620b85fe19c7ea98e521}} 
+\index{main.cc@{main.cc}!print\_sim\_stats@{print\_sim\_stats}}
+\index{print\_sim\_stats@{print\_sim\_stats}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{print\_sim\_stats()}{print\_sim\_stats()}}
+{\footnotesize\ttfamily void print\+\_\+sim\+\_\+stats (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{cpu,  }\item[{\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$}]{cache }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=249pt]{main_8cc_af71f2597b67c620b85fe19c7ea98e521_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{main_8cc_a03a4d89b4e4d2cc7ba4f98bf58e7f35b}\label{main_8cc_a03a4d89b4e4d2cc7ba4f98bf58e7f35b}} 
+\index{main.cc@{main.cc}!record\_roi\_stats@{record\_roi\_stats}}
+\index{record\_roi\_stats@{record\_roi\_stats}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{record\_roi\_stats()}{record\_roi\_stats()}}
+{\footnotesize\ttfamily void record\+\_\+roi\+\_\+stats (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{cpu,  }\item[{\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$}]{cache }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=252pt]{main_8cc_a03a4d89b4e4d2cc7ba4f98bf58e7f35b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{main_8cc_aaebeec0b6e8068c7851c2224f5c84dda}\label{main_8cc_aaebeec0b6e8068c7851c2224f5c84dda}} 
+\index{main.cc@{main.cc}!reset\_cache\_stats@{reset\_cache\_stats}}
+\index{reset\_cache\_stats@{reset\_cache\_stats}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{reset\_cache\_stats()}{reset\_cache\_stats()}}
+{\footnotesize\ttfamily void reset\+\_\+cache\+\_\+stats (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{cpu,  }\item[{\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}} $\ast$}]{cache }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{main_8cc_aaebeec0b6e8068c7851c2224f5c84dda_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{main_8cc_a3b527c56ed133ee6815bfbc625e757af}\label{main_8cc_a3b527c56ed133ee6815bfbc625e757af}} 
+\index{main.cc@{main.cc}!signal\_handler@{signal\_handler}}
+\index{signal\_handler@{signal\_handler}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{signal\_handler()}{signal\_handler()}}
+{\footnotesize\ttfamily void signal\+\_\+handler (\begin{DoxyParamCaption}\item[{int}]{signal }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=245pt]{main_8cc_a3b527c56ed133ee6815bfbc625e757af_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{main_8cc_a8a6c2db12a8111f1cac02e52c83e8a39}\label{main_8cc_a8a6c2db12a8111f1cac02e52c83e8a39}} 
+\index{main.cc@{main.cc}!all\_simulation\_complete@{all\_simulation\_complete}}
+\index{all\_simulation\_complete@{all\_simulation\_complete}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{all\_simulation\_complete}{all\_simulation\_complete}}
+{\footnotesize\ttfamily uint8\+\_\+t all\+\_\+simulation\+\_\+complete = 0}
+
+\mbox{\Hypertarget{main_8cc_a288edcff66ad3c6f62ce2bf7219e2239}\label{main_8cc_a288edcff66ad3c6f62ce2bf7219e2239}} 
+\index{main.cc@{main.cc}!all\_warmup\_complete@{all\_warmup\_complete}}
+\index{all\_warmup\_complete@{all\_warmup\_complete}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{all\_warmup\_complete}{all\_warmup\_complete}}
+{\footnotesize\ttfamily uint8\+\_\+t all\+\_\+warmup\+\_\+complete = 0}
+
+\mbox{\Hypertarget{main_8cc_a3fd44c1a0fdadcb0499307952b226c94}\label{main_8cc_a3fd44c1a0fdadcb0499307952b226c94}} 
+\index{main.cc@{main.cc}!caches@{caches}}
+\index{caches@{caches}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{caches}{caches}}
+{\footnotesize\ttfamily std\+::array$<$\mbox{\hyperlink{classCACHE}{C\+A\+C\+HE}}$\ast$, \mbox{\hyperlink{champsim__constants_8h_a583ed65d9dd7e3ab90cbfe21c9ed8aa9}{N\+U\+M\+\_\+\+C\+A\+C\+H\+ES}}$>$ caches}
+
+\mbox{\Hypertarget{main_8cc_a1a4fea00fe004ad1ef53f486c417cc5e}\label{main_8cc_a1a4fea00fe004ad1ef53f486c417cc5e}} 
+\index{main.cc@{main.cc}!current\_core\_cycle@{current\_core\_cycle}}
+\index{current\_core\_cycle@{current\_core\_cycle}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{current\_core\_cycle}{current\_core\_cycle}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structchampsim_1_1deprecated__clock__cycle}{champsim\+::deprecated\+\_\+clock\+\_\+cycle}} current\+\_\+core\+\_\+cycle}
+
+\mbox{\Hypertarget{main_8cc_a1e0301e172253aa713cf238f07e3102d}\label{main_8cc_a1e0301e172253aa713cf238f07e3102d}} 
+\index{main.cc@{main.cc}!DRAM@{DRAM}}
+\index{DRAM@{DRAM}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{DRAM}{DRAM}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classMEMORY__CONTROLLER}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}} D\+R\+AM}
+
+\mbox{\Hypertarget{main_8cc_a8f0e86d63f158621b9df4dcff0713417}\label{main_8cc_a8f0e86d63f158621b9df4dcff0713417}} 
+\index{main.cc@{main.cc}!knob\_cloudsuite@{knob\_cloudsuite}}
+\index{knob\_cloudsuite@{knob\_cloudsuite}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{knob\_cloudsuite}{knob\_cloudsuite}}
+{\footnotesize\ttfamily uint8\+\_\+t knob\+\_\+cloudsuite = 0}
+
+\mbox{\Hypertarget{main_8cc_afbeba368b5ccbdac870b9052c15950f6}\label{main_8cc_afbeba368b5ccbdac870b9052c15950f6}} 
+\index{main.cc@{main.cc}!knob\_low\_bandwidth@{knob\_low\_bandwidth}}
+\index{knob\_low\_bandwidth@{knob\_low\_bandwidth}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{knob\_low\_bandwidth}{knob\_low\_bandwidth}}
+{\footnotesize\ttfamily uint8\+\_\+t knob\+\_\+low\+\_\+bandwidth = 0}
+
+\mbox{\Hypertarget{main_8cc_a3311c0092a6c8dcbf1b903cdc6a8c51f}\label{main_8cc_a3311c0092a6c8dcbf1b903cdc6a8c51f}} 
+\index{main.cc@{main.cc}!MAX\_INSTR\_DESTINATIONS@{MAX\_INSTR\_DESTINATIONS}}
+\index{MAX\_INSTR\_DESTINATIONS@{MAX\_INSTR\_DESTINATIONS}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{MAX\_INSTR\_DESTINATIONS}{MAX\_INSTR\_DESTINATIONS}}
+{\footnotesize\ttfamily uint8\+\_\+t M\+A\+X\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+NS = \mbox{\hyperlink{trace__instruction_8h_a27b4eb73b09fa14bcceccab20c4d4051}{N\+U\+M\+\_\+\+I\+N\+S\+T\+R\+\_\+\+D\+E\+S\+T\+I\+N\+A\+T\+I\+O\+NS}}}
+
+\mbox{\Hypertarget{main_8cc_a30818f7144f8ea07a8844017e68a98ee}\label{main_8cc_a30818f7144f8ea07a8844017e68a98ee}} 
+\index{main.cc@{main.cc}!ooo\_cpu@{ooo\_cpu}}
+\index{ooo\_cpu@{ooo\_cpu}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{ooo\_cpu}{ooo\_cpu}}
+{\footnotesize\ttfamily std\+::array$<$\mbox{\hyperlink{classO3__CPU}{O3\+\_\+\+C\+PU}}$\ast$, \mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}$>$ ooo\+\_\+cpu}
+
+\mbox{\Hypertarget{main_8cc_a94f5399bbe3109df7b8b6f57cfd4803d}\label{main_8cc_a94f5399bbe3109df7b8b6f57cfd4803d}} 
+\index{main.cc@{main.cc}!operables@{operables}}
+\index{operables@{operables}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{operables}{operables}}
+{\footnotesize\ttfamily std\+::array$<$\mbox{\hyperlink{classchampsim_1_1operable}{champsim\+::operable}}$\ast$, \mbox{\hyperlink{champsim__constants_8h_af93f5a29fd87cf776fbbc5a84f3a051c}{N\+U\+M\+\_\+\+O\+P\+E\+R\+A\+B\+L\+ES}}$>$ operables}
+
+\mbox{\Hypertarget{main_8cc_a99d4241617bbe65cc308537d90093185}\label{main_8cc_a99d4241617bbe65cc308537d90093185}} 
+\index{main.cc@{main.cc}!simulation\_complete@{simulation\_complete}}
+\index{simulation\_complete@{simulation\_complete}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{simulation\_complete}{simulation\_complete}}
+{\footnotesize\ttfamily uint8\+\_\+t simulation\+\_\+complete\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{main_8cc_a8d7b8ab8c868a509bb3348202f21ff96}\label{main_8cc_a8d7b8ab8c868a509bb3348202f21ff96}} 
+\index{main.cc@{main.cc}!simulation\_instructions@{simulation\_instructions}}
+\index{simulation\_instructions@{simulation\_instructions}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{simulation\_instructions}{simulation\_instructions}}
+{\footnotesize\ttfamily uint64\+\_\+t simulation\+\_\+instructions = 10000000}
+
+\mbox{\Hypertarget{main_8cc_ae79d771c5e4a335205a8e6ba68677e2f}\label{main_8cc_ae79d771c5e4a335205a8e6ba68677e2f}} 
+\index{main.cc@{main.cc}!start\_time@{start\_time}}
+\index{start\_time@{start\_time}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{start\_time}{start\_time}}
+{\footnotesize\ttfamily auto start\+\_\+time = time(N\+U\+LL)}
+
+\mbox{\Hypertarget{main_8cc_a69502d7cd64325f2d275b0e0d80bdeea}\label{main_8cc_a69502d7cd64325f2d275b0e0d80bdeea}} 
+\index{main.cc@{main.cc}!traces@{traces}}
+\index{traces@{traces}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{traces}{traces}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classtracereader}{tracereader}}$\ast$$>$ traces}
+
+\mbox{\Hypertarget{main_8cc_a27bc99bc899255d210a545263135c2b2}\label{main_8cc_a27bc99bc899255d210a545263135c2b2}} 
+\index{main.cc@{main.cc}!vmem@{vmem}}
+\index{vmem@{vmem}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{vmem}{vmem}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classVirtualMemory}{Virtual\+Memory}} vmem}
+
+\mbox{\Hypertarget{main_8cc_ab4fed54274903225c5f3de0058bea6b9}\label{main_8cc_ab4fed54274903225c5f3de0058bea6b9}} 
+\index{main.cc@{main.cc}!warmup\_complete@{warmup\_complete}}
+\index{warmup\_complete@{warmup\_complete}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{warmup\_complete}{warmup\_complete}}
+{\footnotesize\ttfamily uint8\+\_\+t warmup\+\_\+complete\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{main_8cc_a42598f6b609c9b775cc2daa4da35e053}\label{main_8cc_a42598f6b609c9b775cc2daa4da35e053}} 
+\index{main.cc@{main.cc}!warmup\_instructions@{warmup\_instructions}}
+\index{warmup\_instructions@{warmup\_instructions}!main.cc@{main.cc}}
+\doxysubsubsection{\texorpdfstring{warmup\_instructions}{warmup\_instructions}}
+{\footnotesize\ttfamily uint64\+\_\+t warmup\+\_\+instructions = 1000000}
+

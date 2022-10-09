@@ -1,0 +1,250 @@
+\hypertarget{basic__btb_8cc}{}\doxysection{btb/basic\+\_\+btb/basic\+\_\+btb.cc File Reference}
+\label{basic__btb_8cc}\index{btb/basic\_btb/basic\_btb.cc@{btb/basic\_btb/basic\_btb.cc}}
+{\ttfamily \#include \char`\"{}ooo\+\_\+cpu.\+h\char`\"{}}\newline
+Include dependency graph for basic\+\_\+btb.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{basic__btb_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structBASIC__BTB__ENTRY}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+E\+N\+T\+RY}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{basic__btb_8cc_ac0b60cfdfffb8836cfabadc6abbed184}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+S\+E\+TS}}~1024
+\item 
+\#define \mbox{\hyperlink{basic__btb_8cc_a5838f49ff2c97c5a27877a77eaea84a7}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+W\+A\+YS}}~8
+\item 
+\#define \mbox{\hyperlink{basic__btb_8cc_a678aba8ec52ee936fce1485f5ec276b7}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+I\+N\+D\+I\+R\+E\+C\+T\+\_\+\+S\+I\+ZE}}~4096
+\item 
+\#define \mbox{\hyperlink{basic__btb_8cc_a2409673142e718beb2b31278c3cb7d23}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+R\+A\+S\+\_\+\+S\+I\+ZE}}~64
+\item 
+\#define \mbox{\hyperlink{basic__btb_8cc_a6dac8ce7f9b1743770f71b7be6908c75}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+C\+A\+L\+L\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+I\+Z\+E\+\_\+\+T\+R\+A\+C\+K\+E\+RS}}~1024
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_a7f1ebb71caf00dcd09fd03870e74744d}{basic\+\_\+btb\+\_\+abs\+\_\+addr\+\_\+dist}} (uint64\+\_\+t addr1, uint64\+\_\+t addr2)
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_ac0ad34be84bf58ff3e97a25cb6f4dd20}{basic\+\_\+btb\+\_\+set\+\_\+index}} (uint64\+\_\+t ip)
+\item 
+\mbox{\hyperlink{structBASIC__BTB__ENTRY}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+E\+N\+T\+RY}} $\ast$ \mbox{\hyperlink{basic__btb_8cc_a553f93b06453c78958d91c486a8ca4c4}{basic\+\_\+btb\+\_\+find\+\_\+entry}} (uint8\+\_\+t cpu, uint64\+\_\+t ip)
+\item 
+\mbox{\hyperlink{structBASIC__BTB__ENTRY}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+E\+N\+T\+RY}} $\ast$ \mbox{\hyperlink{basic__btb_8cc_a4e38d2a59fbfa1d901de2e3538beb357}{basic\+\_\+btb\+\_\+get\+\_\+lru\+\_\+entry}} (uint8\+\_\+t cpu, uint64\+\_\+t set)
+\item 
+void \mbox{\hyperlink{basic__btb_8cc_a0dc84837ca90e22a67ae86d93222fe60}{basic\+\_\+btb\+\_\+update\+\_\+lru}} (uint8\+\_\+t cpu, \mbox{\hyperlink{structBASIC__BTB__ENTRY}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+E\+N\+T\+RY}} $\ast$btb\+\_\+entry)
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_a6460f53ae5de77da2da255dfa738df2e}{basic\+\_\+btb\+\_\+indirect\+\_\+hash}} (uint8\+\_\+t cpu, uint64\+\_\+t ip)
+\item 
+void \mbox{\hyperlink{basic__btb_8cc_aea3a8e3f9a0042c7893ea3358fd97cc4}{push\+\_\+basic\+\_\+btb\+\_\+ras}} (uint8\+\_\+t cpu, uint64\+\_\+t ip)
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_aa5d93e583c80ab35437fe7c1a2da7c29}{peek\+\_\+basic\+\_\+btb\+\_\+ras}} (uint8\+\_\+t cpu)
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_a50bfdd4b0c05d4a0d42ac05245bf223f}{pop\+\_\+basic\+\_\+btb\+\_\+ras}} (uint8\+\_\+t cpu)
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_a446018af00fbea7923aadae421160964}{basic\+\_\+btb\+\_\+call\+\_\+size\+\_\+tracker\+\_\+hash}} (uint64\+\_\+t ip)
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_ac7c894d205afc343e191ea9723211844}{basic\+\_\+btb\+\_\+get\+\_\+call\+\_\+size}} (uint8\+\_\+t cpu, uint64\+\_\+t ip)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structBASIC__BTB__ENTRY}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+E\+N\+T\+RY}} \mbox{\hyperlink{basic__btb_8cc_aadce6e3b8b41e06f1584f7cc187e27c9}{basic\+\_\+btb}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_ac0b60cfdfffb8836cfabadc6abbed184}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+S\+E\+TS}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_a5838f49ff2c97c5a27877a77eaea84a7}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+W\+A\+YS}}\mbox{]}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_a1e62473618265c451cab63bb3eec374b}{basic\+\_\+btb\+\_\+lru\+\_\+counter}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_aeb77abf941c329b93828fae6fdf782d7}{basic\+\_\+btb\+\_\+indirect}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_a678aba8ec52ee936fce1485f5ec276b7}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+I\+N\+D\+I\+R\+E\+C\+T\+\_\+\+S\+I\+ZE}}\mbox{]}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_a0e198545aa9fa1340a90bb60e3aeb7c1}{basic\+\_\+btb\+\_\+conditional\+\_\+history}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_a276e29310be75538ee46def961866b64}{basic\+\_\+btb\+\_\+ras}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_a2409673142e718beb2b31278c3cb7d23}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+R\+A\+S\+\_\+\+S\+I\+ZE}}\mbox{]}
+\item 
+int \mbox{\hyperlink{basic__btb_8cc_a8d6c01e553a5b7ebfbd21c413b7d7ece}{basic\+\_\+btb\+\_\+ras\+\_\+index}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{basic__btb_8cc_af0446d05e393f709980e8a2076c0abcd}{basic\+\_\+btb\+\_\+call\+\_\+instr\+\_\+sizes}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_a6dac8ce7f9b1743770f71b7be6908c75}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+C\+A\+L\+L\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+I\+Z\+E\+\_\+\+T\+R\+A\+C\+K\+E\+RS}}\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{basic__btb_8cc_a6dac8ce7f9b1743770f71b7be6908c75}\label{basic__btb_8cc_a6dac8ce7f9b1743770f71b7be6908c75}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!BASIC\_BTB\_CALL\_INSTR\_SIZE\_TRACKERS@{BASIC\_BTB\_CALL\_INSTR\_SIZE\_TRACKERS}}
+\index{BASIC\_BTB\_CALL\_INSTR\_SIZE\_TRACKERS@{BASIC\_BTB\_CALL\_INSTR\_SIZE\_TRACKERS}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{BASIC\_BTB\_CALL\_INSTR\_SIZE\_TRACKERS}{BASIC\_BTB\_CALL\_INSTR\_SIZE\_TRACKERS}}
+{\footnotesize\ttfamily \#define B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+C\+A\+L\+L\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+I\+Z\+E\+\_\+\+T\+R\+A\+C\+K\+E\+RS~1024}
+
+\mbox{\Hypertarget{basic__btb_8cc_a678aba8ec52ee936fce1485f5ec276b7}\label{basic__btb_8cc_a678aba8ec52ee936fce1485f5ec276b7}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!BASIC\_BTB\_INDIRECT\_SIZE@{BASIC\_BTB\_INDIRECT\_SIZE}}
+\index{BASIC\_BTB\_INDIRECT\_SIZE@{BASIC\_BTB\_INDIRECT\_SIZE}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{BASIC\_BTB\_INDIRECT\_SIZE}{BASIC\_BTB\_INDIRECT\_SIZE}}
+{\footnotesize\ttfamily \#define B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+I\+N\+D\+I\+R\+E\+C\+T\+\_\+\+S\+I\+ZE~4096}
+
+\mbox{\Hypertarget{basic__btb_8cc_a2409673142e718beb2b31278c3cb7d23}\label{basic__btb_8cc_a2409673142e718beb2b31278c3cb7d23}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!BASIC\_BTB\_RAS\_SIZE@{BASIC\_BTB\_RAS\_SIZE}}
+\index{BASIC\_BTB\_RAS\_SIZE@{BASIC\_BTB\_RAS\_SIZE}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{BASIC\_BTB\_RAS\_SIZE}{BASIC\_BTB\_RAS\_SIZE}}
+{\footnotesize\ttfamily \#define B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+R\+A\+S\+\_\+\+S\+I\+ZE~64}
+
+\mbox{\Hypertarget{basic__btb_8cc_ac0b60cfdfffb8836cfabadc6abbed184}\label{basic__btb_8cc_ac0b60cfdfffb8836cfabadc6abbed184}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!BASIC\_BTB\_SETS@{BASIC\_BTB\_SETS}}
+\index{BASIC\_BTB\_SETS@{BASIC\_BTB\_SETS}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{BASIC\_BTB\_SETS}{BASIC\_BTB\_SETS}}
+{\footnotesize\ttfamily \#define B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+S\+E\+TS~1024}
+
+\mbox{\Hypertarget{basic__btb_8cc_a5838f49ff2c97c5a27877a77eaea84a7}\label{basic__btb_8cc_a5838f49ff2c97c5a27877a77eaea84a7}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!BASIC\_BTB\_WAYS@{BASIC\_BTB\_WAYS}}
+\index{BASIC\_BTB\_WAYS@{BASIC\_BTB\_WAYS}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{BASIC\_BTB\_WAYS}{BASIC\_BTB\_WAYS}}
+{\footnotesize\ttfamily \#define B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+W\+A\+YS~8}
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{basic__btb_8cc_a7f1ebb71caf00dcd09fd03870e74744d}\label{basic__btb_8cc_a7f1ebb71caf00dcd09fd03870e74744d}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_abs\_addr\_dist@{basic\_btb\_abs\_addr\_dist}}
+\index{basic\_btb\_abs\_addr\_dist@{basic\_btb\_abs\_addr\_dist}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_abs\_addr\_dist()}{basic\_btb\_abs\_addr\_dist()}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+abs\+\_\+addr\+\_\+dist (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{addr1,  }\item[{uint64\+\_\+t}]{addr2 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{basic__btb_8cc_a446018af00fbea7923aadae421160964}\label{basic__btb_8cc_a446018af00fbea7923aadae421160964}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_call\_size\_tracker\_hash@{basic\_btb\_call\_size\_tracker\_hash}}
+\index{basic\_btb\_call\_size\_tracker\_hash@{basic\_btb\_call\_size\_tracker\_hash}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_call\_size\_tracker\_hash()}{basic\_btb\_call\_size\_tracker\_hash()}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+call\+\_\+size\+\_\+tracker\+\_\+hash (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{ip }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{basic__btb_8cc_a446018af00fbea7923aadae421160964_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{basic__btb_8cc_a553f93b06453c78958d91c486a8ca4c4}\label{basic__btb_8cc_a553f93b06453c78958d91c486a8ca4c4}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_find\_entry@{basic\_btb\_find\_entry}}
+\index{basic\_btb\_find\_entry@{basic\_btb\_find\_entry}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_find\_entry()}{basic\_btb\_find\_entry()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structBASIC__BTB__ENTRY}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+E\+N\+T\+RY}}$\ast$ basic\+\_\+btb\+\_\+find\+\_\+entry (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu,  }\item[{uint64\+\_\+t}]{ip }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{basic__btb_8cc_a553f93b06453c78958d91c486a8ca4c4_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{basic__btb_8cc_ac7c894d205afc343e191ea9723211844}\label{basic__btb_8cc_ac7c894d205afc343e191ea9723211844}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_get\_call\_size@{basic\_btb\_get\_call\_size}}
+\index{basic\_btb\_get\_call\_size@{basic\_btb\_get\_call\_size}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_get\_call\_size()}{basic\_btb\_get\_call\_size()}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+get\+\_\+call\+\_\+size (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu,  }\item[{uint64\+\_\+t}]{ip }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{basic__btb_8cc_ac7c894d205afc343e191ea9723211844_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{basic__btb_8cc_a4e38d2a59fbfa1d901de2e3538beb357}\label{basic__btb_8cc_a4e38d2a59fbfa1d901de2e3538beb357}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_get\_lru\_entry@{basic\_btb\_get\_lru\_entry}}
+\index{basic\_btb\_get\_lru\_entry@{basic\_btb\_get\_lru\_entry}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_get\_lru\_entry()}{basic\_btb\_get\_lru\_entry()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structBASIC__BTB__ENTRY}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+E\+N\+T\+RY}}$\ast$ basic\+\_\+btb\+\_\+get\+\_\+lru\+\_\+entry (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu,  }\item[{uint64\+\_\+t}]{set }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{basic__btb_8cc_a6460f53ae5de77da2da255dfa738df2e}\label{basic__btb_8cc_a6460f53ae5de77da2da255dfa738df2e}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_indirect\_hash@{basic\_btb\_indirect\_hash}}
+\index{basic\_btb\_indirect\_hash@{basic\_btb\_indirect\_hash}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_indirect\_hash()}{basic\_btb\_indirect\_hash()}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+indirect\+\_\+hash (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu,  }\item[{uint64\+\_\+t}]{ip }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{basic__btb_8cc_ac0ad34be84bf58ff3e97a25cb6f4dd20}\label{basic__btb_8cc_ac0ad34be84bf58ff3e97a25cb6f4dd20}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_set\_index@{basic\_btb\_set\_index}}
+\index{basic\_btb\_set\_index@{basic\_btb\_set\_index}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_set\_index()}{basic\_btb\_set\_index()}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+set\+\_\+index (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{ip }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{basic__btb_8cc_ac0ad34be84bf58ff3e97a25cb6f4dd20_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{basic__btb_8cc_a0dc84837ca90e22a67ae86d93222fe60}\label{basic__btb_8cc_a0dc84837ca90e22a67ae86d93222fe60}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_update\_lru@{basic\_btb\_update\_lru}}
+\index{basic\_btb\_update\_lru@{basic\_btb\_update\_lru}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_update\_lru()}{basic\_btb\_update\_lru()}}
+{\footnotesize\ttfamily void basic\+\_\+btb\+\_\+update\+\_\+lru (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu,  }\item[{\mbox{\hyperlink{structBASIC__BTB__ENTRY}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+E\+N\+T\+RY}} $\ast$}]{btb\+\_\+entry }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{basic__btb_8cc_aa5d93e583c80ab35437fe7c1a2da7c29}\label{basic__btb_8cc_aa5d93e583c80ab35437fe7c1a2da7c29}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!peek\_basic\_btb\_ras@{peek\_basic\_btb\_ras}}
+\index{peek\_basic\_btb\_ras@{peek\_basic\_btb\_ras}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{peek\_basic\_btb\_ras()}{peek\_basic\_btb\_ras()}}
+{\footnotesize\ttfamily uint64\+\_\+t peek\+\_\+basic\+\_\+btb\+\_\+ras (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{basic__btb_8cc_a50bfdd4b0c05d4a0d42ac05245bf223f}\label{basic__btb_8cc_a50bfdd4b0c05d4a0d42ac05245bf223f}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!pop\_basic\_btb\_ras@{pop\_basic\_btb\_ras}}
+\index{pop\_basic\_btb\_ras@{pop\_basic\_btb\_ras}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{pop\_basic\_btb\_ras()}{pop\_basic\_btb\_ras()}}
+{\footnotesize\ttfamily uint64\+\_\+t pop\+\_\+basic\+\_\+btb\+\_\+ras (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{basic__btb_8cc_aea3a8e3f9a0042c7893ea3358fd97cc4}\label{basic__btb_8cc_aea3a8e3f9a0042c7893ea3358fd97cc4}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!push\_basic\_btb\_ras@{push\_basic\_btb\_ras}}
+\index{push\_basic\_btb\_ras@{push\_basic\_btb\_ras}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{push\_basic\_btb\_ras()}{push\_basic\_btb\_ras()}}
+{\footnotesize\ttfamily void push\+\_\+basic\+\_\+btb\+\_\+ras (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{cpu,  }\item[{uint64\+\_\+t}]{ip }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{basic__btb_8cc_aadce6e3b8b41e06f1584f7cc187e27c9}\label{basic__btb_8cc_aadce6e3b8b41e06f1584f7cc187e27c9}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb@{basic\_btb}}
+\index{basic\_btb@{basic\_btb}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb}{basic\_btb}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structBASIC__BTB__ENTRY}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+E\+N\+T\+RY}} basic\+\_\+btb\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_ac0b60cfdfffb8836cfabadc6abbed184}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+S\+E\+TS}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_a5838f49ff2c97c5a27877a77eaea84a7}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+W\+A\+YS}}\mbox{]}}
+
+\mbox{\Hypertarget{basic__btb_8cc_af0446d05e393f709980e8a2076c0abcd}\label{basic__btb_8cc_af0446d05e393f709980e8a2076c0abcd}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_call\_instr\_sizes@{basic\_btb\_call\_instr\_sizes}}
+\index{basic\_btb\_call\_instr\_sizes@{basic\_btb\_call\_instr\_sizes}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_call\_instr\_sizes}{basic\_btb\_call\_instr\_sizes}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+call\+\_\+instr\+\_\+sizes\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_a6dac8ce7f9b1743770f71b7be6908c75}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+C\+A\+L\+L\+\_\+\+I\+N\+S\+T\+R\+\_\+\+S\+I\+Z\+E\+\_\+\+T\+R\+A\+C\+K\+E\+RS}}\mbox{]}}
+
+\mbox{\Hypertarget{basic__btb_8cc_a0e198545aa9fa1340a90bb60e3aeb7c1}\label{basic__btb_8cc_a0e198545aa9fa1340a90bb60e3aeb7c1}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_conditional\_history@{basic\_btb\_conditional\_history}}
+\index{basic\_btb\_conditional\_history@{basic\_btb\_conditional\_history}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_conditional\_history}{basic\_btb\_conditional\_history}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+conditional\+\_\+history\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}}
+
+\mbox{\Hypertarget{basic__btb_8cc_aeb77abf941c329b93828fae6fdf782d7}\label{basic__btb_8cc_aeb77abf941c329b93828fae6fdf782d7}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_indirect@{basic\_btb\_indirect}}
+\index{basic\_btb\_indirect@{basic\_btb\_indirect}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_indirect}{basic\_btb\_indirect}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+indirect\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_a678aba8ec52ee936fce1485f5ec276b7}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+I\+N\+D\+I\+R\+E\+C\+T\+\_\+\+S\+I\+ZE}}\mbox{]}}
+
+\mbox{\Hypertarget{basic__btb_8cc_a1e62473618265c451cab63bb3eec374b}\label{basic__btb_8cc_a1e62473618265c451cab63bb3eec374b}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_lru\_counter@{basic\_btb\_lru\_counter}}
+\index{basic\_btb\_lru\_counter@{basic\_btb\_lru\_counter}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_lru\_counter}{basic\_btb\_lru\_counter}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+lru\+\_\+counter\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}}
+
+\mbox{\Hypertarget{basic__btb_8cc_a276e29310be75538ee46def961866b64}\label{basic__btb_8cc_a276e29310be75538ee46def961866b64}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_ras@{basic\_btb\_ras}}
+\index{basic\_btb\_ras@{basic\_btb\_ras}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_ras}{basic\_btb\_ras}}
+{\footnotesize\ttfamily uint64\+\_\+t basic\+\_\+btb\+\_\+ras\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{basic__btb_8cc_a2409673142e718beb2b31278c3cb7d23}{B\+A\+S\+I\+C\+\_\+\+B\+T\+B\+\_\+\+R\+A\+S\+\_\+\+S\+I\+ZE}}\mbox{]}}
+
+\mbox{\Hypertarget{basic__btb_8cc_a8d6c01e553a5b7ebfbd21c413b7d7ece}\label{basic__btb_8cc_a8d6c01e553a5b7ebfbd21c413b7d7ece}} 
+\index{basic\_btb.cc@{basic\_btb.cc}!basic\_btb\_ras\_index@{basic\_btb\_ras\_index}}
+\index{basic\_btb\_ras\_index@{basic\_btb\_ras\_index}!basic\_btb.cc@{basic\_btb.cc}}
+\doxysubsubsection{\texorpdfstring{basic\_btb\_ras\_index}{basic\_btb\_ras\_index}}
+{\footnotesize\ttfamily int basic\+\_\+btb\+\_\+ras\+\_\+index\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}}
+

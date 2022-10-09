@@ -1,0 +1,104 @@
+\hypertarget{util_8h}{}\doxysection{inc/util.h File Reference}
+\label{util_8h}\index{inc/util.h@{inc/util.h}}
+{\ttfamily \#include $<$cstdint$>$}\newline
+Include dependency graph for util.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=139pt]{util_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{util_8h__dep__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structis__valid}{is\+\_\+valid$<$ T $>$}}
+\item 
+struct \mbox{\hyperlink{structeq__addr}{eq\+\_\+addr$<$ T $>$}}
+\item 
+struct \mbox{\hyperlink{structinvalid__is__minimal}{invalid\+\_\+is\+\_\+minimal$<$ T, B\+I\+N, U, U\+N\+\_\+\+T, U\+N\+\_\+\+U $>$}}
+\item 
+struct \mbox{\hyperlink{structinvalid__is__maximal}{invalid\+\_\+is\+\_\+maximal$<$ T, B\+I\+N, U, U\+N\+\_\+\+T, U\+N\+\_\+\+U $>$}}
+\item 
+struct \mbox{\hyperlink{structcmp__event__cycle}{cmp\+\_\+event\+\_\+cycle$<$ T, U $>$}}
+\item 
+struct \mbox{\hyperlink{structmin__event__cycle}{min\+\_\+event\+\_\+cycle$<$ T $>$}}
+\item 
+struct \mbox{\hyperlink{structcmp__lru}{cmp\+\_\+lru$<$ T, U $>$}}
+\item 
+struct \mbox{\hyperlink{structlru__comparator}{lru\+\_\+comparator$<$ T, U $>$}}
+\item 
+struct \mbox{\hyperlink{structlru__updater}{lru\+\_\+updater$<$ T $>$}}
+\item 
+struct \mbox{\hyperlink{structord__event__cycle}{ord\+\_\+event\+\_\+cycle$<$ T, U $>$}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+constexpr unsigned \mbox{\hyperlink{util_8h_a4b3c4034ed558e4d0fd0ec0c4b7e4daf}{lg2}} (uint64\+\_\+t n)
+\item 
+constexpr uint64\+\_\+t \mbox{\hyperlink{util_8h_a57caafc23f9c592454e36584dee2b92a}{bitmask}} (std\+::size\+\_\+t begin, std\+::size\+\_\+t end=0)
+\item 
+constexpr uint64\+\_\+t \mbox{\hyperlink{util_8h_aecac423e42bb915bc189fe74b7cb0d68}{splice\+\_\+bits}} (uint64\+\_\+t upper, uint64\+\_\+t lower, std\+::size\+\_\+t bits)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{util_8h_a57caafc23f9c592454e36584dee2b92a}\label{util_8h_a57caafc23f9c592454e36584dee2b92a}} 
+\index{util.h@{util.h}!bitmask@{bitmask}}
+\index{bitmask@{bitmask}!util.h@{util.h}}
+\doxysubsubsection{\texorpdfstring{bitmask()}{bitmask()}}
+{\footnotesize\ttfamily constexpr uint64\+\_\+t bitmask (\begin{DoxyParamCaption}\item[{std\+::size\+\_\+t}]{begin,  }\item[{std\+::size\+\_\+t}]{end = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{util_8h_a57caafc23f9c592454e36584dee2b92a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{util_8h_a4b3c4034ed558e4d0fd0ec0c4b7e4daf}\label{util_8h_a4b3c4034ed558e4d0fd0ec0c4b7e4daf}} 
+\index{util.h@{util.h}!lg2@{lg2}}
+\index{lg2@{lg2}!util.h@{util.h}}
+\doxysubsubsection{\texorpdfstring{lg2()}{lg2()}}
+{\footnotesize\ttfamily constexpr unsigned lg2 (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{n }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{util_8h_a4b3c4034ed558e4d0fd0ec0c4b7e4daf_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{util_8h_aecac423e42bb915bc189fe74b7cb0d68}\label{util_8h_aecac423e42bb915bc189fe74b7cb0d68}} 
+\index{util.h@{util.h}!splice\_bits@{splice\_bits}}
+\index{splice\_bits@{splice\_bits}!util.h@{util.h}}
+\doxysubsubsection{\texorpdfstring{splice\_bits()}{splice\_bits()}}
+{\footnotesize\ttfamily constexpr uint64\+\_\+t splice\+\_\+bits (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{upper,  }\item[{uint64\+\_\+t}]{lower,  }\item[{std\+::size\+\_\+t}]{bits }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=240pt]{util_8h_aecac423e42bb915bc189fe74b7cb0d68_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{util_8h_aecac423e42bb915bc189fe74b7cb0d68_icgraph}
+\end{center}
+\end{figure}

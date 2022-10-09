@@ -1,0 +1,16 @@
+<map id="inc/tracereader.h" name="inc/tracereader.h">
+<area shape="rect" id="node1" title=" " alt="" coords="127,5,259,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="79,80,140,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="164,80,223,107"/>
+<area shape="rect" id="node4" href="$instruction_8h.html" title=" " alt="" coords="247,80,350,107"/>
+<area shape="rect" id="node5" title=" " alt="" coords="5,155,61,181"/>
+<area shape="rect" id="node6" title=" " alt="" coords="85,155,152,181"/>
+<area shape="rect" id="node7" title=" " alt="" coords="204,229,284,256"/>
+<area shape="rect" id="node8" title=" " alt="" coords="353,229,412,256"/>
+<area shape="rect" id="node9" title=" " alt="" coords="437,229,499,256"/>
+<area shape="rect" id="node10" href="$circular__buffer_8hpp.html" title=" " alt="" coords="496,155,640,181"/>
+<area shape="rect" id="node14" href="$trace__instruction_8h.html" title=" " alt="" coords="227,155,370,181"/>
+<area shape="rect" id="node11" title=" " alt="" coords="524,229,593,256"/>
+<area shape="rect" id="node12" title=" " alt="" coords="618,229,689,256"/>
+<area shape="rect" id="node13" title=" " alt="" coords="713,229,805,256"/>
+</map>

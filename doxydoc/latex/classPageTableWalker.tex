@@ -1,0 +1,368 @@
+\hypertarget{classPageTableWalker}{}\doxysection{Page\+Table\+Walker Class Reference}
+\label{classPageTableWalker}\index{PageTableWalker@{PageTableWalker}}
+
+
+{\ttfamily \#include $<$ptw.\+h$>$}
+
+
+
+Inheritance diagram for Page\+Table\+Walker\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Page\+Table\+Walker\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classPageTableWalker_a1bf6d71f0955cdc829f2727c7092b272}{Page\+Table\+Walker}} (std\+::string v1, uint32\+\_\+t \mbox{\hyperlink{classPageTableWalker_a32df35993a8e02927e2dbcee1ac36933}{cpu}}, unsigned \mbox{\hyperlink{classMemoryRequestConsumer_a93263647de08b7203dab91693de2bcd7}{fill\+\_\+level}}, uint32\+\_\+t v2, uint32\+\_\+t v3, uint32\+\_\+t v4, uint32\+\_\+t v5, uint32\+\_\+t v6, uint32\+\_\+t v7, uint32\+\_\+t v8, uint32\+\_\+t v9, uint32\+\_\+t v10, uint32\+\_\+t v11, uint32\+\_\+t v12, uint32\+\_\+t v13, unsigned latency, \mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$ll)
+\item 
+int \mbox{\hyperlink{classPageTableWalker_a5addb4e1e3ce4fa0973c988ad8690013}{add\+\_\+rq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+int \mbox{\hyperlink{classPageTableWalker_a7c59db1c6d6f974f953c1e368cccc3ad}{add\+\_\+wq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+int \mbox{\hyperlink{classPageTableWalker_a7bb664d96660c2cbbad88ccdf8b5f44e}{add\+\_\+pq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+void \mbox{\hyperlink{classPageTableWalker_a0c8e005b4248acf660ee4b67b8c6087a}{return\+\_\+data}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+void \mbox{\hyperlink{classPageTableWalker_a8dc8ccc81450f800780735a46bc93261}{operate}} () override
+\item 
+void \mbox{\hyperlink{classPageTableWalker_ac6f7bb5eb607cab1e558587e831c8159}{handle\+\_\+read}} ()
+\item 
+void \mbox{\hyperlink{classPageTableWalker_ab412d979bde2212190e1b688fae3a13f}{handle\+\_\+fill}} ()
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classPageTableWalker_ab93c537f9e7ae059b2247d811f528425}{get\+\_\+occupancy}} (uint8\+\_\+t queue\+\_\+type, uint64\+\_\+t address) override
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classPageTableWalker_ab9fee4027d1e730177b3c1443c005c64}{get\+\_\+size}} (uint8\+\_\+t queue\+\_\+type, uint64\+\_\+t address) override
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classPageTableWalker_a8bcbb9def5a2c87f313346ef173f7108}{get\+\_\+shamt}} (uint8\+\_\+t pt\+\_\+level)
+\item 
+void \mbox{\hyperlink{classPageTableWalker_ac898f14d9b8b6cd2c2ebfba73ced68b0}{print\+\_\+deadlock}} () override
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const std\+::string \mbox{\hyperlink{classPageTableWalker_aacd471bf55e06b98f309dd3805b31f9c}{N\+A\+ME}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classPageTableWalker_a32df35993a8e02927e2dbcee1ac36933}{cpu}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classPageTableWalker_a10b2a3d34169b8a2e037e1bf32ea5f76}{M\+S\+H\+R\+\_\+\+S\+I\+ZE}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classPageTableWalker_a2861ebea95f1da63d11f995c084941eb}{M\+A\+X\+\_\+\+R\+E\+AD}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classPageTableWalker_a61571e96026d03a847d7ca37544e790d}{M\+A\+X\+\_\+\+F\+I\+LL}}
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $>$ \mbox{\hyperlink{classPageTableWalker_a1cddba75a09119d2dab74e01cd79b98f}{RQ}}
+\item 
+std\+::list$<$ \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $>$ \mbox{\hyperlink{classPageTableWalker_a380a24f7cddb508e06cac7480e861378}{M\+S\+HR}}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classPageTableWalker_a583d22e9dec2b9dad6703d7e0e7e6431}{total\+\_\+miss\+\_\+latency}} = 0
+\item 
+\mbox{\hyperlink{classPagingStructureCache}{Paging\+Structure\+Cache}} \mbox{\hyperlink{classPageTableWalker_af4b3ae0728fb5f1a8d7139f5b0256fca}{P\+S\+C\+L5}}
+\item 
+\mbox{\hyperlink{classPagingStructureCache}{Paging\+Structure\+Cache}} \mbox{\hyperlink{classPageTableWalker_ae7d756362d70a293621b120b4e5c8f7d}{P\+S\+C\+L4}}
+\item 
+\mbox{\hyperlink{classPagingStructureCache}{Paging\+Structure\+Cache}} \mbox{\hyperlink{classPageTableWalker_a9f32fa30172209516109ceb0e15f6caa}{P\+S\+C\+L3}}
+\item 
+\mbox{\hyperlink{classPagingStructureCache}{Paging\+Structure\+Cache}} \mbox{\hyperlink{classPageTableWalker_a69532ba8f17a1049a9bb01dde9295477}{P\+S\+C\+L2}}
+\item 
+const uint64\+\_\+t \mbox{\hyperlink{classPageTableWalker_ad10de6aa809849302ab366ac8c600927}{C\+R3\+\_\+addr}}
+\item 
+std\+::map$<$ std\+::pair$<$ uint64\+\_\+t, std\+::size\+\_\+t $>$, uint64\+\_\+t $>$ \mbox{\hyperlink{classPageTableWalker_a6b1484631960e7e5c713af1789132276}{page\+\_\+table}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classPageTableWalker_a1bf6d71f0955cdc829f2727c7092b272}\label{classPageTableWalker_a1bf6d71f0955cdc829f2727c7092b272}} 
+\index{PageTableWalker@{PageTableWalker}!PageTableWalker@{PageTableWalker}}
+\index{PageTableWalker@{PageTableWalker}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{PageTableWalker()}{PageTableWalker()}}
+{\footnotesize\ttfamily Page\+Table\+Walker\+::\+Page\+Table\+Walker (\begin{DoxyParamCaption}\item[{std\+::string}]{v1,  }\item[{uint32\+\_\+t}]{cpu,  }\item[{unsigned}]{fill\+\_\+level,  }\item[{uint32\+\_\+t}]{v2,  }\item[{uint32\+\_\+t}]{v3,  }\item[{uint32\+\_\+t}]{v4,  }\item[{uint32\+\_\+t}]{v5,  }\item[{uint32\+\_\+t}]{v6,  }\item[{uint32\+\_\+t}]{v7,  }\item[{uint32\+\_\+t}]{v8,  }\item[{uint32\+\_\+t}]{v9,  }\item[{uint32\+\_\+t}]{v10,  }\item[{uint32\+\_\+t}]{v11,  }\item[{uint32\+\_\+t}]{v12,  }\item[{uint32\+\_\+t}]{v13,  }\item[{unsigned}]{latency,  }\item[{\mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$}]{ll }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classPageTableWalker_a7bb664d96660c2cbbad88ccdf8b5f44e}\label{classPageTableWalker_a7bb664d96660c2cbbad88ccdf8b5f44e}} 
+\index{PageTableWalker@{PageTableWalker}!add\_pq@{add\_pq}}
+\index{add\_pq@{add\_pq}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{add\_pq()}{add\_pq()}}
+{\footnotesize\ttfamily int Page\+Table\+Walker\+::add\+\_\+pq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a64d59e661926c0150ad3041626c10fa2}{Memory\+Request\+Consumer}}.
+
+\mbox{\Hypertarget{classPageTableWalker_a5addb4e1e3ce4fa0973c988ad8690013}\label{classPageTableWalker_a5addb4e1e3ce4fa0973c988ad8690013}} 
+\index{PageTableWalker@{PageTableWalker}!add\_rq@{add\_rq}}
+\index{add\_rq@{add\_rq}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{add\_rq()}{add\_rq()}}
+{\footnotesize\ttfamily int Page\+Table\+Walker\+::add\+\_\+rq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_adffc84de8306e1e78f595c312ff8edfd}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_a5addb4e1e3ce4fa0973c988ad8690013_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classPageTableWalker_a7c59db1c6d6f974f953c1e368cccc3ad}\label{classPageTableWalker_a7c59db1c6d6f974f953c1e368cccc3ad}} 
+\index{PageTableWalker@{PageTableWalker}!add\_wq@{add\_wq}}
+\index{add\_wq@{add\_wq}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{add\_wq()}{add\_wq()}}
+{\footnotesize\ttfamily int Page\+Table\+Walker\+::add\+\_\+wq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a1af8f6159f3f318bf204926269e2d07e}{Memory\+Request\+Consumer}}.
+
+\mbox{\Hypertarget{classPageTableWalker_ab93c537f9e7ae059b2247d811f528425}\label{classPageTableWalker_ab93c537f9e7ae059b2247d811f528425}} 
+\index{PageTableWalker@{PageTableWalker}!get\_occupancy@{get\_occupancy}}
+\index{get\_occupancy@{get\_occupancy}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{get\_occupancy()}{get\_occupancy()}}
+{\footnotesize\ttfamily uint32\+\_\+t Page\+Table\+Walker\+::get\+\_\+occupancy (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{queue\+\_\+type,  }\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a44af5bdfa7aa133c0b9f167a5c1c5797}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_ab93c537f9e7ae059b2247d811f528425_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_ab93c537f9e7ae059b2247d811f528425_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classPageTableWalker_a8bcbb9def5a2c87f313346ef173f7108}\label{classPageTableWalker_a8bcbb9def5a2c87f313346ef173f7108}} 
+\index{PageTableWalker@{PageTableWalker}!get\_shamt@{get\_shamt}}
+\index{get\_shamt@{get\_shamt}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{get\_shamt()}{get\_shamt()}}
+{\footnotesize\ttfamily uint64\+\_\+t Page\+Table\+Walker\+::get\+\_\+shamt (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{pt\+\_\+level }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classPageTableWalker_ab9fee4027d1e730177b3c1443c005c64}\label{classPageTableWalker_ab9fee4027d1e730177b3c1443c005c64}} 
+\index{PageTableWalker@{PageTableWalker}!get\_size@{get\_size}}
+\index{get\_size@{get\_size}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{get\_size()}{get\_size()}}
+{\footnotesize\ttfamily uint32\+\_\+t Page\+Table\+Walker\+::get\+\_\+size (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{queue\+\_\+type,  }\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a644b9e3366e45e6db2dafbf19720bdea}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_ab9fee4027d1e730177b3c1443c005c64_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classPageTableWalker_ab412d979bde2212190e1b688fae3a13f}\label{classPageTableWalker_ab412d979bde2212190e1b688fae3a13f}} 
+\index{PageTableWalker@{PageTableWalker}!handle\_fill@{handle\_fill}}
+\index{handle\_fill@{handle\_fill}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{handle\_fill()}{handle\_fill()}}
+{\footnotesize\ttfamily void Page\+Table\+Walker\+::handle\+\_\+fill (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_ab412d979bde2212190e1b688fae3a13f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_ab412d979bde2212190e1b688fae3a13f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classPageTableWalker_ac6f7bb5eb607cab1e558587e831c8159}\label{classPageTableWalker_ac6f7bb5eb607cab1e558587e831c8159}} 
+\index{PageTableWalker@{PageTableWalker}!handle\_read@{handle\_read}}
+\index{handle\_read@{handle\_read}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{handle\_read()}{handle\_read()}}
+{\footnotesize\ttfamily void Page\+Table\+Walker\+::handle\+\_\+read (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_ac6f7bb5eb607cab1e558587e831c8159_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_ac6f7bb5eb607cab1e558587e831c8159_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classPageTableWalker_a8dc8ccc81450f800780735a46bc93261}\label{classPageTableWalker_a8dc8ccc81450f800780735a46bc93261}} 
+\index{PageTableWalker@{PageTableWalker}!operate@{operate}}
+\index{operate@{operate}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{operate()}{operate()}}
+{\footnotesize\ttfamily void Page\+Table\+Walker\+::operate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classchampsim_1_1operable_adb14f46a1019f5c6432845215af46741}{champsim\+::operable}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_a8dc8ccc81450f800780735a46bc93261_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classPageTableWalker_ac898f14d9b8b6cd2c2ebfba73ced68b0}\label{classPageTableWalker_ac898f14d9b8b6cd2c2ebfba73ced68b0}} 
+\index{PageTableWalker@{PageTableWalker}!print\_deadlock@{print\_deadlock}}
+\index{print\_deadlock@{print\_deadlock}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{print\_deadlock()}{print\_deadlock()}}
+{\footnotesize\ttfamily void Page\+Table\+Walker\+::print\+\_\+deadlock (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classchampsim_1_1operable_a19019841fc4b9a0cb245552c1425bece}{champsim\+::operable}}.
+
+\mbox{\Hypertarget{classPageTableWalker_a0c8e005b4248acf660ee4b67b8c6087a}\label{classPageTableWalker_a0c8e005b4248acf660ee4b67b8c6087a}} 
+\index{PageTableWalker@{PageTableWalker}!return\_data@{return\_data}}
+\index{return\_data@{return\_data}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{return\_data()}{return\_data()}}
+{\footnotesize\ttfamily void Page\+Table\+Walker\+::return\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestProducer_a5be6ee7d0d72f69a9ea77ec7fd3eafef}{Memory\+Request\+Producer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classPageTableWalker_a0c8e005b4248acf660ee4b67b8c6087a_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classPageTableWalker_a32df35993a8e02927e2dbcee1ac36933}\label{classPageTableWalker_a32df35993a8e02927e2dbcee1ac36933}} 
+\index{PageTableWalker@{PageTableWalker}!cpu@{cpu}}
+\index{cpu@{cpu}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{cpu}{cpu}}
+{\footnotesize\ttfamily const uint32\+\_\+t Page\+Table\+Walker\+::cpu}
+
+\mbox{\Hypertarget{classPageTableWalker_ad10de6aa809849302ab366ac8c600927}\label{classPageTableWalker_ad10de6aa809849302ab366ac8c600927}} 
+\index{PageTableWalker@{PageTableWalker}!CR3\_addr@{CR3\_addr}}
+\index{CR3\_addr@{CR3\_addr}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{CR3\_addr}{CR3\_addr}}
+{\footnotesize\ttfamily const uint64\+\_\+t Page\+Table\+Walker\+::\+C\+R3\+\_\+addr}
+
+\mbox{\Hypertarget{classPageTableWalker_a61571e96026d03a847d7ca37544e790d}\label{classPageTableWalker_a61571e96026d03a847d7ca37544e790d}} 
+\index{PageTableWalker@{PageTableWalker}!MAX\_FILL@{MAX\_FILL}}
+\index{MAX\_FILL@{MAX\_FILL}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{MAX\_FILL}{MAX\_FILL}}
+{\footnotesize\ttfamily const uint32\+\_\+t Page\+Table\+Walker\+::\+M\+A\+X\+\_\+\+F\+I\+LL}
+
+\mbox{\Hypertarget{classPageTableWalker_a2861ebea95f1da63d11f995c084941eb}\label{classPageTableWalker_a2861ebea95f1da63d11f995c084941eb}} 
+\index{PageTableWalker@{PageTableWalker}!MAX\_READ@{MAX\_READ}}
+\index{MAX\_READ@{MAX\_READ}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{MAX\_READ}{MAX\_READ}}
+{\footnotesize\ttfamily const uint32\+\_\+t Page\+Table\+Walker\+::\+M\+A\+X\+\_\+\+R\+E\+AD}
+
+\mbox{\Hypertarget{classPageTableWalker_a380a24f7cddb508e06cac7480e861378}\label{classPageTableWalker_a380a24f7cddb508e06cac7480e861378}} 
+\index{PageTableWalker@{PageTableWalker}!MSHR@{MSHR}}
+\index{MSHR@{MSHR}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{MSHR}{MSHR}}
+{\footnotesize\ttfamily std\+::list$<$\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}}$>$ Page\+Table\+Walker\+::\+M\+S\+HR}
+
+\mbox{\Hypertarget{classPageTableWalker_a10b2a3d34169b8a2e037e1bf32ea5f76}\label{classPageTableWalker_a10b2a3d34169b8a2e037e1bf32ea5f76}} 
+\index{PageTableWalker@{PageTableWalker}!MSHR\_SIZE@{MSHR\_SIZE}}
+\index{MSHR\_SIZE@{MSHR\_SIZE}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{MSHR\_SIZE}{MSHR\_SIZE}}
+{\footnotesize\ttfamily const uint32\+\_\+t Page\+Table\+Walker\+::\+M\+S\+H\+R\+\_\+\+S\+I\+ZE}
+
+\mbox{\Hypertarget{classPageTableWalker_aacd471bf55e06b98f309dd3805b31f9c}\label{classPageTableWalker_aacd471bf55e06b98f309dd3805b31f9c}} 
+\index{PageTableWalker@{PageTableWalker}!NAME@{NAME}}
+\index{NAME@{NAME}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{NAME}{NAME}}
+{\footnotesize\ttfamily const std\+::string Page\+Table\+Walker\+::\+N\+A\+ME}
+
+\mbox{\Hypertarget{classPageTableWalker_a6b1484631960e7e5c713af1789132276}\label{classPageTableWalker_a6b1484631960e7e5c713af1789132276}} 
+\index{PageTableWalker@{PageTableWalker}!page\_table@{page\_table}}
+\index{page\_table@{page\_table}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{page\_table}{page\_table}}
+{\footnotesize\ttfamily std\+::map$<$std\+::pair$<$uint64\+\_\+t, std\+::size\+\_\+t$>$, uint64\+\_\+t$>$ Page\+Table\+Walker\+::page\+\_\+table}
+
+\mbox{\Hypertarget{classPageTableWalker_a69532ba8f17a1049a9bb01dde9295477}\label{classPageTableWalker_a69532ba8f17a1049a9bb01dde9295477}} 
+\index{PageTableWalker@{PageTableWalker}!PSCL2@{PSCL2}}
+\index{PSCL2@{PSCL2}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{PSCL2}{PSCL2}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classPagingStructureCache}{Paging\+Structure\+Cache}} Page\+Table\+Walker\+::\+P\+S\+C\+L2}
+
+\mbox{\Hypertarget{classPageTableWalker_a9f32fa30172209516109ceb0e15f6caa}\label{classPageTableWalker_a9f32fa30172209516109ceb0e15f6caa}} 
+\index{PageTableWalker@{PageTableWalker}!PSCL3@{PSCL3}}
+\index{PSCL3@{PSCL3}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{PSCL3}{PSCL3}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classPagingStructureCache}{Paging\+Structure\+Cache}} Page\+Table\+Walker\+::\+P\+S\+C\+L3}
+
+\mbox{\Hypertarget{classPageTableWalker_ae7d756362d70a293621b120b4e5c8f7d}\label{classPageTableWalker_ae7d756362d70a293621b120b4e5c8f7d}} 
+\index{PageTableWalker@{PageTableWalker}!PSCL4@{PSCL4}}
+\index{PSCL4@{PSCL4}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{PSCL4}{PSCL4}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classPagingStructureCache}{Paging\+Structure\+Cache}} Page\+Table\+Walker\+::\+P\+S\+C\+L4}
+
+\mbox{\Hypertarget{classPageTableWalker_af4b3ae0728fb5f1a8d7139f5b0256fca}\label{classPageTableWalker_af4b3ae0728fb5f1a8d7139f5b0256fca}} 
+\index{PageTableWalker@{PageTableWalker}!PSCL5@{PSCL5}}
+\index{PSCL5@{PSCL5}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{PSCL5}{PSCL5}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classPagingStructureCache}{Paging\+Structure\+Cache}} Page\+Table\+Walker\+::\+P\+S\+C\+L5}
+
+\mbox{\Hypertarget{classPageTableWalker_a1cddba75a09119d2dab74e01cd79b98f}\label{classPageTableWalker_a1cddba75a09119d2dab74e01cd79b98f}} 
+\index{PageTableWalker@{PageTableWalker}!RQ@{RQ}}
+\index{RQ@{RQ}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{RQ}{RQ}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}}$>$ Page\+Table\+Walker\+::\+RQ}
+
+\mbox{\Hypertarget{classPageTableWalker_a583d22e9dec2b9dad6703d7e0e7e6431}\label{classPageTableWalker_a583d22e9dec2b9dad6703d7e0e7e6431}} 
+\index{PageTableWalker@{PageTableWalker}!total\_miss\_latency@{total\_miss\_latency}}
+\index{total\_miss\_latency@{total\_miss\_latency}!PageTableWalker@{PageTableWalker}}
+\doxysubsubsection{\texorpdfstring{total\_miss\_latency}{total\_miss\_latency}}
+{\footnotesize\ttfamily uint64\+\_\+t Page\+Table\+Walker\+::total\+\_\+miss\+\_\+latency = 0}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{ptw_8h}{ptw.\+h}}\item 
+src/\mbox{\hyperlink{ptw_8cc}{ptw.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,139 @@
+\hypertarget{hashed__perceptron_8cc}{}\doxysection{branch/hashed\+\_\+perceptron/hashed\+\_\+perceptron.cc File Reference}
+\label{hashed__perceptron_8cc}\index{branch/hashed\_perceptron/hashed\_perceptron.cc@{branch/hashed\_perceptron/hashed\_perceptron.cc}}
+{\ttfamily \#include $<$math.\+h$>$}\newline
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}ooo\+\_\+cpu.\+h\char`\"{}}\newline
+Include dependency graph for hashed\+\_\+perceptron.\+cc\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{hashed__perceptron_8cc__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\#define \mbox{\hyperlink{hashed__perceptron_8cc_a77b522223d55ee10c6405bc4237bce28}{N\+T\+A\+B\+L\+ES}}~16
+\item 
+\#define \mbox{\hyperlink{hashed__perceptron_8cc_a41ba038635d6b8c9533fdfc5e2cf55d6}{M\+A\+X\+H\+I\+ST}}~232
+\item 
+\#define \mbox{\hyperlink{hashed__perceptron_8cc_a3f0eab8cf8b221b98f2db047ad2958d8}{M\+I\+N\+H\+I\+ST}}~3
+\item 
+\#define \mbox{\hyperlink{hashed__perceptron_8cc_aac3553b3932cbfeeac4526ce7ca0336b}{S\+P\+E\+ED}}~18
+\item 
+\#define \mbox{\hyperlink{hashed__perceptron_8cc_a39f445c336c3e871eccbaa0423b6daef}{L\+O\+G\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}}~12
+\item 
+\#define \mbox{\hyperlink{hashed__perceptron_8cc_a032503e76d6f69bc67e99e909c8125da}{T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}}~(1 $<$$<$ \mbox{\hyperlink{hashed__perceptron_8cc_a39f445c336c3e871eccbaa0423b6daef}{L\+O\+G\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}})
+\item 
+\#define \mbox{\hyperlink{hashed__perceptron_8cc_a57a4ded27201009cd9a4c5b028e63b85}{N\+G\+H\+I\+S\+T\+\_\+\+W\+O\+R\+DS}}~(\mbox{\hyperlink{hashed__perceptron_8cc_a41ba038635d6b8c9533fdfc5e2cf55d6}{M\+A\+X\+H\+I\+ST}} / \mbox{\hyperlink{hashed__perceptron_8cc_a39f445c336c3e871eccbaa0423b6daef}{L\+O\+G\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}} + 1)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{hashed__perceptron_8cc_adc4ac465e053e065860ecac76bbf5704}{history\+\_\+lengths}} \mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a77b522223d55ee10c6405bc4237bce28}{N\+T\+A\+B\+L\+ES}}\mbox{]} = \{0, 3, 4, 6, 8, 10, 14, 19, 26, 36, 49, 67, 91, 125, 170, \mbox{\hyperlink{hashed__perceptron_8cc_a41ba038635d6b8c9533fdfc5e2cf55d6}{M\+A\+X\+H\+I\+ST}}\}
+\item 
+int \mbox{\hyperlink{hashed__perceptron_8cc_a96d9bf9e8a1d2d0d79bd2728a680991c}{tables}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a77b522223d55ee10c6405bc4237bce28}{N\+T\+A\+B\+L\+ES}}\mbox{]}\mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a032503e76d6f69bc67e99e909c8125da}{T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}}\mbox{]}
+\item 
+unsigned int \mbox{\hyperlink{hashed__perceptron_8cc_a3b15f261a56d4c37a8591bb6b93bf4d3}{ghist\+\_\+words}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a57a4ded27201009cd9a4c5b028e63b85}{N\+G\+H\+I\+S\+T\+\_\+\+W\+O\+R\+DS}}\mbox{]}
+\item 
+unsigned int \mbox{\hyperlink{hashed__perceptron_8cc_a8eaeaa95bac4f5c62cc71d46e786daa5}{indices}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a77b522223d55ee10c6405bc4237bce28}{N\+T\+A\+B\+L\+ES}}\mbox{]}
+\item 
+int \mbox{\hyperlink{hashed__perceptron_8cc_a34440442bba710fa115e3cdf537a7b0f}{theta}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}
+\item 
+int \mbox{\hyperlink{hashed__perceptron_8cc_a6cd656d57cc393b5bc7b410b18110bc1}{tc}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}
+\item 
+int \mbox{\hyperlink{hashed__perceptron_8cc_adcd249f412b4534a05d05af2a9a9bfa9}{yout}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Macro Definition Documentation}
+\mbox{\Hypertarget{hashed__perceptron_8cc_a39f445c336c3e871eccbaa0423b6daef}\label{hashed__perceptron_8cc_a39f445c336c3e871eccbaa0423b6daef}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!LOG\_TABLE\_SIZE@{LOG\_TABLE\_SIZE}}
+\index{LOG\_TABLE\_SIZE@{LOG\_TABLE\_SIZE}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{LOG\_TABLE\_SIZE}{LOG\_TABLE\_SIZE}}
+{\footnotesize\ttfamily \#define L\+O\+G\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE~12}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_a41ba038635d6b8c9533fdfc5e2cf55d6}\label{hashed__perceptron_8cc_a41ba038635d6b8c9533fdfc5e2cf55d6}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!MAXHIST@{MAXHIST}}
+\index{MAXHIST@{MAXHIST}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{MAXHIST}{MAXHIST}}
+{\footnotesize\ttfamily \#define M\+A\+X\+H\+I\+ST~232}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_a3f0eab8cf8b221b98f2db047ad2958d8}\label{hashed__perceptron_8cc_a3f0eab8cf8b221b98f2db047ad2958d8}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!MINHIST@{MINHIST}}
+\index{MINHIST@{MINHIST}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{MINHIST}{MINHIST}}
+{\footnotesize\ttfamily \#define M\+I\+N\+H\+I\+ST~3}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_a57a4ded27201009cd9a4c5b028e63b85}\label{hashed__perceptron_8cc_a57a4ded27201009cd9a4c5b028e63b85}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!NGHIST\_WORDS@{NGHIST\_WORDS}}
+\index{NGHIST\_WORDS@{NGHIST\_WORDS}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{NGHIST\_WORDS}{NGHIST\_WORDS}}
+{\footnotesize\ttfamily \#define N\+G\+H\+I\+S\+T\+\_\+\+W\+O\+R\+DS~(\mbox{\hyperlink{hashed__perceptron_8cc_a41ba038635d6b8c9533fdfc5e2cf55d6}{M\+A\+X\+H\+I\+ST}} / \mbox{\hyperlink{hashed__perceptron_8cc_a39f445c336c3e871eccbaa0423b6daef}{L\+O\+G\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}} + 1)}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_a77b522223d55ee10c6405bc4237bce28}\label{hashed__perceptron_8cc_a77b522223d55ee10c6405bc4237bce28}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!NTABLES@{NTABLES}}
+\index{NTABLES@{NTABLES}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{NTABLES}{NTABLES}}
+{\footnotesize\ttfamily \#define N\+T\+A\+B\+L\+ES~16}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_aac3553b3932cbfeeac4526ce7ca0336b}\label{hashed__perceptron_8cc_aac3553b3932cbfeeac4526ce7ca0336b}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!SPEED@{SPEED}}
+\index{SPEED@{SPEED}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{SPEED}{SPEED}}
+{\footnotesize\ttfamily \#define S\+P\+E\+ED~18}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_a032503e76d6f69bc67e99e909c8125da}\label{hashed__perceptron_8cc_a032503e76d6f69bc67e99e909c8125da}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!TABLE\_SIZE@{TABLE\_SIZE}}
+\index{TABLE\_SIZE@{TABLE\_SIZE}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{TABLE\_SIZE}{TABLE\_SIZE}}
+{\footnotesize\ttfamily \#define T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE~(1 $<$$<$ \mbox{\hyperlink{hashed__perceptron_8cc_a39f445c336c3e871eccbaa0423b6daef}{L\+O\+G\+\_\+\+T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}})}
+
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{hashed__perceptron_8cc_a3b15f261a56d4c37a8591bb6b93bf4d3}\label{hashed__perceptron_8cc_a3b15f261a56d4c37a8591bb6b93bf4d3}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!ghist\_words@{ghist\_words}}
+\index{ghist\_words@{ghist\_words}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{ghist\_words}{ghist\_words}}
+{\footnotesize\ttfamily unsigned int ghist\+\_\+words\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a57a4ded27201009cd9a4c5b028e63b85}{N\+G\+H\+I\+S\+T\+\_\+\+W\+O\+R\+DS}}\mbox{]}}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_adc4ac465e053e065860ecac76bbf5704}\label{hashed__perceptron_8cc_adc4ac465e053e065860ecac76bbf5704}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!history\_lengths@{history\_lengths}}
+\index{history\_lengths@{history\_lengths}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{history\_lengths}{history\_lengths}}
+{\footnotesize\ttfamily int history\+\_\+lengths\mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a77b522223d55ee10c6405bc4237bce28}{N\+T\+A\+B\+L\+ES}}\mbox{]} = \{0, 3, 4, 6, 8, 10, 14, 19, 26, 36, 49, 67, 91, 125, 170, \mbox{\hyperlink{hashed__perceptron_8cc_a41ba038635d6b8c9533fdfc5e2cf55d6}{M\+A\+X\+H\+I\+ST}}\}}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_a8eaeaa95bac4f5c62cc71d46e786daa5}\label{hashed__perceptron_8cc_a8eaeaa95bac4f5c62cc71d46e786daa5}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!indices@{indices}}
+\index{indices@{indices}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{indices}{indices}}
+{\footnotesize\ttfamily unsigned int indices\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a77b522223d55ee10c6405bc4237bce28}{N\+T\+A\+B\+L\+ES}}\mbox{]}}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_a96d9bf9e8a1d2d0d79bd2728a680991c}\label{hashed__perceptron_8cc_a96d9bf9e8a1d2d0d79bd2728a680991c}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!tables@{tables}}
+\index{tables@{tables}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{tables}{tables}}
+{\footnotesize\ttfamily int tables\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a77b522223d55ee10c6405bc4237bce28}{N\+T\+A\+B\+L\+ES}}\mbox{]}\mbox{[}\mbox{\hyperlink{hashed__perceptron_8cc_a032503e76d6f69bc67e99e909c8125da}{T\+A\+B\+L\+E\+\_\+\+S\+I\+ZE}}\mbox{]}}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_a6cd656d57cc393b5bc7b410b18110bc1}\label{hashed__perceptron_8cc_a6cd656d57cc393b5bc7b410b18110bc1}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!tc@{tc}}
+\index{tc@{tc}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{tc}{tc}}
+{\footnotesize\ttfamily int tc\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_a34440442bba710fa115e3cdf537a7b0f}\label{hashed__perceptron_8cc_a34440442bba710fa115e3cdf537a7b0f}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!theta@{theta}}
+\index{theta@{theta}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{theta}{theta}}
+{\footnotesize\ttfamily int theta\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}}
+
+\mbox{\Hypertarget{hashed__perceptron_8cc_adcd249f412b4534a05d05af2a9a9bfa9}\label{hashed__perceptron_8cc_adcd249f412b4534a05d05af2a9a9bfa9}} 
+\index{hashed\_perceptron.cc@{hashed\_perceptron.cc}!yout@{yout}}
+\index{yout@{yout}!hashed\_perceptron.cc@{hashed\_perceptron.cc}}
+\doxysubsubsection{\texorpdfstring{yout}{yout}}
+{\footnotesize\ttfamily int yout\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}}
+

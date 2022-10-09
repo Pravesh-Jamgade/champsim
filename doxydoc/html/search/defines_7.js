@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['l2_5fghr_5ftrack_1574',['L2_GHR_TRACK',['../kpcp_8h.html#a025cd2951cfce82fda7c0291e3aeea7a',1,'kpcp.h']]],
+  ['l2_5fpf_5fdebug_1575',['L2_PF_DEBUG',['../kpcp_8h.html#ae2c35402822da6f14b1fe257cf155f27',1,'kpcp.h']]],
+  ['l2_5fpt_5fprime_1576',['L2_PT_PRIME',['../kpcp_8h.html#a07cbe445b6da1bf70183e80f95ea4bc2',1,'kpcp.h']]],
+  ['l2_5fpt_5fset_1577',['L2_PT_SET',['../kpcp_8h.html#af06e8e8e4cb0de129d7e272416fe2f31',1,'kpcp.h']]],
+  ['l2_5fpt_5fway_1578',['L2_PT_WAY',['../kpcp_8h.html#a0871eeb3e32dedae326eb7993ccac662',1,'kpcp.h']]],
+  ['l2_5fst_5fprime_1579',['L2_ST_PRIME',['../kpcp_8h.html#adfe5392741d940b4e12d0722074c6cf4',1,'kpcp.h']]],
+  ['l2_5fst_5fset_1580',['L2_ST_SET',['../kpcp_8h.html#a627e1f06539b79abe395f25fb621632f',1,'kpcp.h']]],
+  ['l2_5fst_5fway_1581',['L2_ST_WAY',['../kpcp_8h.html#ae6d6b40f903877db3d814a1b45a4a078',1,'kpcp.h']]],
+  ['l2c_5fva_5fampm_5flite_5fmax_5fdistance_1582',['L2C_VA_AMPM_LITE_MAX_DISTANCE',['../va__ampm__lite_8cc.html#a7498e2e8da93873a55f5854c1627a929',1,'va_ampm_lite.cc']]],
+  ['l2c_5fva_5fampm_5flite_5fprefetch_5fdegree_1583',['L2C_VA_AMPM_LITE_PREFETCH_DEGREE',['../va__ampm__lite_8cc.html#ac3f0bd514d33cd4fa05a853a408fd421',1,'va_ampm_lite.cc']]],
+  ['l2c_5fva_5fampm_5flite_5fregion_5fcount_1584',['L2C_VA_AMPM_LITE_REGION_COUNT',['../va__ampm__lite_8cc.html#af05eb5556ec784844c31cac028dcf82d',1,'va_ampm_lite.cc']]],
+  ['llc_5fbypass_1585',['LLC_BYPASS',['../champsim_8h.html#aa3c6c464c9ee051413b5a4e1281f50d1',1,'champsim.h']]],
+  ['load_1586',['LOAD',['../memory__class_8h.html#a0b674752cca6d434a1a69f40877eb2be',1,'memory_class.h']]],
+  ['log2_5fblock_5fsize_1587',['LOG2_BLOCK_SIZE',['../champsim__constants_8h.html#af2f0ea3ae57b18b09b66ff4795992d90',1,'champsim_constants.h']]],
+  ['log2_5fpage_5fsize_1588',['LOG2_PAGE_SIZE',['../champsim__constants_8h.html#af3565986a6e8300d3ef7c6f1c0680eed',1,'champsim_constants.h']]],
+  ['log_5ftable_5fsize_1589',['LOG_TABLE_SIZE',['../hashed__perceptron_8cc.html#a39f445c336c3e871eccbaa0423b6daef',1,'hashed_perceptron.cc']]],
+  ['lookahead_5fon_1590',['LOOKAHEAD_ON',['../kpcp_8cc.html#a20643749d8135b927017962de166b834',1,'LOOKAHEAD_ON():&#160;kpcp.cc'],['../spp__dev_8h.html#a20643749d8135b927017962de166b834',1,'LOOKAHEAD_ON():&#160;spp_dev.h']]]
+];

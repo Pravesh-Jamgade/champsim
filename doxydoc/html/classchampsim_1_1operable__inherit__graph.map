@@ -1,0 +1,7 @@
+<map id="champsim::operable" name="champsim::operable">
+<area shape="rect" id="node1" title=" " alt="" coords="356,5,511,156"/>
+<area shape="rect" id="node2" href="$classCACHE.html" title=" " alt="" coords="5,233,149,604"/>
+<area shape="rect" id="node3" href="$classMEMORY__CONTROLLER.html" title=" " alt="" coords="173,263,443,575"/>
+<area shape="rect" id="node4" href="$classO3__CPU.html" title=" " alt="" coords="467,226,651,611"/>
+<area shape="rect" id="node5" href="$classPageTableWalker.html" title=" " alt="" coords="675,204,835,633"/>
+</map>

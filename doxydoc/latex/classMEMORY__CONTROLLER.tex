@@ -1,0 +1,354 @@
+\hypertarget{classMEMORY__CONTROLLER}{}\doxysection{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER Class Reference}
+\label{classMEMORY__CONTROLLER}\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+
+
+{\ttfamily \#include $<$dram\+\_\+controller.\+h$>$}
+
+
+
+Inheritance diagram for M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classMEMORY__CONTROLLER_a9155ba2748d8c102f0d7a41ee59bcec4}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}} (double freq\+\_\+scale)
+\item 
+int \mbox{\hyperlink{classMEMORY__CONTROLLER_a2706f6755d4ededc12ac6e72f8155821}{add\+\_\+rq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+int \mbox{\hyperlink{classMEMORY__CONTROLLER_a777b7bc61dcbec23fdde5b6c06ed49dc}{add\+\_\+wq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+int \mbox{\hyperlink{classMEMORY__CONTROLLER_a821681d21c4e9efc8c0980fe4a1ac6ed}{add\+\_\+pq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+void \mbox{\hyperlink{classMEMORY__CONTROLLER_afe96384cc0b0ca0604e09593fa109213}{operate}} () override
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_a493a889c57e872d3f3af97de6eeabfc5}{get\+\_\+occupancy}} (uint8\+\_\+t queue\+\_\+type, uint64\+\_\+t address) override
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_a2dc7e699fa828c39b3d99eda8803740f}{get\+\_\+size}} (uint8\+\_\+t queue\+\_\+type, uint64\+\_\+t address) override
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_a8be6a032392352cebbfad7f13de547f3}{dram\+\_\+get\+\_\+channel}} (uint64\+\_\+t address)
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_a328c9b59f568b231a8d19c2202945780}{dram\+\_\+get\+\_\+rank}} (uint64\+\_\+t address)
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_a989b8b579d9bf6d09c9c8e4121802168}{dram\+\_\+get\+\_\+bank}} (uint64\+\_\+t address)
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_afdbd1761877336aa4d10ca5bd6fe4420}{dram\+\_\+get\+\_\+row}} (uint64\+\_\+t address)
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_ae40d9cbe416cd01fa5a67e5ce9813513}{dram\+\_\+get\+\_\+column}} (uint64\+\_\+t address)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::array$<$ \mbox{\hyperlink{structDRAM__CHANNEL}{D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+EL}}, \mbox{\hyperlink{champsim__constants_8h_a10ab6205988725c33b329ce86f65f69a}{D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+LS}} $>$ \mbox{\hyperlink{classMEMORY__CONTROLLER_a5e3c2229a8b5a258b58f455601a7602e}{channels}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const static uint64\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_aa5407d75476b7758e1efdcb5869e8828}{t\+RP}} = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_a0a7af7f4bc584902756c51c2eca24ab5}{t\+R\+P\+\_\+\+D\+R\+A\+M\+\_\+\+N\+A\+N\+O\+S\+E\+C\+O\+N\+DS}} $\ast$ \mbox{\hyperlink{champsim__constants_8h_a100bd04b6cdc499458e359b64543037d}{D\+R\+A\+M\+\_\+\+I\+O\+\_\+\+F\+R\+EQ}} / 1000)
+\item 
+const static uint64\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_a065e8e2f9312e84bb6d7e43d0897ab7a}{t\+R\+CD}} = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_a4c27ac5b3c2bbc7fb0b6dac3aaf7ed79}{t\+R\+C\+D\+\_\+\+D\+R\+A\+M\+\_\+\+N\+A\+N\+O\+S\+E\+C\+O\+N\+DS}} $\ast$ \mbox{\hyperlink{champsim__constants_8h_a100bd04b6cdc499458e359b64543037d}{D\+R\+A\+M\+\_\+\+I\+O\+\_\+\+F\+R\+EQ}} / 1000)
+\item 
+const static uint64\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_a3de6be61df6326fef91e62046be94914}{t\+C\+AS}} = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_a9bc7c94aedec9f0045e26225f680a076}{t\+C\+A\+S\+\_\+\+D\+R\+A\+M\+\_\+\+N\+A\+N\+O\+S\+E\+C\+O\+N\+DS}} $\ast$ \mbox{\hyperlink{champsim__constants_8h_a100bd04b6cdc499458e359b64543037d}{D\+R\+A\+M\+\_\+\+I\+O\+\_\+\+F\+R\+EQ}} / 1000)
+\item 
+const static uint64\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_a80d4d3398bcc387fc315cc24b09e9fd8}{D\+R\+A\+M\+\_\+\+D\+B\+U\+S\+\_\+\+T\+U\+R\+N\+\_\+\+A\+R\+O\+U\+N\+D\+\_\+\+T\+I\+ME}} = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_ad340db58aca51a080416b40f2b0942c2}{D\+B\+U\+S\+\_\+\+T\+U\+R\+N\+\_\+\+A\+R\+O\+U\+N\+D\+\_\+\+N\+A\+N\+O\+S\+E\+C\+O\+N\+DS}} $\ast$ \mbox{\hyperlink{champsim__constants_8h_a100bd04b6cdc499458e359b64543037d}{D\+R\+A\+M\+\_\+\+I\+O\+\_\+\+F\+R\+EQ}} / 1000)
+\item 
+const static uint64\+\_\+t \mbox{\hyperlink{classMEMORY__CONTROLLER_a59af84462837d52f109f11f953a33950}{D\+R\+A\+M\+\_\+\+D\+B\+U\+S\+\_\+\+R\+E\+T\+U\+R\+N\+\_\+\+T\+I\+ME}} = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_ad51ded0bbd705f02f73fc60c0b721ced}{B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE}} / \mbox{\hyperlink{champsim__constants_8h_ab5f50d0fbfd22b9e7056c72689fd4844}{D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+\_\+\+W\+I\+D\+TH}})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a9155ba2748d8c102f0d7a41ee59bcec4}\label{classMEMORY__CONTROLLER_a9155ba2748d8c102f0d7a41ee59bcec4}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{MEMORY\_CONTROLLER()}{MEMORY\_CONTROLLER()}}
+{\footnotesize\ttfamily M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::\+M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER (\begin{DoxyParamCaption}\item[{double}]{freq\+\_\+scale }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a821681d21c4e9efc8c0980fe4a1ac6ed}\label{classMEMORY__CONTROLLER_a821681d21c4e9efc8c0980fe4a1ac6ed}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!add\_pq@{add\_pq}}
+\index{add\_pq@{add\_pq}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{add\_pq()}{add\_pq()}}
+{\footnotesize\ttfamily int M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::add\+\_\+pq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a64d59e661926c0150ad3041626c10fa2}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a821681d21c4e9efc8c0980fe4a1ac6ed_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a2706f6755d4ededc12ac6e72f8155821}\label{classMEMORY__CONTROLLER_a2706f6755d4ededc12ac6e72f8155821}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!add\_rq@{add\_rq}}
+\index{add\_rq@{add\_rq}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{add\_rq()}{add\_rq()}}
+{\footnotesize\ttfamily int M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::add\+\_\+rq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_adffc84de8306e1e78f595c312ff8edfd}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a2706f6755d4ededc12ac6e72f8155821_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a2706f6755d4ededc12ac6e72f8155821_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a777b7bc61dcbec23fdde5b6c06ed49dc}\label{classMEMORY__CONTROLLER_a777b7bc61dcbec23fdde5b6c06ed49dc}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!add\_wq@{add\_wq}}
+\index{add\_wq@{add\_wq}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{add\_wq()}{add\_wq()}}
+{\footnotesize\ttfamily int M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::add\+\_\+wq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a1af8f6159f3f318bf204926269e2d07e}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a777b7bc61dcbec23fdde5b6c06ed49dc_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a989b8b579d9bf6d09c9c8e4121802168}\label{classMEMORY__CONTROLLER_a989b8b579d9bf6d09c9c8e4121802168}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!dram\_get\_bank@{dram\_get\_bank}}
+\index{dram\_get\_bank@{dram\_get\_bank}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{dram\_get\_bank()}{dram\_get\_bank()}}
+{\footnotesize\ttfamily uint32\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::dram\+\_\+get\+\_\+bank (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{classMEMORY__CONTROLLER_a989b8b579d9bf6d09c9c8e4121802168_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a989b8b579d9bf6d09c9c8e4121802168_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a8be6a032392352cebbfad7f13de547f3}\label{classMEMORY__CONTROLLER_a8be6a032392352cebbfad7f13de547f3}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!dram\_get\_channel@{dram\_get\_channel}}
+\index{dram\_get\_channel@{dram\_get\_channel}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{dram\_get\_channel()}{dram\_get\_channel()}}
+{\footnotesize\ttfamily uint32\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::dram\+\_\+get\+\_\+channel (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{classMEMORY__CONTROLLER_a8be6a032392352cebbfad7f13de547f3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a8be6a032392352cebbfad7f13de547f3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_ae40d9cbe416cd01fa5a67e5ce9813513}\label{classMEMORY__CONTROLLER_ae40d9cbe416cd01fa5a67e5ce9813513}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!dram\_get\_column@{dram\_get\_column}}
+\index{dram\_get\_column@{dram\_get\_column}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{dram\_get\_column()}{dram\_get\_column()}}
+{\footnotesize\ttfamily uint32\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::dram\+\_\+get\+\_\+column (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{classMEMORY__CONTROLLER_ae40d9cbe416cd01fa5a67e5ce9813513_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a328c9b59f568b231a8d19c2202945780}\label{classMEMORY__CONTROLLER_a328c9b59f568b231a8d19c2202945780}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!dram\_get\_rank@{dram\_get\_rank}}
+\index{dram\_get\_rank@{dram\_get\_rank}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{dram\_get\_rank()}{dram\_get\_rank()}}
+{\footnotesize\ttfamily uint32\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::dram\+\_\+get\+\_\+rank (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{classMEMORY__CONTROLLER_a328c9b59f568b231a8d19c2202945780_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a328c9b59f568b231a8d19c2202945780_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_afdbd1761877336aa4d10ca5bd6fe4420}\label{classMEMORY__CONTROLLER_afdbd1761877336aa4d10ca5bd6fe4420}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!dram\_get\_row@{dram\_get\_row}}
+\index{dram\_get\_row@{dram\_get\_row}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{dram\_get\_row()}{dram\_get\_row()}}
+{\footnotesize\ttfamily uint32\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::dram\+\_\+get\+\_\+row (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=309pt]{classMEMORY__CONTROLLER_afdbd1761877336aa4d10ca5bd6fe4420_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_afdbd1761877336aa4d10ca5bd6fe4420_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a493a889c57e872d3f3af97de6eeabfc5}\label{classMEMORY__CONTROLLER_a493a889c57e872d3f3af97de6eeabfc5}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!get\_occupancy@{get\_occupancy}}
+\index{get\_occupancy@{get\_occupancy}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{get\_occupancy()}{get\_occupancy()}}
+{\footnotesize\ttfamily uint32\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::get\+\_\+occupancy (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{queue\+\_\+type,  }\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a44af5bdfa7aa133c0b9f167a5c1c5797}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a493a889c57e872d3f3af97de6eeabfc5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a493a889c57e872d3f3af97de6eeabfc5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a2dc7e699fa828c39b3d99eda8803740f}\label{classMEMORY__CONTROLLER_a2dc7e699fa828c39b3d99eda8803740f}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!get\_size@{get\_size}}
+\index{get\_size@{get\_size}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{get\_size()}{get\_size()}}
+{\footnotesize\ttfamily uint32\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::get\+\_\+size (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{queue\+\_\+type,  }\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a644b9e3366e45e6db2dafbf19720bdea}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_a2dc7e699fa828c39b3d99eda8803740f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_afe96384cc0b0ca0604e09593fa109213}\label{classMEMORY__CONTROLLER_afe96384cc0b0ca0604e09593fa109213}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!operate@{operate}}
+\index{operate@{operate}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{operate()}{operate()}}
+{\footnotesize\ttfamily void M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::operate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classchampsim_1_1operable_adb14f46a1019f5c6432845215af46741}{champsim\+::operable}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classMEMORY__CONTROLLER_afe96384cc0b0ca0604e09593fa109213_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a5e3c2229a8b5a258b58f455601a7602e}\label{classMEMORY__CONTROLLER_a5e3c2229a8b5a258b58f455601a7602e}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!channels@{channels}}
+\index{channels@{channels}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{channels}{channels}}
+{\footnotesize\ttfamily std\+::array$<$\mbox{\hyperlink{structDRAM__CHANNEL}{D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+EL}}, \mbox{\hyperlink{champsim__constants_8h_a10ab6205988725c33b329ce86f65f69a}{D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+LS}}$>$ M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::channels}
+
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a59af84462837d52f109f11f953a33950}\label{classMEMORY__CONTROLLER_a59af84462837d52f109f11f953a33950}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!DRAM\_DBUS\_RETURN\_TIME@{DRAM\_DBUS\_RETURN\_TIME}}
+\index{DRAM\_DBUS\_RETURN\_TIME@{DRAM\_DBUS\_RETURN\_TIME}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{DRAM\_DBUS\_RETURN\_TIME}{DRAM\_DBUS\_RETURN\_TIME}}
+{\footnotesize\ttfamily const static uint64\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::\+D\+R\+A\+M\+\_\+\+D\+B\+U\+S\+\_\+\+R\+E\+T\+U\+R\+N\+\_\+\+T\+I\+ME = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_ad51ded0bbd705f02f73fc60c0b721ced}{B\+L\+O\+C\+K\+\_\+\+S\+I\+ZE}} / \mbox{\hyperlink{champsim__constants_8h_ab5f50d0fbfd22b9e7056c72689fd4844}{D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+E\+L\+\_\+\+W\+I\+D\+TH}})\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a80d4d3398bcc387fc315cc24b09e9fd8}\label{classMEMORY__CONTROLLER_a80d4d3398bcc387fc315cc24b09e9fd8}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!DRAM\_DBUS\_TURN\_AROUND\_TIME@{DRAM\_DBUS\_TURN\_AROUND\_TIME}}
+\index{DRAM\_DBUS\_TURN\_AROUND\_TIME@{DRAM\_DBUS\_TURN\_AROUND\_TIME}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{DRAM\_DBUS\_TURN\_AROUND\_TIME}{DRAM\_DBUS\_TURN\_AROUND\_TIME}}
+{\footnotesize\ttfamily const static uint64\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::\+D\+R\+A\+M\+\_\+\+D\+B\+U\+S\+\_\+\+T\+U\+R\+N\+\_\+\+A\+R\+O\+U\+N\+D\+\_\+\+T\+I\+ME = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_ad340db58aca51a080416b40f2b0942c2}{D\+B\+U\+S\+\_\+\+T\+U\+R\+N\+\_\+\+A\+R\+O\+U\+N\+D\+\_\+\+N\+A\+N\+O\+S\+E\+C\+O\+N\+DS}} $\ast$ \mbox{\hyperlink{champsim__constants_8h_a100bd04b6cdc499458e359b64543037d}{D\+R\+A\+M\+\_\+\+I\+O\+\_\+\+F\+R\+EQ}} / 1000)\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a3de6be61df6326fef91e62046be94914}\label{classMEMORY__CONTROLLER_a3de6be61df6326fef91e62046be94914}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!tCAS@{tCAS}}
+\index{tCAS@{tCAS}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{tCAS}{tCAS}}
+{\footnotesize\ttfamily const static uint64\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::t\+C\+AS = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_a9bc7c94aedec9f0045e26225f680a076}{t\+C\+A\+S\+\_\+\+D\+R\+A\+M\+\_\+\+N\+A\+N\+O\+S\+E\+C\+O\+N\+DS}} $\ast$ \mbox{\hyperlink{champsim__constants_8h_a100bd04b6cdc499458e359b64543037d}{D\+R\+A\+M\+\_\+\+I\+O\+\_\+\+F\+R\+EQ}} / 1000)\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_a065e8e2f9312e84bb6d7e43d0897ab7a}\label{classMEMORY__CONTROLLER_a065e8e2f9312e84bb6d7e43d0897ab7a}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!tRCD@{tRCD}}
+\index{tRCD@{tRCD}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{tRCD}{tRCD}}
+{\footnotesize\ttfamily const static uint64\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::t\+R\+CD = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_a4c27ac5b3c2bbc7fb0b6dac3aaf7ed79}{t\+R\+C\+D\+\_\+\+D\+R\+A\+M\+\_\+\+N\+A\+N\+O\+S\+E\+C\+O\+N\+DS}} $\ast$ \mbox{\hyperlink{champsim__constants_8h_a100bd04b6cdc499458e359b64543037d}{D\+R\+A\+M\+\_\+\+I\+O\+\_\+\+F\+R\+EQ}} / 1000)\hspace{0.3cm}{\ttfamily [static]}}
+
+\mbox{\Hypertarget{classMEMORY__CONTROLLER_aa5407d75476b7758e1efdcb5869e8828}\label{classMEMORY__CONTROLLER_aa5407d75476b7758e1efdcb5869e8828}} 
+\index{MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}!tRP@{tRP}}
+\index{tRP@{tRP}!MEMORY\_CONTROLLER@{MEMORY\_CONTROLLER}}
+\doxysubsubsection{\texorpdfstring{tRP}{tRP}}
+{\footnotesize\ttfamily const static uint64\+\_\+t M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+E\+R\+::t\+RP = \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}}(1.\+0 $\ast$ \mbox{\hyperlink{champsim__constants_8h_a0a7af7f4bc584902756c51c2eca24ab5}{t\+R\+P\+\_\+\+D\+R\+A\+M\+\_\+\+N\+A\+N\+O\+S\+E\+C\+O\+N\+DS}} $\ast$ \mbox{\hyperlink{champsim__constants_8h_a100bd04b6cdc499458e359b64543037d}{D\+R\+A\+M\+\_\+\+I\+O\+\_\+\+F\+R\+EQ}} / 1000)\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{dram__controller_8h}{dram\+\_\+controller.\+h}}\item 
+src/\mbox{\hyperlink{dram__controller_8cc}{dram\+\_\+controller.\+cc}}\end{DoxyCompactItemize}

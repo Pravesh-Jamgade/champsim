@@ -1,0 +1,74 @@
+\hypertarget{dram__controller_8h}{}\doxysection{inc/dram\+\_\+controller.h File Reference}
+\label{dram__controller_8h}\index{inc/dram\_controller.h@{inc/dram\_controller.h}}
+{\ttfamily \#include $<$array$>$}\newline
+{\ttfamily \#include $<$cmath$>$}\newline
+{\ttfamily \#include $<$limits$>$}\newline
+{\ttfamily \#include \char`\"{}champsim\+\_\+constants.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}memory\+\_\+class.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}operable.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}util.\+h\char`\"{}}\newline
+Include dependency graph for dram\+\_\+controller.\+h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dram__controller_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{dram__controller_8h__dep__incl}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structBANK__REQUEST}{B\+A\+N\+K\+\_\+\+R\+E\+Q\+U\+E\+ST}}
+\item 
+struct \mbox{\hyperlink{structDRAM__CHANNEL}{D\+R\+A\+M\+\_\+\+C\+H\+A\+N\+N\+EL}}
+\item 
+class \mbox{\hyperlink{classMEMORY__CONTROLLER}{M\+E\+M\+O\+R\+Y\+\_\+\+C\+O\+N\+T\+R\+O\+L\+L\+ER}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespacedetail}{detail}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+constexpr int32\+\_\+t \mbox{\hyperlink{namespacedetail_a9454e017825f39e50c67a93fe6ea4cd7}{detail\+::ceil}} (float num)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{dram__controller_8h_a8fea2266cc8f2917d2c84e9ca2f2d0dd}{D\+R\+A\+M\+\_\+\+W\+R\+I\+T\+E\+\_\+\+H\+I\+G\+H\+\_\+\+WM}} = ((\mbox{\hyperlink{champsim__constants_8h_ad2fc6120efa8f4ef57903e88c18efbd3}{D\+R\+A\+M\+\_\+\+W\+Q\+\_\+\+S\+I\+ZE}} $\ast$ 7) $>$$>$ 3)
+\item 
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{dram__controller_8h_ad2fbb18704ed59577e0b567683fb294b}{D\+R\+A\+M\+\_\+\+W\+R\+I\+T\+E\+\_\+\+L\+O\+W\+\_\+\+WM}} = ((\mbox{\hyperlink{champsim__constants_8h_ad2fc6120efa8f4ef57903e88c18efbd3}{D\+R\+A\+M\+\_\+\+W\+Q\+\_\+\+S\+I\+ZE}} $\ast$ 6) $>$$>$ 3)
+\item 
+constexpr std\+::size\+\_\+t \mbox{\hyperlink{dram__controller_8h_a19aaf08b61d29de03ef0e9fb1c6f3ddd}{M\+I\+N\+\_\+\+D\+R\+A\+M\+\_\+\+W\+R\+I\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+S\+W\+I\+T\+CH}} = ((\mbox{\hyperlink{champsim__constants_8h_ad2fc6120efa8f4ef57903e88c18efbd3}{D\+R\+A\+M\+\_\+\+W\+Q\+\_\+\+S\+I\+ZE}} $\ast$ 1) $>$$>$ 2)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{dram__controller_8h_a8fea2266cc8f2917d2c84e9ca2f2d0dd}\label{dram__controller_8h_a8fea2266cc8f2917d2c84e9ca2f2d0dd}} 
+\index{dram\_controller.h@{dram\_controller.h}!DRAM\_WRITE\_HIGH\_WM@{DRAM\_WRITE\_HIGH\_WM}}
+\index{DRAM\_WRITE\_HIGH\_WM@{DRAM\_WRITE\_HIGH\_WM}!dram\_controller.h@{dram\_controller.h}}
+\doxysubsubsection{\texorpdfstring{DRAM\_WRITE\_HIGH\_WM}{DRAM\_WRITE\_HIGH\_WM}}
+{\footnotesize\ttfamily constexpr std\+::size\+\_\+t D\+R\+A\+M\+\_\+\+W\+R\+I\+T\+E\+\_\+\+H\+I\+G\+H\+\_\+\+WM = ((\mbox{\hyperlink{champsim__constants_8h_ad2fc6120efa8f4ef57903e88c18efbd3}{D\+R\+A\+M\+\_\+\+W\+Q\+\_\+\+S\+I\+ZE}} $\ast$ 7) $>$$>$ 3)\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{dram__controller_8h_ad2fbb18704ed59577e0b567683fb294b}\label{dram__controller_8h_ad2fbb18704ed59577e0b567683fb294b}} 
+\index{dram\_controller.h@{dram\_controller.h}!DRAM\_WRITE\_LOW\_WM@{DRAM\_WRITE\_LOW\_WM}}
+\index{DRAM\_WRITE\_LOW\_WM@{DRAM\_WRITE\_LOW\_WM}!dram\_controller.h@{dram\_controller.h}}
+\doxysubsubsection{\texorpdfstring{DRAM\_WRITE\_LOW\_WM}{DRAM\_WRITE\_LOW\_WM}}
+{\footnotesize\ttfamily constexpr std\+::size\+\_\+t D\+R\+A\+M\+\_\+\+W\+R\+I\+T\+E\+\_\+\+L\+O\+W\+\_\+\+WM = ((\mbox{\hyperlink{champsim__constants_8h_ad2fc6120efa8f4ef57903e88c18efbd3}{D\+R\+A\+M\+\_\+\+W\+Q\+\_\+\+S\+I\+ZE}} $\ast$ 6) $>$$>$ 3)\hspace{0.3cm}{\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{dram__controller_8h_a19aaf08b61d29de03ef0e9fb1c6f3ddd}\label{dram__controller_8h_a19aaf08b61d29de03ef0e9fb1c6f3ddd}} 
+\index{dram\_controller.h@{dram\_controller.h}!MIN\_DRAM\_WRITES\_PER\_SWITCH@{MIN\_DRAM\_WRITES\_PER\_SWITCH}}
+\index{MIN\_DRAM\_WRITES\_PER\_SWITCH@{MIN\_DRAM\_WRITES\_PER\_SWITCH}!dram\_controller.h@{dram\_controller.h}}
+\doxysubsubsection{\texorpdfstring{MIN\_DRAM\_WRITES\_PER\_SWITCH}{MIN\_DRAM\_WRITES\_PER\_SWITCH}}
+{\footnotesize\ttfamily constexpr std\+::size\+\_\+t M\+I\+N\+\_\+\+D\+R\+A\+M\+\_\+\+W\+R\+I\+T\+E\+S\+\_\+\+P\+E\+R\+\_\+\+S\+W\+I\+T\+CH = ((\mbox{\hyperlink{champsim__constants_8h_ad2fc6120efa8f4ef57903e88c18efbd3}{D\+R\+A\+M\+\_\+\+W\+Q\+\_\+\+S\+I\+ZE}} $\ast$ 1) $>$$>$ 2)\hspace{0.3cm}{\ttfamily [constexpr]}}
+

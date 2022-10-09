@@ -1,0 +1,1266 @@
+\hypertarget{classO3__CPU}{}\doxysection{O3\+\_\+\+C\+PU Class Reference}
+\label{classO3__CPU}\index{O3\_CPU@{O3\_CPU}}
+
+
+{\ttfamily \#include $<$ooo\+\_\+cpu.\+h$>$}
+
+
+
+Inheritance diagram for O3\+\_\+\+C\+PU\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=218pt]{classO3__CPU__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for O3\+\_\+\+C\+PU\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structO3__CPU_1_1dib__entry__t}{dib\+\_\+entry\+\_\+t}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+using \mbox{\hyperlink{classO3__CPU_a2f7402a0a6e86e28cdd5e4d6dd162f8d}{dib\+\_\+t}} = std\+::vector$<$ \mbox{\hyperlink{structO3__CPU_1_1dib__entry__t}{dib\+\_\+entry\+\_\+t}} $>$
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classO3__CPU_abb63841c61a7ea49b2e3f55b1f875c8b}{operate}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_adafa0416d19e6d76896af93758d63051}{init\+\_\+instruction}} (\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} instr)
+\item 
+void \mbox{\hyperlink{classO3__CPU_a672d6845de1502b1e89a9f453fe1c12d}{check\+\_\+dib}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_ad138173fbfedf55c6a2dd6f15ca2ac2a}{translate\+\_\+fetch}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a23c296fb6bbd6ab1a639b4c092901200}{fetch\+\_\+instruction}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a1cde4d45f29b6f676c393edf64ab0b28}{promote\+\_\+to\+\_\+decode}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a6166320b7886c2d9a97808de48163ed1}{decode\+\_\+instruction}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a4ad0b7b3ef4399260ac384659c653b52}{dispatch\+\_\+instruction}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a6ecb62d6fd8772cdd65977f86803df69}{schedule\+\_\+instruction}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a4d96337387dbe96c6e7265c16e234848}{execute\+\_\+instruction}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a1e79867bbae46bb880c7a7aaa669c647}{schedule\+\_\+memory\+\_\+instruction}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_adc607d4937b1955cda7ade36c00ac210}{execute\+\_\+memory\+\_\+instruction}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a7bc34824747b6b3a1c756560804cebde}{do\+\_\+check\+\_\+dib}} (\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} \&instr)
+\item 
+void \mbox{\hyperlink{classO3__CPU_a6b1b86f1cb0448a12da692f65ada15dc}{do\+\_\+translate\+\_\+fetch}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator begin, \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator end)
+\item 
+void \mbox{\hyperlink{classO3__CPU_a0b51101e5765592b1395f732d3f6fb91}{do\+\_\+fetch\+\_\+instruction}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator begin, \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator end)
+\item 
+void \mbox{\hyperlink{classO3__CPU_aa641eb22e198a5548bdc5b0a652859b2}{do\+\_\+dib\+\_\+update}} (const \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} \&instr)
+\item 
+void \mbox{\hyperlink{classO3__CPU_aebe8bb6f864763e071b74eb30209194b}{do\+\_\+scheduling}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator rob\+\_\+it)
+\item 
+void \mbox{\hyperlink{classO3__CPU_abba892d7e79a7679d74afc80d01a6946}{do\+\_\+execution}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator rob\+\_\+it)
+\item 
+void \mbox{\hyperlink{classO3__CPU_ab6b2fcb74679cc34ed5c11507b398e7d}{do\+\_\+memory\+\_\+scheduling}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator rob\+\_\+it)
+\item 
+void \mbox{\hyperlink{classO3__CPU_adb6782601106060a495dbd8823c00bb1}{operate\+\_\+lsq}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_afccd4eb948411e41b9f88946774122d0}{do\+\_\+complete\+\_\+execution}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator rob\+\_\+it)
+\item 
+void \mbox{\hyperlink{classO3__CPU_ac082e3ec61c631118c12ab15916b1fef}{do\+\_\+sq\+\_\+forward\+\_\+to\+\_\+lq}} (\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} \&sq\+\_\+entry, \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} \&lq\+\_\+entry)
+\item 
+void \mbox{\hyperlink{classO3__CPU_acbae80d70f8026086125e172c1644f2d}{initialize\+\_\+core}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a80d01da310133393c7cc0e4eec950e7f}{add\+\_\+load\+\_\+queue}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator rob\+\_\+index, uint32\+\_\+t data\+\_\+index)
+\item 
+void \mbox{\hyperlink{classO3__CPU_ace76d4c4bb699ef5ac00805dcad6d4d9}{add\+\_\+store\+\_\+queue}} (\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator rob\+\_\+index, uint32\+\_\+t data\+\_\+index)
+\item 
+void \mbox{\hyperlink{classO3__CPU_a11fb535781516d64b61c94419400bbd4}{execute\+\_\+store}} (std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator sq\+\_\+it)
+\item 
+int \mbox{\hyperlink{classO3__CPU_a31bdfc38be3aaefe313225956fad0a7e}{execute\+\_\+load}} (std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator lq\+\_\+it)
+\item 
+int \mbox{\hyperlink{classO3__CPU_a988f621c2fd97da2be8135bd8b5ef9ad}{do\+\_\+translate\+\_\+store}} (std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator sq\+\_\+it)
+\item 
+int \mbox{\hyperlink{classO3__CPU_adced3f033b0ea489cffd3e94dacc8f5f}{do\+\_\+translate\+\_\+load}} (std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator sq\+\_\+it)
+\item 
+void \mbox{\hyperlink{classO3__CPU_a0f01d6b078a319b06a90f20782044b45}{check\+\_\+dependency}} (int prior, int current)
+\item 
+void \mbox{\hyperlink{classO3__CPU_a90b7f68c816c5b8d4994f59ddb7f2ce0}{operate\+\_\+cache}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_ab971ee3a75071bb5ff5a3267e281ac4d}{complete\+\_\+inflight\+\_\+instruction}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_afb4b5a8c687fec475a870e00e43c6d10}{handle\+\_\+memory\+\_\+return}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_a0760ed97b7df5e1779fe5774e6fcfcba}{retire\+\_\+rob}} ()
+\item 
+void \mbox{\hyperlink{classO3__CPU_ab0ccd72a6b7cc16f69924f70cf24ac69}{print\+\_\+deadlock}} () override
+\item 
+int \mbox{\hyperlink{classO3__CPU_a8d924a30dbe9ffb3cbdbee347076a03f}{prefetch\+\_\+code\+\_\+line}} (uint64\+\_\+t pf\+\_\+v\+\_\+addr)
+\item 
+\mbox{\hyperlink{classO3__CPU_aa79621c963bb7f694196797b45b912f4}{O3\+\_\+\+C\+PU}} (uint32\+\_\+t \mbox{\hyperlink{classO3__CPU_aaa6f3db1ef7b2e60fb1d0919715f72f7}{cpu}}, double freq\+\_\+scale, std\+::size\+\_\+t \mbox{\hyperlink{classO3__CPU_a60fa349f274b200538f19f498f2ae3c5}{dib\+\_\+set}}, std\+::size\+\_\+t \mbox{\hyperlink{classO3__CPU_a2e889fdd220d5e8b90bf3e370bc2acaf}{dib\+\_\+way}}, std\+::size\+\_\+t \mbox{\hyperlink{classO3__CPU_a56cea10300643fc8fe1bb370bf4e01f0}{dib\+\_\+window}}, std\+::size\+\_\+t ifetch\+\_\+buffer\+\_\+size, std\+::size\+\_\+t decode\+\_\+buffer\+\_\+size, std\+::size\+\_\+t dispatch\+\_\+buffer\+\_\+size, std\+::size\+\_\+t rob\+\_\+size, std\+::size\+\_\+t lq\+\_\+size, std\+::size\+\_\+t sq\+\_\+size, unsigned fetch\+\_\+width, unsigned decode\+\_\+width, unsigned dispatch\+\_\+width, unsigned schedule\+\_\+width, unsigned execute\+\_\+width, unsigned lq\+\_\+width, unsigned sq\+\_\+width, unsigned retire\+\_\+width, unsigned mispredict\+\_\+penalty, unsigned decode\+\_\+latency, unsigned dispatch\+\_\+latency, unsigned schedule\+\_\+latency, unsigned execute\+\_\+latency, \mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$itlb, \mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$dtlb, \mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$l1i, \mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$l1d, bpred\+\_\+t \mbox{\hyperlink{classO3__CPU_afa9b75efbdcea0080dfc000573683642}{bpred\+\_\+type}}, btb\+\_\+t \mbox{\hyperlink{classO3__CPU_a43b7014eb2823f255a4d298b1ff4f989}{btb\+\_\+type}}, ipref\+\_\+t \mbox{\hyperlink{classO3__CPU_a1a2115dbb23814efca1911e20abbd889}{ipref\+\_\+type}})
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classO3__CPU_aaa6f3db1ef7b2e60fb1d0919715f72f7}{cpu}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a0e520b3006a88b885e4b048cc04f66b3}{instr\+\_\+unique\+\_\+id}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_aedae329cc566e5110b3d331d41869f51}{completed\+\_\+executions}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_aa5513d19d347ed0ce635e37aad9dbb85}{begin\+\_\+sim\+\_\+cycle}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_addc92dbb1e570e2f8b04fb242544df16}{begin\+\_\+sim\+\_\+instr}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a2ee2cfe6df61f64f43871f055630f5ef}{last\+\_\+sim\+\_\+cycle}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a42b3fca9bfff82e9ef7acd541e62cd0e}{last\+\_\+sim\+\_\+instr}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a936e20c9b6e8a64fa5d274ad12bbee3e}{finish\+\_\+sim\+\_\+cycle}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a487b9f557b0abbe3045da8910bf52120}{finish\+\_\+sim\+\_\+instr}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_ae7c6dce372e0cf8e64de3994157f3256}{instrs\+\_\+to\+\_\+read\+\_\+this\+\_\+cycle}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a5ddd5d55f69e8efe982bcd286fbea0f1}{instrs\+\_\+to\+\_\+fetch\+\_\+this\+\_\+cycle}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_ad4bf4f900d6e82f7cd5b1241f78d3f80}{next\+\_\+print\+\_\+instruction}} = \mbox{\hyperlink{champsim__constants_8h_a328b2f12c52082a0026bd74dfa7c825b}{S\+T\+A\+T\+\_\+\+P\+R\+I\+N\+T\+I\+N\+G\+\_\+\+P\+E\+R\+I\+OD}}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_af038f22c02b6f1dabc6de5319faf5aea}{num\+\_\+retired}} = 0
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classO3__CPU_a5b3a2e73abbbce8bb2a1fdcf51086425}{inflight\+\_\+reg\+\_\+executions}} = 0
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classO3__CPU_af61af253457f9165a25f269be680c24d}{inflight\+\_\+mem\+\_\+executions}} = 0
+\item 
+const std\+::size\+\_\+t \mbox{\hyperlink{classO3__CPU_a60fa349f274b200538f19f498f2ae3c5}{dib\+\_\+set}}
+\item 
+const std\+::size\+\_\+t \mbox{\hyperlink{classO3__CPU_a2e889fdd220d5e8b90bf3e370bc2acaf}{dib\+\_\+way}}
+\item 
+const std\+::size\+\_\+t \mbox{\hyperlink{classO3__CPU_a56cea10300643fc8fe1bb370bf4e01f0}{dib\+\_\+window}}
+\item 
+\mbox{\hyperlink{classO3__CPU_a2f7402a0a6e86e28cdd5e4d6dd162f8d}{dib\+\_\+t}} \mbox{\hyperlink{classO3__CPU_a2ff16a32d0cf1875605f8b3703b06eaf}{D\+IB}} \{\mbox{\hyperlink{classO3__CPU_a60fa349f274b200538f19f498f2ae3c5}{dib\+\_\+set}} $\ast$ \mbox{\hyperlink{classO3__CPU_a2e889fdd220d5e8b90bf3e370bc2acaf}{dib\+\_\+way}}\}
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$ \mbox{\hyperlink{classO3__CPU_aace886b690c10b7f50a3367bb6a31746}{I\+F\+E\+T\+C\+H\+\_\+\+B\+U\+F\+F\+ER}}
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$ \mbox{\hyperlink{classO3__CPU_a8ebefcc91509fa3edc6c63940e8acbe9}{D\+I\+S\+P\+A\+T\+C\+H\+\_\+\+B\+U\+F\+F\+ER}}
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$ \mbox{\hyperlink{classO3__CPU_ade866fbd63b7a892b70521dfa6d2409b}{D\+E\+C\+O\+D\+E\+\_\+\+B\+U\+F\+F\+ER}}
+\item 
+\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$ \mbox{\hyperlink{classO3__CPU_af59ebc94ae9d1805c1b778622e4b4113}{R\+OB}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$ \mbox{\hyperlink{classO3__CPU_a67f0f8a2f48da27efe504c5f6958bf2d}{LQ}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$ \mbox{\hyperlink{classO3__CPU_ab765bf0ebbe3254cb58eb9d8c8859a27}{SQ}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_af99704b4e1bc5c9831b24c79afc2c56b}{F\+E\+T\+C\+H\+\_\+\+W\+I\+D\+TH}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_acfff33a4ec76a21a761f878d0115e617}{D\+E\+C\+O\+D\+E\+\_\+\+W\+I\+D\+TH}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_a64a065f3f1ac20acefb3bcc84d83d26b}{D\+I\+S\+P\+A\+T\+C\+H\+\_\+\+W\+I\+D\+TH}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_af70efa747a49539e2e20dafb2cf7dca7}{S\+C\+H\+E\+D\+U\+L\+E\+R\+\_\+\+S\+I\+ZE}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_a07d7b3f7aca13ef04c1336e1de22259e}{E\+X\+E\+C\+\_\+\+W\+I\+D\+TH}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_a2b8bd68c624870540139dea5654028be}{L\+Q\+\_\+\+W\+I\+D\+TH}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_aac2005537541566406ed5860a7ad2d8c}{S\+Q\+\_\+\+W\+I\+D\+TH}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_a870685d72745c31f6b6928fbac7ed1b2}{R\+E\+T\+I\+R\+E\+\_\+\+W\+I\+D\+TH}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_a526a30ee6327c03d4520572ba08f852f}{B\+R\+A\+N\+C\+H\+\_\+\+M\+I\+S\+P\+R\+E\+D\+I\+C\+T\+\_\+\+P\+E\+N\+A\+L\+TY}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_a31b447d69eb4de2d64379455eaf9ef59}{S\+C\+H\+E\+D\+U\+L\+I\+N\+G\+\_\+\+L\+A\+T\+E\+N\+CY}}
+\item 
+const unsigned \mbox{\hyperlink{classO3__CPU_afc1678357873313e77e63577b8ba8ec4}{E\+X\+E\+C\+\_\+\+L\+A\+T\+E\+N\+CY}}
+\item 
+std\+::queue$<$ uint64\+\_\+t $>$ \mbox{\hyperlink{classO3__CPU_abbc4f703628f2a1435a054b7a5eee309}{S\+TA}}
+\item 
+std\+::queue$<$ \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator $>$ \mbox{\hyperlink{classO3__CPU_a8daeb8803e3c8ed905673a342abcbc64}{ready\+\_\+to\+\_\+execute}}
+\item 
+std\+::queue$<$ std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator $>$ \mbox{\hyperlink{classO3__CPU_ae6f95b13c4cb811e753f30ebb960e673}{R\+T\+L0}}
+\item 
+std\+::queue$<$ std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator $>$ \mbox{\hyperlink{classO3__CPU_a9e571955e501c8826bdd1634b4d04065}{R\+T\+L1}}
+\item 
+std\+::queue$<$ std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator $>$ \mbox{\hyperlink{classO3__CPU_a1d9e14a1cd644d4e1ed20e1f225d4b6f}{R\+T\+S0}}
+\item 
+std\+::queue$<$ std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator $>$ \mbox{\hyperlink{classO3__CPU_ae86a79d5f864e58975d34a2b07b57cfc}{R\+T\+S1}}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{classO3__CPU_a3763172287417060c1fe6f4d16476692}{fetch\+\_\+stall}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_aec7cac9a55aa9a83fbb2a13504f3e033}{fetch\+\_\+resume\+\_\+cycle}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a12eca07a6d1b4c68802d0560ed9521ac}{num\+\_\+branch}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a295716a13e5d23dd8627fb1bc0c88dd9}{branch\+\_\+mispredictions}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a6a0fca8e9f5754bb50eb3c23d41b5609}{total\+\_\+rob\+\_\+occupancy\+\_\+at\+\_\+branch\+\_\+mispredict}}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a1abc2dc1642902fd35290184ccb25ede}{total\+\_\+branch\+\_\+types}} \mbox{[}8\mbox{]} = \{\}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classO3__CPU_a44386c4d07d8d8a3b88a5d9d8e8f8f42}{branch\+\_\+type\+\_\+misses}} \mbox{[}8\mbox{]} = \{\}
+\item 
+\mbox{\hyperlink{classCacheBus}{Cache\+Bus}} \mbox{\hyperlink{classO3__CPU_a866df264abfea3e097722a8b3af9d5a5}{I\+T\+L\+B\+\_\+bus}}
+\item 
+\mbox{\hyperlink{classCacheBus}{Cache\+Bus}} \mbox{\hyperlink{classO3__CPU_af752debe13c09a7e2730fb1dca112b9f}{D\+T\+L\+B\+\_\+bus}}
+\item 
+\mbox{\hyperlink{classCacheBus}{Cache\+Bus}} \mbox{\hyperlink{classO3__CPU_a7b241d79056d9723cc0097a1dd2308df}{L1\+I\+\_\+bus}}
+\item 
+\mbox{\hyperlink{classCacheBus}{Cache\+Bus}} \mbox{\hyperlink{classO3__CPU_ac8b41ff25d0260a8f871d66d4140b6e7}{L1\+D\+\_\+bus}}
+\item 
+const bpred\+\_\+t \mbox{\hyperlink{classO3__CPU_afa9b75efbdcea0080dfc000573683642}{bpred\+\_\+type}}
+\item 
+const btb\+\_\+t \mbox{\hyperlink{classO3__CPU_a43b7014eb2823f255a4d298b1ff4f989}{btb\+\_\+type}}
+\item 
+const ipref\+\_\+t \mbox{\hyperlink{classO3__CPU_a1a2115dbb23814efca1911e20abbd889}{ipref\+\_\+type}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Typedef Documentation}
+\mbox{\Hypertarget{classO3__CPU_a2f7402a0a6e86e28cdd5e4d6dd162f8d}\label{classO3__CPU_a2f7402a0a6e86e28cdd5e4d6dd162f8d}} 
+\index{O3\_CPU@{O3\_CPU}!dib\_t@{dib\_t}}
+\index{dib\_t@{dib\_t}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{dib\_t}{dib\_t}}
+{\footnotesize\ttfamily using \mbox{\hyperlink{classO3__CPU_a2f7402a0a6e86e28cdd5e4d6dd162f8d}{O3\+\_\+\+C\+P\+U\+::dib\+\_\+t}} =  std\+::vector$<$\mbox{\hyperlink{structO3__CPU_1_1dib__entry__t}{dib\+\_\+entry\+\_\+t}}$>$}
+
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classO3__CPU_aa79621c963bb7f694196797b45b912f4}\label{classO3__CPU_aa79621c963bb7f694196797b45b912f4}} 
+\index{O3\_CPU@{O3\_CPU}!O3\_CPU@{O3\_CPU}}
+\index{O3\_CPU@{O3\_CPU}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{O3\_CPU()}{O3\_CPU()}}
+{\footnotesize\ttfamily O3\+\_\+\+C\+P\+U\+::\+O3\+\_\+\+C\+PU (\begin{DoxyParamCaption}\item[{uint32\+\_\+t}]{cpu,  }\item[{double}]{freq\+\_\+scale,  }\item[{std\+::size\+\_\+t}]{dib\+\_\+set,  }\item[{std\+::size\+\_\+t}]{dib\+\_\+way,  }\item[{std\+::size\+\_\+t}]{dib\+\_\+window,  }\item[{std\+::size\+\_\+t}]{ifetch\+\_\+buffer\+\_\+size,  }\item[{std\+::size\+\_\+t}]{decode\+\_\+buffer\+\_\+size,  }\item[{std\+::size\+\_\+t}]{dispatch\+\_\+buffer\+\_\+size,  }\item[{std\+::size\+\_\+t}]{rob\+\_\+size,  }\item[{std\+::size\+\_\+t}]{lq\+\_\+size,  }\item[{std\+::size\+\_\+t}]{sq\+\_\+size,  }\item[{unsigned}]{fetch\+\_\+width,  }\item[{unsigned}]{decode\+\_\+width,  }\item[{unsigned}]{dispatch\+\_\+width,  }\item[{unsigned}]{schedule\+\_\+width,  }\item[{unsigned}]{execute\+\_\+width,  }\item[{unsigned}]{lq\+\_\+width,  }\item[{unsigned}]{sq\+\_\+width,  }\item[{unsigned}]{retire\+\_\+width,  }\item[{unsigned}]{mispredict\+\_\+penalty,  }\item[{unsigned}]{decode\+\_\+latency,  }\item[{unsigned}]{dispatch\+\_\+latency,  }\item[{unsigned}]{schedule\+\_\+latency,  }\item[{unsigned}]{execute\+\_\+latency,  }\item[{\mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$}]{itlb,  }\item[{\mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$}]{dtlb,  }\item[{\mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$}]{l1i,  }\item[{\mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$}]{l1d,  }\item[{bpred\+\_\+t}]{bpred\+\_\+type,  }\item[{btb\+\_\+t}]{btb\+\_\+type,  }\item[{ipref\+\_\+t}]{ipref\+\_\+type }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classO3__CPU_a80d01da310133393c7cc0e4eec950e7f}\label{classO3__CPU_a80d01da310133393c7cc0e4eec950e7f}} 
+\index{O3\_CPU@{O3\_CPU}!add\_load\_queue@{add\_load\_queue}}
+\index{add\_load\_queue@{add\_load\_queue}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{add\_load\_queue()}{add\_load\_queue()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::add\+\_\+load\+\_\+queue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{rob\+\_\+index,  }\item[{uint32\+\_\+t}]{data\+\_\+index }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a80d01da310133393c7cc0e4eec950e7f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a80d01da310133393c7cc0e4eec950e7f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_ace76d4c4bb699ef5ac00805dcad6d4d9}\label{classO3__CPU_ace76d4c4bb699ef5ac00805dcad6d4d9}} 
+\index{O3\_CPU@{O3\_CPU}!add\_store\_queue@{add\_store\_queue}}
+\index{add\_store\_queue@{add\_store\_queue}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{add\_store\_queue()}{add\_store\_queue()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::add\+\_\+store\+\_\+queue (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{rob\+\_\+index,  }\item[{uint32\+\_\+t}]{data\+\_\+index }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ace76d4c4bb699ef5ac00805dcad6d4d9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a0f01d6b078a319b06a90f20782044b45}\label{classO3__CPU_a0f01d6b078a319b06a90f20782044b45}} 
+\index{O3\_CPU@{O3\_CPU}!check\_dependency@{check\_dependency}}
+\index{check\_dependency@{check\_dependency}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{check\_dependency()}{check\_dependency()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::check\+\_\+dependency (\begin{DoxyParamCaption}\item[{int}]{prior,  }\item[{int}]{current }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classO3__CPU_a672d6845de1502b1e89a9f453fe1c12d}\label{classO3__CPU_a672d6845de1502b1e89a9f453fe1c12d}} 
+\index{O3\_CPU@{O3\_CPU}!check\_dib@{check\_dib}}
+\index{check\_dib@{check\_dib}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{check\_dib()}{check\_dib()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::check\+\_\+dib (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a672d6845de1502b1e89a9f453fe1c12d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=325pt]{classO3__CPU_a672d6845de1502b1e89a9f453fe1c12d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_ab971ee3a75071bb5ff5a3267e281ac4d}\label{classO3__CPU_ab971ee3a75071bb5ff5a3267e281ac4d}} 
+\index{O3\_CPU@{O3\_CPU}!complete\_inflight\_instruction@{complete\_inflight\_instruction}}
+\index{complete\_inflight\_instruction@{complete\_inflight\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{complete\_inflight\_instruction()}{complete\_inflight\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::complete\+\_\+inflight\+\_\+instruction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ab971ee3a75071bb5ff5a3267e281ac4d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ab971ee3a75071bb5ff5a3267e281ac4d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a6166320b7886c2d9a97808de48163ed1}\label{classO3__CPU_a6166320b7886c2d9a97808de48163ed1}} 
+\index{O3\_CPU@{O3\_CPU}!decode\_instruction@{decode\_instruction}}
+\index{decode\_instruction@{decode\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{decode\_instruction()}{decode\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::decode\+\_\+instruction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a6166320b7886c2d9a97808de48163ed1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a6166320b7886c2d9a97808de48163ed1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a4ad0b7b3ef4399260ac384659c653b52}\label{classO3__CPU_a4ad0b7b3ef4399260ac384659c653b52}} 
+\index{O3\_CPU@{O3\_CPU}!dispatch\_instruction@{dispatch\_instruction}}
+\index{dispatch\_instruction@{dispatch\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{dispatch\_instruction()}{dispatch\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::dispatch\+\_\+instruction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a4ad0b7b3ef4399260ac384659c653b52_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a4ad0b7b3ef4399260ac384659c653b52_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a7bc34824747b6b3a1c756560804cebde}\label{classO3__CPU_a7bc34824747b6b3a1c756560804cebde}} 
+\index{O3\_CPU@{O3\_CPU}!do\_check\_dib@{do\_check\_dib}}
+\index{do\_check\_dib@{do\_check\_dib}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_check\_dib()}{do\_check\_dib()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::do\+\_\+check\+\_\+dib (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} \&}]{instr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=276pt]{classO3__CPU_a7bc34824747b6b3a1c756560804cebde_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a7bc34824747b6b3a1c756560804cebde_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_afccd4eb948411e41b9f88946774122d0}\label{classO3__CPU_afccd4eb948411e41b9f88946774122d0}} 
+\index{O3\_CPU@{O3\_CPU}!do\_complete\_execution@{do\_complete\_execution}}
+\index{do\_complete\_execution@{do\_complete\_execution}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_complete\_execution()}{do\_complete\_execution()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::do\+\_\+complete\+\_\+execution (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{rob\+\_\+it }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_afccd4eb948411e41b9f88946774122d0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_aa641eb22e198a5548bdc5b0a652859b2}\label{classO3__CPU_aa641eb22e198a5548bdc5b0a652859b2}} 
+\index{O3\_CPU@{O3\_CPU}!do\_dib\_update@{do\_dib\_update}}
+\index{do\_dib\_update@{do\_dib\_update}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_dib\_update()}{do\_dib\_update()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::do\+\_\+dib\+\_\+update (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} \&}]{instr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=281pt]{classO3__CPU_aa641eb22e198a5548bdc5b0a652859b2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_aa641eb22e198a5548bdc5b0a652859b2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_abba892d7e79a7679d74afc80d01a6946}\label{classO3__CPU_abba892d7e79a7679d74afc80d01a6946}} 
+\index{O3\_CPU@{O3\_CPU}!do\_execution@{do\_execution}}
+\index{do\_execution@{do\_execution}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_execution()}{do\_execution()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::do\+\_\+execution (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{rob\+\_\+it }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_abba892d7e79a7679d74afc80d01a6946_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a0b51101e5765592b1395f732d3f6fb91}\label{classO3__CPU_a0b51101e5765592b1395f732d3f6fb91}} 
+\index{O3\_CPU@{O3\_CPU}!do\_fetch\_instruction@{do\_fetch\_instruction}}
+\index{do\_fetch\_instruction@{do\_fetch\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_fetch\_instruction()}{do\_fetch\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::do\+\_\+fetch\+\_\+instruction (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{begin,  }\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{end }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a0b51101e5765592b1395f732d3f6fb91_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a0b51101e5765592b1395f732d3f6fb91_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_ab6b2fcb74679cc34ed5c11507b398e7d}\label{classO3__CPU_ab6b2fcb74679cc34ed5c11507b398e7d}} 
+\index{O3\_CPU@{O3\_CPU}!do\_memory\_scheduling@{do\_memory\_scheduling}}
+\index{do\_memory\_scheduling@{do\_memory\_scheduling}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_memory\_scheduling()}{do\_memory\_scheduling()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::do\+\_\+memory\+\_\+scheduling (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{rob\+\_\+it }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ab6b2fcb74679cc34ed5c11507b398e7d_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ab6b2fcb74679cc34ed5c11507b398e7d_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_aebe8bb6f864763e071b74eb30209194b}\label{classO3__CPU_aebe8bb6f864763e071b74eb30209194b}} 
+\index{O3\_CPU@{O3\_CPU}!do\_scheduling@{do\_scheduling}}
+\index{do\_scheduling@{do\_scheduling}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_scheduling()}{do\_scheduling()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::do\+\_\+scheduling (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{rob\+\_\+it }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_aebe8bb6f864763e071b74eb30209194b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_aebe8bb6f864763e071b74eb30209194b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_ac082e3ec61c631118c12ab15916b1fef}\label{classO3__CPU_ac082e3ec61c631118c12ab15916b1fef}} 
+\index{O3\_CPU@{O3\_CPU}!do\_sq\_forward\_to\_lq@{do\_sq\_forward\_to\_lq}}
+\index{do\_sq\_forward\_to\_lq@{do\_sq\_forward\_to\_lq}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_sq\_forward\_to\_lq()}{do\_sq\_forward\_to\_lq()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::do\+\_\+sq\+\_\+forward\+\_\+to\+\_\+lq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} \&}]{sq\+\_\+entry,  }\item[{\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} \&}]{lq\+\_\+entry }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ac082e3ec61c631118c12ab15916b1fef_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ac082e3ec61c631118c12ab15916b1fef_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a6b1b86f1cb0448a12da692f65ada15dc}\label{classO3__CPU_a6b1b86f1cb0448a12da692f65ada15dc}} 
+\index{O3\_CPU@{O3\_CPU}!do\_translate\_fetch@{do\_translate\_fetch}}
+\index{do\_translate\_fetch@{do\_translate\_fetch}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_translate\_fetch()}{do\_translate\_fetch()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::do\+\_\+translate\+\_\+fetch (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{begin,  }\item[{\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$ \mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}} $>$\+::iterator}]{end }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a6b1b86f1cb0448a12da692f65ada15dc_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a6b1b86f1cb0448a12da692f65ada15dc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_adced3f033b0ea489cffd3e94dacc8f5f}\label{classO3__CPU_adced3f033b0ea489cffd3e94dacc8f5f}} 
+\index{O3\_CPU@{O3\_CPU}!do\_translate\_load@{do\_translate\_load}}
+\index{do\_translate\_load@{do\_translate\_load}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_translate\_load()}{do\_translate\_load()}}
+{\footnotesize\ttfamily int O3\+\_\+\+C\+P\+U\+::do\+\_\+translate\+\_\+load (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator}]{sq\+\_\+it }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_adced3f033b0ea489cffd3e94dacc8f5f_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_adced3f033b0ea489cffd3e94dacc8f5f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a988f621c2fd97da2be8135bd8b5ef9ad}\label{classO3__CPU_a988f621c2fd97da2be8135bd8b5ef9ad}} 
+\index{O3\_CPU@{O3\_CPU}!do\_translate\_store@{do\_translate\_store}}
+\index{do\_translate\_store@{do\_translate\_store}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{do\_translate\_store()}{do\_translate\_store()}}
+{\footnotesize\ttfamily int O3\+\_\+\+C\+P\+U\+::do\+\_\+translate\+\_\+store (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator}]{sq\+\_\+it }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a988f621c2fd97da2be8135bd8b5ef9ad_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a988f621c2fd97da2be8135bd8b5ef9ad_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a4d96337387dbe96c6e7265c16e234848}\label{classO3__CPU_a4d96337387dbe96c6e7265c16e234848}} 
+\index{O3\_CPU@{O3\_CPU}!execute\_instruction@{execute\_instruction}}
+\index{execute\_instruction@{execute\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{execute\_instruction()}{execute\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::execute\+\_\+instruction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a4d96337387dbe96c6e7265c16e234848_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a4d96337387dbe96c6e7265c16e234848_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a31bdfc38be3aaefe313225956fad0a7e}\label{classO3__CPU_a31bdfc38be3aaefe313225956fad0a7e}} 
+\index{O3\_CPU@{O3\_CPU}!execute\_load@{execute\_load}}
+\index{execute\_load@{execute\_load}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{execute\_load()}{execute\_load()}}
+{\footnotesize\ttfamily int O3\+\_\+\+C\+P\+U\+::execute\+\_\+load (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator}]{lq\+\_\+it }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a31bdfc38be3aaefe313225956fad0a7e_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a31bdfc38be3aaefe313225956fad0a7e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_adc607d4937b1955cda7ade36c00ac210}\label{classO3__CPU_adc607d4937b1955cda7ade36c00ac210}} 
+\index{O3\_CPU@{O3\_CPU}!execute\_memory\_instruction@{execute\_memory\_instruction}}
+\index{execute\_memory\_instruction@{execute\_memory\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{execute\_memory\_instruction()}{execute\_memory\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::execute\+\_\+memory\+\_\+instruction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classO3__CPU_a11fb535781516d64b61c94419400bbd4}\label{classO3__CPU_a11fb535781516d64b61c94419400bbd4}} 
+\index{O3\_CPU@{O3\_CPU}!execute\_store@{execute\_store}}
+\index{execute\_store@{execute\_store}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{execute\_store()}{execute\_store()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::execute\+\_\+store (\begin{DoxyParamCaption}\item[{std\+::vector$<$ \mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}} $>$\+::iterator}]{sq\+\_\+it }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a11fb535781516d64b61c94419400bbd4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a11fb535781516d64b61c94419400bbd4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a23c296fb6bbd6ab1a639b4c092901200}\label{classO3__CPU_a23c296fb6bbd6ab1a639b4c092901200}} 
+\index{O3\_CPU@{O3\_CPU}!fetch\_instruction@{fetch\_instruction}}
+\index{fetch\_instruction@{fetch\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{fetch\_instruction()}{fetch\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::fetch\+\_\+instruction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a23c296fb6bbd6ab1a639b4c092901200_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a23c296fb6bbd6ab1a639b4c092901200_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_afb4b5a8c687fec475a870e00e43c6d10}\label{classO3__CPU_afb4b5a8c687fec475a870e00e43c6d10}} 
+\index{O3\_CPU@{O3\_CPU}!handle\_memory\_return@{handle\_memory\_return}}
+\index{handle\_memory\_return@{handle\_memory\_return}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{handle\_memory\_return()}{handle\_memory\_return()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::handle\+\_\+memory\+\_\+return (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_afb4b5a8c687fec475a870e00e43c6d10_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_afb4b5a8c687fec475a870e00e43c6d10_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_adafa0416d19e6d76896af93758d63051}\label{classO3__CPU_adafa0416d19e6d76896af93758d63051}} 
+\index{O3\_CPU@{O3\_CPU}!init\_instruction@{init\_instruction}}
+\index{init\_instruction@{init\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{init\_instruction()}{init\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::init\+\_\+instruction (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}}]{instr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_adafa0416d19e6d76896af93758d63051_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_acbae80d70f8026086125e172c1644f2d}\label{classO3__CPU_acbae80d70f8026086125e172c1644f2d}} 
+\index{O3\_CPU@{O3\_CPU}!initialize\_core@{initialize\_core}}
+\index{initialize\_core@{initialize\_core}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{initialize\_core()}{initialize\_core()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::initialize\+\_\+core (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classO3__CPU_abb63841c61a7ea49b2e3f55b1f875c8b}\label{classO3__CPU_abb63841c61a7ea49b2e3f55b1f875c8b}} 
+\index{O3\_CPU@{O3\_CPU}!operate@{operate}}
+\index{operate@{operate}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{operate()}{operate()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::operate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classchampsim_1_1operable_adb14f46a1019f5c6432845215af46741}{champsim\+::operable}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_abb63841c61a7ea49b2e3f55b1f875c8b_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a90b7f68c816c5b8d4994f59ddb7f2ce0}\label{classO3__CPU_a90b7f68c816c5b8d4994f59ddb7f2ce0}} 
+\index{O3\_CPU@{O3\_CPU}!operate\_cache@{operate\_cache}}
+\index{operate\_cache@{operate\_cache}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{operate\_cache()}{operate\_cache()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::operate\+\_\+cache (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classO3__CPU_adb6782601106060a495dbd8823c00bb1}\label{classO3__CPU_adb6782601106060a495dbd8823c00bb1}} 
+\index{O3\_CPU@{O3\_CPU}!operate\_lsq@{operate\_lsq}}
+\index{operate\_lsq@{operate\_lsq}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{operate\_lsq()}{operate\_lsq()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::operate\+\_\+lsq (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_adb6782601106060a495dbd8823c00bb1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=334pt]{classO3__CPU_adb6782601106060a495dbd8823c00bb1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a8d924a30dbe9ffb3cbdbee347076a03f}\label{classO3__CPU_a8d924a30dbe9ffb3cbdbee347076a03f}} 
+\index{O3\_CPU@{O3\_CPU}!prefetch\_code\_line@{prefetch\_code\_line}}
+\index{prefetch\_code\_line@{prefetch\_code\_line}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{prefetch\_code\_line()}{prefetch\_code\_line()}}
+{\footnotesize\ttfamily int O3\+\_\+\+C\+P\+U\+::prefetch\+\_\+code\+\_\+line (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{pf\+\_\+v\+\_\+addr }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classO3__CPU_ab0ccd72a6b7cc16f69924f70cf24ac69}\label{classO3__CPU_ab0ccd72a6b7cc16f69924f70cf24ac69}} 
+\index{O3\_CPU@{O3\_CPU}!print\_deadlock@{print\_deadlock}}
+\index{print\_deadlock@{print\_deadlock}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{print\_deadlock()}{print\_deadlock()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::print\+\_\+deadlock (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classchampsim_1_1operable_a19019841fc4b9a0cb245552c1425bece}{champsim\+::operable}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ab0ccd72a6b7cc16f69924f70cf24ac69_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a1cde4d45f29b6f676c393edf64ab0b28}\label{classO3__CPU_a1cde4d45f29b6f676c393edf64ab0b28}} 
+\index{O3\_CPU@{O3\_CPU}!promote\_to\_decode@{promote\_to\_decode}}
+\index{promote\_to\_decode@{promote\_to\_decode}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{promote\_to\_decode()}{promote\_to\_decode()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::promote\+\_\+to\+\_\+decode (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a1cde4d45f29b6f676c393edf64ab0b28_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=333pt]{classO3__CPU_a1cde4d45f29b6f676c393edf64ab0b28_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a0760ed97b7df5e1779fe5774e6fcfcba}\label{classO3__CPU_a0760ed97b7df5e1779fe5774e6fcfcba}} 
+\index{O3\_CPU@{O3\_CPU}!retire\_rob@{retire\_rob}}
+\index{retire\_rob@{retire\_rob}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{retire\_rob()}{retire\_rob()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::retire\+\_\+rob (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a0760ed97b7df5e1779fe5774e6fcfcba_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=324pt]{classO3__CPU_a0760ed97b7df5e1779fe5774e6fcfcba_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a6ecb62d6fd8772cdd65977f86803df69}\label{classO3__CPU_a6ecb62d6fd8772cdd65977f86803df69}} 
+\index{O3\_CPU@{O3\_CPU}!schedule\_instruction@{schedule\_instruction}}
+\index{schedule\_instruction@{schedule\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{schedule\_instruction()}{schedule\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::schedule\+\_\+instruction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a6ecb62d6fd8772cdd65977f86803df69_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a6ecb62d6fd8772cdd65977f86803df69_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_a1e79867bbae46bb880c7a7aaa669c647}\label{classO3__CPU_a1e79867bbae46bb880c7a7aaa669c647}} 
+\index{O3\_CPU@{O3\_CPU}!schedule\_memory\_instruction@{schedule\_memory\_instruction}}
+\index{schedule\_memory\_instruction@{schedule\_memory\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{schedule\_memory\_instruction()}{schedule\_memory\_instruction()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::schedule\+\_\+memory\+\_\+instruction (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a1e79867bbae46bb880c7a7aaa669c647_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_a1e79867bbae46bb880c7a7aaa669c647_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classO3__CPU_ad138173fbfedf55c6a2dd6f15ca2ac2a}\label{classO3__CPU_ad138173fbfedf55c6a2dd6f15ca2ac2a}} 
+\index{O3\_CPU@{O3\_CPU}!translate\_fetch@{translate\_fetch}}
+\index{translate\_fetch@{translate\_fetch}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{translate\_fetch()}{translate\_fetch()}}
+{\footnotesize\ttfamily void O3\+\_\+\+C\+P\+U\+::translate\+\_\+fetch (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ad138173fbfedf55c6a2dd6f15ca2ac2a_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classO3__CPU_ad138173fbfedf55c6a2dd6f15ca2ac2a_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classO3__CPU_aa5513d19d347ed0ce635e37aad9dbb85}\label{classO3__CPU_aa5513d19d347ed0ce635e37aad9dbb85}} 
+\index{O3\_CPU@{O3\_CPU}!begin\_sim\_cycle@{begin\_sim\_cycle}}
+\index{begin\_sim\_cycle@{begin\_sim\_cycle}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{begin\_sim\_cycle}{begin\_sim\_cycle}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::begin\+\_\+sim\+\_\+cycle = 0}
+
+\mbox{\Hypertarget{classO3__CPU_addc92dbb1e570e2f8b04fb242544df16}\label{classO3__CPU_addc92dbb1e570e2f8b04fb242544df16}} 
+\index{O3\_CPU@{O3\_CPU}!begin\_sim\_instr@{begin\_sim\_instr}}
+\index{begin\_sim\_instr@{begin\_sim\_instr}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{begin\_sim\_instr}{begin\_sim\_instr}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::begin\+\_\+sim\+\_\+instr = 0}
+
+\mbox{\Hypertarget{classO3__CPU_afa9b75efbdcea0080dfc000573683642}\label{classO3__CPU_afa9b75efbdcea0080dfc000573683642}} 
+\index{O3\_CPU@{O3\_CPU}!bpred\_type@{bpred\_type}}
+\index{bpred\_type@{bpred\_type}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{bpred\_type}{bpred\_type}}
+{\footnotesize\ttfamily const bpred\+\_\+t O3\+\_\+\+C\+P\+U\+::bpred\+\_\+type}
+
+\mbox{\Hypertarget{classO3__CPU_a526a30ee6327c03d4520572ba08f852f}\label{classO3__CPU_a526a30ee6327c03d4520572ba08f852f}} 
+\index{O3\_CPU@{O3\_CPU}!BRANCH\_MISPREDICT\_PENALTY@{BRANCH\_MISPREDICT\_PENALTY}}
+\index{BRANCH\_MISPREDICT\_PENALTY@{BRANCH\_MISPREDICT\_PENALTY}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{BRANCH\_MISPREDICT\_PENALTY}{BRANCH\_MISPREDICT\_PENALTY}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+B\+R\+A\+N\+C\+H\+\_\+\+M\+I\+S\+P\+R\+E\+D\+I\+C\+T\+\_\+\+P\+E\+N\+A\+L\+TY}
+
+\mbox{\Hypertarget{classO3__CPU_a295716a13e5d23dd8627fb1bc0c88dd9}\label{classO3__CPU_a295716a13e5d23dd8627fb1bc0c88dd9}} 
+\index{O3\_CPU@{O3\_CPU}!branch\_mispredictions@{branch\_mispredictions}}
+\index{branch\_mispredictions@{branch\_mispredictions}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{branch\_mispredictions}{branch\_mispredictions}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::branch\+\_\+mispredictions = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a44386c4d07d8d8a3b88a5d9d8e8f8f42}\label{classO3__CPU_a44386c4d07d8d8a3b88a5d9d8e8f8f42}} 
+\index{O3\_CPU@{O3\_CPU}!branch\_type\_misses@{branch\_type\_misses}}
+\index{branch\_type\_misses@{branch\_type\_misses}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{branch\_type\_misses}{branch\_type\_misses}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::branch\+\_\+type\+\_\+misses\mbox{[}8\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{classO3__CPU_a43b7014eb2823f255a4d298b1ff4f989}\label{classO3__CPU_a43b7014eb2823f255a4d298b1ff4f989}} 
+\index{O3\_CPU@{O3\_CPU}!btb\_type@{btb\_type}}
+\index{btb\_type@{btb\_type}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{btb\_type}{btb\_type}}
+{\footnotesize\ttfamily const btb\+\_\+t O3\+\_\+\+C\+P\+U\+::btb\+\_\+type}
+
+\mbox{\Hypertarget{classO3__CPU_aedae329cc566e5110b3d331d41869f51}\label{classO3__CPU_aedae329cc566e5110b3d331d41869f51}} 
+\index{O3\_CPU@{O3\_CPU}!completed\_executions@{completed\_executions}}
+\index{completed\_executions@{completed\_executions}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{completed\_executions}{completed\_executions}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::completed\+\_\+executions = 0}
+
+\mbox{\Hypertarget{classO3__CPU_aaa6f3db1ef7b2e60fb1d0919715f72f7}\label{classO3__CPU_aaa6f3db1ef7b2e60fb1d0919715f72f7}} 
+\index{O3\_CPU@{O3\_CPU}!cpu@{cpu}}
+\index{cpu@{cpu}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{cpu}{cpu}}
+{\footnotesize\ttfamily uint32\+\_\+t O3\+\_\+\+C\+P\+U\+::cpu = 0}
+
+\mbox{\Hypertarget{classO3__CPU_ade866fbd63b7a892b70521dfa6d2409b}\label{classO3__CPU_ade866fbd63b7a892b70521dfa6d2409b}} 
+\index{O3\_CPU@{O3\_CPU}!DECODE\_BUFFER@{DECODE\_BUFFER}}
+\index{DECODE\_BUFFER@{DECODE\_BUFFER}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{DECODE\_BUFFER}{DECODE\_BUFFER}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}$>$ O3\+\_\+\+C\+P\+U\+::\+D\+E\+C\+O\+D\+E\+\_\+\+B\+U\+F\+F\+ER}
+
+\mbox{\Hypertarget{classO3__CPU_acfff33a4ec76a21a761f878d0115e617}\label{classO3__CPU_acfff33a4ec76a21a761f878d0115e617}} 
+\index{O3\_CPU@{O3\_CPU}!DECODE\_WIDTH@{DECODE\_WIDTH}}
+\index{DECODE\_WIDTH@{DECODE\_WIDTH}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{DECODE\_WIDTH}{DECODE\_WIDTH}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+D\+E\+C\+O\+D\+E\+\_\+\+W\+I\+D\+TH}
+
+\mbox{\Hypertarget{classO3__CPU_a2ff16a32d0cf1875605f8b3703b06eaf}\label{classO3__CPU_a2ff16a32d0cf1875605f8b3703b06eaf}} 
+\index{O3\_CPU@{O3\_CPU}!DIB@{DIB}}
+\index{DIB@{DIB}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{DIB}{DIB}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classO3__CPU_a2f7402a0a6e86e28cdd5e4d6dd162f8d}{dib\+\_\+t}} O3\+\_\+\+C\+P\+U\+::\+D\+IB \{\mbox{\hyperlink{classO3__CPU_a60fa349f274b200538f19f498f2ae3c5}{dib\+\_\+set}} $\ast$ \mbox{\hyperlink{classO3__CPU_a2e889fdd220d5e8b90bf3e370bc2acaf}{dib\+\_\+way}}\}}
+
+\mbox{\Hypertarget{classO3__CPU_a60fa349f274b200538f19f498f2ae3c5}\label{classO3__CPU_a60fa349f274b200538f19f498f2ae3c5}} 
+\index{O3\_CPU@{O3\_CPU}!dib\_set@{dib\_set}}
+\index{dib\_set@{dib\_set}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{dib\_set}{dib\_set}}
+{\footnotesize\ttfamily const std\+::size\+\_\+t O3\+\_\+\+C\+P\+U\+::dib\+\_\+set}
+
+\mbox{\Hypertarget{classO3__CPU_a2e889fdd220d5e8b90bf3e370bc2acaf}\label{classO3__CPU_a2e889fdd220d5e8b90bf3e370bc2acaf}} 
+\index{O3\_CPU@{O3\_CPU}!dib\_way@{dib\_way}}
+\index{dib\_way@{dib\_way}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{dib\_way}{dib\_way}}
+{\footnotesize\ttfamily const std\+::size\+\_\+t O3\+\_\+\+C\+P\+U\+::dib\+\_\+way}
+
+\mbox{\Hypertarget{classO3__CPU_a56cea10300643fc8fe1bb370bf4e01f0}\label{classO3__CPU_a56cea10300643fc8fe1bb370bf4e01f0}} 
+\index{O3\_CPU@{O3\_CPU}!dib\_window@{dib\_window}}
+\index{dib\_window@{dib\_window}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{dib\_window}{dib\_window}}
+{\footnotesize\ttfamily const std\+::size\+\_\+t O3\+\_\+\+C\+P\+U\+::dib\+\_\+window}
+
+\mbox{\Hypertarget{classO3__CPU_a8ebefcc91509fa3edc6c63940e8acbe9}\label{classO3__CPU_a8ebefcc91509fa3edc6c63940e8acbe9}} 
+\index{O3\_CPU@{O3\_CPU}!DISPATCH\_BUFFER@{DISPATCH\_BUFFER}}
+\index{DISPATCH\_BUFFER@{DISPATCH\_BUFFER}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{DISPATCH\_BUFFER}{DISPATCH\_BUFFER}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}$>$ O3\+\_\+\+C\+P\+U\+::\+D\+I\+S\+P\+A\+T\+C\+H\+\_\+\+B\+U\+F\+F\+ER}
+
+\mbox{\Hypertarget{classO3__CPU_a64a065f3f1ac20acefb3bcc84d83d26b}\label{classO3__CPU_a64a065f3f1ac20acefb3bcc84d83d26b}} 
+\index{O3\_CPU@{O3\_CPU}!DISPATCH\_WIDTH@{DISPATCH\_WIDTH}}
+\index{DISPATCH\_WIDTH@{DISPATCH\_WIDTH}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{DISPATCH\_WIDTH}{DISPATCH\_WIDTH}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+D\+I\+S\+P\+A\+T\+C\+H\+\_\+\+W\+I\+D\+TH}
+
+\mbox{\Hypertarget{classO3__CPU_af752debe13c09a7e2730fb1dca112b9f}\label{classO3__CPU_af752debe13c09a7e2730fb1dca112b9f}} 
+\index{O3\_CPU@{O3\_CPU}!DTLB\_bus@{DTLB\_bus}}
+\index{DTLB\_bus@{DTLB\_bus}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{DTLB\_bus}{DTLB\_bus}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCacheBus}{Cache\+Bus}} O3\+\_\+\+C\+P\+U\+::\+D\+T\+L\+B\+\_\+bus}
+
+\mbox{\Hypertarget{classO3__CPU_afc1678357873313e77e63577b8ba8ec4}\label{classO3__CPU_afc1678357873313e77e63577b8ba8ec4}} 
+\index{O3\_CPU@{O3\_CPU}!EXEC\_LATENCY@{EXEC\_LATENCY}}
+\index{EXEC\_LATENCY@{EXEC\_LATENCY}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{EXEC\_LATENCY}{EXEC\_LATENCY}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+E\+X\+E\+C\+\_\+\+L\+A\+T\+E\+N\+CY}
+
+\mbox{\Hypertarget{classO3__CPU_a07d7b3f7aca13ef04c1336e1de22259e}\label{classO3__CPU_a07d7b3f7aca13ef04c1336e1de22259e}} 
+\index{O3\_CPU@{O3\_CPU}!EXEC\_WIDTH@{EXEC\_WIDTH}}
+\index{EXEC\_WIDTH@{EXEC\_WIDTH}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{EXEC\_WIDTH}{EXEC\_WIDTH}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+E\+X\+E\+C\+\_\+\+W\+I\+D\+TH}
+
+\mbox{\Hypertarget{classO3__CPU_aec7cac9a55aa9a83fbb2a13504f3e033}\label{classO3__CPU_aec7cac9a55aa9a83fbb2a13504f3e033}} 
+\index{O3\_CPU@{O3\_CPU}!fetch\_resume\_cycle@{fetch\_resume\_cycle}}
+\index{fetch\_resume\_cycle@{fetch\_resume\_cycle}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{fetch\_resume\_cycle}{fetch\_resume\_cycle}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::fetch\+\_\+resume\+\_\+cycle = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a3763172287417060c1fe6f4d16476692}\label{classO3__CPU_a3763172287417060c1fe6f4d16476692}} 
+\index{O3\_CPU@{O3\_CPU}!fetch\_stall@{fetch\_stall}}
+\index{fetch\_stall@{fetch\_stall}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{fetch\_stall}{fetch\_stall}}
+{\footnotesize\ttfamily uint8\+\_\+t O3\+\_\+\+C\+P\+U\+::fetch\+\_\+stall = 0}
+
+\mbox{\Hypertarget{classO3__CPU_af99704b4e1bc5c9831b24c79afc2c56b}\label{classO3__CPU_af99704b4e1bc5c9831b24c79afc2c56b}} 
+\index{O3\_CPU@{O3\_CPU}!FETCH\_WIDTH@{FETCH\_WIDTH}}
+\index{FETCH\_WIDTH@{FETCH\_WIDTH}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{FETCH\_WIDTH}{FETCH\_WIDTH}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+F\+E\+T\+C\+H\+\_\+\+W\+I\+D\+TH}
+
+\mbox{\Hypertarget{classO3__CPU_a936e20c9b6e8a64fa5d274ad12bbee3e}\label{classO3__CPU_a936e20c9b6e8a64fa5d274ad12bbee3e}} 
+\index{O3\_CPU@{O3\_CPU}!finish\_sim\_cycle@{finish\_sim\_cycle}}
+\index{finish\_sim\_cycle@{finish\_sim\_cycle}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{finish\_sim\_cycle}{finish\_sim\_cycle}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::finish\+\_\+sim\+\_\+cycle = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a487b9f557b0abbe3045da8910bf52120}\label{classO3__CPU_a487b9f557b0abbe3045da8910bf52120}} 
+\index{O3\_CPU@{O3\_CPU}!finish\_sim\_instr@{finish\_sim\_instr}}
+\index{finish\_sim\_instr@{finish\_sim\_instr}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{finish\_sim\_instr}{finish\_sim\_instr}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::finish\+\_\+sim\+\_\+instr = 0}
+
+\mbox{\Hypertarget{classO3__CPU_aace886b690c10b7f50a3367bb6a31746}\label{classO3__CPU_aace886b690c10b7f50a3367bb6a31746}} 
+\index{O3\_CPU@{O3\_CPU}!IFETCH\_BUFFER@{IFETCH\_BUFFER}}
+\index{IFETCH\_BUFFER@{IFETCH\_BUFFER}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{IFETCH\_BUFFER}{IFETCH\_BUFFER}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}$>$ O3\+\_\+\+C\+P\+U\+::\+I\+F\+E\+T\+C\+H\+\_\+\+B\+U\+F\+F\+ER}
+
+\mbox{\Hypertarget{classO3__CPU_af61af253457f9165a25f269be680c24d}\label{classO3__CPU_af61af253457f9165a25f269be680c24d}} 
+\index{O3\_CPU@{O3\_CPU}!inflight\_mem\_executions@{inflight\_mem\_executions}}
+\index{inflight\_mem\_executions@{inflight\_mem\_executions}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{inflight\_mem\_executions}{inflight\_mem\_executions}}
+{\footnotesize\ttfamily uint32\+\_\+t O3\+\_\+\+C\+P\+U\+::inflight\+\_\+mem\+\_\+executions = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a5b3a2e73abbbce8bb2a1fdcf51086425}\label{classO3__CPU_a5b3a2e73abbbce8bb2a1fdcf51086425}} 
+\index{O3\_CPU@{O3\_CPU}!inflight\_reg\_executions@{inflight\_reg\_executions}}
+\index{inflight\_reg\_executions@{inflight\_reg\_executions}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{inflight\_reg\_executions}{inflight\_reg\_executions}}
+{\footnotesize\ttfamily uint32\+\_\+t O3\+\_\+\+C\+P\+U\+::inflight\+\_\+reg\+\_\+executions = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a0e520b3006a88b885e4b048cc04f66b3}\label{classO3__CPU_a0e520b3006a88b885e4b048cc04f66b3}} 
+\index{O3\_CPU@{O3\_CPU}!instr\_unique\_id@{instr\_unique\_id}}
+\index{instr\_unique\_id@{instr\_unique\_id}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{instr\_unique\_id}{instr\_unique\_id}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::instr\+\_\+unique\+\_\+id = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a5ddd5d55f69e8efe982bcd286fbea0f1}\label{classO3__CPU_a5ddd5d55f69e8efe982bcd286fbea0f1}} 
+\index{O3\_CPU@{O3\_CPU}!instrs\_to\_fetch\_this\_cycle@{instrs\_to\_fetch\_this\_cycle}}
+\index{instrs\_to\_fetch\_this\_cycle@{instrs\_to\_fetch\_this\_cycle}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{instrs\_to\_fetch\_this\_cycle}{instrs\_to\_fetch\_this\_cycle}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::instrs\+\_\+to\+\_\+fetch\+\_\+this\+\_\+cycle = 0}
+
+\mbox{\Hypertarget{classO3__CPU_ae7c6dce372e0cf8e64de3994157f3256}\label{classO3__CPU_ae7c6dce372e0cf8e64de3994157f3256}} 
+\index{O3\_CPU@{O3\_CPU}!instrs\_to\_read\_this\_cycle@{instrs\_to\_read\_this\_cycle}}
+\index{instrs\_to\_read\_this\_cycle@{instrs\_to\_read\_this\_cycle}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{instrs\_to\_read\_this\_cycle}{instrs\_to\_read\_this\_cycle}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::instrs\+\_\+to\+\_\+read\+\_\+this\+\_\+cycle = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a1a2115dbb23814efca1911e20abbd889}\label{classO3__CPU_a1a2115dbb23814efca1911e20abbd889}} 
+\index{O3\_CPU@{O3\_CPU}!ipref\_type@{ipref\_type}}
+\index{ipref\_type@{ipref\_type}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{ipref\_type}{ipref\_type}}
+{\footnotesize\ttfamily const ipref\+\_\+t O3\+\_\+\+C\+P\+U\+::ipref\+\_\+type}
+
+\mbox{\Hypertarget{classO3__CPU_a866df264abfea3e097722a8b3af9d5a5}\label{classO3__CPU_a866df264abfea3e097722a8b3af9d5a5}} 
+\index{O3\_CPU@{O3\_CPU}!ITLB\_bus@{ITLB\_bus}}
+\index{ITLB\_bus@{ITLB\_bus}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{ITLB\_bus}{ITLB\_bus}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCacheBus}{Cache\+Bus}} O3\+\_\+\+C\+P\+U\+::\+I\+T\+L\+B\+\_\+bus}
+
+\mbox{\Hypertarget{classO3__CPU_ac8b41ff25d0260a8f871d66d4140b6e7}\label{classO3__CPU_ac8b41ff25d0260a8f871d66d4140b6e7}} 
+\index{O3\_CPU@{O3\_CPU}!L1D\_bus@{L1D\_bus}}
+\index{L1D\_bus@{L1D\_bus}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{L1D\_bus}{L1D\_bus}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCacheBus}{Cache\+Bus}} O3\+\_\+\+C\+P\+U\+::\+L1\+D\+\_\+bus}
+
+\mbox{\Hypertarget{classO3__CPU_a7b241d79056d9723cc0097a1dd2308df}\label{classO3__CPU_a7b241d79056d9723cc0097a1dd2308df}} 
+\index{O3\_CPU@{O3\_CPU}!L1I\_bus@{L1I\_bus}}
+\index{L1I\_bus@{L1I\_bus}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{L1I\_bus}{L1I\_bus}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classCacheBus}{Cache\+Bus}} O3\+\_\+\+C\+P\+U\+::\+L1\+I\+\_\+bus}
+
+\mbox{\Hypertarget{classO3__CPU_a2ee2cfe6df61f64f43871f055630f5ef}\label{classO3__CPU_a2ee2cfe6df61f64f43871f055630f5ef}} 
+\index{O3\_CPU@{O3\_CPU}!last\_sim\_cycle@{last\_sim\_cycle}}
+\index{last\_sim\_cycle@{last\_sim\_cycle}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{last\_sim\_cycle}{last\_sim\_cycle}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::last\+\_\+sim\+\_\+cycle = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a42b3fca9bfff82e9ef7acd541e62cd0e}\label{classO3__CPU_a42b3fca9bfff82e9ef7acd541e62cd0e}} 
+\index{O3\_CPU@{O3\_CPU}!last\_sim\_instr@{last\_sim\_instr}}
+\index{last\_sim\_instr@{last\_sim\_instr}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{last\_sim\_instr}{last\_sim\_instr}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::last\+\_\+sim\+\_\+instr = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a67f0f8a2f48da27efe504c5f6958bf2d}\label{classO3__CPU_a67f0f8a2f48da27efe504c5f6958bf2d}} 
+\index{O3\_CPU@{O3\_CPU}!LQ@{LQ}}
+\index{LQ@{LQ}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{LQ}{LQ}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$ O3\+\_\+\+C\+P\+U\+::\+LQ}
+
+\mbox{\Hypertarget{classO3__CPU_a2b8bd68c624870540139dea5654028be}\label{classO3__CPU_a2b8bd68c624870540139dea5654028be}} 
+\index{O3\_CPU@{O3\_CPU}!LQ\_WIDTH@{LQ\_WIDTH}}
+\index{LQ\_WIDTH@{LQ\_WIDTH}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{LQ\_WIDTH}{LQ\_WIDTH}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+L\+Q\+\_\+\+W\+I\+D\+TH}
+
+\mbox{\Hypertarget{classO3__CPU_ad4bf4f900d6e82f7cd5b1241f78d3f80}\label{classO3__CPU_ad4bf4f900d6e82f7cd5b1241f78d3f80}} 
+\index{O3\_CPU@{O3\_CPU}!next\_print\_instruction@{next\_print\_instruction}}
+\index{next\_print\_instruction@{next\_print\_instruction}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{next\_print\_instruction}{next\_print\_instruction}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::next\+\_\+print\+\_\+instruction = \mbox{\hyperlink{champsim__constants_8h_a328b2f12c52082a0026bd74dfa7c825b}{S\+T\+A\+T\+\_\+\+P\+R\+I\+N\+T\+I\+N\+G\+\_\+\+P\+E\+R\+I\+OD}}}
+
+\mbox{\Hypertarget{classO3__CPU_a12eca07a6d1b4c68802d0560ed9521ac}\label{classO3__CPU_a12eca07a6d1b4c68802d0560ed9521ac}} 
+\index{O3\_CPU@{O3\_CPU}!num\_branch@{num\_branch}}
+\index{num\_branch@{num\_branch}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{num\_branch}{num\_branch}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::num\+\_\+branch = 0}
+
+\mbox{\Hypertarget{classO3__CPU_af038f22c02b6f1dabc6de5319faf5aea}\label{classO3__CPU_af038f22c02b6f1dabc6de5319faf5aea}} 
+\index{O3\_CPU@{O3\_CPU}!num\_retired@{num\_retired}}
+\index{num\_retired@{num\_retired}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{num\_retired}{num\_retired}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::num\+\_\+retired = 0}
+
+\mbox{\Hypertarget{classO3__CPU_a8daeb8803e3c8ed905673a342abcbc64}\label{classO3__CPU_a8daeb8803e3c8ed905673a342abcbc64}} 
+\index{O3\_CPU@{O3\_CPU}!ready\_to\_execute@{ready\_to\_execute}}
+\index{ready\_to\_execute@{ready\_to\_execute}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{ready\_to\_execute}{ready\_to\_execute}}
+{\footnotesize\ttfamily std\+::queue$<$\mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}$>$\+::iterator$>$ O3\+\_\+\+C\+P\+U\+::ready\+\_\+to\+\_\+execute}
+
+\mbox{\Hypertarget{classO3__CPU_a870685d72745c31f6b6928fbac7ed1b2}\label{classO3__CPU_a870685d72745c31f6b6928fbac7ed1b2}} 
+\index{O3\_CPU@{O3\_CPU}!RETIRE\_WIDTH@{RETIRE\_WIDTH}}
+\index{RETIRE\_WIDTH@{RETIRE\_WIDTH}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{RETIRE\_WIDTH}{RETIRE\_WIDTH}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+R\+E\+T\+I\+R\+E\+\_\+\+W\+I\+D\+TH}
+
+\mbox{\Hypertarget{classO3__CPU_af59ebc94ae9d1805c1b778622e4b4113}\label{classO3__CPU_af59ebc94ae9d1805c1b778622e4b4113}} 
+\index{O3\_CPU@{O3\_CPU}!ROB@{ROB}}
+\index{ROB@{ROB}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{ROB}{ROB}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1circular__buffer}{champsim\+::circular\+\_\+buffer}}$<$\mbox{\hyperlink{structooo__model__instr}{ooo\+\_\+model\+\_\+instr}}$>$ O3\+\_\+\+C\+P\+U\+::\+R\+OB}
+
+\mbox{\Hypertarget{classO3__CPU_ae6f95b13c4cb811e753f30ebb960e673}\label{classO3__CPU_ae6f95b13c4cb811e753f30ebb960e673}} 
+\index{O3\_CPU@{O3\_CPU}!RTL0@{RTL0}}
+\index{RTL0@{RTL0}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{RTL0}{RTL0}}
+{\footnotesize\ttfamily std\+::queue$<$std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$\+::iterator$>$ O3\+\_\+\+C\+P\+U\+::\+R\+T\+L0}
+
+\mbox{\Hypertarget{classO3__CPU_a9e571955e501c8826bdd1634b4d04065}\label{classO3__CPU_a9e571955e501c8826bdd1634b4d04065}} 
+\index{O3\_CPU@{O3\_CPU}!RTL1@{RTL1}}
+\index{RTL1@{RTL1}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{RTL1}{RTL1}}
+{\footnotesize\ttfamily std\+::queue$<$std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$\+::iterator$>$ O3\+\_\+\+C\+P\+U\+::\+R\+T\+L1}
+
+\mbox{\Hypertarget{classO3__CPU_a1d9e14a1cd644d4e1ed20e1f225d4b6f}\label{classO3__CPU_a1d9e14a1cd644d4e1ed20e1f225d4b6f}} 
+\index{O3\_CPU@{O3\_CPU}!RTS0@{RTS0}}
+\index{RTS0@{RTS0}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{RTS0}{RTS0}}
+{\footnotesize\ttfamily std\+::queue$<$std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$\+::iterator$>$ O3\+\_\+\+C\+P\+U\+::\+R\+T\+S0}
+
+\mbox{\Hypertarget{classO3__CPU_ae86a79d5f864e58975d34a2b07b57cfc}\label{classO3__CPU_ae86a79d5f864e58975d34a2b07b57cfc}} 
+\index{O3\_CPU@{O3\_CPU}!RTS1@{RTS1}}
+\index{RTS1@{RTS1}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{RTS1}{RTS1}}
+{\footnotesize\ttfamily std\+::queue$<$std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$\+::iterator$>$ O3\+\_\+\+C\+P\+U\+::\+R\+T\+S1}
+
+\mbox{\Hypertarget{classO3__CPU_af70efa747a49539e2e20dafb2cf7dca7}\label{classO3__CPU_af70efa747a49539e2e20dafb2cf7dca7}} 
+\index{O3\_CPU@{O3\_CPU}!SCHEDULER\_SIZE@{SCHEDULER\_SIZE}}
+\index{SCHEDULER\_SIZE@{SCHEDULER\_SIZE}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{SCHEDULER\_SIZE}{SCHEDULER\_SIZE}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+S\+C\+H\+E\+D\+U\+L\+E\+R\+\_\+\+S\+I\+ZE}
+
+\mbox{\Hypertarget{classO3__CPU_a31b447d69eb4de2d64379455eaf9ef59}\label{classO3__CPU_a31b447d69eb4de2d64379455eaf9ef59}} 
+\index{O3\_CPU@{O3\_CPU}!SCHEDULING\_LATENCY@{SCHEDULING\_LATENCY}}
+\index{SCHEDULING\_LATENCY@{SCHEDULING\_LATENCY}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{SCHEDULING\_LATENCY}{SCHEDULING\_LATENCY}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+S\+C\+H\+E\+D\+U\+L\+I\+N\+G\+\_\+\+L\+A\+T\+E\+N\+CY}
+
+\mbox{\Hypertarget{classO3__CPU_ab765bf0ebbe3254cb58eb9d8c8859a27}\label{classO3__CPU_ab765bf0ebbe3254cb58eb9d8c8859a27}} 
+\index{O3\_CPU@{O3\_CPU}!SQ@{SQ}}
+\index{SQ@{SQ}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{SQ}{SQ}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{structLSQ__ENTRY}{L\+S\+Q\+\_\+\+E\+N\+T\+RY}}$>$ O3\+\_\+\+C\+P\+U\+::\+SQ}
+
+\mbox{\Hypertarget{classO3__CPU_aac2005537541566406ed5860a7ad2d8c}\label{classO3__CPU_aac2005537541566406ed5860a7ad2d8c}} 
+\index{O3\_CPU@{O3\_CPU}!SQ\_WIDTH@{SQ\_WIDTH}}
+\index{SQ\_WIDTH@{SQ\_WIDTH}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{SQ\_WIDTH}{SQ\_WIDTH}}
+{\footnotesize\ttfamily const unsigned O3\+\_\+\+C\+P\+U\+::\+S\+Q\+\_\+\+W\+I\+D\+TH}
+
+\mbox{\Hypertarget{classO3__CPU_abbc4f703628f2a1435a054b7a5eee309}\label{classO3__CPU_abbc4f703628f2a1435a054b7a5eee309}} 
+\index{O3\_CPU@{O3\_CPU}!STA@{STA}}
+\index{STA@{STA}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{STA}{STA}}
+{\footnotesize\ttfamily std\+::queue$<$uint64\+\_\+t$>$ O3\+\_\+\+C\+P\+U\+::\+S\+TA}
+
+\mbox{\Hypertarget{classO3__CPU_a1abc2dc1642902fd35290184ccb25ede}\label{classO3__CPU_a1abc2dc1642902fd35290184ccb25ede}} 
+\index{O3\_CPU@{O3\_CPU}!total\_branch\_types@{total\_branch\_types}}
+\index{total\_branch\_types@{total\_branch\_types}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{total\_branch\_types}{total\_branch\_types}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::total\+\_\+branch\+\_\+types\mbox{[}8\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{classO3__CPU_a6a0fca8e9f5754bb50eb3c23d41b5609}\label{classO3__CPU_a6a0fca8e9f5754bb50eb3c23d41b5609}} 
+\index{O3\_CPU@{O3\_CPU}!total\_rob\_occupancy\_at\_branch\_mispredict@{total\_rob\_occupancy\_at\_branch\_mispredict}}
+\index{total\_rob\_occupancy\_at\_branch\_mispredict@{total\_rob\_occupancy\_at\_branch\_mispredict}!O3\_CPU@{O3\_CPU}}
+\doxysubsubsection{\texorpdfstring{total\_rob\_occupancy\_at\_branch\_mispredict}{total\_rob\_occupancy\_at\_branch\_mispredict}}
+{\footnotesize\ttfamily uint64\+\_\+t O3\+\_\+\+C\+P\+U\+::total\+\_\+rob\+\_\+occupancy\+\_\+at\+\_\+branch\+\_\+mispredict}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{ooo__cpu_8h}{ooo\+\_\+cpu.\+h}}\item 
+src/\mbox{\hyperlink{ooo__cpu_8cc}{ooo\+\_\+cpu.\+cc}}\end{DoxyCompactItemize}

@@ -1,0 +1,992 @@
+\hypertarget{classCACHE}{}\doxysection{C\+A\+C\+HE Class Reference}
+\label{classCACHE}\index{CACHE@{CACHE}}
+
+
+{\ttfamily \#include $<$cache.\+h$>$}
+
+
+
+Inheritance diagram for C\+A\+C\+HE\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for C\+A\+C\+HE\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{classCACHE_adf224173f8b35bc386945586b9f3b972}{add\+\_\+rq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+int \mbox{\hyperlink{classCACHE_a13e065d074bb30fdc57411b6bbfb14a1}{add\+\_\+wq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+int \mbox{\hyperlink{classCACHE_a454c927d233980dfd687da97c304963b}{add\+\_\+pq}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+void \mbox{\hyperlink{classCACHE_a36243c97144bd3465539d20c1e573772}{return\+\_\+data}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet) override
+\item 
+void \mbox{\hyperlink{classCACHE_a0300c159747594f9aee26e7eadb91cb1}{operate}} () override
+\item 
+void \mbox{\hyperlink{classCACHE_ac5b9971fdf875afd79fad7586982fec4}{operate\+\_\+writes}} ()
+\item 
+void \mbox{\hyperlink{classCACHE_a7020a909a094c75de3f5e32e6b865df3}{operate\+\_\+reads}} ()
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classCACHE_a91073baf7efb407f68b2ded06ecaa717}{get\+\_\+occupancy}} (uint8\+\_\+t queue\+\_\+type, uint64\+\_\+t address) override
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classCACHE_a6a36d5bdaf6dd5664d936cb7156b4320}{get\+\_\+size}} (uint8\+\_\+t queue\+\_\+type, uint64\+\_\+t address) override
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classCACHE_aae591712183e816bf2d2c4c1ae540cab}{get\+\_\+set}} (uint64\+\_\+t address)
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classCACHE_ab2144316cc36de8e17cfd9f67f21bc86}{get\+\_\+way}} (uint64\+\_\+t address, uint32\+\_\+t set)
+\item 
+int \mbox{\hyperlink{classCACHE_ac09b33824cb45e284bc218f77acdeefd}{invalidate\+\_\+entry}} (uint64\+\_\+t inval\+\_\+addr)
+\item 
+int \mbox{\hyperlink{classCACHE_aa64044841983110bb83e1823c77e4ca5}{prefetch\+\_\+line}} (uint64\+\_\+t pf\+\_\+addr, bool fill\+\_\+this\+\_\+level, uint32\+\_\+t prefetch\+\_\+metadata)
+\item 
+int \mbox{\hyperlink{classCACHE_a21e31b7bc30707c7020397e3b710493e}{prefetch\+\_\+line}} (uint64\+\_\+t ip, uint64\+\_\+t base\+\_\+addr, uint64\+\_\+t pf\+\_\+addr, bool fill\+\_\+this\+\_\+level, uint32\+\_\+t prefetch\+\_\+metadata)
+\item 
+void \mbox{\hyperlink{classCACHE_a14a2a1ab2682c4e568df6bf4d4f0cc49}{add\+\_\+mshr}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$packet)
+\item 
+void \mbox{\hyperlink{classCACHE_aa33e09ded50f809c3bb1ae5d55fd0ef0}{va\+\_\+translate\+\_\+prefetches}} ()
+\item 
+void \mbox{\hyperlink{classCACHE_ae6b581ad4663846cbc617519edb17d55}{handle\+\_\+fill}} ()
+\item 
+void \mbox{\hyperlink{classCACHE_a5d228455b4c729f711f8ec495fbb0436}{handle\+\_\+writeback}} ()
+\item 
+void \mbox{\hyperlink{classCACHE_a47b6221eeddd0332c2cc1698cdb2f777}{handle\+\_\+read}} ()
+\item 
+void \mbox{\hyperlink{classCACHE_a66af82424902e6fa5294cc83f88694d2}{handle\+\_\+prefetch}} ()
+\item 
+void \mbox{\hyperlink{classCACHE_aa56725f82dd678c756f681939f550008}{readlike\+\_\+hit}} (std\+::size\+\_\+t set, std\+::size\+\_\+t way, \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} \&handle\+\_\+pkt)
+\item 
+bool \mbox{\hyperlink{classCACHE_a1ac7b91e4071e6c1c915fc12f9065c65}{readlike\+\_\+miss}} (\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} \&handle\+\_\+pkt)
+\item 
+bool \mbox{\hyperlink{classCACHE_a612820c707474e3d36f0e906e9ab6bc2}{filllike\+\_\+miss}} (std\+::size\+\_\+t set, std\+::size\+\_\+t way, \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} \&handle\+\_\+pkt)
+\item 
+bool \mbox{\hyperlink{classCACHE_a9d2d82232a16029062ccfee5ccd85edc}{should\+\_\+activate\+\_\+prefetcher}} (int type)
+\item 
+void \mbox{\hyperlink{classCACHE_aaab1fd23d8a1c4dafab1d69c6c9f46b2}{print\+\_\+deadlock}} () override
+\item 
+\mbox{\hyperlink{classCACHE_a87a69b3971e5b0760910c57b05680f51}{C\+A\+C\+HE}} (std\+::string v1, double freq\+\_\+scale, unsigned \mbox{\hyperlink{classMemoryRequestConsumer_a93263647de08b7203dab91693de2bcd7}{fill\+\_\+level}}, uint32\+\_\+t v2, int v3, uint32\+\_\+t v5, uint32\+\_\+t v6, uint32\+\_\+t v7, uint32\+\_\+t v8, uint32\+\_\+t hit\+\_\+lat, uint32\+\_\+t fill\+\_\+lat, uint32\+\_\+t max\+\_\+read, uint32\+\_\+t max\+\_\+write, std\+::size\+\_\+t offset\+\_\+bits, bool pref\+\_\+load, bool wq\+\_\+full\+\_\+addr, bool va\+\_\+pref, unsigned pref\+\_\+act\+\_\+mask, \mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$ll, pref\+\_\+t pref, repl\+\_\+t repl)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classCACHE_a87b90ab65ad1ac0fb1c25d24e71bfdb3}{cpu}}
+\item 
+const std\+::string \mbox{\hyperlink{classCACHE_a677946ec359a5d63efb5fca5d8f796cd}{N\+A\+ME}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_a27f929e7499b4380bb1eb137789ecc15}{N\+U\+M\+\_\+\+S\+ET}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_ab1d55261a8d0cf765fd90115c9a59679}{N\+U\+M\+\_\+\+W\+AY}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_a59b96af7391a0b2aab64978e7a992756}{W\+Q\+\_\+\+S\+I\+ZE}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_aea6b0ee19947fe7cb92ea7cd3a3353ba}{R\+Q\+\_\+\+S\+I\+ZE}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_a4de8916a9eb83d7e38013a40f428ae54}{P\+Q\+\_\+\+S\+I\+ZE}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_a1fe14de255f47173f84d1f82b0078bd9}{M\+S\+H\+R\+\_\+\+S\+I\+ZE}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_a70c26c627b1882277f6a31dad1ba52e9}{H\+I\+T\+\_\+\+L\+A\+T\+E\+N\+CY}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_a32aac4199089c53fc42aaf5789bcf6c4}{F\+I\+L\+L\+\_\+\+L\+A\+T\+E\+N\+CY}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_ad191ea9eb7baedb56e4c592b490300df}{O\+F\+F\+S\+E\+T\+\_\+\+B\+I\+TS}}
+\item 
+std\+::vector$<$ \mbox{\hyperlink{classBLOCK}{B\+L\+O\+CK}} $>$ \mbox{\hyperlink{classCACHE_ae6823a6535c32c57bb88efb77e027241}{block}} \{\mbox{\hyperlink{classCACHE_a27f929e7499b4380bb1eb137789ecc15}{N\+U\+M\+\_\+\+S\+ET}} $\ast$ \mbox{\hyperlink{classCACHE_ab1d55261a8d0cf765fd90115c9a59679}{N\+U\+M\+\_\+\+W\+AY}}\}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_aff5c662edde640ae7dab1d486c0017a9}{M\+A\+X\+\_\+\+R\+E\+AD}}
+\item 
+const uint32\+\_\+t \mbox{\hyperlink{classCACHE_a34669fff18abc8d277e4c14d14b3c03b}{M\+A\+X\+\_\+\+W\+R\+I\+TE}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classCACHE_a9a3820862d6bca2e4420ce19fefa4f72}{reads\+\_\+available\+\_\+this\+\_\+cycle}}
+\item 
+uint32\+\_\+t \mbox{\hyperlink{classCACHE_af6b71afe039044ac21f6260bf1c2b68f}{writes\+\_\+available\+\_\+this\+\_\+cycle}}
+\item 
+const bool \mbox{\hyperlink{classCACHE_ae730fa75d6aa15bfa41b2e48e1b9fd69}{prefetch\+\_\+as\+\_\+load}}
+\item 
+const bool \mbox{\hyperlink{classCACHE_a099df667e7b83c3503aa7b39b6628344}{match\+\_\+offset\+\_\+bits}}
+\item 
+const bool \mbox{\hyperlink{classCACHE_ad23c22d2243f6f1f599a244a2661f69b}{virtual\+\_\+prefetch}}
+\item 
+bool \mbox{\hyperlink{classCACHE_a95c49295093926a4faa8b3bc922ec13a}{ever\+\_\+seen\+\_\+data}} = false
+\item 
+const unsigned \mbox{\hyperlink{classCACHE_a1de38964a4af2d0af3f1dfe029da93c7}{pref\+\_\+activate\+\_\+mask}} = (1 $<$$<$ static\+\_\+cast$<$int$>$(\mbox{\hyperlink{memory__class_8h_a0b674752cca6d434a1a69f40877eb2be}{L\+O\+AD}})) $\vert$ (1 $<$$<$ static\+\_\+cast$<$int$>$(\mbox{\hyperlink{memory__class_8h_a59e87faf077b439e224c9fb08a2eaa52}{P\+R\+E\+F\+E\+T\+CH}}))
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a79d4f504febc11491ec320242b877812}{pf\+\_\+requested}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_aa61b69d86ad499d6a49ce1f230e27742}{pf\+\_\+issued}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_ab4c484a28040fc1b90195aac33bc5c6b}{pf\+\_\+useful}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a7b98ff3839fac101b8577e4d9eb26019}{pf\+\_\+useless}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a9e9fcbb666d65d6df9d88581a7b9db41}{pf\+\_\+fill}} = 0
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $>$ \mbox{\hyperlink{classCACHE_a38fe7953311799afcab00b2dd926ab28}{RQ}} \{\mbox{\hyperlink{classCACHE_aea6b0ee19947fe7cb92ea7cd3a3353ba}{R\+Q\+\_\+\+S\+I\+ZE}}, \mbox{\hyperlink{classCACHE_a70c26c627b1882277f6a31dad1ba52e9}{H\+I\+T\+\_\+\+L\+A\+T\+E\+N\+CY}}\}
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $>$ \mbox{\hyperlink{classCACHE_aec5b9d020e8448036f0b1afa318c06c0}{PQ}} \{\mbox{\hyperlink{classCACHE_a4de8916a9eb83d7e38013a40f428ae54}{P\+Q\+\_\+\+S\+I\+ZE}}, \mbox{\hyperlink{classCACHE_a70c26c627b1882277f6a31dad1ba52e9}{H\+I\+T\+\_\+\+L\+A\+T\+E\+N\+CY}}\}
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $>$ \mbox{\hyperlink{classCACHE_ae7f77cf1c9fe6a9892697d4f3c17eb0a}{V\+A\+PQ}} \{\mbox{\hyperlink{classCACHE_a4de8916a9eb83d7e38013a40f428ae54}{P\+Q\+\_\+\+S\+I\+ZE}}, \mbox{\hyperlink{cache_8h_a20ebc7615faef2fa87af6406c65757e9}{V\+A\+\_\+\+P\+R\+E\+F\+E\+T\+C\+H\+\_\+\+T\+R\+A\+N\+S\+L\+A\+T\+I\+O\+N\+\_\+\+L\+A\+T\+E\+N\+CY}}\}
+\item 
+\mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$ \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $>$ \mbox{\hyperlink{classCACHE_a281dc7cf458f51dfc4212e8b36bb2741}{WQ}} \{\mbox{\hyperlink{classCACHE_a59b96af7391a0b2aab64978e7a992756}{W\+Q\+\_\+\+S\+I\+ZE}}, \mbox{\hyperlink{classCACHE_a70c26c627b1882277f6a31dad1ba52e9}{H\+I\+T\+\_\+\+L\+A\+T\+E\+N\+CY}}\}
+\item 
+std\+::list$<$ \mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $>$ \mbox{\hyperlink{classCACHE_ae2ccabdb54408cb3a759a519a45ae9ab}{M\+S\+HR}}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a7d6fb71450903486c409ce93fef148cd}{sim\+\_\+access}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_ad6464835424d8e7484450399e9d8cba6}{sim\+\_\+hit}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a14aa24dc8af479d80a39ae8f903ebde0}{sim\+\_\+miss}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a5301b353df5e0885a4ad27cad5ea944c}{roi\+\_\+access}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a7392b3637a6a7a3baf73d35b0bfdf208}{roi\+\_\+hit}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_aec33bb7b8e388006786ace5dbaf3ff98}{roi\+\_\+miss}} \mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a052d842999abee6649db42e641bf9d85}{R\+Q\+\_\+\+A\+C\+C\+E\+SS}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a23bf52339906579eb6b7c5c4deccc24e}{R\+Q\+\_\+\+M\+E\+R\+G\+ED}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a5a5f2ddc6f778a119179cc2758656e2b}{R\+Q\+\_\+\+F\+U\+LL}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_ae7f717267bbc7fd73c7a442ca8dd398a}{R\+Q\+\_\+\+T\+O\+\_\+\+C\+A\+C\+HE}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_aaaca7212d61d2887bfd6738c096dedf2}{P\+Q\+\_\+\+A\+C\+C\+E\+SS}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_ad260815a222293fd65e5cea9ed5f8851}{P\+Q\+\_\+\+M\+E\+R\+G\+ED}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a6f9cf6550ce9d1e04754349b327aebf0}{P\+Q\+\_\+\+F\+U\+LL}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a17729b4e8ffb820fc4dcd6874efee39e}{P\+Q\+\_\+\+T\+O\+\_\+\+C\+A\+C\+HE}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a325a750f80cf63e2a9ce709c2a4372c0}{W\+Q\+\_\+\+A\+C\+C\+E\+SS}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_aa8da1ad44a6f9b21421e21742844caf9}{W\+Q\+\_\+\+M\+E\+R\+G\+ED}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a4318191092e1ed708905b3258e73ee72}{W\+Q\+\_\+\+F\+U\+LL}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a509a435087471248275eeb782eb36b17}{W\+Q\+\_\+\+F\+O\+R\+W\+A\+RD}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a84357f9a6e8a376207f901111e859ec2}{W\+Q\+\_\+\+T\+O\+\_\+\+C\+A\+C\+HE}} = 0
+\item 
+uint64\+\_\+t \mbox{\hyperlink{classCACHE_a3e709d395e143ac6024c65c2621bcd7a}{total\+\_\+miss\+\_\+latency}} = 0
+\item 
+const repl\+\_\+t \mbox{\hyperlink{classCACHE_a71ab6e62caf51a76ae44d6c1e8788807}{repl\+\_\+type}}
+\item 
+const pref\+\_\+t \mbox{\hyperlink{classCACHE_a56a8ba17ae220bb85377726382117baa}{pref\+\_\+type}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classCACHE_a87a69b3971e5b0760910c57b05680f51}\label{classCACHE_a87a69b3971e5b0760910c57b05680f51}} 
+\index{CACHE@{CACHE}!CACHE@{CACHE}}
+\index{CACHE@{CACHE}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{CACHE()}{CACHE()}}
+{\footnotesize\ttfamily C\+A\+C\+H\+E\+::\+C\+A\+C\+HE (\begin{DoxyParamCaption}\item[{std\+::string}]{v1,  }\item[{double}]{freq\+\_\+scale,  }\item[{unsigned}]{fill\+\_\+level,  }\item[{uint32\+\_\+t}]{v2,  }\item[{int}]{v3,  }\item[{uint32\+\_\+t}]{v5,  }\item[{uint32\+\_\+t}]{v6,  }\item[{uint32\+\_\+t}]{v7,  }\item[{uint32\+\_\+t}]{v8,  }\item[{uint32\+\_\+t}]{hit\+\_\+lat,  }\item[{uint32\+\_\+t}]{fill\+\_\+lat,  }\item[{uint32\+\_\+t}]{max\+\_\+read,  }\item[{uint32\+\_\+t}]{max\+\_\+write,  }\item[{std\+::size\+\_\+t}]{offset\+\_\+bits,  }\item[{bool}]{pref\+\_\+load,  }\item[{bool}]{wq\+\_\+full\+\_\+addr,  }\item[{bool}]{va\+\_\+pref,  }\item[{unsigned}]{pref\+\_\+act\+\_\+mask,  }\item[{\mbox{\hyperlink{classMemoryRequestConsumer}{Memory\+Request\+Consumer}} $\ast$}]{ll,  }\item[{pref\+\_\+t}]{pref,  }\item[{repl\+\_\+t}]{repl }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classCACHE_a14a2a1ab2682c4e568df6bf4d4f0cc49}\label{classCACHE_a14a2a1ab2682c4e568df6bf4d4f0cc49}} 
+\index{CACHE@{CACHE}!add\_mshr@{add\_mshr}}
+\index{add\_mshr@{add\_mshr}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{add\_mshr()}{add\_mshr()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::add\+\_\+mshr (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{classCACHE_a454c927d233980dfd687da97c304963b}\label{classCACHE_a454c927d233980dfd687da97c304963b}} 
+\index{CACHE@{CACHE}!add\_pq@{add\_pq}}
+\index{add\_pq@{add\_pq}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{add\_pq()}{add\_pq()}}
+{\footnotesize\ttfamily int C\+A\+C\+H\+E\+::add\+\_\+pq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a64d59e661926c0150ad3041626c10fa2}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a454c927d233980dfd687da97c304963b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a454c927d233980dfd687da97c304963b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_adf224173f8b35bc386945586b9f3b972}\label{classCACHE_adf224173f8b35bc386945586b9f3b972}} 
+\index{CACHE@{CACHE}!add\_rq@{add\_rq}}
+\index{add\_rq@{add\_rq}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{add\_rq()}{add\_rq()}}
+{\footnotesize\ttfamily int C\+A\+C\+H\+E\+::add\+\_\+rq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_adffc84de8306e1e78f595c312ff8edfd}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_adf224173f8b35bc386945586b9f3b972_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a13e065d074bb30fdc57411b6bbfb14a1}\label{classCACHE_a13e065d074bb30fdc57411b6bbfb14a1}} 
+\index{CACHE@{CACHE}!add\_wq@{add\_wq}}
+\index{add\_wq@{add\_wq}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{add\_wq()}{add\_wq()}}
+{\footnotesize\ttfamily int C\+A\+C\+H\+E\+::add\+\_\+wq (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a1af8f6159f3f318bf204926269e2d07e}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a13e065d074bb30fdc57411b6bbfb14a1_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a612820c707474e3d36f0e906e9ab6bc2}\label{classCACHE_a612820c707474e3d36f0e906e9ab6bc2}} 
+\index{CACHE@{CACHE}!filllike\_miss@{filllike\_miss}}
+\index{filllike\_miss@{filllike\_miss}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{filllike\_miss()}{filllike\_miss()}}
+{\footnotesize\ttfamily bool C\+A\+C\+H\+E\+::filllike\+\_\+miss (\begin{DoxyParamCaption}\item[{std\+::size\+\_\+t}]{set,  }\item[{std\+::size\+\_\+t}]{way,  }\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} \&}]{handle\+\_\+pkt }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a612820c707474e3d36f0e906e9ab6bc2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a612820c707474e3d36f0e906e9ab6bc2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a91073baf7efb407f68b2ded06ecaa717}\label{classCACHE_a91073baf7efb407f68b2ded06ecaa717}} 
+\index{CACHE@{CACHE}!get\_occupancy@{get\_occupancy}}
+\index{get\_occupancy@{get\_occupancy}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{get\_occupancy()}{get\_occupancy()}}
+{\footnotesize\ttfamily uint32\+\_\+t C\+A\+C\+H\+E\+::get\+\_\+occupancy (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{queue\+\_\+type,  }\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a44af5bdfa7aa133c0b9f167a5c1c5797}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a91073baf7efb407f68b2ded06ecaa717_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_aae591712183e816bf2d2c4c1ae540cab}\label{classCACHE_aae591712183e816bf2d2c4c1ae540cab}} 
+\index{CACHE@{CACHE}!get\_set@{get\_set}}
+\index{get\_set@{get\_set}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{get\_set()}{get\_set()}}
+{\footnotesize\ttfamily uint32\+\_\+t C\+A\+C\+H\+E\+::get\+\_\+set (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=264pt]{classCACHE_aae591712183e816bf2d2c4c1ae540cab_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_aae591712183e816bf2d2c4c1ae540cab_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a6a36d5bdaf6dd5664d936cb7156b4320}\label{classCACHE_a6a36d5bdaf6dd5664d936cb7156b4320}} 
+\index{CACHE@{CACHE}!get\_size@{get\_size}}
+\index{get\_size@{get\_size}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{get\_size()}{get\_size()}}
+{\footnotesize\ttfamily uint32\+\_\+t C\+A\+C\+H\+E\+::get\+\_\+size (\begin{DoxyParamCaption}\item[{uint8\+\_\+t}]{queue\+\_\+type,  }\item[{uint64\+\_\+t}]{address }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestConsumer_a644b9e3366e45e6db2dafbf19720bdea}{Memory\+Request\+Consumer}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=349pt]{classCACHE_a6a36d5bdaf6dd5664d936cb7156b4320_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_ab2144316cc36de8e17cfd9f67f21bc86}\label{classCACHE_ab2144316cc36de8e17cfd9f67f21bc86}} 
+\index{CACHE@{CACHE}!get\_way@{get\_way}}
+\index{get\_way@{get\_way}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{get\_way()}{get\_way()}}
+{\footnotesize\ttfamily uint32\+\_\+t C\+A\+C\+H\+E\+::get\+\_\+way (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{address,  }\item[{uint32\+\_\+t}]{set }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_ab2144316cc36de8e17cfd9f67f21bc86_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_ae6b581ad4663846cbc617519edb17d55}\label{classCACHE_ae6b581ad4663846cbc617519edb17d55}} 
+\index{CACHE@{CACHE}!handle\_fill@{handle\_fill}}
+\index{handle\_fill@{handle\_fill}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{handle\_fill()}{handle\_fill()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::handle\+\_\+fill (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_ae6b581ad4663846cbc617519edb17d55_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_ae6b581ad4663846cbc617519edb17d55_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a66af82424902e6fa5294cc83f88694d2}\label{classCACHE_a66af82424902e6fa5294cc83f88694d2}} 
+\index{CACHE@{CACHE}!handle\_prefetch@{handle\_prefetch}}
+\index{handle\_prefetch@{handle\_prefetch}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{handle\_prefetch()}{handle\_prefetch()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::handle\+\_\+prefetch (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a66af82424902e6fa5294cc83f88694d2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a66af82424902e6fa5294cc83f88694d2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a47b6221eeddd0332c2cc1698cdb2f777}\label{classCACHE_a47b6221eeddd0332c2cc1698cdb2f777}} 
+\index{CACHE@{CACHE}!handle\_read@{handle\_read}}
+\index{handle\_read@{handle\_read}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{handle\_read()}{handle\_read()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::handle\+\_\+read (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a47b6221eeddd0332c2cc1698cdb2f777_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a47b6221eeddd0332c2cc1698cdb2f777_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a5d228455b4c729f711f8ec495fbb0436}\label{classCACHE_a5d228455b4c729f711f8ec495fbb0436}} 
+\index{CACHE@{CACHE}!handle\_writeback@{handle\_writeback}}
+\index{handle\_writeback@{handle\_writeback}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{handle\_writeback()}{handle\_writeback()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::handle\+\_\+writeback (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a5d228455b4c729f711f8ec495fbb0436_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a5d228455b4c729f711f8ec495fbb0436_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_ac09b33824cb45e284bc218f77acdeefd}\label{classCACHE_ac09b33824cb45e284bc218f77acdeefd}} 
+\index{CACHE@{CACHE}!invalidate\_entry@{invalidate\_entry}}
+\index{invalidate\_entry@{invalidate\_entry}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{invalidate\_entry()}{invalidate\_entry()}}
+{\footnotesize\ttfamily int C\+A\+C\+H\+E\+::invalidate\+\_\+entry (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{inval\+\_\+addr }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_ac09b33824cb45e284bc218f77acdeefd_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a0300c159747594f9aee26e7eadb91cb1}\label{classCACHE_a0300c159747594f9aee26e7eadb91cb1}} 
+\index{CACHE@{CACHE}!operate@{operate}}
+\index{operate@{operate}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{operate()}{operate()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::operate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classchampsim_1_1operable_adb14f46a1019f5c6432845215af46741}{champsim\+::operable}}.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a0300c159747594f9aee26e7eadb91cb1_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a7020a909a094c75de3f5e32e6b865df3}\label{classCACHE_a7020a909a094c75de3f5e32e6b865df3}} 
+\index{CACHE@{CACHE}!operate\_reads@{operate\_reads}}
+\index{operate\_reads@{operate\_reads}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{operate\_reads()}{operate\_reads()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::operate\+\_\+reads (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a7020a909a094c75de3f5e32e6b865df3_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=336pt]{classCACHE_a7020a909a094c75de3f5e32e6b865df3_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_ac5b9971fdf875afd79fad7586982fec4}\label{classCACHE_ac5b9971fdf875afd79fad7586982fec4}} 
+\index{CACHE@{CACHE}!operate\_writes@{operate\_writes}}
+\index{operate\_writes@{operate\_writes}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{operate\_writes()}{operate\_writes()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::operate\+\_\+writes (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_ac5b9971fdf875afd79fad7586982fec4_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=339pt]{classCACHE_ac5b9971fdf875afd79fad7586982fec4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a21e31b7bc30707c7020397e3b710493e}\label{classCACHE_a21e31b7bc30707c7020397e3b710493e}} 
+\index{CACHE@{CACHE}!prefetch\_line@{prefetch\_line}}
+\index{prefetch\_line@{prefetch\_line}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{prefetch\_line()}{prefetch\_line()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily int C\+A\+C\+H\+E\+::prefetch\+\_\+line (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{ip,  }\item[{uint64\+\_\+t}]{base\+\_\+addr,  }\item[{uint64\+\_\+t}]{pf\+\_\+addr,  }\item[{bool}]{fill\+\_\+this\+\_\+level,  }\item[{uint32\+\_\+t}]{prefetch\+\_\+metadata }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a21e31b7bc30707c7020397e3b710493e_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_aa64044841983110bb83e1823c77e4ca5}\label{classCACHE_aa64044841983110bb83e1823c77e4ca5}} 
+\index{CACHE@{CACHE}!prefetch\_line@{prefetch\_line}}
+\index{prefetch\_line@{prefetch\_line}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{prefetch\_line()}{prefetch\_line()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily int C\+A\+C\+H\+E\+::prefetch\+\_\+line (\begin{DoxyParamCaption}\item[{uint64\+\_\+t}]{pf\+\_\+addr,  }\item[{bool}]{fill\+\_\+this\+\_\+level,  }\item[{uint32\+\_\+t}]{prefetch\+\_\+metadata }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_aa64044841983110bb83e1823c77e4ca5_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_aa64044841983110bb83e1823c77e4ca5_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_aaab1fd23d8a1c4dafab1d69c6c9f46b2}\label{classCACHE_aaab1fd23d8a1c4dafab1d69c6c9f46b2}} 
+\index{CACHE@{CACHE}!print\_deadlock@{print\_deadlock}}
+\index{print\_deadlock@{print\_deadlock}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{print\_deadlock()}{print\_deadlock()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::print\+\_\+deadlock (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classchampsim_1_1operable_a19019841fc4b9a0cb245552c1425bece}{champsim\+::operable}}.
+
+\mbox{\Hypertarget{classCACHE_aa56725f82dd678c756f681939f550008}\label{classCACHE_aa56725f82dd678c756f681939f550008}} 
+\index{CACHE@{CACHE}!readlike\_hit@{readlike\_hit}}
+\index{readlike\_hit@{readlike\_hit}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{readlike\_hit()}{readlike\_hit()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::readlike\+\_\+hit (\begin{DoxyParamCaption}\item[{std\+::size\+\_\+t}]{set,  }\item[{std\+::size\+\_\+t}]{way,  }\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} \&}]{handle\+\_\+pkt }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_aa56725f82dd678c756f681939f550008_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_aa56725f82dd678c756f681939f550008_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a1ac7b91e4071e6c1c915fc12f9065c65}\label{classCACHE_a1ac7b91e4071e6c1c915fc12f9065c65}} 
+\index{CACHE@{CACHE}!readlike\_miss@{readlike\_miss}}
+\index{readlike\_miss@{readlike\_miss}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{readlike\_miss()}{readlike\_miss()}}
+{\footnotesize\ttfamily bool C\+A\+C\+H\+E\+::readlike\+\_\+miss (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} \&}]{handle\+\_\+pkt }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a1ac7b91e4071e6c1c915fc12f9065c65_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a1ac7b91e4071e6c1c915fc12f9065c65_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_a36243c97144bd3465539d20c1e573772}\label{classCACHE_a36243c97144bd3465539d20c1e573772}} 
+\index{CACHE@{CACHE}!return\_data@{return\_data}}
+\index{return\_data@{return\_data}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{return\_data()}{return\_data()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::return\+\_\+data (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}} $\ast$}]{packet }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{classMemoryRequestProducer_a5be6ee7d0d72f69a9ea77ec7fd3eafef}{Memory\+Request\+Producer}}.
+
+\mbox{\Hypertarget{classCACHE_a9d2d82232a16029062ccfee5ccd85edc}\label{classCACHE_a9d2d82232a16029062ccfee5ccd85edc}} 
+\index{CACHE@{CACHE}!should\_activate\_prefetcher@{should\_activate\_prefetcher}}
+\index{should\_activate\_prefetcher@{should\_activate\_prefetcher}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{should\_activate\_prefetcher()}{should\_activate\_prefetcher()}}
+{\footnotesize\ttfamily bool C\+A\+C\+H\+E\+::should\+\_\+activate\+\_\+prefetcher (\begin{DoxyParamCaption}\item[{int}]{type }\end{DoxyParamCaption})}
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_a9d2d82232a16029062ccfee5ccd85edc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classCACHE_aa33e09ded50f809c3bb1ae5d55fd0ef0}\label{classCACHE_aa33e09ded50f809c3bb1ae5d55fd0ef0}} 
+\index{CACHE@{CACHE}!va\_translate\_prefetches@{va\_translate\_prefetches}}
+\index{va\_translate\_prefetches@{va\_translate\_prefetches}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{va\_translate\_prefetches()}{va\_translate\_prefetches()}}
+{\footnotesize\ttfamily void C\+A\+C\+H\+E\+::va\+\_\+translate\+\_\+prefetches (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_aa33e09ded50f809c3bb1ae5d55fd0ef0_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classCACHE_aa33e09ded50f809c3bb1ae5d55fd0ef0_icgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classCACHE_ae6823a6535c32c57bb88efb77e027241}\label{classCACHE_ae6823a6535c32c57bb88efb77e027241}} 
+\index{CACHE@{CACHE}!block@{block}}
+\index{block@{block}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{block}{block}}
+{\footnotesize\ttfamily std\+::vector$<$\mbox{\hyperlink{classBLOCK}{B\+L\+O\+CK}}$>$ C\+A\+C\+H\+E\+::block \{\mbox{\hyperlink{classCACHE_a27f929e7499b4380bb1eb137789ecc15}{N\+U\+M\+\_\+\+S\+ET}} $\ast$ \mbox{\hyperlink{classCACHE_ab1d55261a8d0cf765fd90115c9a59679}{N\+U\+M\+\_\+\+W\+AY}}\}}
+
+\mbox{\Hypertarget{classCACHE_a87b90ab65ad1ac0fb1c25d24e71bfdb3}\label{classCACHE_a87b90ab65ad1ac0fb1c25d24e71bfdb3}} 
+\index{CACHE@{CACHE}!cpu@{cpu}}
+\index{cpu@{cpu}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{cpu}{cpu}}
+{\footnotesize\ttfamily uint32\+\_\+t C\+A\+C\+H\+E\+::cpu}
+
+\mbox{\Hypertarget{classCACHE_a95c49295093926a4faa8b3bc922ec13a}\label{classCACHE_a95c49295093926a4faa8b3bc922ec13a}} 
+\index{CACHE@{CACHE}!ever\_seen\_data@{ever\_seen\_data}}
+\index{ever\_seen\_data@{ever\_seen\_data}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{ever\_seen\_data}{ever\_seen\_data}}
+{\footnotesize\ttfamily bool C\+A\+C\+H\+E\+::ever\+\_\+seen\+\_\+data = false}
+
+\mbox{\Hypertarget{classCACHE_a32aac4199089c53fc42aaf5789bcf6c4}\label{classCACHE_a32aac4199089c53fc42aaf5789bcf6c4}} 
+\index{CACHE@{CACHE}!FILL\_LATENCY@{FILL\_LATENCY}}
+\index{FILL\_LATENCY@{FILL\_LATENCY}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{FILL\_LATENCY}{FILL\_LATENCY}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+F\+I\+L\+L\+\_\+\+L\+A\+T\+E\+N\+CY}
+
+\mbox{\Hypertarget{classCACHE_a70c26c627b1882277f6a31dad1ba52e9}\label{classCACHE_a70c26c627b1882277f6a31dad1ba52e9}} 
+\index{CACHE@{CACHE}!HIT\_LATENCY@{HIT\_LATENCY}}
+\index{HIT\_LATENCY@{HIT\_LATENCY}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{HIT\_LATENCY}{HIT\_LATENCY}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+H\+I\+T\+\_\+\+L\+A\+T\+E\+N\+CY}
+
+\mbox{\Hypertarget{classCACHE_a099df667e7b83c3503aa7b39b6628344}\label{classCACHE_a099df667e7b83c3503aa7b39b6628344}} 
+\index{CACHE@{CACHE}!match\_offset\_bits@{match\_offset\_bits}}
+\index{match\_offset\_bits@{match\_offset\_bits}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{match\_offset\_bits}{match\_offset\_bits}}
+{\footnotesize\ttfamily const bool C\+A\+C\+H\+E\+::match\+\_\+offset\+\_\+bits}
+
+\mbox{\Hypertarget{classCACHE_aff5c662edde640ae7dab1d486c0017a9}\label{classCACHE_aff5c662edde640ae7dab1d486c0017a9}} 
+\index{CACHE@{CACHE}!MAX\_READ@{MAX\_READ}}
+\index{MAX\_READ@{MAX\_READ}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{MAX\_READ}{MAX\_READ}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+M\+A\+X\+\_\+\+R\+E\+AD}
+
+\mbox{\Hypertarget{classCACHE_a34669fff18abc8d277e4c14d14b3c03b}\label{classCACHE_a34669fff18abc8d277e4c14d14b3c03b}} 
+\index{CACHE@{CACHE}!MAX\_WRITE@{MAX\_WRITE}}
+\index{MAX\_WRITE@{MAX\_WRITE}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{MAX\_WRITE}{MAX\_WRITE}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+M\+A\+X\+\_\+\+W\+R\+I\+TE}
+
+\mbox{\Hypertarget{classCACHE_ae2ccabdb54408cb3a759a519a45ae9ab}\label{classCACHE_ae2ccabdb54408cb3a759a519a45ae9ab}} 
+\index{CACHE@{CACHE}!MSHR@{MSHR}}
+\index{MSHR@{MSHR}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{MSHR}{MSHR}}
+{\footnotesize\ttfamily std\+::list$<$\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}}$>$ C\+A\+C\+H\+E\+::\+M\+S\+HR}
+
+\mbox{\Hypertarget{classCACHE_a1fe14de255f47173f84d1f82b0078bd9}\label{classCACHE_a1fe14de255f47173f84d1f82b0078bd9}} 
+\index{CACHE@{CACHE}!MSHR\_SIZE@{MSHR\_SIZE}}
+\index{MSHR\_SIZE@{MSHR\_SIZE}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{MSHR\_SIZE}{MSHR\_SIZE}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+M\+S\+H\+R\+\_\+\+S\+I\+ZE}
+
+\mbox{\Hypertarget{classCACHE_a677946ec359a5d63efb5fca5d8f796cd}\label{classCACHE_a677946ec359a5d63efb5fca5d8f796cd}} 
+\index{CACHE@{CACHE}!NAME@{NAME}}
+\index{NAME@{NAME}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{NAME}{NAME}}
+{\footnotesize\ttfamily const std\+::string C\+A\+C\+H\+E\+::\+N\+A\+ME}
+
+\mbox{\Hypertarget{classCACHE_a27f929e7499b4380bb1eb137789ecc15}\label{classCACHE_a27f929e7499b4380bb1eb137789ecc15}} 
+\index{CACHE@{CACHE}!NUM\_SET@{NUM\_SET}}
+\index{NUM\_SET@{NUM\_SET}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{NUM\_SET}{NUM\_SET}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+N\+U\+M\+\_\+\+S\+ET}
+
+\mbox{\Hypertarget{classCACHE_ab1d55261a8d0cf765fd90115c9a59679}\label{classCACHE_ab1d55261a8d0cf765fd90115c9a59679}} 
+\index{CACHE@{CACHE}!NUM\_WAY@{NUM\_WAY}}
+\index{NUM\_WAY@{NUM\_WAY}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{NUM\_WAY}{NUM\_WAY}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+N\+U\+M\+\_\+\+W\+AY}
+
+\mbox{\Hypertarget{classCACHE_ad191ea9eb7baedb56e4c592b490300df}\label{classCACHE_ad191ea9eb7baedb56e4c592b490300df}} 
+\index{CACHE@{CACHE}!OFFSET\_BITS@{OFFSET\_BITS}}
+\index{OFFSET\_BITS@{OFFSET\_BITS}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{OFFSET\_BITS}{OFFSET\_BITS}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+O\+F\+F\+S\+E\+T\+\_\+\+B\+I\+TS}
+
+\mbox{\Hypertarget{classCACHE_a9e9fcbb666d65d6df9d88581a7b9db41}\label{classCACHE_a9e9fcbb666d65d6df9d88581a7b9db41}} 
+\index{CACHE@{CACHE}!pf\_fill@{pf\_fill}}
+\index{pf\_fill@{pf\_fill}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{pf\_fill}{pf\_fill}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::pf\+\_\+fill = 0}
+
+\mbox{\Hypertarget{classCACHE_aa61b69d86ad499d6a49ce1f230e27742}\label{classCACHE_aa61b69d86ad499d6a49ce1f230e27742}} 
+\index{CACHE@{CACHE}!pf\_issued@{pf\_issued}}
+\index{pf\_issued@{pf\_issued}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{pf\_issued}{pf\_issued}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::pf\+\_\+issued = 0}
+
+\mbox{\Hypertarget{classCACHE_a79d4f504febc11491ec320242b877812}\label{classCACHE_a79d4f504febc11491ec320242b877812}} 
+\index{CACHE@{CACHE}!pf\_requested@{pf\_requested}}
+\index{pf\_requested@{pf\_requested}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{pf\_requested}{pf\_requested}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::pf\+\_\+requested = 0}
+
+\mbox{\Hypertarget{classCACHE_ab4c484a28040fc1b90195aac33bc5c6b}\label{classCACHE_ab4c484a28040fc1b90195aac33bc5c6b}} 
+\index{CACHE@{CACHE}!pf\_useful@{pf\_useful}}
+\index{pf\_useful@{pf\_useful}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{pf\_useful}{pf\_useful}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::pf\+\_\+useful = 0}
+
+\mbox{\Hypertarget{classCACHE_a7b98ff3839fac101b8577e4d9eb26019}\label{classCACHE_a7b98ff3839fac101b8577e4d9eb26019}} 
+\index{CACHE@{CACHE}!pf\_useless@{pf\_useless}}
+\index{pf\_useless@{pf\_useless}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{pf\_useless}{pf\_useless}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::pf\+\_\+useless = 0}
+
+\mbox{\Hypertarget{classCACHE_aec5b9d020e8448036f0b1afa318c06c0}\label{classCACHE_aec5b9d020e8448036f0b1afa318c06c0}} 
+\index{CACHE@{CACHE}!PQ@{PQ}}
+\index{PQ@{PQ}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{PQ}{PQ}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}}$>$ C\+A\+C\+H\+E\+::\+PQ \{\mbox{\hyperlink{classCACHE_a4de8916a9eb83d7e38013a40f428ae54}{P\+Q\+\_\+\+S\+I\+ZE}}, \mbox{\hyperlink{classCACHE_a70c26c627b1882277f6a31dad1ba52e9}{H\+I\+T\+\_\+\+L\+A\+T\+E\+N\+CY}}\}}
+
+\mbox{\Hypertarget{classCACHE_aaaca7212d61d2887bfd6738c096dedf2}\label{classCACHE_aaaca7212d61d2887bfd6738c096dedf2}} 
+\index{CACHE@{CACHE}!PQ\_ACCESS@{PQ\_ACCESS}}
+\index{PQ\_ACCESS@{PQ\_ACCESS}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{PQ\_ACCESS}{PQ\_ACCESS}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+P\+Q\+\_\+\+A\+C\+C\+E\+SS = 0}
+
+\mbox{\Hypertarget{classCACHE_a6f9cf6550ce9d1e04754349b327aebf0}\label{classCACHE_a6f9cf6550ce9d1e04754349b327aebf0}} 
+\index{CACHE@{CACHE}!PQ\_FULL@{PQ\_FULL}}
+\index{PQ\_FULL@{PQ\_FULL}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{PQ\_FULL}{PQ\_FULL}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+P\+Q\+\_\+\+F\+U\+LL = 0}
+
+\mbox{\Hypertarget{classCACHE_ad260815a222293fd65e5cea9ed5f8851}\label{classCACHE_ad260815a222293fd65e5cea9ed5f8851}} 
+\index{CACHE@{CACHE}!PQ\_MERGED@{PQ\_MERGED}}
+\index{PQ\_MERGED@{PQ\_MERGED}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{PQ\_MERGED}{PQ\_MERGED}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+P\+Q\+\_\+\+M\+E\+R\+G\+ED = 0}
+
+\mbox{\Hypertarget{classCACHE_a4de8916a9eb83d7e38013a40f428ae54}\label{classCACHE_a4de8916a9eb83d7e38013a40f428ae54}} 
+\index{CACHE@{CACHE}!PQ\_SIZE@{PQ\_SIZE}}
+\index{PQ\_SIZE@{PQ\_SIZE}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{PQ\_SIZE}{PQ\_SIZE}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+P\+Q\+\_\+\+S\+I\+ZE}
+
+\mbox{\Hypertarget{classCACHE_a17729b4e8ffb820fc4dcd6874efee39e}\label{classCACHE_a17729b4e8ffb820fc4dcd6874efee39e}} 
+\index{CACHE@{CACHE}!PQ\_TO\_CACHE@{PQ\_TO\_CACHE}}
+\index{PQ\_TO\_CACHE@{PQ\_TO\_CACHE}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{PQ\_TO\_CACHE}{PQ\_TO\_CACHE}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+P\+Q\+\_\+\+T\+O\+\_\+\+C\+A\+C\+HE = 0}
+
+\mbox{\Hypertarget{classCACHE_a1de38964a4af2d0af3f1dfe029da93c7}\label{classCACHE_a1de38964a4af2d0af3f1dfe029da93c7}} 
+\index{CACHE@{CACHE}!pref\_activate\_mask@{pref\_activate\_mask}}
+\index{pref\_activate\_mask@{pref\_activate\_mask}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{pref\_activate\_mask}{pref\_activate\_mask}}
+{\footnotesize\ttfamily const unsigned C\+A\+C\+H\+E\+::pref\+\_\+activate\+\_\+mask = (1 $<$$<$ static\+\_\+cast$<$int$>$(\mbox{\hyperlink{memory__class_8h_a0b674752cca6d434a1a69f40877eb2be}{L\+O\+AD}})) $\vert$ (1 $<$$<$ static\+\_\+cast$<$int$>$(\mbox{\hyperlink{memory__class_8h_a59e87faf077b439e224c9fb08a2eaa52}{P\+R\+E\+F\+E\+T\+CH}}))}
+
+\mbox{\Hypertarget{classCACHE_a56a8ba17ae220bb85377726382117baa}\label{classCACHE_a56a8ba17ae220bb85377726382117baa}} 
+\index{CACHE@{CACHE}!pref\_type@{pref\_type}}
+\index{pref\_type@{pref\_type}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{pref\_type}{pref\_type}}
+{\footnotesize\ttfamily const pref\+\_\+t C\+A\+C\+H\+E\+::pref\+\_\+type}
+
+\mbox{\Hypertarget{classCACHE_ae730fa75d6aa15bfa41b2e48e1b9fd69}\label{classCACHE_ae730fa75d6aa15bfa41b2e48e1b9fd69}} 
+\index{CACHE@{CACHE}!prefetch\_as\_load@{prefetch\_as\_load}}
+\index{prefetch\_as\_load@{prefetch\_as\_load}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{prefetch\_as\_load}{prefetch\_as\_load}}
+{\footnotesize\ttfamily const bool C\+A\+C\+H\+E\+::prefetch\+\_\+as\+\_\+load}
+
+\mbox{\Hypertarget{classCACHE_a9a3820862d6bca2e4420ce19fefa4f72}\label{classCACHE_a9a3820862d6bca2e4420ce19fefa4f72}} 
+\index{CACHE@{CACHE}!reads\_available\_this\_cycle@{reads\_available\_this\_cycle}}
+\index{reads\_available\_this\_cycle@{reads\_available\_this\_cycle}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{reads\_available\_this\_cycle}{reads\_available\_this\_cycle}}
+{\footnotesize\ttfamily uint32\+\_\+t C\+A\+C\+H\+E\+::reads\+\_\+available\+\_\+this\+\_\+cycle}
+
+\mbox{\Hypertarget{classCACHE_a71ab6e62caf51a76ae44d6c1e8788807}\label{classCACHE_a71ab6e62caf51a76ae44d6c1e8788807}} 
+\index{CACHE@{CACHE}!repl\_type@{repl\_type}}
+\index{repl\_type@{repl\_type}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{repl\_type}{repl\_type}}
+{\footnotesize\ttfamily const repl\+\_\+t C\+A\+C\+H\+E\+::repl\+\_\+type}
+
+\mbox{\Hypertarget{classCACHE_a5301b353df5e0885a4ad27cad5ea944c}\label{classCACHE_a5301b353df5e0885a4ad27cad5ea944c}} 
+\index{CACHE@{CACHE}!roi\_access@{roi\_access}}
+\index{roi\_access@{roi\_access}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{roi\_access}{roi\_access}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::roi\+\_\+access\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{classCACHE_a7392b3637a6a7a3baf73d35b0bfdf208}\label{classCACHE_a7392b3637a6a7a3baf73d35b0bfdf208}} 
+\index{CACHE@{CACHE}!roi\_hit@{roi\_hit}}
+\index{roi\_hit@{roi\_hit}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{roi\_hit}{roi\_hit}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::roi\+\_\+hit\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{classCACHE_aec33bb7b8e388006786ace5dbaf3ff98}\label{classCACHE_aec33bb7b8e388006786ace5dbaf3ff98}} 
+\index{CACHE@{CACHE}!roi\_miss@{roi\_miss}}
+\index{roi\_miss@{roi\_miss}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{roi\_miss}{roi\_miss}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::roi\+\_\+miss\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{classCACHE_a38fe7953311799afcab00b2dd926ab28}\label{classCACHE_a38fe7953311799afcab00b2dd926ab28}} 
+\index{CACHE@{CACHE}!RQ@{RQ}}
+\index{RQ@{RQ}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{RQ}{RQ}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}}$>$ C\+A\+C\+H\+E\+::\+RQ \{\mbox{\hyperlink{classCACHE_aea6b0ee19947fe7cb92ea7cd3a3353ba}{R\+Q\+\_\+\+S\+I\+ZE}}, \mbox{\hyperlink{classCACHE_a70c26c627b1882277f6a31dad1ba52e9}{H\+I\+T\+\_\+\+L\+A\+T\+E\+N\+CY}}\}}
+
+\mbox{\Hypertarget{classCACHE_a052d842999abee6649db42e641bf9d85}\label{classCACHE_a052d842999abee6649db42e641bf9d85}} 
+\index{CACHE@{CACHE}!RQ\_ACCESS@{RQ\_ACCESS}}
+\index{RQ\_ACCESS@{RQ\_ACCESS}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{RQ\_ACCESS}{RQ\_ACCESS}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+R\+Q\+\_\+\+A\+C\+C\+E\+SS = 0}
+
+\mbox{\Hypertarget{classCACHE_a5a5f2ddc6f778a119179cc2758656e2b}\label{classCACHE_a5a5f2ddc6f778a119179cc2758656e2b}} 
+\index{CACHE@{CACHE}!RQ\_FULL@{RQ\_FULL}}
+\index{RQ\_FULL@{RQ\_FULL}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{RQ\_FULL}{RQ\_FULL}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+R\+Q\+\_\+\+F\+U\+LL = 0}
+
+\mbox{\Hypertarget{classCACHE_a23bf52339906579eb6b7c5c4deccc24e}\label{classCACHE_a23bf52339906579eb6b7c5c4deccc24e}} 
+\index{CACHE@{CACHE}!RQ\_MERGED@{RQ\_MERGED}}
+\index{RQ\_MERGED@{RQ\_MERGED}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{RQ\_MERGED}{RQ\_MERGED}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+R\+Q\+\_\+\+M\+E\+R\+G\+ED = 0}
+
+\mbox{\Hypertarget{classCACHE_aea6b0ee19947fe7cb92ea7cd3a3353ba}\label{classCACHE_aea6b0ee19947fe7cb92ea7cd3a3353ba}} 
+\index{CACHE@{CACHE}!RQ\_SIZE@{RQ\_SIZE}}
+\index{RQ\_SIZE@{RQ\_SIZE}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{RQ\_SIZE}{RQ\_SIZE}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+R\+Q\+\_\+\+S\+I\+ZE}
+
+\mbox{\Hypertarget{classCACHE_ae7f717267bbc7fd73c7a442ca8dd398a}\label{classCACHE_ae7f717267bbc7fd73c7a442ca8dd398a}} 
+\index{CACHE@{CACHE}!RQ\_TO\_CACHE@{RQ\_TO\_CACHE}}
+\index{RQ\_TO\_CACHE@{RQ\_TO\_CACHE}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{RQ\_TO\_CACHE}{RQ\_TO\_CACHE}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+R\+Q\+\_\+\+T\+O\+\_\+\+C\+A\+C\+HE = 0}
+
+\mbox{\Hypertarget{classCACHE_a7d6fb71450903486c409ce93fef148cd}\label{classCACHE_a7d6fb71450903486c409ce93fef148cd}} 
+\index{CACHE@{CACHE}!sim\_access@{sim\_access}}
+\index{sim\_access@{sim\_access}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{sim\_access}{sim\_access}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::sim\+\_\+access\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{classCACHE_ad6464835424d8e7484450399e9d8cba6}\label{classCACHE_ad6464835424d8e7484450399e9d8cba6}} 
+\index{CACHE@{CACHE}!sim\_hit@{sim\_hit}}
+\index{sim\_hit@{sim\_hit}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{sim\_hit}{sim\_hit}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::sim\+\_\+hit\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{classCACHE_a14aa24dc8af479d80a39ae8f903ebde0}\label{classCACHE_a14aa24dc8af479d80a39ae8f903ebde0}} 
+\index{CACHE@{CACHE}!sim\_miss@{sim\_miss}}
+\index{sim\_miss@{sim\_miss}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{sim\_miss}{sim\_miss}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::sim\+\_\+miss\mbox{[}\mbox{\hyperlink{champsim__constants_8h_aa061b51fb2d77d7721a3882edf5cd84a}{N\+U\+M\+\_\+\+C\+P\+US}}\mbox{]}\mbox{[}\mbox{\hyperlink{memory__class_8h_ae7974e3868b215ddfacebd5a128733a1}{N\+U\+M\+\_\+\+T\+Y\+P\+ES}}\mbox{]} = \{\}}
+
+\mbox{\Hypertarget{classCACHE_a3e709d395e143ac6024c65c2621bcd7a}\label{classCACHE_a3e709d395e143ac6024c65c2621bcd7a}} 
+\index{CACHE@{CACHE}!total\_miss\_latency@{total\_miss\_latency}}
+\index{total\_miss\_latency@{total\_miss\_latency}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{total\_miss\_latency}{total\_miss\_latency}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::total\+\_\+miss\+\_\+latency = 0}
+
+\mbox{\Hypertarget{classCACHE_ae7f77cf1c9fe6a9892697d4f3c17eb0a}\label{classCACHE_ae7f77cf1c9fe6a9892697d4f3c17eb0a}} 
+\index{CACHE@{CACHE}!VAPQ@{VAPQ}}
+\index{VAPQ@{VAPQ}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{VAPQ}{VAPQ}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}}$>$ C\+A\+C\+H\+E\+::\+V\+A\+PQ \{\mbox{\hyperlink{classCACHE_a4de8916a9eb83d7e38013a40f428ae54}{P\+Q\+\_\+\+S\+I\+ZE}}, \mbox{\hyperlink{cache_8h_a20ebc7615faef2fa87af6406c65757e9}{V\+A\+\_\+\+P\+R\+E\+F\+E\+T\+C\+H\+\_\+\+T\+R\+A\+N\+S\+L\+A\+T\+I\+O\+N\+\_\+\+L\+A\+T\+E\+N\+CY}}\}}
+
+\mbox{\Hypertarget{classCACHE_ad23c22d2243f6f1f599a244a2661f69b}\label{classCACHE_ad23c22d2243f6f1f599a244a2661f69b}} 
+\index{CACHE@{CACHE}!virtual\_prefetch@{virtual\_prefetch}}
+\index{virtual\_prefetch@{virtual\_prefetch}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{virtual\_prefetch}{virtual\_prefetch}}
+{\footnotesize\ttfamily const bool C\+A\+C\+H\+E\+::virtual\+\_\+prefetch}
+
+\mbox{\Hypertarget{classCACHE_a281dc7cf458f51dfc4212e8b36bb2741}\label{classCACHE_a281dc7cf458f51dfc4212e8b36bb2741}} 
+\index{CACHE@{CACHE}!WQ@{WQ}}
+\index{WQ@{WQ}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{WQ}{WQ}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classchampsim_1_1delay__queue}{champsim\+::delay\+\_\+queue}}$<$\mbox{\hyperlink{classPACKET}{P\+A\+C\+K\+ET}}$>$ C\+A\+C\+H\+E\+::\+WQ \{\mbox{\hyperlink{classCACHE_a59b96af7391a0b2aab64978e7a992756}{W\+Q\+\_\+\+S\+I\+ZE}}, \mbox{\hyperlink{classCACHE_a70c26c627b1882277f6a31dad1ba52e9}{H\+I\+T\+\_\+\+L\+A\+T\+E\+N\+CY}}\}}
+
+\mbox{\Hypertarget{classCACHE_a325a750f80cf63e2a9ce709c2a4372c0}\label{classCACHE_a325a750f80cf63e2a9ce709c2a4372c0}} 
+\index{CACHE@{CACHE}!WQ\_ACCESS@{WQ\_ACCESS}}
+\index{WQ\_ACCESS@{WQ\_ACCESS}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{WQ\_ACCESS}{WQ\_ACCESS}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+W\+Q\+\_\+\+A\+C\+C\+E\+SS = 0}
+
+\mbox{\Hypertarget{classCACHE_a509a435087471248275eeb782eb36b17}\label{classCACHE_a509a435087471248275eeb782eb36b17}} 
+\index{CACHE@{CACHE}!WQ\_FORWARD@{WQ\_FORWARD}}
+\index{WQ\_FORWARD@{WQ\_FORWARD}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{WQ\_FORWARD}{WQ\_FORWARD}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+W\+Q\+\_\+\+F\+O\+R\+W\+A\+RD = 0}
+
+\mbox{\Hypertarget{classCACHE_a4318191092e1ed708905b3258e73ee72}\label{classCACHE_a4318191092e1ed708905b3258e73ee72}} 
+\index{CACHE@{CACHE}!WQ\_FULL@{WQ\_FULL}}
+\index{WQ\_FULL@{WQ\_FULL}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{WQ\_FULL}{WQ\_FULL}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+W\+Q\+\_\+\+F\+U\+LL = 0}
+
+\mbox{\Hypertarget{classCACHE_aa8da1ad44a6f9b21421e21742844caf9}\label{classCACHE_aa8da1ad44a6f9b21421e21742844caf9}} 
+\index{CACHE@{CACHE}!WQ\_MERGED@{WQ\_MERGED}}
+\index{WQ\_MERGED@{WQ\_MERGED}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{WQ\_MERGED}{WQ\_MERGED}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+W\+Q\+\_\+\+M\+E\+R\+G\+ED = 0}
+
+\mbox{\Hypertarget{classCACHE_a59b96af7391a0b2aab64978e7a992756}\label{classCACHE_a59b96af7391a0b2aab64978e7a992756}} 
+\index{CACHE@{CACHE}!WQ\_SIZE@{WQ\_SIZE}}
+\index{WQ\_SIZE@{WQ\_SIZE}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{WQ\_SIZE}{WQ\_SIZE}}
+{\footnotesize\ttfamily const uint32\+\_\+t C\+A\+C\+H\+E\+::\+W\+Q\+\_\+\+S\+I\+ZE}
+
+\mbox{\Hypertarget{classCACHE_a84357f9a6e8a376207f901111e859ec2}\label{classCACHE_a84357f9a6e8a376207f901111e859ec2}} 
+\index{CACHE@{CACHE}!WQ\_TO\_CACHE@{WQ\_TO\_CACHE}}
+\index{WQ\_TO\_CACHE@{WQ\_TO\_CACHE}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{WQ\_TO\_CACHE}{WQ\_TO\_CACHE}}
+{\footnotesize\ttfamily uint64\+\_\+t C\+A\+C\+H\+E\+::\+W\+Q\+\_\+\+T\+O\+\_\+\+C\+A\+C\+HE = 0}
+
+\mbox{\Hypertarget{classCACHE_af6b71afe039044ac21f6260bf1c2b68f}\label{classCACHE_af6b71afe039044ac21f6260bf1c2b68f}} 
+\index{CACHE@{CACHE}!writes\_available\_this\_cycle@{writes\_available\_this\_cycle}}
+\index{writes\_available\_this\_cycle@{writes\_available\_this\_cycle}!CACHE@{CACHE}}
+\doxysubsubsection{\texorpdfstring{writes\_available\_this\_cycle}{writes\_available\_this\_cycle}}
+{\footnotesize\ttfamily uint32\+\_\+t C\+A\+C\+H\+E\+::writes\+\_\+available\+\_\+this\+\_\+cycle}
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+inc/\mbox{\hyperlink{cache_8h}{cache.\+h}}\item 
+src/\mbox{\hyperlink{cache_8cc}{cache.\+cc}}\end{DoxyCompactItemize}

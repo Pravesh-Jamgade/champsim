@@ -1,0 +1,65 @@
+\hypertarget{classperceptron}{}\doxysection{perceptron$<$ T, H\+I\+S\+T\+L\+EN, B\+I\+TS $>$ Class Template Reference}
+\label{classperceptron}\index{perceptron$<$ T, HISTLEN, BITS $>$@{perceptron$<$ T, HISTLEN, BITS $>$}}
+
+
+Collaboration diagram for perceptron$<$ T, H\+I\+S\+T\+L\+EN, B\+I\+TS $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=218pt]{classperceptron__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+T \mbox{\hyperlink{classperceptron_ae313dfd17bf39e582c973d0ac0a5e2c3}{predict}} (std\+::bitset$<$ H\+I\+S\+T\+L\+EN $>$ history)
+\item 
+void \mbox{\hyperlink{classperceptron_af34b922395804eeb23e09c3a2c79fc4f}{update}} (bool result, std\+::bitset$<$ H\+I\+S\+T\+L\+EN $>$ history)
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+constexpr static T \mbox{\hyperlink{classperceptron_af36fd147ee9076fc7ac479cc81a641ea}{max\+\_\+weight}} = (1 $<$$<$ (B\+I\+TS -\/ 1)) -\/ 1
+\item 
+constexpr static T \mbox{\hyperlink{classperceptron_a873d1222355c555621add2b6f107f38f}{min\+\_\+weight}} = -\/(\mbox{\hyperlink{classperceptron_af36fd147ee9076fc7ac479cc81a641ea}{max\+\_\+weight}} + 1)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classperceptron_ae313dfd17bf39e582c973d0ac0a5e2c3}\label{classperceptron_ae313dfd17bf39e582c973d0ac0a5e2c3}} 
+\index{perceptron$<$ T, HISTLEN, BITS $>$@{perceptron$<$ T, HISTLEN, BITS $>$}!predict@{predict}}
+\index{predict@{predict}!perceptron$<$ T, HISTLEN, BITS $>$@{perceptron$<$ T, HISTLEN, BITS $>$}}
+\doxysubsubsection{\texorpdfstring{predict()}{predict()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t H\+I\+S\+T\+L\+EN, std\+::size\+\_\+t B\+I\+TS$>$ \\
+T \mbox{\hyperlink{classperceptron}{perceptron}}$<$ T, H\+I\+S\+T\+L\+EN, B\+I\+TS $>$\+::predict (\begin{DoxyParamCaption}\item[{std\+::bitset$<$ H\+I\+S\+T\+L\+EN $>$}]{history }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classperceptron_af34b922395804eeb23e09c3a2c79fc4f}\label{classperceptron_af34b922395804eeb23e09c3a2c79fc4f}} 
+\index{perceptron$<$ T, HISTLEN, BITS $>$@{perceptron$<$ T, HISTLEN, BITS $>$}!update@{update}}
+\index{update@{update}!perceptron$<$ T, HISTLEN, BITS $>$@{perceptron$<$ T, HISTLEN, BITS $>$}}
+\doxysubsubsection{\texorpdfstring{update()}{update()}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t H\+I\+S\+T\+L\+EN, std\+::size\+\_\+t B\+I\+TS$>$ \\
+void \mbox{\hyperlink{classperceptron}{perceptron}}$<$ T, H\+I\+S\+T\+L\+EN, B\+I\+TS $>$\+::update (\begin{DoxyParamCaption}\item[{bool}]{result,  }\item[{std\+::bitset$<$ H\+I\+S\+T\+L\+EN $>$}]{history }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classperceptron_af36fd147ee9076fc7ac479cc81a641ea}\label{classperceptron_af36fd147ee9076fc7ac479cc81a641ea}} 
+\index{perceptron$<$ T, HISTLEN, BITS $>$@{perceptron$<$ T, HISTLEN, BITS $>$}!max\_weight@{max\_weight}}
+\index{max\_weight@{max\_weight}!perceptron$<$ T, HISTLEN, BITS $>$@{perceptron$<$ T, HISTLEN, BITS $>$}}
+\doxysubsubsection{\texorpdfstring{max\_weight}{max\_weight}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t H\+I\+S\+T\+L\+EN, std\+::size\+\_\+t B\+I\+TS$>$ \\
+constexpr static T \mbox{\hyperlink{classperceptron}{perceptron}}$<$ T, H\+I\+S\+T\+L\+EN, B\+I\+TS $>$\+::max\+\_\+weight = (1 $<$$<$ (B\+I\+TS -\/ 1)) -\/ 1\hspace{0.3cm}{\ttfamily [static]}, {\ttfamily [constexpr]}}
+
+\mbox{\Hypertarget{classperceptron_a873d1222355c555621add2b6f107f38f}\label{classperceptron_a873d1222355c555621add2b6f107f38f}} 
+\index{perceptron$<$ T, HISTLEN, BITS $>$@{perceptron$<$ T, HISTLEN, BITS $>$}!min\_weight@{min\_weight}}
+\index{min\_weight@{min\_weight}!perceptron$<$ T, HISTLEN, BITS $>$@{perceptron$<$ T, HISTLEN, BITS $>$}}
+\doxysubsubsection{\texorpdfstring{min\_weight}{min\_weight}}
+{\footnotesize\ttfamily template$<$typename T , std\+::size\+\_\+t H\+I\+S\+T\+L\+EN, std\+::size\+\_\+t B\+I\+TS$>$ \\
+constexpr static T \mbox{\hyperlink{classperceptron}{perceptron}}$<$ T, H\+I\+S\+T\+L\+EN, B\+I\+TS $>$\+::min\+\_\+weight = -\/(\mbox{\hyperlink{classperceptron_af36fd147ee9076fc7ac479cc81a641ea}{max\+\_\+weight}} + 1)\hspace{0.3cm}{\ttfamily [static]}, {\ttfamily [constexpr]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+branch/perceptron/\mbox{\hyperlink{perceptron_8cc}{perceptron.\+cc}}\end{DoxyCompactItemize}
