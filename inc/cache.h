@@ -32,6 +32,9 @@ public:
   const bool virtual_prefetch;
   bool ever_seen_data = false;
   const unsigned pref_activate_mask = (1 << static_cast<int>(LOAD)) | (1 << static_cast<int>(PREFETCH));
+  
+  // ***
+  std::vector<Set> set_stat{NUM_SET};
 
   // prefetch stats
   uint64_t pf_requested = 0, pf_issued = 0, pf_useful = 0, pf_useless = 0, pf_fill = 0;

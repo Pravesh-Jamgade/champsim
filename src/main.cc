@@ -503,6 +503,33 @@ int main(int argc, char** argv)
   for (auto it = caches.rbegin(); it != caches.rend(); ++it)
     (*it)->impl_replacement_final_stats();
 
+  // ***
+  FILE* fptr = fopen("customLog0.log", "w");
+  if(fptr ==  NULL){
+    cout<< "[ERR] error opening log file\n";
+    exit(0);
+  }
+
+  for (uint32_t i = 0; i < NUM_CPUS; i++) {
+    
+    for (auto it = caches.rbegin(); it != caches.rend(); ++it){
+      CACHE *cache = *it;
+
+      for(int i=0; i< cache->NUM_SET; i++){
+        
+        // *** 
+        // core,cache,set,way1,way2...
+        fprintf(fptr, "%d,%d,%d,", i,cache->NAME.c_str(),cache->set_stat[i]);
+        for(int j=0; j< cache->NUM_WAY; j++){
+
+          fprintf(fptr,"%ld,", cache->block[i * cache->NUM_SET + j].write_counter);
+        }
+
+        fprintf(fptr, "\n");
+      }
+    }
+  }
+
 #ifndef CRC2_COMPILE
   print_dram_stats();
   print_branch_stats();

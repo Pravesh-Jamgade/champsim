@@ -46,7 +46,6 @@ for i in range(len(ways)):
 
 for replace_policy in replacement:
     for setting in allCombi:#iterating 8 possibilities of way
-
         combi_str = ""
         for i in range(len(setting)):#using a single setting of ways
             way = setting[i]
@@ -84,4 +83,5 @@ for replace_policy in replacement:
                 outfile.write(line+'\n')
         
         outfile.close()
+
             

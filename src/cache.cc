@@ -34,6 +34,11 @@ void CACHE::handle_fill()
                                          fill_mshr->type);
 
     bool success = filllike_miss(set, way, *fill_mshr);
+
+     // ***
+    block[set*NUM_WAY + way].write_counter++;
+    // set_stat[set].writes++;
+
     if (!success)
       return;
 
@@ -97,6 +102,10 @@ void CACHE::handle_writeback()
         return;
     }
 
+    //// ***
+    // fill_block.write_counter++;
+    // set_stat[set].writes++;
+
     // remove this entry from WQ
     writes_available_this_cycle--;
     WQ.pop_front();
@@ -129,6 +138,10 @@ void CACHE::handle_read()
         return;
     }
 
+    // ***
+    // set_stat[set].reads++;
+    block[set*NUM_WAY + way].read_counter++;
+
     // remove this entry from RQ
     RQ.pop_front();
     reads_available_this_cycle--;
@@ -155,6 +168,10 @@ void CACHE::handle_prefetch()
       if (!success)
         return;
     }
+
+    // ***
+    // set_stat[set].reads++;
+    block[set*NUM_WAY + way].read_counter++;
 
     // remove this entry from PQ
     PQ.pop_front();

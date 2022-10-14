@@ -13,6 +13,13 @@
 #define TRANSLATION 4
 #define NUM_TYPES 5
 
+
+class Set
+{
+  public:
+    uint64_t writes=0, reads=0;
+};
+
 // CACHE BLOCK
 class BLOCK
 {
@@ -23,6 +30,10 @@ public:
 
   // replacement state
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
+
+  // ***
+  uint32_t write_counter, read_counter;
+
 };
 
 class MemoryRequestConsumer
