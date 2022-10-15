@@ -504,17 +504,21 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  FILE* fptr = fopen("customLog0.log", "w");
-  if(fptr ==  NULL){
-    cout<< "[ERR] error opening log file\n";
-    exit(0);
-  }
-
+  
   // cpu
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
     // cache
     for (auto it = caches.rbegin(); it != caches.rend(); ++it){
       CACHE *cache = *it;
+
+      string fileName = "customLog_"+to_string(i)+"_"+cache->NAME+".log";
+      FILE* fptr = fopen(fileName.c_str(), "w");
+
+      if(fptr ==  NULL){
+        cout<< "[ERR] error opening log file\n";
+        exit(0);
+      }
+
       // set
       for(int j=0; j< cache->NUM_SET; j++){
         // way
@@ -526,6 +530,8 @@ int main(int argc, char** argv)
         }
         fprintf(fptr, "%s\n", s.c_str());
       }
+
+      fclose(fptr);
     }
   }
 
