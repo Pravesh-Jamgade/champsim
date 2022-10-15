@@ -510,22 +510,21 @@ int main(int argc, char** argv)
     exit(0);
   }
 
+  // cpu
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
-    
+    // cache
     for (auto it = caches.rbegin(); it != caches.rend(); ++it){
       CACHE *cache = *it;
-
-      for(int i=0; i< cache->NUM_SET; i++){
-        
-        // *** 
-        // core,cache,set,way1,way2...
-        fprintf(fptr, "%d,%d,%d,", i,cache->NAME.c_str(),cache->set_stat[i]);
-        for(int j=0; j< cache->NUM_WAY; j++){
-
-          fprintf(fptr,"%ld,", cache->block[i * cache->NUM_SET + j].write_counter);
+      // set
+      for(int j=0; j< cache->NUM_SET; j++){
+        // way
+        string s = "";
+        // * core, cache, set, ways...
+        s +=  to_string(i) + cache->NAME + "," + to_string(j) + ",";
+        for(int k=0; k< cache->NUM_WAY; k++){
+          s += to_string(k) + ",";
         }
-
-        fprintf(fptr, "\n");
+        fprintf(fptr, "%s\n", s.c_str());
       }
     }
   }
