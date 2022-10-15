@@ -520,7 +520,7 @@ int main(int argc, char** argv)
         // way
         string s = "";
         // * core, cache, set, ways...
-        s +=  to_string(i) + cache->NAME + "," + to_string(j) + ",";
+        s +=  to_string(i)+ "," + cache->NAME + "," + to_string(j) + ",";
         for(int k=0; k< cache->NUM_WAY; k++){
           s += to_string(k) + ",";
         }
