@@ -521,13 +521,18 @@ int main(int argc, char** argv)
 
       // set
       for(int j=0; j< cache->NUM_SET; j++){
-        // way
+        
+
         string s = "";
-        // * core, cache, set, ways...
-        s +=  to_string(i)+ "," + cache->NAME + "," + to_string(j) + ",";
+        // * core, cache, set, set write count, ways write count...
+        s +=  to_string(i)+ "," + cache->NAME + "," + to_string(j) + "," + to_string(cache->set_stat[j].writes) + ",";
+        
+        // way
         for(int k=0; k< cache->NUM_WAY; k++){
-          s += to_string(k) + ",";
+          uint32_t way_wr_count = cache->block[j * cache->NUM_WAY + k].write_counter; 
+          s += to_string(way_wr_count) + ",";
         }
+
         fprintf(fptr, "%s\n", s.c_str());
       }
 
