@@ -37,7 +37,7 @@ void CACHE::handle_fill()
 
      // ***
     block[set*NUM_WAY + way].write_counter++;
-    // set_stat[set].writes++;
+    set_stat[set].writes++;
 
     if (!success)
       return;
@@ -102,9 +102,9 @@ void CACHE::handle_writeback()
         return;
     }
 
-    //// ***
-    // fill_block.write_counter++;
-    // set_stat[set].writes++;
+    // ***
+    fill_block.write_counter++;
+    set_stat[set].writes++;
 
     // remove this entry from WQ
     writes_available_this_cycle--;
