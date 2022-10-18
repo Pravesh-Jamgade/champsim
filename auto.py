@@ -5,7 +5,6 @@ import os
 import shlex
 from os.path import exists
 
-from black import replace
 import shutil
 
 inputs = [
