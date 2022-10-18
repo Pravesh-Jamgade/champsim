@@ -20,30 +20,6 @@ inputs = [
     '447.dealII-3B.champsimtrace.xz'
 ]
 
-allCombi=[]
-
-def update(key, subkey, value):
-    cj[key][subkey] = value
-
-
-def combi(depth, j, bag):
-    if depth == 0:
-        allCombi.append(bag.copy())
-        return
-    for i in range(len(ways)):
-        bag.append(ways[i])
-        combi(depth-1, i, bag)
-        bag.pop()
-
-# block size is 64B
-BLOCK_SIZE = 64
-
-ways = [8] #llc
-all_size = [0.5, 1, 2]#llc cache size in MB
-cache = ['LLC']
-
-replacement = ['lru', 'random', 'srrip']
-
 curdir = os.getcwd()
 default_file_name = "default_config.json"#read from
 config_file_name = "champsim_config.json"#write to

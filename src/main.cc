@@ -540,6 +540,61 @@ int main(int argc, char** argv)
     }
   }
 
+  // *** write variation
+  CACHE *llc = caches.front();
+
+  uint64_t total_write_count=0;
+  for(int i=0;i< llc->NUM_SET; i++){
+    total_write_count += llc->set_stat[i].writes;
+  }
+
+  uint64_t total_blocks = llc->NUM_SET * llc->NUM_WAY;
+
+  uint64_t total_avg_wr = total_write_count/total_blocks;
+
+  // *** intra
+  double total_expect = 0;
+  for(int i=0; i< llc->NUM_SET; i++){
+    double set_avg = 0;
+    for(int j=0; j< llc->NUM_WAY; j++){
+      set_avg += llc->block[i*llc->NUM_WAY + j].write_counter;
+    }
+    set_avg /= (double)llc->NUM_WAY;
+
+    double set_expect = 0;
+    for(int j=0; j< llc->NUM_WAY; j++){
+      double expect = llc->block[i*llc->NUM_WAY + j].write_counter - set_avg;
+      expect *= expect;
+      set_expect += expect;
+    }
+
+    set_expect /= (llc->NUM_WAY-1);
+    set_expect = sqrt(set_expect);
+    total_expect += set_expect;
+  }
+
+  double intra = (100/(llc->NUM_SET * total_avg_wr)) * total_expect;
+
+  // *** inter 
+  total_expect = 0;
+  for(int i=0; i< llc->NUM_SET; i++){
+    double set_avg=0;
+    for(int j=0 ;j< llc->NUM_WAY; j++){
+      set_avg+=llc->block[i*llc->NUM_WAY + j].write_counter;
+    }
+    set_avg /= llc->NUM_WAY;
+
+    double set_expect = set_avg - total_avg_wr;
+    set_expect *= set_expect;
+    total_expect += set_expect;
+  }
+  total_expect /= (llc->NUM_SET-1);
+  total_expect = sqrt(total_expect);
+  double inter = total_expect/total_avg_wr;
+
+  printf("inter=%f, intra=%f\n", inter, intra);
+
+
 #ifndef CRC2_COMPILE
   print_dram_stats();
   print_branch_stats();
