@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "vector": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "stdexcept": "cpp"
     }
 }
