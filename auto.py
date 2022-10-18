@@ -3,8 +3,10 @@ from gc import collect
 import json
 import os
 import shlex
+from os.path import exists
 
 from black import replace
+import shutil
 
 inputs = [
     '410.bwaves-945B.champsimtrace.xz',
@@ -22,7 +24,7 @@ inputs = [
 allCombi=[]
 
 def update(key, subkey, value):
-    cj[key][subkey] = int(value)
+    cj[key][subkey] = value
 
 
 def combi(depth, j, bag):
@@ -37,11 +39,8 @@ def combi(depth, j, bag):
 # block size is 64B
 BLOCK_SIZE = 64
 
-# use combination of ways 2 for each hence total 8 combination of selecting ways
-ways = ['8']
-
-# cache size in MB
-all_size = [0.5, 1, 2]
+ways = [8] #llc
+all_size = [0.5, 1, 2]#llc cache size in MB
 cache = ['LLC']
 
 replacement = ['lru', 'random', 'srrip']
@@ -54,37 +53,51 @@ default_file_path = os.path.join(curdir, default_file_name)
 config_file_path = os.path.join(curdir, config_file_name)
 
 print(default_file_path)
-config_json_file = open(default_file_path, "r") 
+default_json_file = open(default_file_path, "r") 
 
-cj = json.load(config_json_file)
-config_json_file.close()
+cj = json.load(default_json_file)
 
 # for i in range(len(ways)):
 #     bag=[]
 #     combi(3, i, bag)
 
-update(cache[0], "ways", ways[0])
-
 
 for fol in inputs:
-    os.mkdir(fol)
-    savedir = os.path.join(curdir, fol)
+    tmp = os.path.join(curdir, fol)
+    if exists(tmp):
+        shutil.rmtree(tmp)
 
+for fol in inputs:
+    
+    #check if trace exists
+    file_exist = exists( os.path.join(curdir, "traces/{}".format(fol)))
+
+    if not file_exist:
+        print("{} ..fail".format(fol))
+        continue
+
+    #create folder with trace name
+    savedir = os.path.join(curdir, fol)
+    os.mkdir(fol)
+
+    #foreach trace use reaplce policy
     for replace_policy in replacement:
 
-        for size in all_size:#iterating 8 possibilities of way
+        #with LLC size
+        for size in all_size:
             combi_str = ""
-
+            
+            #no. of sets
             byteSize = size * pow(2, 20) #MB to B
-            setsize = BLOCK_SIZE * pow()
-            update(cache[0], "sets", byteSize/)
+            setsize = BLOCK_SIZE * ways[0] #
+            sets=int(byteSize/setsize)
+
+            #update llc
+            update(cache[0], "ways", ways[0])
+            update(cache[0], "sets", sets)
             update(cache[0], "replacement", replace_policy)
 
-            combi_str = "{}{}.log".format(size, replace_policy)
-
-            setting = "size={}, replacement_policy={}".format(size, replace_policy)
-
-            print("[config] {},{},{}".format(setting, combi_str, replace_policy))
+            combi_str = "{}-{}.log".format(size, replace_policy)
 
             #saving new setting
             json_string = json.dumps(cj)
@@ -97,6 +110,7 @@ for fol in inputs:
 
             stat_file = os.path.join(savedir, combi_str)
 
+            # print("[config] {}".format(combi_str))
             print("[output]",stat_file)
 
             outfile = open(stat_file, 'w')
@@ -110,6 +124,5 @@ for fol in inputs:
             
             outfile.close()
 
-
-
+default_json_file.close()
             

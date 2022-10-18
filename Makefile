@@ -19,8 +19,8 @@ clean:
 	 find . -name \*.d -delete
 	 $(RM) -r obj
 
-	 find replacement/random -name \*.o -delete
-	 find replacement/random -name \*.d -delete
+	 find replacement/srrip -name \*.o -delete
+	 find replacement/srrip -name \*.d -delete
 	 find prefetcher/no -name \*.o -delete
 	 find prefetcher/no -name \*.d -delete
 	 find replacement/lru -name \*.o -delete
@@ -32,13 +32,13 @@ clean:
 	 find btb/basic_btb -name \*.o -delete
 	 find btb/basic_btb -name \*.d -delete
 
-bin/champsim: $(patsubst %.cc,%.o,$(wildcard src/*.cc)) obj/repl_rreplacementDrandom.a obj/pref_pprefetcherDno.a obj/repl_rreplacementDlru.a obj/pref_pprefetcherDno_instr.a obj/bpred_bbranchDbimodal.a obj/btb_bbtbDbasic_btb.a
+bin/champsim: $(patsubst %.cc,%.o,$(wildcard src/*.cc)) obj/repl_rreplacementDsrrip.a obj/pref_pprefetcherDno.a obj/repl_rreplacementDlru.a obj/pref_pprefetcherDno_instr.a obj/bpred_bbranchDbimodal.a obj/btb_bbtbDbasic_btb.a
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-replacement/random/%.o: CFLAGS += -Ireplacement/random
-replacement/random/%.o: CXXFLAGS += -Ireplacement/random
-replacement/random/%.o: CXXFLAGS +=  -Dinitialize_replacement=repl_rreplacementDrandom_initialize -Dfind_victim=repl_rreplacementDrandom_victim -Dupdate_replacement_state=repl_rreplacementDrandom_update -Dreplacement_final_stats=repl_rreplacementDrandom_final_stats
-obj/repl_rreplacementDrandom.a: $(patsubst %.cc,%.o,$(wildcard replacement/random/*.cc)) $(patsubst %.c,%.o,$(wildcard replacement/random/*.c))
+replacement/srrip/%.o: CFLAGS += -Ireplacement/srrip
+replacement/srrip/%.o: CXXFLAGS += -Ireplacement/srrip
+replacement/srrip/%.o: CXXFLAGS +=  -Dinitialize_replacement=repl_rreplacementDsrrip_initialize -Dfind_victim=repl_rreplacementDsrrip_victim -Dupdate_replacement_state=repl_rreplacementDsrrip_update -Dreplacement_final_stats=repl_rreplacementDsrrip_final_stats
+obj/repl_rreplacementDsrrip.a: $(patsubst %.cc,%.o,$(wildcard replacement/srrip/*.cc)) $(patsubst %.c,%.o,$(wildcard replacement/srrip/*.c))
 	@mkdir -p $(dir $@)
 	ar -rcs $@ $^
 
@@ -78,7 +78,7 @@ obj/btb_bbtbDbasic_btb.a: $(patsubst %.cc,%.o,$(wildcard btb/basic_btb/*.cc)) $(
 	ar -rcs $@ $^
 
 -include $(wildcard src/*.d)
--include $(wildcard replacement/random/*.d)
+-include $(wildcard replacement/srrip/*.d)
 -include $(wildcard prefetcher/no/*.d)
 -include $(wildcard replacement/lru/*.d)
 -include $(wildcard prefetcher/no_instr/*.d)
