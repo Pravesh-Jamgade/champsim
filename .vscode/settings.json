@@ -2,6 +2,10 @@
     "files.associations": {
         "vector": "cpp",
         "*.inc": "cpp",
-        "stdexcept": "cpp"
+        "stdexcept": "cpp",
+        "*.tcc": "cpp",
+        "fstream": "cpp",
+        "array": "cpp",
+        "iosfwd": "cpp"
     }
 }

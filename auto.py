@@ -105,7 +105,8 @@ for fol in inputs:
 
             subprocess.run(['./config.sh'.format(curdir), 'champsim_config.json'])
             
-            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 traces/{}".format(fol)
+            trace_inital = fol.split('.')[1]
+            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 traces/{} --trace_name {}".format(fol, trace_inital)
 
             stat_file = os.path.join(savedir, combi_str)
 

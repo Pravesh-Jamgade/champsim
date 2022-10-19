@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <string.h>
 #include <vector>
+#include <fstream>
 
 #include "cache.h"
 #include "champsim.h"
@@ -21,6 +22,9 @@ uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
 
 uint64_t warmup_instructions = 1000000, simulation_instructions = 10000000;
+
+// ***
+string trace_name;
 
 auto start_time = time(NULL);
 
@@ -57,6 +61,7 @@ void record_roi_stats(uint32_t cpu, CACHE* cache)
 
 void print_roi_stats(uint32_t cpu, CACHE* cache)
 {
+  cout << "[TEST]" << cpu << cache->NAME << '\n';
   uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;
 
   for (uint32_t i = 0; i < NUM_TYPES; i++) {
@@ -321,13 +326,14 @@ int main(int argc, char** argv)
   int traces_encountered = 0;
   static struct option long_options[] = {{"warmup_instructions", required_argument, 0, 'w'},
                                          {"simulation_instructions", required_argument, 0, 'i'},
+                                         {"trace_name", required_argument, 0, 't'},
                                          {"hide_heartbeat", no_argument, 0, 'h'},
                                          {"cloudsuite", no_argument, 0, 'c'},
                                          {"traces", no_argument, &traces_encountered, 1},
                                          {0, 0, 0, 0}};
 
   int c;
-  while ((c = getopt_long_only(argc, argv, "w:i:hc", long_options, NULL)) != -1 && !traces_encountered) {
+  while ((c = getopt_long_only(argc, argv, "w:i:t:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
     case 'w':
       warmup_instructions = atol(optarg);
@@ -343,6 +349,9 @@ int main(int argc, char** argv)
       MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS_SPARC;
       break;
     case 0:
+      break;
+    case 't':
+      trace_name = optarg;
       break;
     default:
       abort();
@@ -504,14 +513,37 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  
-  // cpu
+  fstream cache_file_stream, ipc_file_stream;
+  cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
+  ipc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
+
+  for(auto cache: caches){
+    uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;
+    int cpu = cache->cpu;
+    for (uint32_t i = 0; i < NUM_TYPES; i++) {
+      TOTAL_ACCESS += cache->sim_access[cpu][i];
+      TOTAL_HIT += cache->sim_hit[cpu][i];
+      TOTAL_MISS += cache->sim_miss[cpu][i];
+    }
+    float miss_ratio = (float)TOTAL_MISS/(float)TOTAL_ACCESS;
+    string result = trace_name + "," + cache->NAME + "," + to_string(cpu) + "," +to_string(miss_ratio);
+    cache_file_stream << result << '\n';
+  }
+
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
-    // cache
-    for (auto it = caches.rbegin(); it != caches.rend(); ++it){
+    float ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
+    string result = trace_name +","+to_string(i)+","+to_string(ipc); 
+    ipc_file_stream << result << '\n';
+  }
+
+  cache_file_stream.close();
+  ipc_file_stream.close();
+
+  // cache
+  for (auto it = caches.rbegin(); it != caches.rend(); ++it){
       CACHE *cache = *it;
 
-      string fileName = "customLog_"+to_string(i)+"_"+cache->NAME+".log";
+      string fileName = "customLog_"+to_string(cache->cpu)+"_"+cache->NAME+".log";
       FILE* fptr = fopen(fileName.c_str(), "w");
 
       if(fptr ==  NULL){
@@ -522,10 +554,9 @@ int main(int argc, char** argv)
       // set
       for(int j=0; j< cache->NUM_SET; j++){
         
-
         string s = "";
         // * core, cache, set, set write count, ways write count...
-        s +=  to_string(i)+ "," + cache->NAME + "," + to_string(j) + "," + to_string(cache->set_stat[j].writes) + ",";
+        s +=  to_string(cache->cpu)+ "," + cache->NAME + "," + to_string(j) + "," + to_string(cache->set_stat[j].writes) + ",";
         
         // way
         for(int k=0; k< cache->NUM_WAY; k++){
@@ -538,7 +569,6 @@ int main(int argc, char** argv)
 
       fclose(fptr);
     }
-  }
 
 #ifndef CRC2_COMPILE
   print_dram_stats();
