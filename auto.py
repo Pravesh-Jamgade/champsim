@@ -107,24 +107,10 @@ for fol in inputs:
             
             trace_inital = fol.split('.')[1]
             cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 traces/{} --trace_name {}".format(fol, fol)
-            
-            ## output screen stat 
-            # stat_file = os.path.join(savedir, combi_str)
-
-            # # print("[config] {}".format(combi_str))
-            # print("[output]",stat_file)
-
-            # outfile = open(stat_file, 'w')
 
             with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                 op, er = proc.communicate()
-            #     lines = op.decode('utf-8').splitlines()
-                
-            #     for line in lines:
-            #         outfile.write(line+'\n')
-            
-            # outfile.close()
-            
+         
             ## output cache.log and ipc.log
             for path in os.listdir(curdir):
                 file = os.path.join(curdir, path)
@@ -133,7 +119,7 @@ for fol in inputs:
                         log_file_name = path.split('.')[0]#cache
                         log_file_name =  log_file_name +'-'+ combi_str#cache-combi-str.log
                         newfile = os.path.join(savedir,log_file_name)
-                        os.system('mv {} {}/'.format(file, newfile)) 
+                        os.system('mv {} {}'.format(file, newfile)) 
 
 
 default_json_file.close()
