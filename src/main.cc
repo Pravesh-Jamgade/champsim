@@ -543,7 +543,7 @@ int main(int argc, char** argv)
   for (auto it = caches.rbegin(); it != caches.rend(); ++it){
       CACHE *cache = *it;
 
-      string fileName = "customLog_"+to_string(cache->cpu)+"_"+cache->NAME+".log";
+      string fileName = "writes_"+to_string(cache->cpu)+"_"+cache->NAME+".log";
       FILE* fptr = fopen(fileName.c_str(), "w");
 
       if(fptr ==  NULL){
