@@ -108,9 +108,6 @@ for fol in inputs:
             # trace_inital = fol.split('.')[1]
             cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 traces/{} --trace_name {}".format(fol, fol)
 
-            
-            subprocess.run(['mv {}/* {}'.format(curdir, savedir)]) 
-
             stat_file = os.path.join(savedir, combi_str)
 
             # print("[config] {}".format(combi_str))
@@ -126,6 +123,9 @@ for fol in inputs:
                     outfile.write(line+'\n')
             
             outfile.close()
+
+            subprocess.run(['mv {}/*.log {}'.format(curdir, savedir)]) 
+
 
 default_json_file.close()
             
