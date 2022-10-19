@@ -108,23 +108,27 @@ for fol in inputs:
             # trace_inital = fol.split('.')[1]
             cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 traces/{} --trace_name {}".format(fol, fol)
 
-            stat_file = os.path.join(savedir, combi_str)
+            # stat_file = os.path.join(savedir, combi_str)
 
-            # print("[config] {}".format(combi_str))
-            print("[output]",stat_file)
+            # # print("[config] {}".format(combi_str))
+            # print("[output]",stat_file)
 
-            outfile = open(stat_file, 'w')
+            # outfile = open(stat_file, 'w')
 
-            with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
-                op, er = proc.communicate()
-                lines = op.decode('utf-8').splitlines()
+            # with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+            #     op, er = proc.communicate()
+            #     lines = op.decode('utf-8').splitlines()
                 
-                for line in lines:
-                    outfile.write(line+'\n')
+            #     for line in lines:
+            #         outfile.write(line+'\n')
             
-            outfile.close()
-
-            subprocess.run(['mv {}/*.log {}'.format(curdir, savedir)]) 
+            # outfile.close()
+            
+            for path in os.listdir(curdir):
+                file = os.path.join(curdir, path)
+                if os.path.isfile(file):
+                    if path.endswith('.log'):
+                        os.system('mv {} {}/'.format(file, savedir)) 
 
 
 default_json_file.close()
