@@ -332,6 +332,8 @@ int main(int argc, char** argv)
                                          {"traces", no_argument, &traces_encountered, 1},
                                          {0, 0, 0, 0}};
 
+                                         //config
+
   int c;
   while ((c = getopt_long_only(argc, argv, "w:i:t:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
@@ -539,36 +541,36 @@ int main(int argc, char** argv)
   cache_file_stream.close();
   ipc_file_stream.close();
 
-  // cache
-  for (auto it = caches.rbegin(); it != caches.rend(); ++it){
-      CACHE *cache = *it;
+  // // cache
+  // for (auto it = caches.rbegin(); it != caches.rend(); ++it){
+  //     CACHE *cache = *it;
 
-      string fileName = "customLog_"+to_string(cache->cpu)+"_"+cache->NAME+".log";
-      FILE* fptr = fopen(fileName.c_str(), "w");
+  //     string fileName = "writes_"+to_string(cache->cpu)+"_"+cache->NAME+".log";
+  //     FILE* fptr = fopen(fileName.c_str(), "w");
 
-      if(fptr ==  NULL){
-        cout<< "[ERR] error opening log file\n";
-        exit(0);
-      }
+  //     if(fptr ==  NULL){
+  //       cout<< "[ERR] error opening log file\n";
+  //       exit(0);
+  //     }
 
-      // set
-      for(int j=0; j< cache->NUM_SET; j++){
+  //     // set
+  //     for(int j=0; j< cache->NUM_SET; j++){
         
-        string s = "";
-        // * core, cache, set, set write count, ways write count...
-        s +=  to_string(cache->cpu)+ "," + cache->NAME + "," + to_string(j) + "," + to_string(cache->set_stat[j].writes) + ",";
+  //       string s = "";
+  //       // * core, cache, set, set write count, ways write count...
+  //       s +=  to_string(cache->cpu)+ "," + cache->NAME + "," + to_string(j) + "," + to_string(cache->set_stat[j].writes) + ",";
         
-        // way
-        for(int k=0; k< cache->NUM_WAY; k++){
-          uint32_t way_wr_count = cache->block[j * cache->NUM_WAY + k].write_counter; 
-          s += to_string(way_wr_count) + ",";
-        }
+  //       // way
+  //       for(int k=0; k< cache->NUM_WAY; k++){
+  //         uint32_t way_wr_count = cache->block[j * cache->NUM_WAY + k].write_counter; 
+  //         s += to_string(way_wr_count) + ",";
+  //       }
 
-        fprintf(fptr, "%s\n", s.c_str());
-      }
+  //       fprintf(fptr, "%s\n", s.c_str());
+  //     }
 
-      fclose(fptr);
-    }
+  //     fclose(fptr);
+  //   }
 
   // *** write variation
   CACHE *llc = caches.front();
