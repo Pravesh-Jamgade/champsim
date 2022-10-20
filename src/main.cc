@@ -24,7 +24,7 @@ uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_
 uint64_t warmup_instructions = 1000000, simulation_instructions = 10000000;
 
 // ***
-string trace_name;
+string trace_name, config;
 
 auto start_time = time(NULL);
 
@@ -327,6 +327,7 @@ int main(int argc, char** argv)
   static struct option long_options[] = {{"warmup_instructions", required_argument, 0, 'w'},
                                          {"simulation_instructions", required_argument, 0, 'i'},
                                          {"trace_name", required_argument, 0, 't'},
+                                         {"config", required_argument, 0, 'k'},
                                          {"hide_heartbeat", no_argument, 0, 'h'},
                                          {"cloudsuite", no_argument, 0, 'c'},
                                          {"traces", no_argument, &traces_encountered, 1},
@@ -354,6 +355,9 @@ int main(int argc, char** argv)
       break;
     case 't':
       trace_name = optarg;
+      break;  
+    case 'k':
+      config = optarg;
       break;
     default:
       abort();
@@ -606,7 +610,7 @@ int main(int argc, char** argv)
     total_expect += set_expect;
   }
 
-  double intra = (100/(llc->NUM_SET * total_avg_wr)) * total_expect;
+  double intra = ((double)100/(double)(llc->NUM_SET * total_avg_wr)) * total_expect;
 
   // *** inter 
   total_expect = 0;
@@ -626,8 +630,8 @@ int main(int argc, char** argv)
   double inter = total_expect/total_avg_wr;
 
   // printf("inter=%f, intra=%f\n", inter, intra);
-  
-  wv_file_stream << trace_name << "," << inter << "," << intra << '\n';
+
+  wv_file_stream << trace_name << "," << config << "," << inter << "," << intra << '\n';
 
 
 #ifndef CRC2_COMPILE

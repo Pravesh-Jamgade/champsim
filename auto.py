@@ -106,7 +106,7 @@ for fol in inputs:
             subprocess.run(['./config.sh'.format(curdir), 'champsim_config.json'])
             
             trace_inital = fol.split('.')[1]
-            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 traces/{} --trace_name {}".format(fol, fol)
+            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 traces/{} --trace_name {} --config {}".format(fol, fol, combi_str)
 
             with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                 op, er = proc.communicate()
@@ -117,6 +117,8 @@ for fol in inputs:
                 if os.path.isfile(file):
                     if path.endswith('.log'):
                         log_file_name = path.split('.')[0]#cache
+                        if log_file_name == 'writes':
+                            continue
                         log_file_name =  log_file_name +'-'+ combi_str#cache-combi-str.log
                         newfile = os.path.join(savedir,log_file_name)
                         os.system('mv {} {}'.format(file, newfile)) 
