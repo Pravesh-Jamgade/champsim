@@ -121,7 +121,9 @@ for fol in inputs:
                             continue
                         log_file_name =  log_file_name +'-'+ combi_str#cache-combi-str.log
                         newfile = os.path.join(savedir,log_file_name)
-                        os.system('mv {} {}'.format(file, newfile)) 
+                        os.system('mv {} {}'.format(file, newfile))
+            
+            print("{} in {}  ..ok\n".format(combi_str, fol)) 
 
 
 default_json_file.close()
