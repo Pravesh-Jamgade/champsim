@@ -587,7 +587,7 @@ int main(int argc, char** argv)
 
   uint64_t total_blocks = llc->NUM_SET * llc->NUM_WAY;
 
-  uint64_t total_avg_wr = total_write_count/total_blocks;
+  double total_avg_wr = ((double)total_write_count)/((double)total_blocks);
 
   // *** intra
   double total_expect = 0;
