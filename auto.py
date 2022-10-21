@@ -111,18 +111,6 @@ for fol in inputs:
             with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                 op, er = proc.communicate()
          
-            ## output cache.log and ipc.log
-            for path in os.listdir(curdir):
-                file = os.path.join(curdir, path)
-                if os.path.isfile(file):
-                    if path.endswith('.log'):
-                        log_file_name = path.split('.')[0]#cache
-                        if log_file_name == 'writes':
-                            continue
-                        log_file_name =  log_file_name +'-'+ combi_str#cache-combi-str.log
-                        newfile = os.path.join(savedir,log_file_name)
-                        os.system('mv {} {}'.format(file, newfile))
-            
             print("{} in {}  ..ok\n".format(combi_str, fol)) 
 
 

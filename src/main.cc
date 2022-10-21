@@ -520,9 +520,9 @@ int main(int argc, char** argv)
 
   // ***
   fstream cache_file_stream, ipc_file_stream, wv_file_stream;
-  cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
-  ipc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
-  wv_file_stream.open("write.log", fstream::in | fstream::out | fstream::app);
+  cache_file_stream.open("cache.log", fstream::in  | fstream::app);
+  ipc_file_stream.open("ipc.log", fstream::in  | fstream::app);
+  wv_file_stream.open("write.log", fstream::in | fstream::app);
 
   for(auto cache: caches){
     uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;
@@ -533,13 +533,13 @@ int main(int argc, char** argv)
       TOTAL_MISS += cache->sim_miss[cpu][i];
     }
     float miss_ratio = (float)TOTAL_MISS/(float)TOTAL_ACCESS;
-    string result = trace_name + "," + cache->NAME + "," + to_string(cpu) + "," +to_string(miss_ratio);
+    string result = trace_name + "," + config + "," + cache->NAME + "," + to_string(cpu) + "," +to_string(miss_ratio);
     cache_file_stream << result << '\n';
   }
 
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
     float ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
-    string result = trace_name +","+to_string(i)+","+to_string(ipc); 
+    string result = trace_name+","+config+","+to_string(i)+","+to_string(ipc); 
     ipc_file_stream << result << '\n';
   }
 
@@ -587,7 +587,7 @@ int main(int argc, char** argv)
 
   uint64_t total_blocks = llc->NUM_SET * llc->NUM_WAY;
 
-  uint64_t total_avg_wr = total_write_count/total_blocks;
+  double total_avg_wr = (double)total_write_count/(double)total_blocks;
 
   // *** intra
   double total_expect = 0;
@@ -631,7 +631,7 @@ int main(int argc, char** argv)
 
   // printf("inter=%f, intra=%f\n", inter, intra);
 
-  wv_file_stream << trace_name << "," << config << "," << inter << "," << intra << '\n';
+  wv_file_stream << trace_name<< "," << config << "," << inter << "," << intra << '\n';
 
 
 #ifndef CRC2_COMPILE

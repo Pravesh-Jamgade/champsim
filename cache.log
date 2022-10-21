@@ -1,0 +1,7 @@
+410.bwaves-945B.champsimtrace.xz,0.5-lru.log,LLC,0,0.702889
+410.bwaves-945B.champsimtrace.xz,0.5-lru.log,cpu0_L2C,0,0.460993
+410.bwaves-945B.champsimtrace.xz,0.5-lru.log,cpu0_L1D,0,0.000247
+410.bwaves-945B.champsimtrace.xz,0.5-lru.log,cpu0_STLB,0,0.989583
+410.bwaves-945B.champsimtrace.xz,0.5-lru.log,cpu0_L1I,0,0.000000
+410.bwaves-945B.champsimtrace.xz,0.5-lru.log,cpu0_ITLB,0,0.000000
+410.bwaves-945B.champsimtrace.xz,0.5-lru.log,cpu0_DTLB,0,0.000003
