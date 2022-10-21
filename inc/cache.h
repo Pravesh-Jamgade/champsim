@@ -15,6 +15,9 @@
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
+// ***
+#include "DBP.h"
+
 extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
@@ -106,6 +109,10 @@ public:
         repl_type(repl), pref_type(pref)
   {
   }
+
+  // ***
+  // at LLC
+  DBPModule dbp;  
 };
 
 #endif

@@ -12,6 +12,9 @@
 #define NDEBUG
 #endif
 
+// ***
+#include "DBP.h"
+
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
@@ -35,7 +38,7 @@ void CACHE::handle_fill()
 
     bool success = filllike_miss(set, way, *fill_mshr);
 
-     // ***
+    // ***
     block[set*NUM_WAY + way].write_counter++;
     set_stat[set].writes++;
 
@@ -49,6 +52,10 @@ void CACHE::handle_fill()
       for (auto ret : fill_mshr->to_return)
         ret->return_data(&(*fill_mshr));
     }
+
+    // ***
+    // if MSHR entry was successfully filled
+    dbp.upon_access_miss(fill_mshr->instr_id);
 
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
