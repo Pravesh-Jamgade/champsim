@@ -106,7 +106,7 @@ for fol in inputs:
             subprocess.run(['./config.sh'.format(curdir), 'champsim_config.json'])
             
             trace_inital = fol.split('.')[1]
-            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 50000000 --trace_name {0} --policy {1} --size {2}".format(fol, replace_policy, size)
+            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 --trace_name {0} --policy {1} --size {2}".format(fol, replace_policy, size)
 
             with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                 op, er = proc.communicate()
