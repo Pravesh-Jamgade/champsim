@@ -533,13 +533,13 @@ int main(int argc, char** argv)
       TOTAL_MISS += cache->sim_miss[cpu][i];
     }
     float miss_ratio = (float)TOTAL_MISS/(float)TOTAL_ACCESS;
-    string result = trace_name + "," + cache->NAME + "," + to_string(cpu) + "," +to_string(miss_ratio);
+    string result = trace_name + "," + config + "," + cache->NAME + "," + to_string(cpu) + "," +to_string(miss_ratio);
     cache_file_stream << result << '\n';
   }
 
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
     float ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
-    string result = trace_name +","+to_string(i)+","+to_string(ipc); 
+    string result = trace_name+","+config+","+to_string(i)+","+to_string(ipc); 
     ipc_file_stream << result << '\n';
   }
 
