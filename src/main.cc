@@ -327,8 +327,8 @@ int main(int argc, char** argv)
   static struct option long_options[] = {{"warmup_instructions", required_argument, 0, 'w'},
                                          {"simulation_instructions", required_argument, 0, 'i'},
                                          {"trace_name", required_argument, 0, 't'},
-                                         {"policy", required_argument, 0, 'p'},
-                                         {"size", required_argument, 0, 's'},
+                                         {"policy_config", required_argument, 0, 'p'},
+                                         {"size_config", required_argument, 0, 's'},
                                          {"hide_heartbeat", no_argument, 0, 'h'},
                                          {"cloudsuite", no_argument, 0, 'c'},
                                          {"traces", no_argument, &traces_encountered, 1},
@@ -337,7 +337,7 @@ int main(int argc, char** argv)
                                          //config
 
   int c;
-  while ((c = getopt_long_only(argc, argv, "w:i:t:hc", long_options, NULL)) != -1 && !traces_encountered) {
+  while ((c = getopt_long_only(argc, argv, "w:i:t:p:s:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
     case 'w':
       warmup_instructions = atol(optarg);
@@ -361,7 +361,9 @@ int main(int argc, char** argv)
       policy_config = optarg;
       break;
     case 's':
-    size_config = optarg;
+      size_config = optarg;
+      cout << size_config;
+      break;
     default:
       abort();
     }
