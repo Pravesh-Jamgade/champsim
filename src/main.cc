@@ -524,10 +524,11 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  fstream cache_file_stream, ipc_file_stream, wv_file_stream;
+  fstream cache_file_stream, ipc_file_stream, wv_file_stream, exc_file_stream;
   cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
   ipc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
   wv_file_stream.open("write.log", fstream::in | fstream::out | fstream::app);
+  exc_file_stream.open("execution.log", fstream::in | fstream::out | fstream::app);
 
   for(auto cache: caches){
     uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;
@@ -546,6 +547,11 @@ int main(int argc, char** argv)
     float ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
     string result = trace_name+","+policy_config+","+size_config+","+to_string(i)+","+to_string(ipc); 
     ipc_file_stream << result << '\n';
+  }
+
+  for(uint32_t i=0; i< NUM_CPUS; i++){
+    string result = trace_name + "," + to_string(ooo_cpu[i]->finish_sim_cycle) + "," + to_string(ooo_cpu[i]->finish_sim_instr) + "," + to_string(elapsed_hour) + "," + to_string(elapsed_minute) + "," + to_string(elapsed_second);
+    exc_file_stream << result << '\n';
   }
 
   cache_file_stream.close();
