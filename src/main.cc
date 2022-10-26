@@ -621,7 +621,7 @@ int main(int argc, char** argv)
     total_expect += set_expect;
   }
 
-  double intra = ((double)100/(double)(llc->NUM_SET * total_avg_wr)) * total_expect;
+  double intra = ((double)1/(double)(llc->NUM_SET * total_avg_wr)) * total_expect;
 
   // *** inter 
   total_expect = 0;
