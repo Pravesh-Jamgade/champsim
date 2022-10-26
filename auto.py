@@ -105,6 +105,7 @@ for fol in inputs:
                 outfile.write(json_string)
 
             subprocess.run(['./config.sh'.format(curdir), 'champsim_config.json'])
+            subprocess.run(['make'])
             
             trace_path = os.path.join(curdir, "traces/{}".format(fol))
             trace_inital = fol.split('.')[1]
