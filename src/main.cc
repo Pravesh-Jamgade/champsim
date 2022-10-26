@@ -24,7 +24,7 @@ uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_
 uint64_t warmup_instructions = 1000000, simulation_instructions = 10000000;
 
 // ***
-string trace_name, config;
+string trace_name;
 
 auto start_time = time(NULL);
 
@@ -326,8 +326,6 @@ int main(int argc, char** argv)
   int traces_encountered = 0;
   static struct option long_options[] = {{"warmup_instructions", required_argument, 0, 'w'},
                                          {"simulation_instructions", required_argument, 0, 'i'},
-                                         {"trace_name", required_argument, 0, 't'},
-                                         {"config", required_argument, 0, 'k'},
                                          {"hide_heartbeat", no_argument, 0, 'h'},
                                          {"cloudsuite", no_argument, 0, 'c'},
                                          {"traces", no_argument, &traces_encountered, 1},
@@ -336,7 +334,7 @@ int main(int argc, char** argv)
                                          //config
 
   int c;
-  while ((c = getopt_long_only(argc, argv, "w:i:t:hc", long_options, NULL)) != -1 && !traces_encountered) {
+  while ((c = getopt_long_only(argc, argv, "w:i:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
     case 'w':
       warmup_instructions = atol(optarg);
@@ -352,12 +350,6 @@ int main(int argc, char** argv)
       MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS_SPARC;
       break;
     case 0:
-      break;
-    case 't':
-      trace_name = optarg;
-      break;  
-    case 'k':
-      config = optarg;
       break;
     default:
       abort();
@@ -533,13 +525,13 @@ int main(int argc, char** argv)
       TOTAL_MISS += cache->sim_miss[cpu][i];
     }
     float miss_ratio = (float)TOTAL_MISS/(float)TOTAL_ACCESS;
-    string result = trace_name + "," + config + "," + cache->NAME + "," + to_string(cpu) + "," +to_string(miss_ratio);
+    string result = cache->NAME + "," + to_string(cpu) + "," +to_string(miss_ratio);
     cache_file_stream << result << '\n';
   }
 
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
     float ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
-    string result = trace_name+","+config+","+to_string(i)+","+to_string(ipc); 
+    string result = to_string(i)+","+to_string(ipc); 
     ipc_file_stream << result << '\n';
   }
 
@@ -631,7 +623,7 @@ int main(int argc, char** argv)
 
   // printf("inter=%f, intra=%f\n", inter, intra);
 
-  wv_file_stream << trace_name<< "," << config << "," << inter << "," << intra << '\n';
+  wv_file_stream<< "," << "," << inter << "," << intra << '\n';
 
 
 #ifndef CRC2_COMPILE

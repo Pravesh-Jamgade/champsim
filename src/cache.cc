@@ -12,9 +12,6 @@
 #define NDEBUG
 #endif
 
-// ***
-#include "DBP.h"
-
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
@@ -38,12 +35,13 @@ void CACHE::handle_fill()
 
     bool success = filllike_miss(set, way, *fill_mshr);
 
+    
+    if (!success)
+      return;
+    
     // ***
     block[set*NUM_WAY + way].write_counter++;
     set_stat[set].writes++;
-
-    if (!success)
-      return;
 
     if (way != NUM_WAY) {
       // update processed packets
@@ -52,10 +50,6 @@ void CACHE::handle_fill()
       for (auto ret : fill_mshr->to_return)
         ret->return_data(&(*fill_mshr));
     }
-
-    // ***
-    // if MSHR entry was successfully filled
-    dbp.upon_access_miss(fill_mshr->instr_id);
 
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
@@ -77,38 +71,68 @@ void CACHE::handle_writeback()
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
-    if (way < NUM_WAY) // HIT
-    {
-      impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
+    // ***
+    bool do_not_write_bypass = dbp.lookup(handle_pkt.ip, NAME);
+    bool is_it_hit = way<NUM_WAY;
 
-      // COLLECT STATS
-      sim_hit[handle_pkt.cpu][handle_pkt.type]++;
-      sim_access[handle_pkt.cpu][handle_pkt.type]++;
+    bool testing = true;//change it to false to use write bypassing****
+    // upon write by pass enabled
+    if(!do_not_write_bypass && !testing){
+        if(is_it_hit){
+        //invalidate block
+        fill_block.valid=false;
+        }
+        else{
+          //it is a miss in cache and hence forward write request to lower_level
+        }
 
-      // mark dirty
-      fill_block.dirty = 1;
-    } else // MISS
-    {
-      bool success;
-      if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) {
-        success = readlike_miss(handle_pkt);
-      } else {
-        // find victim
-        auto set_begin = std::next(std::begin(block), set * NUM_WAY);
-        auto set_end = std::next(set_begin, NUM_WAY);
-        auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
-        way = std::distance(set_begin, first_inv);
-        if (way == NUM_WAY)
-          way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
-                                             handle_pkt.type);
-
-        success = filllike_miss(set, way, handle_pkt);
-      }
-
-      if (!success)
-        return;
+        //bypass write to lower_level
+        if(lower_level!=NULL)
+          lower_level->add_wq(&handle_pkt);
     }
+    
+    else{
+      if (way < NUM_WAY) // HIT
+      {
+        impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
 
+        // COLLECT STATS
+        sim_hit[handle_pkt.cpu][handle_pkt.type]++;
+        sim_access[handle_pkt.cpu][handle_pkt.type]++;
+
+        // mark dirty
+        fill_block.dirty = 1;
+
+        // ***
+        dbp.upon_access_hit(handle_pkt.ip);
+
+      } 
+      else // MISS
+      {
+        bool success;
+        if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) {
+          success = readlike_miss(handle_pkt);
+        } else {
+          // find victim
+          auto set_begin = std::next(std::begin(block), set * NUM_WAY);
+          auto set_end = std::next(set_begin, NUM_WAY);
+          auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
+          way = std::distance(set_begin, first_inv);
+          if (way == NUM_WAY)
+            way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
+                                              handle_pkt.type);
+
+          success = filllike_miss(set, way, handle_pkt);
+        }
+
+        // ***
+        dbp.upon_access_miss(handle_pkt.ip);
+
+        if (!success)
+          return;
+      }
+    }
+    
     // ***
     fill_block.write_counter++;
     set_stat[set].writes++;

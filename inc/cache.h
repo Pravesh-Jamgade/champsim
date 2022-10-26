@@ -94,6 +94,9 @@ public:
 
   void print_deadlock() override;
 
+  // ***
+  DBPModule dbp;  
+
 #include "cache_modules.inc"
 
   const repl_t repl_type;
@@ -108,11 +111,8 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+    dbp = DBPModule();
   }
-
-  // ***
-  // at LLC
-  DBPModule dbp;  
 };
 
 #endif
