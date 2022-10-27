@@ -107,9 +107,6 @@ for fol in inputs:
 
             with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                 op, er = proc.communicate()
-                lines = op.decode('utf-8').splitlines()
-                for line in lines:
-                    file_op.write(line)
          
             print("{} in {}  ..ok\n".format(combi_str, fol)) 
 
