@@ -24,7 +24,7 @@ uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_
 uint64_t warmup_instructions = 1000000, simulation_instructions = 10000000;
 
 // ***
-string trace_name;
+string config;
 
 auto start_time = time(NULL);
 
@@ -326,6 +326,7 @@ int main(int argc, char** argv)
   int traces_encountered = 0;
   static struct option long_options[] = {{"warmup_instructions", required_argument, 0, 'w'},
                                          {"simulation_instructions", required_argument, 0, 'i'},
+                                         {"config", required_argument, 0, 'a'},
                                          {"hide_heartbeat", no_argument, 0, 'h'},
                                          {"cloudsuite", no_argument, 0, 'c'},
                                          {"traces", no_argument, &traces_encountered, 1},
@@ -334,7 +335,7 @@ int main(int argc, char** argv)
                                          //config
 
   int c;
-  while ((c = getopt_long_only(argc, argv, "w:i:hc", long_options, NULL)) != -1 && !traces_encountered) {
+  while ((c = getopt_long_only(argc, argv, "w:i:a:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
     case 'w':
       warmup_instructions = atol(optarg);
@@ -348,6 +349,9 @@ int main(int argc, char** argv)
     case 'c':
       knob_cloudsuite = 1;
       MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS_SPARC;
+      break;
+    case 'a':
+      config = optarg;
       break;
     case 0:
       break;
@@ -512,9 +516,9 @@ int main(int argc, char** argv)
 
   // ***
   fstream cache_file_stream, ipc_file_stream, wv_file_stream;
-  cache_file_stream.open("cache.log", fstream::in  | fstream::app);
-  ipc_file_stream.open("ipc.log", fstream::in  | fstream::app);
-  wv_file_stream.open("write.log", fstream::in | fstream::app);
+  cache_file_stream.open("cache-"+config+".log", fstream::in  | fstream::app);
+  ipc_file_stream.open("ipc-"+config+".log", fstream::in  | fstream::app);
+  wv_file_stream.open("write-"+config+".log", fstream::in | fstream::app);
 
   for(auto cache: caches){
     uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;

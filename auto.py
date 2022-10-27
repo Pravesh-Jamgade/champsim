@@ -6,6 +6,7 @@ import shlex
 from os.path import exists
 
 import shutil
+import sunau
 
 inputs = [
     '410.bwaves-945B.champsimtrace.xz',
@@ -56,16 +57,6 @@ default_json_file = open(default_file_path, "r")
 
 cj = json.load(default_json_file)
 
-# for i in range(len(ways)):
-#     bag=[]
-#     combi(3, i, bag)
-
-
-for fol in inputs:
-    tmp = os.path.join(curdir, fol)
-    if exists(tmp):
-        shutil.rmtree(tmp)
-
 for fol in inputs:
     
     #check if trace exists
@@ -74,10 +65,6 @@ for fol in inputs:
     if not file_exist:
         print("{} ..fail".format(fol))
         continue
-
-    #create folder with trace name
-    savedir = os.path.join(curdir, fol)
-    os.mkdir(fol)
 
     #foreach trace use reaplce policy
     for replace_policy in replacement:
@@ -96,7 +83,7 @@ for fol in inputs:
             update(cache[0], "sets", sets)
             update(cache[0], "replacement", replace_policy)
 
-            combi_str = "{}-{}.log".format(size, replace_policy)
+            combi_str = "{}-{}".format(size, replace_policy)
 
             #saving new setting
             json_string = json.dumps(cj)
@@ -104,9 +91,10 @@ for fol in inputs:
                 outfile.write(json_string)
 
             subprocess.run(['./config.sh'.format(curdir), 'champsim_config.json'])
+            subprocess.run(['make'])
             
             trace_inital = fol.split('.')[1]
-            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 traces/{} --trace_name {} --config {}".format(fol, fol, combi_str)
+            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 20000000 traces/{} --config {}".format(fol, combi_str)
 
             with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                 op, er = proc.communicate()
