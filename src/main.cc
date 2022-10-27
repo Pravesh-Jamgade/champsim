@@ -530,7 +530,20 @@ int main(int argc, char** argv)
   wv_file_stream.open("write.log", fstream::in | fstream::out | fstream::app);
   exc_file_stream.open("execution.log", fstream::in | fstream::out | fstream::app);
 
+  string allowed[] = {"L1D", "L2C", "LLC"};
   for(auto cache: caches){
+
+    bool found = false;
+    for(auto our_cache: allowed){
+      if(cache->NAME == our_cache){
+        found = true;
+        break;
+      }
+    }
+
+    if(!found)
+      continue;
+    
     uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;
     int cpu = cache->cpu;
     for (uint32_t i = 0; i < NUM_TYPES; i++) {
@@ -550,12 +563,13 @@ int main(int argc, char** argv)
   }
 
   for(uint32_t i=0; i< NUM_CPUS; i++){
-    string result = trace_name + "," + to_string(ooo_cpu[i]->finish_sim_cycle) + "," + to_string(ooo_cpu[i]->finish_sim_instr) + "," + to_string(elapsed_hour) + "," + to_string(elapsed_minute) + "," + to_string(elapsed_second);
+    string result = trace_name+","+policy_config+","+size_config+","+to_string(ooo_cpu[i]->finish_sim_cycle)+","+to_string(ooo_cpu[i]->finish_sim_instr)+","+to_string(elapsed_hour)+","+to_string(elapsed_minute)+","+to_string(elapsed_second);
     exc_file_stream << result << '\n';
   }
 
   cache_file_stream.close();
   ipc_file_stream.close();
+  exc_file_stream.close();
 
   // // cache
   // for (auto it = caches.rbegin(); it != caches.rend(); ++it){
@@ -643,8 +657,8 @@ int main(int argc, char** argv)
   // printf("inter=%f, intra=%f\n", inter, intra);
 
   wv_file_stream << trace_name << "," << policy_config << "," << size_config << "," << inter << "," << intra << '\n';
-
-
+  wv_file_stream.close();
+  
 #ifndef CRC2_COMPILE
   print_dram_stats();
   print_branch_stats();
