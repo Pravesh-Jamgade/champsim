@@ -552,7 +552,7 @@ int main(int argc, char** argv)
       TOTAL_MISS += cache->sim_miss[cpu][i];
     }
     float miss_ratio = (float)TOTAL_MISS/(float)TOTAL_ACCESS;
-    string result = trace_name + "," + policy_config+ ","+ size_config+ "," + cache->NAME + "," + to_string(cpu) + "," +to_string(miss_ratio);
+    string result = trace_name + "," + policy_config+ ","+ size_config+ "," + cache->NAME + "," + to_string(cpu) + "," +to_string(TOTAL_MISS);
     cache_file_stream << result << '\n';
   }
 
@@ -563,7 +563,7 @@ int main(int argc, char** argv)
   }
 
   for(uint32_t i=0; i< NUM_CPUS; i++){
-    string result = trace_name+","+policy_config+","+size_config+","+to_string(ooo_cpu[i]->finish_sim_cycle)+","+to_string(ooo_cpu[i]->finish_sim_instr)+","+to_string(elapsed_hour)+","+to_string(elapsed_minute)+","+to_string(elapsed_second);
+    string result = trace_name+","+policy_config+","+size_config+","+to_string(elapsed_hour)+","+to_string(elapsed_minute)+","+to_string(elapsed_second);
     exc_file_stream << result << '\n';
   }
 
