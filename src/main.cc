@@ -602,7 +602,7 @@ int main(int argc, char** argv)
     total_expect += set_expect;
   }
 
-  double intra = ((double)100/(double)(llc->NUM_SET * total_avg_wr)) * total_expect;
+  double intra = ((double)1/(double)(llc->NUM_SET * total_avg_wr)) * total_expect;
 
   // *** inter 
   total_expect = 0;
@@ -621,10 +621,8 @@ int main(int argc, char** argv)
   total_expect = sqrt(total_expect);
   double inter = total_expect/total_avg_wr;
 
-  // printf("inter=%f, intra=%f\n", inter, intra);
-
   wv_file_stream<< "," << "," << inter << "," << intra << '\n';
-
+  wv_file_stream.close();
 
 #ifndef CRC2_COMPILE
   print_dram_stats();
