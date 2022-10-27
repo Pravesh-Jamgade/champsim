@@ -530,16 +530,7 @@ int main(int argc, char** argv)
   wv_file_stream.open("write.log", fstream::in | fstream::out | fstream::app);
   exc_file_stream.open("execution.log", fstream::in | fstream::out | fstream::app);
 
-  string allowed[] = {"L1D", "L2C", "LLC"};
   for(auto cache: caches){
-
-    bool found = false;
-    for(auto our_cache: allowed){
-      if(cache->NAME == our_cache){
-        found = true;
-        break;
-      }
-    }
 
     if(!found)
       continue;
