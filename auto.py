@@ -10,15 +10,15 @@ import sunau
 
 inputs = [
     '410.bwaves-945B.champsimtrace.xz',
-    '429.mcf-217B.champsimtrace.xz',
-    '433.milc-127B.champsimtrace.xz',
-    '434.zeusmp-10B.champsimtrace.xz',
-    '435.gromacs-111B.champsimtrace.xz',
-    '436.cactusADM-1804B.champsimtrace.xz',
-    '437.leslie3d-134B.champsimtrace.xz',
-    '444.namd-120B.champsimtrace.xz',
-    '445.gobmk-17B.champsimtrace.xz',
-    '447.dealII-3B.champsimtrace.xz'
+    # '429.mcf-217B.champsimtrace.xz',
+    # '433.milc-127B.champsimtrace.xz',
+    # '434.zeusmp-10B.champsimtrace.xz',
+    # '435.gromacs-111B.champsimtrace.xz',
+    # '436.cactusADM-1804B.champsimtrace.xz',
+    # '437.leslie3d-134B.champsimtrace.xz',
+    # '444.namd-120B.champsimtrace.xz',
+    # '445.gobmk-17B.champsimtrace.xz',
+    # '447.dealII-3B.champsimtrace.xz'
 ]
 
 allCombi=[]
@@ -58,6 +58,11 @@ default_json_file = open(default_file_path, "r")
 cj = json.load(default_json_file)
 
 for fol in inputs:
+    tmp = os.path.join(curdir, fol)
+    if exists(tmp):
+        shutil.rmtree(tmp)
+
+for fol in inputs:
     
     #check if trace exists
     file_exist = exists( os.path.join(curdir, "traces/{}".format(fol)))
@@ -65,6 +70,10 @@ for fol in inputs:
     if not file_exist:
         print("{} ..fail".format(fol))
         continue
+
+    #create folder with trace name
+    savedir = os.path.join(curdir, fol)
+    # os.mkdir(fol)
 
     #foreach trace use reaplce policy
     for replace_policy in replacement:
@@ -93,11 +102,14 @@ for fol in inputs:
             subprocess.run(['./config.sh'.format(curdir), 'champsim_config.json'])
             subprocess.run(['make'])
             
-            trace_inital = fol.split('.')[1]
-            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 20000000 traces/{} --config {}".format(fol, combi_str)
+            trace_path = os.path.join(curdir, "traces/{}".format(fol))
+            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
 
             with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                 op, er = proc.communicate()
+                lines = op.decode('utf-8').splitlines()
+                for line in lines:
+                    file_op.write(line)
          
             print("{} in {}  ..ok\n".format(combi_str, fol)) 
 

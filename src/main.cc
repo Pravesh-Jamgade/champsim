@@ -24,7 +24,7 @@ uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_
 uint64_t warmup_instructions = 1000000, simulation_instructions = 10000000;
 
 // ***
-string config;
+string trace_name, policy_config, size_config;
 
 auto start_time = time(NULL);
 
@@ -326,7 +326,9 @@ int main(int argc, char** argv)
   int traces_encountered = 0;
   static struct option long_options[] = {{"warmup_instructions", required_argument, 0, 'w'},
                                          {"simulation_instructions", required_argument, 0, 'i'},
-                                         {"config", required_argument, 0, 'a'},
+                                         {"trace_name", required_argument, 0, 't'},
+                                         {"policy_config", required_argument, 0, 'p'},
+                                         {"size_config", required_argument, 0, 's'},
                                          {"hide_heartbeat", no_argument, 0, 'h'},
                                          {"cloudsuite", no_argument, 0, 'c'},
                                          {"traces", no_argument, &traces_encountered, 1},
@@ -335,7 +337,7 @@ int main(int argc, char** argv)
                                          //config
 
   int c;
-  while ((c = getopt_long_only(argc, argv, "w:i:a:hc", long_options, NULL)) != -1 && !traces_encountered) {
+  while ((c = getopt_long_only(argc, argv, "w:i:t:p:s:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
     case 'w':
       warmup_instructions = atol(optarg);
@@ -350,8 +352,15 @@ int main(int argc, char** argv)
       knob_cloudsuite = 1;
       MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS_SPARC;
       break;
-    case 'a':
-      config = optarg;
+    case 't':
+      trace_name = optarg;
+      break;  
+    case 'p':
+      policy_config = optarg;
+      break;
+    case 's':
+      size_config = optarg;
+      cout << size_config;
       break;
     case 0:
       break;
@@ -515,10 +524,11 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  fstream cache_file_stream, ipc_file_stream, wv_file_stream;
-  cache_file_stream.open("cache-"+config+".log", fstream::in  | fstream::app);
-  ipc_file_stream.open("ipc-"+config+".log", fstream::in  | fstream::app);
-  wv_file_stream.open("write-"+config+".log", fstream::in | fstream::app);
+  fstream cache_file_stream, exc_file_stream, wv_file_stream, run_file_stream;
+  cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
+  exc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
+  wv_file_stream.open("write.log", fstream::in | fstream::out | fstream::app);
+  run_file_stream.open("output.log", fstream::in | fstream::out | fstream::app);
 
   for(auto cache: caches){
     uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;
@@ -529,18 +539,21 @@ int main(int argc, char** argv)
       TOTAL_MISS += cache->sim_miss[cpu][i];
     }
     float miss_ratio = (float)TOTAL_MISS/(float)TOTAL_ACCESS;
-    string result = cache->NAME + "," + to_string(cpu) + "," +to_string(miss_ratio);
+    string result = trace_name + "," + policy_config+ ","+ size_config+ "," + cache->NAME + "," + to_string(cpu) + "," +to_string(TOTAL_MISS);
     cache_file_stream << result << '\n';
+
+    string result2 = trace_name + "," + policy_config+ ","+ size_config+ "," + cache->NAME + "," + to_string(cache->dbp.coverage) + "," + to_string(cache->dbp.accuracy);
+    run_file_stream << result2 << '\n';
   }
 
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
     float ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
-    string result = to_string(i)+","+to_string(ipc); 
-    ipc_file_stream << result << '\n';
+    string result = trace_name+","+policy_config+","+size_config+","+to_string(i)+","+to_string(ipc)+",["+to_string(elapsed_hour)+"."+to_string(elapsed_minute)+"."+to_string(elapsed_second)+"]";
+    exc_file_stream << result << '\n';
   }
 
   cache_file_stream.close();
-  ipc_file_stream.close();
+  exc_file_stream.close();
 
   // // cache
   // for (auto it = caches.rbegin(); it != caches.rend(); ++it){
@@ -583,7 +596,7 @@ int main(int argc, char** argv)
 
   uint64_t total_blocks = llc->NUM_SET * llc->NUM_WAY;
 
-  double total_avg_wr = (double)total_write_count/(double)total_blocks;
+  double total_avg_wr = ((double)total_write_count)/((double)total_blocks);
 
   // *** intra
   double total_expect = 0;
@@ -625,9 +638,9 @@ int main(int argc, char** argv)
   total_expect = sqrt(total_expect);
   double inter = total_expect/total_avg_wr;
 
-  wv_file_stream<< "," << "," << inter << "," << intra << '\n';
+  wv_file_stream << trace_name << "," << policy_config << "," << size_config << "," << inter << "," << intra << '\n';
   wv_file_stream.close();
-
+  
 #ifndef CRC2_COMPILE
   print_dram_stats();
   print_branch_stats();
