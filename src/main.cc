@@ -532,9 +532,6 @@ int main(int argc, char** argv)
 
   for(auto cache: caches){
 
-    if(!found)
-      continue;
-    
     uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;
     int cpu = cache->cpu;
     for (uint32_t i = 0; i < NUM_TYPES; i++) {
