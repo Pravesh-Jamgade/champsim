@@ -8,7 +8,7 @@
 
 #define IntPtr uint64_t
 #define MAX 3
-#define HMAX 2
+#define HMAX 1
 
 #define UT 400
 #define MT 200

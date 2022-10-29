@@ -75,7 +75,7 @@ void CACHE::handle_writeback()
     bool do_not_write_bypass = dbp.lookup(handle_pkt.ip, NAME);
     bool is_it_hit = way<NUM_WAY;
 
-    bool testing = true;//change it to false to use write bypassing****
+    bool testing = false;//change it to false to use write bypassing****
     // upon write by pass enabled
     if(!do_not_write_bypass && !testing){
         if(is_it_hit){
