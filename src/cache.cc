@@ -35,10 +35,6 @@ void CACHE::handle_fill()
 
     bool success = filllike_miss(set, way, *fill_mshr);
 
-     // ***
-    block[set*NUM_WAY + way].write_counter++;
-    set_stat[set].writes++;
-
     if (!success)
       return;
 
@@ -49,6 +45,11 @@ void CACHE::handle_fill()
       for (auto ret : fill_mshr->to_return)
         ret->return_data(&(*fill_mshr));
     }
+
+      // ***
+    block[set*NUM_WAY + way].write_counter++;
+    set_stat[set].writes++;
+    aatable.insert(fill_mshr->address, 1);
 
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
@@ -105,6 +106,7 @@ void CACHE::handle_writeback()
     // ***
     fill_block.write_counter++;
     set_stat[set].writes++;
+    aatable.insert(handle_pkt.address, 1);
 
     // remove this entry from WQ
     writes_available_this_cycle--;
@@ -141,6 +143,7 @@ void CACHE::handle_read()
     // ***
     // set_stat[set].reads++;
     block[set*NUM_WAY + way].read_counter++;
+    aatable.insert(handle_pkt.address, 0);
 
     // remove this entry from RQ
     RQ.pop_front();
