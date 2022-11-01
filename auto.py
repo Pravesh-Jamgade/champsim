@@ -10,15 +10,15 @@ import sunau
 
 inputs = [
     '410.bwaves-945B.champsimtrace.xz',
-    '429.mcf-217B.champsimtrace.xz',
-    '433.milc-127B.champsimtrace.xz',
-    '434.zeusmp-10B.champsimtrace.xz',
-    '435.gromacs-111B.champsimtrace.xz',
-    '436.cactusADM-1804B.champsimtrace.xz',
-    '437.leslie3d-134B.champsimtrace.xz',
-    '444.namd-120B.champsimtrace.xz',
-    '445.gobmk-17B.champsimtrace.xz',
-    '447.dealII-3B.champsimtrace.xz'
+    # '429.mcf-217B.champsimtrace.xz',
+    # '433.milc-127B.champsimtrace.xz',
+    # '434.zeusmp-10B.champsimtrace.xz',
+    # '435.gromacs-111B.champsimtrace.xz',
+    # '436.cactusADM-1804B.champsimtrace.xz',
+    # '437.leslie3d-134B.champsimtrace.xz',
+    # '444.namd-120B.champsimtrace.xz',
+    # '445.gobmk-17B.champsimtrace.xz',
+    # '447.dealII-3B.champsimtrace.xz'
 ]
 
 allCombi=[]
@@ -99,11 +99,14 @@ for fol in inputs:
             with open(config_file_path, 'w') as outfile:
                 outfile.write(json_string)
 
-            subprocess.run(['./config.sh'.format(curdir), 'champsim_config.json'])
-            subprocess.run(['make'])
+            with subprocess.run(['./config.sh'.format(curdir), 'champsim_config.json']) as config_proc:
+                op, er = config_proc.communicate()
+            
+            with subprocess.run(['make']) as make_proc:
+                op, er = make_proc.communicate()
             
             trace_path = os.path.join(curdir, "traces/{}".format(fol))
-            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
+            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 50000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
 
             with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                 op, er = proc.communicate()

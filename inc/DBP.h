@@ -48,6 +48,7 @@ class DBPModule
     bool learning_period(){
         if(wr_counter < MT)
             return true;
+        cout << "[Trigger]" << epoc_dbp <<'\n';
         return false;
     }
     
