@@ -333,6 +333,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
         return false;
+      
+      // ***
+      aatable.evict(writeback_packet.address);
     }
 
     if (ever_seen_data)
