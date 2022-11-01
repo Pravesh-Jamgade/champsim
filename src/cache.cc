@@ -72,6 +72,9 @@ void CACHE::handle_writeback()
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
     // ***
+    if(NAME == "LLC"){
+      cout << "before\n";
+    }
     bool do_not_write_bypass = dbp.lookup(handle_pkt.ip, NAME);
     bool is_it_hit = way<NUM_WAY;
 
