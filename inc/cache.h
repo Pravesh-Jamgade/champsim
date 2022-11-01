@@ -12,6 +12,9 @@
 #include "ooo_cpu.h"
 #include "operable.h"
 
+// ***
+#include "AInfo.h"
+
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
@@ -96,6 +99,9 @@ public:
   const repl_t repl_type;
   const pref_t pref_type;
 
+  // ***
+  AATable aatable;
+
   // constructor
   CACHE(std::string v1, double freq_scale, unsigned fill_level, uint32_t v2, int v3, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8, uint32_t hit_lat,
         uint32_t fill_lat, uint32_t max_read, uint32_t max_write, std::size_t offset_bits, bool pref_load, bool wq_full_addr, bool va_pref,
@@ -105,6 +111,7 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+    aatable = AATable();
   }
 };
 
