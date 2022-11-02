@@ -16,8 +16,8 @@ inputs = [
     # '436.cactusADM-1804B.champsimtrace.xz',
     # '437.leslie3d-134B.champsimtrace.xz',
     # '444.namd-120B.champsimtrace.xz',
-    # '445.gobmk-17B.champsimtrace.xz',
-    # '447.dealII-3B.champsimtrace.xz'
+    '445.gobmk-17B.champsimtrace.xz',
+    '447.dealII-3B.champsimtrace.xz'
 ]
 
 allCombi=[]
