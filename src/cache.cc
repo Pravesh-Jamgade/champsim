@@ -15,6 +15,14 @@
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
+/**
+ * @brief called for write operations.
+ * 1. If MSHR entry has received Data from lower level memory then find cacheline and allocate for it.
+ *    Possible that it could allocate on invalid line or find replacement candidate for it.
+ * 2. Not finding invalid line, calls filllike_miss, which writeback replacement candidate by allcating MSHR for 
+ *    current cache and WQ entry to lower level cache.
+ * 
+ */
 void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
@@ -81,6 +89,10 @@ void CACHE::handle_writeback()
 
       // mark dirty
       fill_block.dirty = 1;
+
+      // ***
+      aatable.insert(handle_pkt.address, 1);
+
     } else // MISS
     {
       bool success;
@@ -106,7 +118,6 @@ void CACHE::handle_writeback()
     // ***
     fill_block.write_counter++;
     set_stat[set].writes++;
-    aatable.insert(handle_pkt.address, 1);
 
     // remove this entry from WQ
     writes_available_this_cycle--;
@@ -134,6 +145,9 @@ void CACHE::handle_read()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
+
+      // ***
+      aatable.insert(handle_pkt.address, 0);
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
@@ -143,7 +157,6 @@ void CACHE::handle_read()
     // ***
     // set_stat[set].reads++;
     block[set*NUM_WAY + way].read_counter++;
-    aatable.insert(handle_pkt.address, 0);
 
     // remove this entry from RQ
     RQ.pop_front();
@@ -166,6 +179,8 @@ void CACHE::handle_prefetch()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
+      // ***
+      aatable.insert(handle_pkt.address, 0);
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
@@ -182,6 +197,14 @@ void CACHE::handle_prefetch()
   }
 }
 
+/**
+ * @brief upon hit called from [incomplete list may be... handle_read, ].
+ * Send data to upper-level cache.
+ * 
+ * @param set 
+ * @param way 
+ * @param handle_pkt 
+ */
 void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
   DP(if (warmup_complete[handle_pkt.cpu]) {
@@ -221,6 +244,16 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   }
 }
 
+/**
+ * @brief upon miss called from [incomplete list.. handle_read(),]
+ * 1.Check if already this miss is exists in MSHR and merge these request as well.
+ *    Otherwise allocate one.
+ * 2.Do prefetcher related stuff :TODO understand how prefetcher is learning
+ * 3.Forward request to lower level read queue
+ * @param handle_pkt 
+ * @return true 
+ * @return false 
+ */
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
   DP(if (warmup_complete[handle_pkt.cpu]) {

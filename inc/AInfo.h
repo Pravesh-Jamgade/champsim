@@ -61,6 +61,9 @@ class AATable{
     void insert(IntPtr key, bool op){
         pos++;
 
+        if(op)
+            return;
+        
         if(evicted_list.size()!=0){
             auto findE = evicted_list.find(key);
             // address was evicted recently
@@ -71,18 +74,13 @@ class AATable{
 
         auto findK = aamap.find(key);
         if(findK!=aamap.end()){
-            if(op){
-                findK->second.writes++;
-            }
+            findK->second.writes++;
         }
         else{
-            if(op){
-                aamap.insert({key,AAInfo(pos)});//with first store access postion
-            }
+            aamap.insert({key,AAInfo(pos)});//with first store access postion
         }
 
-        if(op)
-            aamap[key].last_pos = pos; //with last store access position
+        aamap[key].last_pos = pos; //with last store access position
     }
 
     // evict address from cache
@@ -101,6 +99,12 @@ class AATable{
             if(findf!=aafinal.end()){
                 findf->second.live_interval_len.push_back(length);
                 findf->second.writes_seen.push_back(writes);
+            }
+            else{
+                auto temp = AAFinal();
+                temp.live_interval_len.push_back(length);
+                temp.writes_seen.push_back(writes);
+                aafinal.insert({key, temp});
             }
 
             aamap.erase(findK);                 // removed from live list
