@@ -130,9 +130,6 @@ void CACHE::handle_writeback()
     fill_block.write_counter++;
     set_stat[set].writes++;
 
-     // *** cacheline exist /hit
-      aatable.insert(handle_pkt.address, hit);
-
     // remove this entry from WQ
     writes_available_this_cycle--;
     WQ.pop_front();
@@ -171,7 +168,6 @@ void CACHE::handle_read()
     // ***
     // set_stat[set].reads++;
     block[set*NUM_WAY + way].read_counter++;
-    aatable.insert(handle_pkt.address, hit);
 
     // remove this entry from RQ
     RQ.pop_front();
@@ -206,7 +202,6 @@ void CACHE::handle_prefetch()
     // ***
     // set_stat[set].reads++;
     block[set*NUM_WAY + way].read_counter++;
-    aatable.insert(handle_pkt.address, hit);
     
     // remove this entry from PQ
     PQ.pop_front();
@@ -579,6 +574,9 @@ int CACHE::add_wq(PACKET* packet)
 
   WQ_TO_CACHE++;
   WQ_ACCESS++;
+
+  // ***
+  aatable.increase_write_count(packet->type);
 
   return WQ.occupancy();
 }
