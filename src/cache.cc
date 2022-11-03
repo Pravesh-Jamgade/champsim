@@ -17,9 +17,10 @@ extern uint8_t warmup_complete[NUM_CPUS];
 
 /**
  * @brief called for write operations.
- * 1. If MSHR entry has received Data from lower level memory then find cacheline and allocate for it.
- *    Possible that it could allocate on invalid line or find replacement candidate for it.
- * 2. Not finding invalid line, calls filllike_miss, which writeback replacement candidate by allcating MSHR for 
+ * ***Memory-side write [prefetch write, demand write(not core write)]\n ***
+ * 1. If MSHR entry has received Data from lower level memory then find cacheline and allocate for it.\n
+ *    Possible that it could allocate on invalid line or find replacement candidate for it.\n
+ * 2. Not finding invalid line, calls filllike_miss, which writeback replacement candidate by allcating MSHR for\n
  *    current cache and WQ entry to lower level cache.
  * 
  */
@@ -57,15 +58,25 @@ void CACHE::handle_fill()
       // ***
     block[set*NUM_WAY + way].write_counter++;
     set_stat[set].writes++;
-    aatable.insert(fill_mshr->address, 1);
 
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
   }
 }
 
+/**
+ * @brief 
+ * *** process Write Queue ***.
+ * 1. hit 
+ * 2. miss: if entry was served while being waiting in queue; find candidate to put data
+ * there could be invalid line otherwise replacement candidate
+ * 3. miss: if entry is not served while waiting in in queue; allocate MSHR; fwd req to lower level
+ */
 void CACHE::handle_writeback()
 {
+  // ***
+  bool hit = false;
+
   while (writes_available_this_cycle > 0) {
     if (!WQ.has_ready())
       return;
@@ -91,7 +102,7 @@ void CACHE::handle_writeback()
       fill_block.dirty = 1;
 
       // ***
-      aatable.insert(handle_pkt.address, 1);
+      hit = true;
 
     } else // MISS
     {
@@ -119,6 +130,9 @@ void CACHE::handle_writeback()
     fill_block.write_counter++;
     set_stat[set].writes++;
 
+     // *** cacheline exist /hit
+      aatable.insert(handle_pkt.address, hit);
+
     // remove this entry from WQ
     writes_available_this_cycle--;
     WQ.pop_front();
@@ -127,6 +141,8 @@ void CACHE::handle_writeback()
 
 void CACHE::handle_read()
 {
+  // ***
+  bool hit = false;
   while (reads_available_this_cycle > 0) {
 
     if (!RQ.has_ready())
@@ -145,9 +161,7 @@ void CACHE::handle_read()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
-
-      // ***
-      aatable.insert(handle_pkt.address, 0);
+      hit = true;
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
@@ -157,6 +171,7 @@ void CACHE::handle_read()
     // ***
     // set_stat[set].reads++;
     block[set*NUM_WAY + way].read_counter++;
+    aatable.insert(handle_pkt.address, hit);
 
     // remove this entry from RQ
     RQ.pop_front();
@@ -166,6 +181,8 @@ void CACHE::handle_read()
 
 void CACHE::handle_prefetch()
 {
+  // ***
+  bool hit = false;
   while (reads_available_this_cycle > 0) {
     if (!PQ.has_ready())
       return;
@@ -179,8 +196,7 @@ void CACHE::handle_prefetch()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
-      // ***
-      aatable.insert(handle_pkt.address, 0);
+      hit = true;
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
@@ -190,7 +206,8 @@ void CACHE::handle_prefetch()
     // ***
     // set_stat[set].reads++;
     block[set*NUM_WAY + way].read_counter++;
-
+    aatable.insert(handle_pkt.address, hit);
+    
     // remove this entry from PQ
     PQ.pop_front();
     reads_available_this_cycle--;
@@ -366,9 +383,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
         return false;
-      
-      // ***
-      aatable.evict(writeback_packet.address);
     }
 
     if (ever_seen_data)

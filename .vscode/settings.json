@@ -6,6 +6,8 @@
         "*.tcc": "cpp",
         "fstream": "cpp",
         "array": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "set": "cpp",
+        "iostream": "cpp"
     }
 }
