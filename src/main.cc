@@ -524,14 +524,13 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  fstream cache_file_stream, ipc_file_stream, wv_file_stream, exc_file_stream, address_avg_file_stream, address_all_file_stream;
+  fstream cache_file_stream, ipc_file_stream, wv_file_stream, exc_file_stream, wr_type_fs;
 
   cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
   ipc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
   wv_file_stream.open("write.log", fstream::in | fstream::out | fstream::app);
   exc_file_stream.open("execution.log", fstream::in | fstream::out | fstream::app);
-  address_avg_file_stream.open("address_avg.log", fstream::in | fstream::out | fstream::app);
-  address_all_file_stream.open("address_all.log", fstream::in | fstream::out | fstream::app);
+  wr_type_fs.open("wrtype.log", fstream::in | fstream::out | fstream::app);
 
   for(auto cache: caches){
 
@@ -645,26 +644,11 @@ int main(int argc, char** argv)
   total_expect = sqrt(total_expect);
   double inter = total_expect/total_avg_wr;
 
-  // printf("inter=%f, intra=%f\n", inter, intra);
-
   wv_file_stream << trace_name << "," << policy_config << "," << size_config << "," << inter << "," << intra << '\n';
   wv_file_stream.close();
 
-  vector<string> all_addr_avg_data, all_addr_data;
+  llc->aatable.type_of_writes.print();
 
-  all_addr_avg_data = llc->aatable.process_final(all_addr_data);
-
-  for(auto st:all_addr_avg_data ){
-    address_avg_file_stream << trace_name << "," << policy_config << "," << size_config << "," << st << '\n';
-  }
-
-  for(auto st: all_addr_data){
-   address_all_file_stream << trace_name << "," << policy_config << "," << size_config << "," << st << '\n';
-  }
-
-  address_all_file_stream.close();
-  address_avg_file_stream.close();
-  
 #ifndef CRC2_COMPILE
   print_dram_stats();
   print_branch_stats();

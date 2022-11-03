@@ -38,14 +38,39 @@ class WType
     public:
     //  all of these writes will be added in WQ
     //  0->core write, demand-miss write, prefetch-write
-    IntPtr wr_type[3];
+    IntPtr wr_type[6];
     WType(){
-        wr_type[3] = {0};
+        wr_type[6] = {0};
+    }
+
+    string get_type(int i){
+        switch(i){
+            case 0: return "LOAD";
+            case 1: return "RFO";
+            case 2: return "PREFETCH";
+            case 3: return "WRITEBACK";
+            case 4: return "TRANSLATION";
+            case 5: return "NUM_TYPES";
+        }
     }
 
     void inc(WriteType wt){
         wr_type[wt]++;
     }
+
+    void print(){
+        cout << "Writes Type Count:\n";
+        for(int i=0 ;i< 6; i++){
+            cout << get_type(i) <<":"<< wr_type[i] << '\n';
+        }
+    }
+};
+
+
+class AAinfo{
+    public:
+    int writes;
+        
 };
 
 /**
