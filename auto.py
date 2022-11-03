@@ -9,15 +9,15 @@ import shutil
 
 inputs = [
     '410.bwaves-945B.champsimtrace.xz',
-    # '429.mcf-217B.champsimtrace.xz',
-    # '433.milc-127B.champsimtrace.xz',
-    # '434.zeusmp-10B.champsimtrace.xz',
-    # '435.gromacs-111B.champsimtrace.xz',
-    # '436.cactusADM-1804B.champsimtrace.xz',
-    # '437.leslie3d-134B.champsimtrace.xz',
-    # '444.namd-120B.champsimtrace.xz',
+    '433.milc-127B.champsimtrace.xz',
+    '434.zeusmp-10B.champsimtrace.xz',
+    '435.gromacs-111B.champsimtrace.xz',
+    '436.cactusADM-1804B.champsimtrace.xz',
+    '437.leslie3d-134B.champsimtrace.xz',
+    '444.namd-120B.champsimtrace.xz',
     '445.gobmk-17B.champsimtrace.xz',
-    '447.dealII-3B.champsimtrace.xz'
+    '447.dealII-3B.champsimtrace.xz',
+    '429.mcf-217B.champsimtrace.xz'
 ]
 
 allCombi=[]

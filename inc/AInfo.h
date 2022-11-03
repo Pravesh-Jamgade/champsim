@@ -58,11 +58,14 @@ class WType
         wr_type[wt]++;
     }
 
-    void print(){
-        cout << "Writes Type Count:\n";
+    vector<string> print(){
+        vector<string> vec;
         for(int i=0 ;i< 6; i++){
-            cout << get_type(i) <<":"<< wr_type[i] << '\n';
+            string st = "";
+            st = get_type(i) + "," + to_string(wr_type[i]);
+            vec.push_back(st);
         }
+        return vec;
     }
 };
 
@@ -70,7 +73,7 @@ class WType
 class AAinfo{
     public:
     int writes;
-        
+
 };
 
 /**

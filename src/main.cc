@@ -647,7 +647,11 @@ int main(int argc, char** argv)
   wv_file_stream << trace_name << "," << policy_config << "," << size_config << "," << inter << "," << intra << '\n';
   wv_file_stream.close();
 
-  llc->aatable.type_of_writes.print();
+  vector<string> vec = llc->aatable.type_of_writes.print();
+  for(auto st: vec){
+    wr_type_fs << trace_name << "," << policy_config << "," << size_config << "," << st << '\n';
+  }
+  wr_type_fs.close();
 
 #ifndef CRC2_COMPILE
   print_dram_stats();
