@@ -90,7 +90,10 @@ void CACHE::handle_writeback()
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
-    if (way < NUM_WAY) // HIT
+    bool is_it_hit = way < NUM_WAY;
+    bool predicition = pcinfo.feed(handle_pkt.ip, is_it_hit);
+
+    if (predicition) // HIT
     {
       impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
 

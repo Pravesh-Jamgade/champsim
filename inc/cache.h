@@ -14,6 +14,7 @@
 
 // ***
 #include "AInfo.h"
+#include "PCInfo.h"
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -101,6 +102,7 @@ public:
 
   // ***
   AATable aatable;
+  PCinfo pcinfo;
 
   // constructor
   CACHE(std::string v1, double freq_scale, unsigned fill_level, uint32_t v2, int v3, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8, uint32_t hit_lat,
@@ -112,6 +114,7 @@ public:
         repl_type(repl), pref_type(pref)
   {
     aatable = AATable();
+    pcinfo = PCinfo();
   }
 };
 
