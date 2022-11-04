@@ -91,44 +91,83 @@ void CACHE::handle_writeback()
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
     bool is_it_hit = way < NUM_WAY;
-    bool predicition = pcinfo.feed(handle_pkt.ip, is_it_hit);
+    bool write_by_pass = pcinfo.feed(handle_pkt.ip, is_it_hit);
+    
+    if(NAME == "LLC"){
+      //hit
+      if(is_it_hit){
+        //bypass
+        if(write_by_pass){
+          // invalid existing line + write to mm
+          fill_block.valid = 0;
+          filllike_miss(set, NUM_WAY, handle_pkt);
+        }
+        //donot bypass
+        else{
+          // write at llc (usual case)
+          impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
 
-    if (predicition) // HIT
-    {
-      impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
+          // COLLECT STATS
+          sim_hit[handle_pkt.cpu][handle_pkt.type]++;
+          sim_access[handle_pkt.cpu][handle_pkt.type]++;
 
-      // COLLECT STATS
-      sim_hit[handle_pkt.cpu][handle_pkt.type]++;
-      sim_access[handle_pkt.cpu][handle_pkt.type]++;
-
-      // mark dirty
-      fill_block.dirty = 1;
-
-      // ***
-      hit = true;
-
-    } else // MISS
-    {
-      bool success;
-      if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) {
-        success = readlike_miss(handle_pkt);
-      } else {
-        // find victim
-        auto set_begin = std::next(std::begin(block), set * NUM_WAY);
-        auto set_end = std::next(set_begin, NUM_WAY);
-        auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
-        way = std::distance(set_begin, first_inv);
-        if (way == NUM_WAY)
-          way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
-                                             handle_pkt.type);
-
-        success = filllike_miss(set, way, handle_pkt);
+          // mark dirty
+          fill_block.dirty = 1;
+        }
       }
-
-      if (!success)
-        return;
+      //miss
+      else{
+        //bypass
+        if(write_by_pass){
+          // write to mm
+          filllike_miss(set, NUM_WAY, handle_pkt);
+        }
+        //donot bypass
+        else{
+          // MSHR, next WQ
+          readlike_miss(handle_pkt);
+        }
+      }
     }
 
+    else{
+        if (is_it_hit) // HIT
+        {
+          impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
+
+          // COLLECT STATS
+          sim_hit[handle_pkt.cpu][handle_pkt.type]++;
+          sim_access[handle_pkt.cpu][handle_pkt.type]++;
+
+          // mark dirty
+          fill_block.dirty = 1;
+
+          // ***
+          hit = true;
+
+        } else // MISS
+        {
+          bool success;
+          if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) {
+            success = readlike_miss(handle_pkt);
+          } else {
+            // find victim
+            auto set_begin = std::next(std::begin(block), set * NUM_WAY);
+            auto set_end = std::next(set_begin, NUM_WAY);
+            auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
+            way = std::distance(set_begin, first_inv);
+            if (way == NUM_WAY)
+              way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
+                                                handle_pkt.type);
+
+            success = filllike_miss(set, way, handle_pkt);
+          }
+
+          if (!success)
+            return;
+        }
+    }
+   
     // ***
     fill_block.write_counter++;
     set_stat[set].writes++;

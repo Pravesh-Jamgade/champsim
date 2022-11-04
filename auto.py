@@ -9,15 +9,15 @@ import shutil
 
 inputs = [
     '410.bwaves-945B.champsimtrace.xz',
-    '429.mcf-217B.champsimtrace.xz',
-    '433.milc-127B.champsimtrace.xz',
-    '434.zeusmp-10B.champsimtrace.xz',
-    '435.gromacs-111B.champsimtrace.xz',
-    '436.cactusADM-1804B.champsimtrace.xz',
-    '437.leslie3d-134B.champsimtrace.xz',
-    '444.namd-120B.champsimtrace.xz',
-    '445.gobmk-17B.champsimtrace.xz',
-    '447.dealII-3B.champsimtrace.xz'
+    # '429.mcf-217B.champsimtrace.xz',
+    # '433.milc-127B.champsimtrace.xz',
+    # '434.zeusmp-10B.champsimtrace.xz',
+    # '435.gromacs-111B.champsimtrace.xz',
+    # '436.cactusADM-1804B.champsimtrace.xz',
+    # '437.leslie3d-134B.champsimtrace.xz',
+    # '444.namd-120B.champsimtrace.xz',
+    # '445.gobmk-17B.champsimtrace.xz',
+    # '447.dealII-3B.champsimtrace.xz'
 ]
 
 allCombi=[]
@@ -67,6 +67,9 @@ for fol in inputs:
     if exists(tmp):
         shutil.rmtree(tmp)
 
+
+result_status = []
+
 for fol in inputs:
     
     #check if trace exists
@@ -111,11 +114,14 @@ for fol in inputs:
             trace_inital = fol.split('.')[1]
             cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
 
-            with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+            result_str = "{},{} ".format(combi_str, fol)
+            proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            try:
                 op, er = proc.communicate()
-                lines = op.decode('utf-8').splitlines()
-                for line in lines:
-                    file_op.write(line)
+                result_status.append(result_str+"..pass")
+            except:
+                result_status.append(result_str+"..fail")
+            
          
             ## output cache.log and ipc.log
             # for path in os.listdir(curdir):
@@ -129,8 +135,11 @@ for fol in inputs:
             #             newfile = os.path.join(savedir,log_file_name)
             #             os.system('mv {} {}'.format(file, newfile))
             
-            print("{} in {}  ..ok\n".format(combi_str, fol)) 
-
+            
+            result_status.append(result_str)
 
 default_json_file.close()
+
+for st in result_status:
+    print(st, "..ok\n")
             
