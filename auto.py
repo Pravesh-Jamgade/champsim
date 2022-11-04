@@ -9,6 +9,7 @@ import shutil
 
 inputs = [
     '410.bwaves-945B.champsimtrace.xz',
+    '429.mcf-217B.champsimtrace.xz',
     '433.milc-127B.champsimtrace.xz',
     '434.zeusmp-10B.champsimtrace.xz',
     '435.gromacs-111B.champsimtrace.xz',
@@ -16,8 +17,7 @@ inputs = [
     '437.leslie3d-134B.champsimtrace.xz',
     '444.namd-120B.champsimtrace.xz',
     '445.gobmk-17B.champsimtrace.xz',
-    '447.dealII-3B.champsimtrace.xz',
-    '429.mcf-217B.champsimtrace.xz'
+    '447.dealII-3B.champsimtrace.xz'
 ]
 
 allCombi=[]
@@ -111,7 +111,24 @@ for fol in inputs:
             trace_inital = fol.split('.')[1]
             cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
 
-            subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+                op, er = proc.communicate()
+                lines = op.decode('utf-8').splitlines()
+                for line in lines:
+                    file_op.write(line)
+         
+            ## output cache.log and ipc.log
+            # for path in os.listdir(curdir):
+            #     file = os.path.join(curdir, path)
+            #     if os.path.isfile(file):
+            #         if path.endswith('.log'):
+            #             log_file_name = path.split('.')[0]#cache
+            #             if log_file_name == 'writes':
+            #                 continue
+            #             log_file_name =  log_file_name +'-'+ combi_str#cache-combi-str.log
+            #             newfile = os.path.join(savedir,log_file_name)
+            #             os.system('mv {} {}'.format(file, newfile))
+            
             print("{} in {}  ..ok\n".format(combi_str, fol)) 
 
 
