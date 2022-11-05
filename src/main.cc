@@ -524,13 +524,14 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  fstream cache_file_stream, ipc_file_stream, wv_file_stream, exc_file_stream, wr_type_fs;
+  fstream cache_file_stream, ipc_file_stream, wr_type_fs, llc_data_fs;
 
   cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
   ipc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
-  wv_file_stream.open("write.log", fstream::in | fstream::out | fstream::app);
-  exc_file_stream.open("execution.log", fstream::in | fstream::out | fstream::app);
   wr_type_fs.open("wrtype.log", fstream::in | fstream::out | fstream::app);
+  llc_data_fs.open("data.log", fstream::in | fstream::out | fstream::app);
+
+  string common_string = trace_name+","+policy_config+","+size_config;
 
   for(auto cache: caches){
 
@@ -552,14 +553,8 @@ int main(int argc, char** argv)
     ipc_file_stream << result << '\n';
   }
 
-  for(uint32_t i=0; i< NUM_CPUS; i++){
-    string result = trace_name+","+policy_config+","+size_config+","+to_string(elapsed_hour)+","+to_string(elapsed_minute)+","+to_string(elapsed_second);
-    exc_file_stream << result << '\n';
-  }
-
   cache_file_stream.close();
   ipc_file_stream.close();
-  exc_file_stream.close();
 
   // // cache
   // for (auto it = caches.rbegin(); it != caches.rend(); ++it){
@@ -624,7 +619,6 @@ int main(int argc, char** argv)
     set_expect = sqrt(set_expect);
     total_expect += set_expect;
   }
-
   double intra = ((double)1/(double)(llc->NUM_SET * total_avg_wr)) * total_expect;
 
   // *** inter 
@@ -644,14 +638,20 @@ int main(int argc, char** argv)
   total_expect = sqrt(total_expect);
   double inter = total_expect/total_avg_wr;
 
-  wv_file_stream << trace_name << "," << policy_config << "," << size_config << "," << inter << "," << intra << '\n';
-  wv_file_stream.close();
-
   vector<string> vec = llc->aatable.type_of_writes.print();
   for(auto st: vec){
-    wr_type_fs << trace_name << "," << policy_config << "," << size_config << "," << st << '\n';
+    wr_type_fs << common_string << "," << st << '\n';
   }
   wr_type_fs.close();
+
+  double write_var = total_avg_wr * (inter + intra);
+  double sim_time = elapsed_hour * 3600 + elapsed_minute * 60 + elapsed_second;
+
+  string output = to_string(llc->WQ_TO_CACHE) + "," + to_string(llc->RQ_TO_CACHE) + "," + to_string(llc->PQ_TO_CACHE)+
+  ","+to_string(total_avg_wr) +"," + to_string(write_var) + "," + to_string(sim_time) + "," + to_string(inter) + "," + to_string(intra);
+
+  llc_data_fs << common_string << "," << output << '\n';
+  llc_data_fs.close();
 
 #ifndef CRC2_COMPILE
   print_dram_stats();

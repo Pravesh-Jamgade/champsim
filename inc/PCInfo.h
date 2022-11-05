@@ -11,18 +11,18 @@ class EpocManager{
     IntPtr epocLength;// # memory references
     EpocManager(){
         epocLength = 100;
-        epoc_type = true; // learning
+        epoc_type = false; // learning
     }
     
     bool learn_or_apply(){
-        return epoc_type;// true->learn; false->apply
+        return epoc_type;// false->learn; true->apply
     }
 
     void tick(){
         if(epocLength>0) epocLength--;
         else epocLength++;
         if(epocLength == 0){
-            epoc_type = !epoc_type;
+            epoc_type = true;
         }
     }
 
@@ -59,20 +59,23 @@ class PCinfo{
     }
 
     // result hit->1, miss->0
-    bool feed(IntPtr pc, bool result){
+    bool feed(IntPtr pc, bool result, bool& should_use_pred){
+
+        should_use_pred = use_pred;
+
         auto findpc = bypass.find(pc);
         if(findpc==bypass.end()){
             bypass[pc]=EpocData();
         }
 
-        // learn for first 100 writes of application start then do both learn and apply
+        // learn for first 100 access(read/write) of application start then do both learn and apply
         bypass[pc].inc_access();
         if(!result){
             bypass[pc].inc_miss();
         }
         epoc_mgr.tick();
        
-       // if it is end of epoc then calculate predicition 
+        // if it is end of epoc then calculate predicition 
         if(epoc_mgr.cal_predi()){
             // calculate avg miss ratio per pc
             double avg_miss = 0;
@@ -86,8 +89,9 @@ class PCinfo{
             for(auto pc: bypass){
                 bypass_pred[pc.first] = pc.second.cal_miss_ratio() > avg_miss ? true: false;
             }
-            bypass.clear();
-            use_pred = true;
+            bypass.clear(); // clear to accumulate data for next epoc
+            use_pred = true; // start using prediciton right after end of first epoc
+            epoc_mgr.epoc_type = false; // start learning and prevent from calculating prediciton untill end of next epoc
         }
 
         if(use_pred){

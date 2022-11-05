@@ -91,9 +91,10 @@ void CACHE::handle_writeback()
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
     bool is_it_hit = way < NUM_WAY;
-    bool write_by_pass = pcinfo.feed(handle_pkt.ip, is_it_hit);
+    bool should_use_pred=false;
+    bool write_by_pass = pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred);
     
-    if(NAME == "LLC"){
+    if(NAME == "LLC" && should_use_pred){
       //hit
       if(is_it_hit){
         //bypass
@@ -196,6 +197,11 @@ void CACHE::handle_read()
 
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
+
+    // *** counting read access as well to predict write bypasssing
+    bool is_it_hit = way < NUM_WAY;
+    bool should_use_pred = false;
+    pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred);
 
     if (way < NUM_WAY) // HIT
     {
