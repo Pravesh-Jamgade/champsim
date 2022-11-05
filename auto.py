@@ -8,7 +8,7 @@ from os.path import exists
 import shutil
 
 inputs = [
-    # '410.bwaves-945B.champsimtrace.xz',
+    '410.bwaves-945B.champsimtrace.xz',
     '429.mcf-217B.champsimtrace.xz',
     '444.namd-120B.champsimtrace.xz',
     '445.gobmk-17B.champsimtrace.xz',
