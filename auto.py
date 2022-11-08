@@ -137,7 +137,9 @@ for fol in inputs:
             except:
                 run_status = result_str+"..run=fail\n"
             
-            frun.write(config_status, make_status, run_status)
+            frun.write(config_status)
+            frun.write(make_status)
+            frun.write(run_status)
             
 default_json_file.close()
 frun.close()
