@@ -109,20 +109,20 @@ for fol in inputs:
                 outfile.write(json_string)
 
             try:
-                subprocess.run(['./config.sh','champsim_config.json', '> temp.log'])
+                subprocess.run(['./config.sh','champsim_config.json'])
                 result_status.append(result_str+"..config=pass")
             except:
                 result_status.append(result_str+"..config=fail")
 
             try:
-                subprocess.run(['make', '> temp.log'])
+                subprocess.run(['make'])
                 result_status.append(result_str+"..make=pass")
             except:
                 result_status.append(result_str+"..make=fail")
             
             trace_path = os.path.join(curdir, "traces/{}".format(fol))
             trace_inital = fol.split('.')[1]
-            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {} > temp.log".format(trace_path, fol, replace_policy, size)
+            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
             
             try:
                 proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
