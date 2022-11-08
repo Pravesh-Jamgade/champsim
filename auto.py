@@ -76,7 +76,7 @@ for fol in inputs:
     file_exist = exists( os.path.join(curdir, "traces/{}".format(fol)))
 
     if not file_exist:
-        print("{} ..fail".format(fol))
+        print("Trace not found: {} ..fail".format(fol))
         continue
 
     #create folder with trace name
@@ -102,27 +102,27 @@ for fol in inputs:
 
             combi_str = "{}-{}.log".format(size, replace_policy)
             result_str = "{},{} ".format(combi_str, fol)
-            
+
             #saving new setting
             json_string = json.dumps(cj)
             with open(config_file_path, 'w') as outfile:
                 outfile.write(json_string)
 
             try:
-                subprocess.run(['./config.sh'.format(curdir), 'champsim_config.json'])
-                result_status.append(result_str+"config=pass")
+                subprocess.run(['./config.sh','champsim_config.json', '> temp.log'])
+                result_status.append(result_str+"..config=pass")
             except:
                 result_status.append(result_str+"..config=fail")
 
             try:
-                subprocess.run(['make'])
+                subprocess.run(['make', '> temp.log'])
                 result_status.append(result_str+"..make=pass")
             except:
                 result_status.append(result_str+"..make=fail")
             
             trace_path = os.path.join(curdir, "traces/{}".format(fol))
             trace_inital = fol.split('.')[1]
-            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
+            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {} > temp.log".format(trace_path, fol, replace_policy, size)
             
             try:
                 proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -131,12 +131,10 @@ for fol in inputs:
             except:
                 result_status.append(result_str+"..run=fail")
             
-            result_status.append(result_str)
-
 default_json_file.close()
 
-frun = open("run", 'w')
+frun = open("run.log", 'w')
 for st in result_status:
-    frun.write(str)
+    frun.write(st + '\n')
 frun.close()
             
