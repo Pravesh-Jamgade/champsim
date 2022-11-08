@@ -9,7 +9,6 @@ import shutil
 
 inputs = [
     '410.bwaves-945B.champsimtrace.xz',
-    '429.mcf-217B.champsimtrace.xz',
     '444.namd-120B.champsimtrace.xz',
     '445.gobmk-17B.champsimtrace.xz',
     '447.dealII-3B.champsimtrace.xz',
@@ -17,7 +16,8 @@ inputs = [
     '434.zeusmp-10B.champsimtrace.xz',
     '435.gromacs-111B.champsimtrace.xz',
     '436.cactusADM-1804B.champsimtrace.xz',
-    '437.leslie3d-134B.champsimtrace.xz'
+    '437.leslie3d-134B.champsimtrace.xz',
+    '429.mcf-217B.champsimtrace.xz'
 ]
 
 allCombi=[]
@@ -70,6 +70,8 @@ for fol in inputs:
 
 result_status = []
 
+frun = open("run.log", 'w')
+
 for fol in inputs:
     
     #check if trace exists
@@ -107,34 +109,36 @@ for fol in inputs:
             json_string = json.dumps(cj)
             with open(config_file_path, 'w') as outfile:
                 outfile.write(json_string)
-
+            
+            config_status = ""
             try:
                 subprocess.run(['./config.sh','champsim_config.json'])
-                result_status.append(result_str+"..config=pass")
+                config_status = result_str+"..config=pass\n"
+                
             except:
-                result_status.append(result_str+"..config=fail")
+               config_status = result_str+"..config=fail\n"
 
+            make_status = ""
             try:
                 subprocess.run(['make'])
-                result_status.append(result_str+"..make=pass")
+                make_status = result_str+"..make=pass\n"
             except:
-                result_status.append(result_str+"..make=fail")
+                make_status = result_str+"..make=fail\n"
             
             trace_path = os.path.join(curdir, "traces/{}".format(fol))
             trace_inital = fol.split('.')[1]
             cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
             
+            run_status = ""
             try:
                 proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 op, er = proc.communicate()
-                result_status.append(result_str+"..run=pass")
+                run_status = result_str+"..run=pass\n"
             except:
-                result_status.append(result_str+"..run=fail")
+                run_status = result_str+"..run=fail\n"
+            
+            frun.write(config_status, make_status, run_status)
             
 default_json_file.close()
-
-frun = open("run.log", 'w')
-for st in result_status:
-    frun.write(st + '\n')
 frun.close()
             
