@@ -102,8 +102,7 @@ for fol in inputs:
             update(cache[0], "sets", sets)
             update(cache[0], "replacement", replace_policy)
 
-            combi_str = "{}-{}.log".format(size, replace_policy)
-            result_str = "{},{} ".format(combi_str, fol)
+            combi_str = "{},{},{}".format(size, replace_policy, fol)
 
             #saving new setting
             json_string = json.dumps(cj)
@@ -117,7 +116,7 @@ for fol in inputs:
             trace_inital = fol.split('.')[1]
             cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
             os.system(cmd)
-            frun.write("{} ..ok\n".format(trace_inital))
+            frun.write("{} ..ok\n".format(combi_str))
             
 default_json_file.close()
 frun.close()
