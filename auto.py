@@ -115,9 +115,9 @@ for fol in inputs:
             os.system('make -s')         
             trace_path = os.path.join(curdir, "traces/{}".format(fol))
             trace_inital = fol.split('.')[1]
-            # cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
-            # os.system(cmd)
-            frun.write("{} ..ok".format(trace_inital))
+            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
+            os.system(cmd)
+            frun.write("{} ..ok\n".format(trace_inital))
             
 default_json_file.close()
 frun.close()
