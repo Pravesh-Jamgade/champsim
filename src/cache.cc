@@ -94,7 +94,7 @@ void CACHE::handle_writeback()
     bool should_use_pred=false;
     bool write_by_pass = pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred);
     
-    if(NAME == "LLC" && should_use_pred){
+    if(NAME == "LLC" && should_use_pred && false){
       //hit
       if(is_it_hit){
         //bypass
