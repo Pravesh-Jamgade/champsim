@@ -559,7 +559,7 @@ int main(int argc, char** argv)
     // cache
       CACHE *cache = caches.front();
 
-      string fileName = "writes_"+policy_config+"_"+size_config+"_"+"_"+cache->NAME+".log";
+      string fileName = "w_"+trace_name+"_"+policy_config+"_"+size_config+"_"+cache->NAME+".log";
       FILE* fptr = fopen(fileName.c_str(), "w");
 
       if(fptr ==  NULL){
