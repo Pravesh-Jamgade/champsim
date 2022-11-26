@@ -9,15 +9,15 @@ import shutil
 
 inputs = [
     '410.bwaves-945B.champsimtrace.xz',
-    # '444.namd-120B.champsimtrace.xz',
-    # '445.gobmk-17B.champsimtrace.xz',
-    # '447.dealII-3B.champsimtrace.xz',
-    # '433.milc-127B.champsimtrace.xz',
-    # '434.zeusmp-10B.champsimtrace.xz',
-    # '435.gromacs-111B.champsimtrace.xz',
-    # '436.cactusADM-1804B.champsimtrace.xz',
-    # '437.leslie3d-134B.champsimtrace.xz',
-    # '429.mcf-217B.champsimtrace.xz'
+    '444.namd-120B.champsimtrace.xz',
+    '445.gobmk-17B.champsimtrace.xz',
+    '447.dealII-3B.champsimtrace.xz',
+    '433.milc-127B.champsimtrace.xz',
+    '434.zeusmp-10B.champsimtrace.xz',
+    '435.gromacs-111B.champsimtrace.xz',
+    '436.cactusADM-1804B.champsimtrace.xz',
+    '437.leslie3d-134B.champsimtrace.xz',
+    '429.mcf-217B.champsimtrace.xz'
 ]
 
 allCombi=[]
@@ -42,7 +42,11 @@ ways = [8] #llc
 all_size = [0.5, 1, 2]#llc cache size in MB
 cache = ['LLC']
 
-replacement = ['lru', 'random', 'srrip']
+replacement = [
+    'lru', 
+    'random', 
+    'srrip'
+]
 
 curdir = os.getcwd()
 default_file_name = "default_config.json"#read from
@@ -108,15 +112,17 @@ for fol in inputs:
             json_string = json.dumps(cj)
             with open(config_file_path, 'w') as outfile:
                 outfile.write(json_string)
-            
-            os.system('make clean')
-            os.system('./config.sh champsim_config.json')
-            os.system('make -s')         
-            trace_path = os.path.join(curdir, "traces/{}".format(fol))
-            trace_inital = fol.split('.')[1]
-            cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
-            os.system(cmd)
-            frun.write("{} ..ok\n".format(combi_str))
+            try:
+                os.system('make clean')
+                os.system('./config.sh champsim_config.json')
+                os.system('make -s')         
+                trace_path = os.path.join(curdir, "traces/{}".format(fol))
+                trace_inital = fol.split('.')[1]
+                cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
+                os.system(cmd)
+            except:
+                frun.write("{} ..fail\n".format(combi_str))
+            frun.write("{} ..pass\n".format(combi_str))
             
 default_json_file.close()
 frun.close()
