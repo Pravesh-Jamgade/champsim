@@ -13,7 +13,7 @@
 #include <map>
 #include <vector>
 #include <set>
-#include "champsim_constants.h"
+#include "constant.h"
 
 using namespace std;
 

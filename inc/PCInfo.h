@@ -1,6 +1,6 @@
 #include <iostream>
 #include <map>
-#include "champsim_constants.h"
+#include "constant.h"
 
 #define SIZE 1000000
 

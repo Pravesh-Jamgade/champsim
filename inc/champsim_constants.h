@@ -27,7 +27,4 @@
 #define tRCD_DRAM_NANOSECONDS 12.5
 #define tCAS_DRAM_NANOSECONDS 12.5
 #define DBUS_TURN_AROUND_NANOSECONDS 7.5
-
-// *** added
-#define IntPtr uint64_t
 #endif
