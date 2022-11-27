@@ -8,22 +8,20 @@ from os.path import exists
 import shutil
 
 inputs = [
-    '410.bwaves-945B.champsimtrace.xz',
-    '444.namd-120B.champsimtrace.xz',
-    '445.gobmk-17B.champsimtrace.xz',
-    '447.dealII-3B.champsimtrace.xz',
-    '433.milc-127B.champsimtrace.xz',
-    '434.zeusmp-10B.champsimtrace.xz',
-    '435.gromacs-111B.champsimtrace.xz',
-    '436.cactusADM-1804B.champsimtrace.xz',
-    '437.leslie3d-134B.champsimtrace.xz',
-    '429.mcf-217B.champsimtrace.xz'
+    ('410.bwaves-945B.champsimtrace.xz','444.namd-120B.champsimtrace.xz'),
+    ('445.gobmk-17B.champsimtrace.xz','447.dealII-3B.champsimtrace.xz'),
+    ('433.milc-127B.champsimtrace.xz','434.zeusmp-10B.champsimtrace.xz'),
+    ('435.gromacs-111B.champsimtrace.xz','436.cactusADM-1804B.champsimtrace.xz'),
+    ('437.leslie3d-134B.champsimtrace.xz','429.mcf-217B.champsimtrace.xz')
 ]
 
 allCombi=[]
 
 def update(key, subkey, value):
-    cj[key][subkey] = value
+    if subkey == "":
+        cj[key] = value
+    else:
+        cj[key][subkey] = value
 
 
 def combi(depth, j, bag):
@@ -44,8 +42,8 @@ cache = ['LLC']
 
 replacement = [
     'lru', 
-    'random', 
-    'srrip'
+    # 'random', 
+    # 'srrip'
 ]
 
 curdir = os.getcwd()
@@ -60,34 +58,18 @@ default_json_file = open(default_file_path, "r")
 
 cj = json.load(default_json_file)
 
-file_op = open("run.log", "w")
 # for i in range(len(ways)):
 #     bag=[]
 #     combi(3, i, bag)
 
 
-for fol in inputs:
-    tmp = os.path.join(curdir, fol)
-    if exists(tmp):
-        shutil.rmtree(tmp)
-
-
 result_status = []
 
-frun = open("run.log", 'w')
-
+update("num_cores", "", 2)
+cj['ooo_cpu'].append(cj['ooo_cpu'][0])
 for fol in inputs:
-    
-    #check if trace exists
-    file_exist = exists( os.path.join(curdir, "traces/{}".format(fol)))
 
-    if not file_exist:
-        print("Trace not found: {} ..fail".format(fol))
-        continue
-
-    #create folder with trace name
-    savedir = os.path.join(curdir, fol)
-    # os.mkdir(fol)
+    folName = fol[0].split('.')[1] + "-" + fol[1].split('.')[1]
 
     #foreach trace use reaplce policy
     for replace_policy in replacement:
@@ -96,6 +78,8 @@ for fol in inputs:
         for size in all_size:
             combi_str = ""
             
+            frun = open("run.log", 'a')
+
             #no. of sets
             byteSize = size * pow(2, 20) #MB to B
             setsize = BLOCK_SIZE * ways[0] #
@@ -106,24 +90,33 @@ for fol in inputs:
             update(cache[0], "sets", sets)
             update(cache[0], "replacement", replace_policy)
 
-            combi_str = "{},{},{}".format(size, replace_policy, fol)
+            combi_str = "{},{},{}".format(size, replace_policy, folName)
 
             #saving new setting
             json_string = json.dumps(cj)
             with open(config_file_path, 'w') as outfile:
                 outfile.write(json_string)
-            try:
-                os.system('make clean')
-                os.system('./config.sh champsim_config.json')
-                os.system('make -s')         
-                trace_path = os.path.join(curdir, "traces/{}".format(fol))
-                trace_inital = fol.split('.')[1]
-                cmd = "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path, fol, replace_policy, size)
-                os.system(cmd)
-            except:
-                frun.write("{} ..fail\n".format(combi_str))
+
+            trace_path1 = "traces/{}".format(fol[0])
+            trace_path2 = "traces/{}".format(fol[1])
+            
+            all_cmd = [
+                'make clean', 
+                './config.sh champsim_config.json', 
+                'make -s', 
+                "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} {} --trace_name {} --policy {} --size {}".format(trace_path1, trace_path2, folName, replace_policy, size)
+            ]
+            
+            for cmd in all_cmd:
+                try:
+                    subprocess.run(shlex.split(cmd))
+                except:
+                    frun.write("{} ..fail\n".format(combi_str))
+                    break
             frun.write("{} ..pass\n".format(combi_str))
             
+            frun.close()
+            
 default_json_file.close()
-frun.close()
+
             
