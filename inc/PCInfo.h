@@ -1,32 +1,40 @@
 #include <iostream>
 #include <map>
 
-#define IntPtr uint32_t
-using namespace std;
+#define IntPtr uint64_t
+#define SIZE 1000000
 
+using namespace std;
 
 class EpocManager{
     public:
     bool epoc_type;
     IntPtr epocLength;// # memory references
-    EpocManager(){
+    IntPtr cycle, prev_diff;
+    EpocManager();
+    EpocManager(IntPtr cycle){
         epocLength = 100;
         epoc_type = false; // learning
-    }
-    
-    bool learn_or_apply(){
-        return epoc_type;// false->learn; true->apply
+        this->cycle = cycle;
+        this->prev_diff = 0;
     }
 
-    void tick(){
-        if(epocLength>0) epocLength--;
-        else epocLength++;
-        if(epocLength == 0){
+    void tick(IntPtr curr_cycle){
+        IntPtr diff = (curr_cycle - cycle + 1) % SIZE;
+        if(prev_diff > diff){
             epoc_type = true;
+            cycle = curr_cycle;
         }
+        prev_diff = diff;
+            
+        // if(epocLength>0) epocLength--;
+        // else epocLength++;
+        // if(epocLength == 0){
+        //     epoc_type = true;
+        // }
     }
 
-    // true->no false->yes
+    // false->learn; true->apply
     bool cal_predi(){
         return epoc_type;
     }
@@ -54,8 +62,9 @@ class PCinfo{
 
     bool use_pred = false;
     EpocManager epoc_mgr;
-    PCinfo(){
-        epoc_mgr = EpocManager();
+    PCinfo();
+    PCinfo(IntPtr cycle){
+        epoc_mgr = EpocManager(cycle);
     }
 
     // result hit->1, miss->0

@@ -115,7 +115,7 @@ public:
         repl_type(repl), pref_type(pref)
   {
     aatable = AATable();
-    pcinfo = PCinfo();
+    pcinfo = PCinfo(current_cycle);
   }
 };
 
