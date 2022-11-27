@@ -1,7 +1,7 @@
 #include <iostream>
 #include <map>
+#include "champsim_constants.h"
 
-#define IntPtr uint64_t
 #define SIZE 1000000
 
 using namespace std;
@@ -11,7 +11,7 @@ class EpocManager{
     bool epoc_type;
     IntPtr epocLength;// # memory references
     IntPtr cycle, prev_diff;
-    EpocManager();
+    EpocManager(){}
     EpocManager(IntPtr cycle){
         epocLength = 100;
         epoc_type = false; // learning
@@ -62,13 +62,13 @@ class PCinfo{
 
     bool use_pred = false;
     EpocManager epoc_mgr;
-    PCinfo();
+    PCinfo(){}
     PCinfo(IntPtr cycle){
         epoc_mgr = EpocManager(cycle);
     }
 
     // result hit->1, miss->0
-    bool feed(IntPtr pc, bool result, bool& should_use_pred){
+    bool feed(IntPtr pc, bool result, bool& should_use_pred, IntPtr cycle){
 
         should_use_pred = use_pred;
 
@@ -82,7 +82,7 @@ class PCinfo{
         if(!result){
             bypass[pc].inc_miss();
         }
-        epoc_mgr.tick();
+        epoc_mgr.tick(cycle);
        
         // if it is end of epoc then calculate predicition 
         if(epoc_mgr.cal_predi()){

@@ -13,8 +13,8 @@
 #include <map>
 #include <vector>
 #include <set>
+#include "champsim_constants.h"
 
-#define IntPtr uint32_t
 using namespace std;
 
 // // CACHE ACCESS TYPE

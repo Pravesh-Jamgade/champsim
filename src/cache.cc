@@ -92,7 +92,7 @@ void CACHE::handle_writeback()
 
     bool is_it_hit = way < NUM_WAY;
     bool should_use_pred=false;
-    bool write_by_pass = pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred);
+    bool write_by_pass = pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred, current_cycle);
     
     if(NAME == "LLC" && should_use_pred){
       //hit
@@ -101,7 +101,7 @@ void CACHE::handle_writeback()
         if(write_by_pass){
           // invalid existing line + write to mm
           fill_block.valid = 0;
-          filllike_miss(set, NUM_WAY, handle_pkt);
+          lower_level->add_wq(&handle_pkt);
         }
         //donot bypass
         else{
@@ -121,7 +121,7 @@ void CACHE::handle_writeback()
         //bypass
         if(write_by_pass){
           // write to mm
-          filllike_miss(set, NUM_WAY, handle_pkt);
+          lower_level->add_wq(&handle_pkt);
         }
         //donot bypass
         else{
@@ -201,7 +201,7 @@ void CACHE::handle_read()
     // *** counting read access as well to predict write bypasssing
     bool is_it_hit = way < NUM_WAY;
     bool should_use_pred = false;
-    pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred);
+    pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred, current_cycle);
 
     if (way < NUM_WAY) // HIT
     {
