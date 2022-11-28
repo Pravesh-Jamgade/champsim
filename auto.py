@@ -109,7 +109,6 @@ for fol in inputs:
             trace_path5 = "traces/{}".format(fol[4])
             trace_path6 = "traces/{}".format(fol[5])
             trace_path7 = "traces/{}".format(fol[6])
-            trace_path8 = "traces/{}".format(fol[7])
 
             combi_str = "{},{},{}".format(size, replace_policy, folName)
             
