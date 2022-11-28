@@ -1,3 +1,4 @@
+from inspect import trace
 import subprocess
 from gc import collect
 import json
@@ -66,8 +67,6 @@ update("num_cores", "", 2)
 cj['ooo_cpu'].append(cj['ooo_cpu'][0])
 for fol in inputs:
 
-    folName = fol[0].split('.')[1] + "-" + fol[1].split('.')[1]
-
     #foreach trace use reaplce policy
     for replace_policy in replacement:
 
@@ -87,21 +86,23 @@ for fol in inputs:
             update(cache[0], "sets", sets)
             update(cache[0], "replacement", replace_policy)
 
-            combi_str = "{},{},{}".format(size, replace_policy, folName)
 
             #saving new setting
             json_string = json.dumps(cj)
             with open(config_file_path, 'w') as outfile:
                 outfile.write(json_string)
 
-            trace_path1 = "traces/{}".format(fol[0])
-            trace_path2 = "traces/{}".format(fol[1])
-            trace_path3 = "traces/{}".format(fol[2])
-            trace_path4 = "traces/{}".format(fol[3])
-            trace_path5 = "traces/{}".format(fol[4])
-            trace_path6 = "traces/{}".format(fol[5])
-            trace_path7 = "traces/{}".format(fol[6])
-            trace_path8 = "traces/{}".format(fol[7])
+            trace_path1 = "traces/{}".format(fol[0].split('.')[1])
+            trace_path2 = "traces/{}".format(fol[1].split('.')[1])
+            trace_path3 = "traces/{}".format(fol[2].split('.')[1])
+            trace_path4 = "traces/{}".format(fol[3].split('.')[1])
+            trace_path5 = "traces/{}".format(fol[4].split('.')[1])
+            trace_path6 = "traces/{}".format(fol[5].split('.')[1])
+            trace_path7 = "traces/{}".format(fol[6].split('.')[1])
+            trace_path8 = "traces/{}".format(fol[7].split('.')[1])
+
+            folName = trace_path1+"-"+trace_path2+"-"+trace_path3+","+trace_path4+"-"+trace_path5+"-"+trace_path6+"-"+trace_path7+"-"+trace_path8
+            combi_str = "{},{},{}".format(size, replace_policy, folName)
             
             all_cmd = [
                 'make clean', 
