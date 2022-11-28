@@ -8,9 +8,8 @@ from os.path import exists
 import shutil
 
 inputs = [
-    ('410.bwaves-945B.champsimtrace.xz','444.namd-120B.champsimtrace.xz', '445.gobmk-17B.champsimtrace.xz','447.dealII-3B.champsimtrace.xz'),
-    ('433.milc-127B.champsimtrace.xz','434.zeusmp-10B.champsimtrace.xz', '435.gromacs-111B.champsimtrace.xz','436.cactusADM-1804B.champsimtrace.xz'),
-    ('437.leslie3d-134B.champsimtrace.xz','429.mcf-217B.champsimtrace.xz', '410.bwaves-945B.champsimtrace.xz', '445.gobmk-17B.champsimtrace.xz')
+    ('410.bwaves-945B.champsimtrace.xz','444.namd-120B.champsimtrace.xz', '445.gobmk-17B.champsimtrace.xz','447.dealII-3B.champsimtrace.xz', '433.milc-127B.champsimtrace.xz','434.zeusmp-10B.champsimtrace.xz', '435.gromacs-111B.champsimtrace.xz','436.cactusADM-1804B.champsimtrace.xz'),
+    ('437.leslie3d-134B.champsimtrace.xz','429.mcf-217B.champsimtrace.xz', '410.bwaves-945B.champsimtrace.xz', '445.gobmk-17B.champsimtrace.xz', '433.milc-127B.champsimtrace.xz','434.zeusmp-10B.champsimtrace.xz', '435.gromacs-111B.champsimtrace.xz','436.cactusADM-1804B.champsimtrace.xz')
 ]
 
 allCombi=[]
@@ -99,22 +98,27 @@ for fol in inputs:
             trace_path2 = "traces/{}".format(fol[1])
             trace_path3 = "traces/{}".format(fol[2])
             trace_path4 = "traces/{}".format(fol[3])
+            trace_path5 = "traces/{}".format(fol[4])
+            trace_path6 = "traces/{}".format(fol[5])
+            trace_path7 = "traces/{}".format(fol[6])
+            trace_path8 = "traces/{}".format(fol[7])
             
             all_cmd = [
                 'make clean', 
                 './config.sh champsim_config.json', 
                 'make -s', 
-                "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} {} {} {} --trace_name {} --policy {} --size {}".format(trace_path1, trace_path2, trace_path3, trace_path4, folName, replace_policy, size)
+                "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} {} {} {} {} {} {} {} --trace_name {} --policy {} --size {}".format(trace_path1, trace_path2, trace_path3, trace_path4, trace_path5, trace_path6, trace_path7, trace_path8, folName, replace_policy, size)
             ]
             
             for cmd in all_cmd:
                 try:
-                    subprocess.run(shlex.split(cmd))
+                    with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+                        op, er = proc.communicate()
                 except:
                     frun.write("{} ..fail\n".format(combi_str))
                     break
             frun.write("{} ..pass\n".format(combi_str))
-            
+            print("{} ..pass\n".format(folName))
             frun.close()
             
 default_json_file.close()
