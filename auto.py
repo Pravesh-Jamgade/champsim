@@ -63,7 +63,7 @@ cj = json.load(default_json_file)
 
 result_status = []
 
-update("num_cores", "", 2)
+update("num_cores", "", 8)
 cj['ooo_cpu'].append(cj['ooo_cpu'][0])
 cj['ooo_cpu'].append(cj['ooo_cpu'][0])
 cj['ooo_cpu'].append(cj['ooo_cpu'][0])
@@ -109,6 +109,7 @@ for fol in inputs:
             trace_path5 = "traces/{}".format(fol[4])
             trace_path6 = "traces/{}".format(fol[5])
             trace_path7 = "traces/{}".format(fol[6])
+            trace_path8 = "traces/{}".format(fol[7])
 
             combi_str = "{},{},{}".format(size, replace_policy, folName)
             
@@ -121,7 +122,7 @@ for fol in inputs:
             
             for cmd in all_cmd:
                 try:
-                    with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+                    with subprocess.Popen(shlex.split(cmd)) as proc:
                         op, er = proc.communicate()
                         if proc.returncode < 0:
                             raise Exception("*fail*")
@@ -133,5 +134,5 @@ for fol in inputs:
             frun.close()
             
 default_json_file.close()
-
+#, stdout=subprocess.PIPE, stderr=subprocess.PIPE
             
