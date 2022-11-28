@@ -65,6 +65,13 @@ result_status = []
 
 update("num_cores", "", 2)
 cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+
 for fol in inputs:
 
     folName = ""
