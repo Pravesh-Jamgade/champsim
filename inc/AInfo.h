@@ -76,6 +76,42 @@ class AAinfo{
 
 };
 
+
+/**
+ * @brief Loop Addresses 
+ * 
+ */
+class LoopAddr
+{
+    public:
+    LoopAddr(){}
+
+    map<IntPtr, IntPtr> score;
+    void insert(IntPtr pc, bool req_type){
+        auto findPC = score.find(pc);
+        // eviction
+        if(req_type == 0){
+            
+            if(findPC != score.end()){
+                findPC->second--;
+            }
+            else{
+                // during evixtion should not have happened;
+            }
+        }
+        // first time insert
+        else{
+            
+            if(findPC != score.end()){
+                findPC->second+=2;
+            }
+            else{
+                score.insert({pc, 2});
+            }
+        }
+    }
+};
+
 /**
  * @brief Address access table
  * 
@@ -84,11 +120,32 @@ class AATable{
 
     public:
 
+    LoopAddr *ll;
+
     WType type_of_writes;
     static int pos;
+
+    AATable(){
+        ll = new LoopAddr();
+    }
 
     void increase_write_count(int t){
         type_of_writes.inc(static_cast<WriteType>(t));
     }
 
+    // req_type: 0->evicted 1->inserted
+    void update_lx(IntPtr addr, bool req_type){
+        ll->insert(addr, req_type);
+    }
+
+    vector<string> get_addr_loop(){
+        vector<string> all_res;
+        for(auto m: ll->score){
+            string res = ""+to_string(m.first)+","+to_string(m.second);
+            all_res.push_back(res);
+        }
+        return all_res;
+    }
+ 
 };
+
