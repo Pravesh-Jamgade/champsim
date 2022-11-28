@@ -67,6 +67,10 @@ update("num_cores", "", 2)
 cj['ooo_cpu'].append(cj['ooo_cpu'][0])
 for fol in inputs:
 
+    folName = ""
+    for name in fol:
+        folName = folName+"-"+name
+        
     #foreach trace use reaplce policy
     for replace_policy in replacement:
 
@@ -101,7 +105,6 @@ for fol in inputs:
             trace_path7 = "traces/{}".format(fol[6].split('.')[1])
             trace_path8 = "traces/{}".format(fol[7].split('.')[1])
 
-            folName = trace_path1+"-"+trace_path2+"-"+trace_path3+","+trace_path4+"-"+trace_path5+"-"+trace_path6+"-"+trace_path7+"-"+trace_path8
             combi_str = "{},{},{}".format(size, replace_policy, folName)
             
             all_cmd = [
@@ -115,6 +118,8 @@ for fol in inputs:
                 try:
                     with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                         op, er = proc.communicate()
+                        if proc.returncode < 0:
+                            raise Exception("*fail*")
                 except:
                     frun.write("{} ..fail\n".format(combi_str))
                     break
