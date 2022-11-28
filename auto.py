@@ -116,7 +116,8 @@ for fol in inputs:
             
             for cmd in all_cmd:
                 try:
-                    with subprocess.run(shlex.split(cmd)) as proc:
+                    with subprocess.Popen(shlex.split(cmd)) as proc:
+                        op, er = proc.communicate()
                         if proc.returncode < 0:
                             raise Exception("fail")
 
