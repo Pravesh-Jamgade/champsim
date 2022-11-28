@@ -113,6 +113,8 @@ for fol in inputs:
                 try:
                     with subprocess.Popen(shlex.split(cmd), stdout = subprocess.PIPE, stderr = subprocess.PIPE) as proc:
                         op, er = proc.communicate()
+                        if proc.returncode < 0:
+                            raise Exception("*fail*")
                 except:
                     frun.write("{} for {} ..fail\n".format(combi_str))
                     print("{} for {} ..fail\n".format(combi_str))
