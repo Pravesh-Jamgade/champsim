@@ -59,6 +59,8 @@ void CACHE::handle_fill()
     block[set*NUM_WAY + way].write_counter++;
     set_stat[set].writes++;
 
+    aatable.update_lx(fill_mshr->address, true);
+
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
   }
@@ -424,6 +426,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.type = WRITEBACK;
 
       auto result = lower_level->add_wq(&writeback_packet);
+
+      // ***
+      aatable.update_lx(fill_block.address, false);
+
       if (result == -2)
         return false;
     }
