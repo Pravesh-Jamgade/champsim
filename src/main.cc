@@ -524,12 +524,13 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  fstream cache_file_stream, ipc_file_stream, wr_type_fs, llc_data_fs;
+  fstream cache_file_stream, ipc_file_stream, wr_type_fs, llc_data_fs, loop_fs;
 
   cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
   ipc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
   wr_type_fs.open("wrtype.log", fstream::in | fstream::out | fstream::app);
   llc_data_fs.open("data.log", fstream::in | fstream::out | fstream::app);
+  loop_fs.open("Loop_"+trace_name+"_"+policy_config+"_"+size_config+".log", fstream::in | fstream::out | fstream::app);
 
   string common_string = trace_name+","+policy_config+","+size_config;
 
@@ -650,6 +651,16 @@ int main(int argc, char** argv)
 
   llc_data_fs << common_string << "," << output << '\n';
   llc_data_fs.close();
+
+  for(auto begin = caches.begin(); begin != caches.end(); ++begin){
+    CACHE* c = *begin;
+    if(c->NAME.find("LLC") != string::npos || c->NAME.find("L2C") != string::npos){
+      for(auto line: c->aatable.get_addr_loop()){
+        string wr = to_string(c->cpu) + "," + c->NAME + "," + line + '\n';
+        loop_fs << wr ;
+      }
+    }
+  }
 
 #ifndef CRC2_COMPILE
   print_dram_stats();
