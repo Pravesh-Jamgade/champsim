@@ -86,27 +86,35 @@ class LoopAddr
     public:
     LoopAddr(){}
 
-    map<IntPtr, IntPtr> score;
+    class Count{
+        public:
+        IntPtr insert, evict;
+        Count(){
+            insert=evict=0;
+        }
+    };
+
+    map<IntPtr, Count> score;
     void insert(IntPtr pc, bool req_type){
         auto findPC = score.find(pc);
         // eviction
         if(req_type == 0){
             
             if(findPC != score.end()){
-                findPC->second--;
+                findPC->second.evict++;
             }
             else{
                 // during evixtion should not have happened;
             }
         }
-        // first time insert
+        // insert
         else{
             
             if(findPC != score.end()){
-                findPC->second+=2;
+                findPC->second.insert++;
             }
             else{
-                score.insert({pc, 2});
+                score.insert({pc, Count()});
             }
         }
     }
@@ -141,7 +149,7 @@ class AATable{
     vector<string> get_addr_loop(){
         vector<string> all_res;
         for(auto m: ll->score){
-            string res = ""+to_string(m.first)+","+to_string(m.second);
+            string res = ""+to_string(m.first)+","+to_string(m.second.insert)+","+to_string(m.second.evict);
             all_res.push_back(res);
         }
         return all_res;
