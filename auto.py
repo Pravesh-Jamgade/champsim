@@ -63,8 +63,11 @@ cj = json.load(default_json_file)
 
 result_status = []
 
-update("num_cores", "", 2)
+update("num_cores", "", 4)
 cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+
 for fol in inputs:
 
     folName = ""
@@ -111,13 +114,13 @@ for fol in inputs:
             
             for cmd in all_cmd:
                 try:
-                    with subprocess.Popen(shlex.split(cmd), stdout = subprocess.PIPE, stderr = subprocess.PIPE) as proc:
+                    with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
                         op, er = proc.communicate()
                         if proc.returncode < 0:
                             raise Exception("*fail*")
                 except:
-                    frun.write("{} for {} ..fail\n".format(combi_str))
-                    print("{} for {} ..fail\n".format(combi_str))
+                    frun.write("{} {} ..fail\n".format(cmd, combi_str))
+                    print("{} for {} ..fail\n".format(cmd, combi_str))
                     exit()
             frun.write("{} ..pass\n".format(combi_str))
             print("{} ..pass\n".format(combi_str))
