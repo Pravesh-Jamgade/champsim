@@ -112,7 +112,10 @@ for fol in inputs:
             
             for cmd in all_cmd:
                 try:
-                    subprocess.run(shlex.split(cmd))
+                    with subprocess.run(shlex.split(cmd)) as proc:
+                        if proc.returncode < 0:
+                            raise Exception("fail")
+
                 except:
                     frun.write("{} from {} ..fail\n".format(cmd, combi_str))
                     print("{} from {} ..fail\n".format(cmd, combi_str))
