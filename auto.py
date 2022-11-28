@@ -8,11 +8,16 @@ from os.path import exists
 import shutil
 
 inputs = [
-    ('410.bwaves-945B.champsimtrace.xz','444.namd-120B.champsimtrace.xz'),
-    ('445.gobmk-17B.champsimtrace.xz','447.dealII-3B.champsimtrace.xz'),
-    ('433.milc-127B.champsimtrace.xz','434.zeusmp-10B.champsimtrace.xz'),
-    ('435.gromacs-111B.champsimtrace.xz','436.cactusADM-1804B.champsimtrace.xz'),
-    ('437.leslie3d-134B.champsimtrace.xz','429.mcf-217B.champsimtrace.xz')
+    '410.bwaves-945B.champsimtrace.xz',
+    '444.namd-120B.champsimtrace.xz',
+    '445.gobmk-17B.champsimtrace.xz',
+    '447.dealII-3B.champsimtrace.xz',
+    '433.milc-127B.champsimtrace.xz',
+    '434.zeusmp-10B.champsimtrace.xz',
+    '435.gromacs-111B.champsimtrace.xz',
+    '436.cactusADM-1804B.champsimtrace.xz',
+    '437.leslie3d-134B.champsimtrace.xz',
+    '429.mcf-217B.champsimtrace.xz'
 ]
 
 allCombi=[]
@@ -65,11 +70,10 @@ cj = json.load(default_json_file)
 
 result_status = []
 
-update("num_cores", "", 2)
-cj['ooo_cpu'].append(cj['ooo_cpu'][0])
+update("num_cores", "", 1)
 for fol in inputs:
 
-    folName = fol[0].split('.')[1] + "-" + fol[1].split('.')[1]
+    folName = fol.split('.')[1]
 
     #foreach trace use reaplce policy
     for replace_policy in replacement:
@@ -97,21 +101,21 @@ for fol in inputs:
             with open(config_file_path, 'w') as outfile:
                 outfile.write(json_string)
 
-            trace_path1 = "traces/{}".format(fol[0])
-            trace_path2 = "traces/{}".format(fol[1])
+            trace_path1 = "traces/{}".format(fol)
             
             all_cmd = [
                 'make clean', 
                 './config.sh champsim_config.json', 
                 'make -s', 
-                "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} {} --trace_name {} --policy {} --size {}".format(trace_path1, trace_path2, folName, replace_policy, size)
+                "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path1, folName, replace_policy, size)
             ]
             
             for cmd in all_cmd:
                 try:
                     subprocess.run(shlex.split(cmd))
                 except:
-                    frun.write("{} ..fail\n".format(combi_str))
+                    frun.write("{} from {} ..fail\n".format(cmd, combi_str))
+                    print("{} from {} ..fail\n".format(cmd, combi_str))
                     break
             frun.write("{} ..pass\n".format(combi_str))
             
