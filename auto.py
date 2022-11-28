@@ -91,10 +91,10 @@ for fol in inputs:
             with open(config_file_path, 'w') as outfile:
                 outfile.write(json_string)
 
-            trace_path1 = "traces/{}".format(fol[0])
-            trace_path2 = "traces/{}".format(fol[1])
-            trace_path3 = "traces/{}".format(fol[2])
-            trace_path4 = "traces/{}".format(fol[3])
+            trace_path1 = "traces/{}".format(fol[0].split('.')[1])
+            trace_path2 = "traces/{}".format(fol[1].split('.')[1])
+            trace_path3 = "traces/{}".format(fol[2].split('.')[1])
+            trace_path4 = "traces/{}".format(fol[3].split('.')[1])
 
             folName = trace_path1+"-"+trace_path2+"-"+trace_path3+"-"+trace_path4
 
