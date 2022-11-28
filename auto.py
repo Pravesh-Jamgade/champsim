@@ -67,8 +67,6 @@ update("num_cores", "", 2)
 cj['ooo_cpu'].append(cj['ooo_cpu'][0])
 for fol in inputs:
 
-    folName = fol[0].split('.')[1] + "-" + fol[1].split('.')[1]
-
     #foreach trace use reaplce policy
     for replace_policy in replacement:
 
@@ -88,8 +86,6 @@ for fol in inputs:
             update(cache[0], "sets", sets)
             update(cache[0], "replacement", replace_policy)
 
-            combi_str = "{},{},{}".format(size, replace_policy, folName)
-
             #saving new setting
             json_string = json.dumps(cj)
             with open(config_file_path, 'w') as outfile:
@@ -99,6 +95,10 @@ for fol in inputs:
             trace_path2 = "traces/{}".format(fol[1])
             trace_path3 = "traces/{}".format(fol[2])
             trace_path4 = "traces/{}".format(fol[3])
+
+            folName = trace_path1+"-"+trace_path2+"-"+trace_path3+"-"+trace_path4
+
+            combi_str = "{},{},{}".format(size, replace_policy, folName)
             
             all_cmd = [
                 'make clean', 
@@ -109,11 +109,14 @@ for fol in inputs:
             
             for cmd in all_cmd:
                 try:
-                    subprocess.run(shlex.split(cmd))
+                    with subprocess.Popen(shlex.split(cmd), stdout = subprocess.PIPE, stderr = subprocess.PIPE) as proc:
+                        op, er = proc.communicate()
                 except:
-                    frun.write("{} ..fail\n".format(combi_str))
-                    break
+                    frun.write("{} for {} ..fail\n".format(combi_str))
+                    print("{} for {} ..fail\n".format(combi_str))
+                    exit()
             frun.write("{} ..pass\n".format(combi_str))
+            print("{} ..pass\n".format(combi_str))
             
             frun.close()
             
