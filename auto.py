@@ -131,7 +131,8 @@ for fol in inputs:
                         if proc.returncode < 0:
                             raise Exception("*fail*")
                 except:
-                    frun.write("{} ..fail\n".format(combi_str))
+                    frun.write("{} for {}..fail\n".format(combi_str, cmd))
+                    print("{} for {}..fail\n".format(combi_str, cmd))
                     break
             frun.write("{} ..pass\n".format(combi_str))
             print("{} ..pass\n".format(combi_str))
