@@ -104,6 +104,8 @@ void CACHE::handle_writeback()
           // invalid existing line + write to mm
           fill_block.valid = 0;
           lower_level->add_wq(&handle_pkt);
+
+          aatable.update_lx(fill_block.address, false);
         }
         //donot bypass
         else{
@@ -168,6 +170,8 @@ void CACHE::handle_writeback()
 
           if (!success)
             return;
+
+          aatable.update_lx(handle_pkt.address, true);
         }
     }
    
@@ -427,11 +431,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       auto result = lower_level->add_wq(&writeback_packet);
 
-      // ***
-      aatable.update_lx(fill_block.address, false);
-
       if (result == -2)
         return false;
+
+      // ***
+      aatable.update_lx(fill_block.address, false);
     }
 
     if (ever_seen_data)
