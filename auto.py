@@ -122,10 +122,11 @@ for fol in inputs:
                             raise Exception("fail")
 
                 except:
-                    frun.write("{} from {} ..fail\n".format(cmd, combi_str))
-                    print("{} from {} ..fail\n".format(cmd, combi_str))
+                    frun.write("{} for {} ..fail\n".format(cmd, combi_str))
+                    print("{} for {} ..fail\n".format(cmd, combi_str))
                     break
-            frun.write("{} ..pass\n".format(combi_str))
+            frun.write("{} for {} ..pass\n".format(cmd, combi_str))
+            print("{} for {} ..pass\n".format(cmd, combi_str))
             
             frun.close()
             
