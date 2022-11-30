@@ -59,7 +59,7 @@ void CACHE::handle_fill()
     block[set*NUM_WAY + way].write_counter++;
     set_stat[set].writes++;
 
-    aatable.update_lx(fill_mshr->address, true);
+    aatable.update_lx(fill_mshr->ip, true);
 
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
@@ -97,6 +97,7 @@ void CACHE::handle_writeback()
     bool write_by_pass = pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred, current_cycle);
     
     if(NAME == "LLC" && should_use_pred){
+      fprintf(out_fs, "%ld, %d\n", handle_pkt.ip, write_by_pass);
       //hit
       if(is_it_hit){
         //bypass
@@ -105,7 +106,7 @@ void CACHE::handle_writeback()
           fill_block.valid = 0;
           lower_level->add_wq(&handle_pkt);
 
-          aatable.update_lx(fill_block.address, false);
+          aatable.update_lx(fill_block.ip, false);
         }
         //donot bypass
         else{
@@ -171,7 +172,7 @@ void CACHE::handle_writeback()
           if (!success)
             return;
 
-          aatable.update_lx(handle_pkt.address, true);
+          aatable.update_lx(handle_pkt.ip, true);
         }
     }
    
@@ -435,7 +436,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         return false;
 
       // ***
-      aatable.update_lx(fill_block.address, false);
+      aatable.update_lx(fill_block.ip, false);
     }
 
     if (ever_seen_data)

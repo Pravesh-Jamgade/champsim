@@ -1,5 +1,7 @@
 #include <iostream>
 #include <map>
+#include <fstream>
+
 #include "constant.h"
 
 #define SIZE 1000000
@@ -11,32 +13,24 @@ class EpocManager{
     bool epoc_type;
     IntPtr epocLength;// # memory references
     IntPtr cycle, prev_diff;
+
     EpocManager(){}
     EpocManager(IntPtr cycle){
-        epocLength = 100;
+        epocLength = SIZE;
         epoc_type = false; // learning
         this->cycle = cycle;
         this->prev_diff = 0;
     }
 
-    void tick(IntPtr curr_cycle){
-        IntPtr diff = (curr_cycle - cycle + 1) % SIZE;
-        if(prev_diff > diff){
-            epoc_type = true;
+    bool tick(IntPtr curr_cycle){
+        IntPtr diff = curr_cycle % SIZE;
+        if(diff < prev_diff){
             cycle = curr_cycle;
+            prev_diff = 0;
+            return true;
         }
         prev_diff = diff;
-            
-        // if(epocLength>0) epocLength--;
-        // else epocLength++;
-        // if(epocLength == 0){
-        //     epoc_type = true;
-        // }
-    }
-
-    // false->learn; true->apply
-    bool cal_predi(){
-        return epoc_type;
+        return false;
     }
 };
 
@@ -62,15 +56,17 @@ class PCinfo{
 
     bool use_pred = false;
     EpocManager epoc_mgr;
+
+    FILE* out_fs;
+
     PCinfo(){}
     PCinfo(IntPtr cycle){
         epoc_mgr = EpocManager(cycle);
+        out_fs = fopen("epoc.log", "w");
     }
 
     // result hit->1, miss->0
-    bool feed(IntPtr pc, bool result, bool& should_use_pred, IntPtr cycle){
-
-        should_use_pred = use_pred;
+    bool feed(IntPtr pc, bool result, bool& should_use_pred, IntPtr cc){
 
         auto findpc = bypass.find(pc);
         if(findpc==bypass.end()){
@@ -82,10 +78,11 @@ class PCinfo{
         if(!result){
             bypass[pc].inc_miss();
         }
-        epoc_mgr.tick(cycle);
+        
        
         // if it is end of epoc then calculate predicition 
-        if(epoc_mgr.cal_predi()){
+        if(epoc_mgr.tick(cc)){
+            fprintf(out_fs, "%ld\n", epoc_mgr.cycle);
             // calculate avg miss ratio per pc
             double avg_miss = 0;
             for(auto pc: bypass){
@@ -100,8 +97,9 @@ class PCinfo{
             }
             bypass.clear(); // clear to accumulate data for next epoc
             use_pred = true; // start using prediciton right after end of first epoc
-            epoc_mgr.epoc_type = false; // start learning and prevent from calculating prediciton untill end of next epoc
         }
+
+        should_use_pred = use_pred;
 
         if(use_pred){
             auto find_pred = bypass_pred.find(pc);

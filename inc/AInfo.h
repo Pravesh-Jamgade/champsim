@@ -90,7 +90,7 @@ class LoopAddr
         public:
         IntPtr insert, evict;
         Count(){
-            insert=evict=0;
+            insert=1,evict=0;
         }
     };
 
