@@ -57,11 +57,10 @@ class EpocData{
 
 class PCinfo{
     public:
-    map<IntPtr, EpocData> bypass;
-    map<IntPtr, bool> bypass_pred;
 
     bool use_pred = false;
     EpocManager epoc_mgr;
+<<<<<<< HEAD
     PCinfo(){}
     PCinfo(IntPtr cycle){
         epoc_mgr = EpocManager(cycle);
@@ -108,7 +107,33 @@ class PCinfo{
             if(find_pred!=bypass_pred.end())
                 return bypass_pred[pc];
         }
+=======
+    int epoc;
+    FILE *out_fs;
 
-        return false;
+    PCinfo(){}
+    PCinfo(IntPtr cycle){
+        epoc_mgr = EpocManager(cycle);
+        out_fs = fopen("epoc.log", "w");
+        epoc = 0;
+    }
+
+    // not found->-1, dead->1, intense->2
+    int feed(AATable aatable, IntPtr pc, IntPtr cc){
+
+        // if it is end of epoc then calculate predicition 
+        // if(epoc_mgr.tick(cc)){
+        //     fprintf(out_fs, "%d, %ld\n", epoc++, epoc_mgr.cycle);
+            // aatable.calculate(epoc); // calculate prediction for next epoc
+            use_pred = true; // start using prediciton right after end of first epoc
+        // }
+
+        // if(use_pred){
+        //     int pred = aatable.find_pred(pc);
+        //     return pred;
+        // }
+>>>>>>> c02f661... added
+
+        return -1;
     }
 };
