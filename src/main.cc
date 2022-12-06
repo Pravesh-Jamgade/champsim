@@ -9,6 +9,9 @@
 #include <vector>
 #include <fstream>
 
+#include <stdio.h>
+#include <unistd.h>
+
 #include "cache.h"
 #include "champsim.h"
 #include "champsim_constants.h"
@@ -404,6 +407,14 @@ int main(int argc, char** argv)
   }
   // end trace file setup
 
+  // ***
+  AATable* aatable = new AATable();
+  for(auto cache: caches){
+    if(cache->NAME.find("L2C") == string::npos || cache->NAME.find("LLC") == string::npos){
+      continue;
+    }
+    cache->set_aatable(aatable);
+  }
   // SHARED CACHE
   for (O3_CPU* cpu : ooo_cpu) {
     cpu->initialize_core();
@@ -524,15 +535,36 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  fstream cache_file_stream, ipc_file_stream, wr_type_fs, llc_data_fs, loop_fs;
+  fstream cache_file_stream, ipc_file_stream, wr_type_fs, llc_data_fs, loop_fs, sim_stat_fs;
 
   cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
   ipc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
   wr_type_fs.open("wrtype.log", fstream::in | fstream::out | fstream::app);
   llc_data_fs.open("data.log", fstream::in | fstream::out | fstream::app);
   loop_fs.open("Loop_"+trace_name+"_"+policy_config+"_"+size_config+".log", fstream::in | fstream::out | fstream::app);
+  sim_stat_fs.open("simstat.log", fstream::in | fstream::out | fstream::app);
 
   string common_string = trace_name+","+policy_config+","+size_config;
+
+  CACHE *llc = caches.front();
+
+  // summary report of remaining metrics
+  for (uint32_t i = 0; i < NUM_CPUS; i++) {
+    int cycles = ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
+    int instr = ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr;
+    double cumm_ipc = (double)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
+    sim_stat_fs <<common_string <<",total,"<< i << "," << cumm_ipc << "," << instr << "," << cycles <<'\n';
+  }
+
+  for (uint32_t i = 0; i < NUM_CPUS; i++) {
+    int cycles = ooo_cpu[i]->finish_sim_cycle;
+    int instr = ooo_cpu[i]->finish_sim_instr;
+    double cumm_ipc = ((double)instr/cycles);
+    sim_stat_fs<<common_string <<",roi,"<< i << "," << cumm_ipc << "," << instr << "," << cycles <<'\n';
+  }
+
+  // number of bypassses at LLC
+  sim_stat_fs << common_string << ",LLC-Bypass," << llc->bypass << "," << llc->others << '\n';
 
   for(auto cache: caches){
 
@@ -543,8 +575,7 @@ int main(int argc, char** argv)
       TOTAL_HIT += cache->sim_hit[cpu][i];
       TOTAL_MISS += cache->sim_miss[cpu][i];
     }
-    float miss_ratio = (float)TOTAL_MISS/(float)TOTAL_ACCESS;
-    string result = trace_name + "," + policy_config+ ","+ size_config+ "," + cache->NAME + "," + to_string(cpu) + "," +to_string(TOTAL_MISS);
+    string result = trace_name + "," + policy_config+ ","+ size_config+ "," + cache->NAME + "," + to_string(cpu) + "," +to_string(TOTAL_MISS)+","+to_string(TOTAL_HIT)+","+to_string(TOTAL_ACCESS);
     cache_file_stream << result << '\n';
   }
 
@@ -554,40 +585,34 @@ int main(int argc, char** argv)
     ipc_file_stream << result << '\n';
   }
 
-  cache_file_stream.close();
-  ipc_file_stream.close();
+  // LLC cache, tracking per block counter
+  CACHE *cache = caches.front();
 
-    // cache
-      CACHE *cache = caches.front();
+  string fileName = "w_"+trace_name+"_"+policy_config+"_"+size_config+"_"+cache->NAME+".log";
+  FILE* fptr = fopen(fileName.c_str(), "w");
 
-      string fileName = "w_"+trace_name+"_"+policy_config+"_"+size_config+"_"+cache->NAME+".log";
-      FILE* fptr = fopen(fileName.c_str(), "w");
+  if(fptr ==  NULL){
+    cout<< "[ERR] error opening log file\n";
+    exit(0);
+  }
 
-      if(fptr ==  NULL){
-        cout<< "[ERR] error opening log file\n";
-        exit(0);
-      }
+  // set
+  for(int j=0; j< cache->NUM_SET; j++){
+    
+    string s = "";
+    // * set, set write count, ways write count...
+    s +=  to_string(j) + "," + to_string(cache->set_stat[j].writes) + ",";
+    
+    // way
+    for(int k=0; k< cache->NUM_WAY; k++){
+      uint32_t way_wr_count = cache->block[j * cache->NUM_WAY + k].write_counter; 
+      s += to_string(way_wr_count) + ",";
+    }
 
-      // set
-      for(int j=0; j< cache->NUM_SET; j++){
-        
-        string s = "";
-        // * set, set write count, ways write count...
-        s +=  to_string(j) + "," + to_string(cache->set_stat[j].writes) + ",";
-        
-        // way
-        for(int k=0; k< cache->NUM_WAY; k++){
-          uint32_t way_wr_count = cache->block[j * cache->NUM_WAY + k].write_counter; 
-          s += to_string(way_wr_count) + ",";
-        }
+    fprintf(fptr, "%s\n", s.c_str());
+  }
 
-        fprintf(fptr, "%s\n", s.c_str());
-      }
-
-      fclose(fptr);
-
-  // *** write variation
-  CACHE *llc = caches.front();
+  fclose(fptr);
 
   uint64_t total_write_count=0;
   for(int i=0;i< llc->NUM_SET; i++){
@@ -637,7 +662,7 @@ int main(int argc, char** argv)
   total_expect = sqrt(total_expect);
   double inter = total_expect/total_avg_wr;
 
-  vector<string> vec = llc->aatable.type_of_writes.print();
+  vector<string> vec = llc->aatable->type_of_writes.print();
   for(auto st: vec){
     wr_type_fs << common_string << "," << st << '\n';
   }
@@ -654,13 +679,15 @@ int main(int argc, char** argv)
 
   for(auto begin = caches.begin(); begin != caches.end(); ++begin){
     CACHE* c = *begin;
-    if(c->NAME.find("LLC") != string::npos || c->NAME.find("L2C") != string::npos){
-      for(auto line: c->aatable.get_addr_loop()){
+    if(c->NAME.find("LLC") != string::npos || c->NAME.find("L2") != string::npos){
+      for(auto line: c->aatable->get_addr_loop()){
         string wr = to_string(c->cpu) + "," + c->NAME + "," + line + '\n';
         loop_fs << wr ;
       }
     }
   }
+  
+  cout << llc->bypass << "," << llc->others << '\n';
 
 #ifndef CRC2_COMPILE
   print_dram_stats();
