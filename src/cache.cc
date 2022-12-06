@@ -59,8 +59,9 @@ void CACHE::handle_fill()
     block[set*NUM_WAY + way].write_counter++;
     set_stat[set].writes++;
 
-    aatable.update_lx(fill_mshr->address, true);
-
+    if(aatable!=nullptr)
+      aatable->update_lx(fill_mshr->ip, true);
+ 
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
   }
@@ -93,19 +94,34 @@ void CACHE::handle_writeback()
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
     bool is_it_hit = way < NUM_WAY;
-    bool should_use_pred=false;
-    bool write_by_pass = pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred, current_cycle);
+    int write_by_pass = handle_pkt.hint;
+
+    if(NAME.find("L2C")==string::npos){
+      if(write_by_pass){
+        fprintf(out_fs, "%d,", handle_pkt.ip);
+      }
+    }
     
-    if(NAME == "LLC" && should_use_pred){
+    if(NAME == "LLC" && false){
+
+      // counting number of bypasses
+      if(write_by_pass==1){
+        bypass++;
+      }
+      else{
+        others++;
+      }
+
       //hit
       if(is_it_hit){
         //bypass
-        if(write_by_pass){
+        if(write_by_pass == 1){
           // invalid existing line + write to mm
           fill_block.valid = 0;
           lower_level->add_wq(&handle_pkt);
 
-          aatable.update_lx(fill_block.address, false);
+          if(aatable!=nullptr)
+            aatable->update_lx(fill_block.ip, false);
         }
         //donot bypass
         else{
@@ -123,7 +139,7 @@ void CACHE::handle_writeback()
       //miss
       else{
         //bypass
-        if(write_by_pass){
+        if(write_by_pass == 1){
           // write to mm
           lower_level->add_wq(&handle_pkt);
         }
@@ -171,7 +187,8 @@ void CACHE::handle_writeback()
           if (!success)
             return;
 
-          aatable.update_lx(handle_pkt.address, true);
+          if(aatable!=nullptr)
+            aatable->update_lx(handle_pkt.ip, true);
         }
     }
    
@@ -207,7 +224,6 @@ void CACHE::handle_read()
     // *** counting read access as well to predict write bypasssing
     bool is_it_hit = way < NUM_WAY;
     bool should_use_pred = false;
-    pcinfo.feed(handle_pkt.ip, is_it_hit, should_use_pred, current_cycle);
 
     if (way < NUM_WAY) // HIT
     {
@@ -435,7 +451,14 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         return false;
 
       // ***
-      aatable.update_lx(fill_block.address, false);
+      int pred = -1;
+      if(aatable!=nullptr){
+        pred = aatable->update_lx(fill_block.ip, false);
+        if(NAME.find("L2")!=string::npos){
+          writeback_packet.hint = pred;
+        }
+      }
+
     }
 
     if (ever_seen_data)
@@ -634,7 +657,8 @@ int CACHE::add_wq(PACKET* packet)
   WQ_ACCESS++;
 
   // ***
-  aatable.increase_write_count(packet->type);
+  if(aatable!=nullptr)
+    aatable->increase_write_count(packet->type);
 
   return WQ.occupancy();
 }
@@ -839,4 +863,10 @@ void CACHE::print_deadlock()
   } else {
     std::cout << NAME << " MSHR empty" << std::endl;
   }
+}
+
+
+void
+CACHE::set_aatable(AATable* aatable){
+  this->aatable=aatable;
 }

@@ -70,56 +70,19 @@ class WType
 };
 
 
-class AAinfo{
+class Count{
     public:
-    int writes;
-
-};
-
-
-/**
- * @brief Loop Addresses 
- * 
- */
-class LoopAddr
-{
-    public:
-    LoopAddr(){}
-    
-
-    class Count{
-        public:
-        IntPtr insert, evict;
-        Count(){
-            insert=evict=0;
-        }
-    };
-
-    map<IntPtr, Count> score;
-    void insert(IntPtr pc, bool req_type){
-        auto findPC = score.find(pc);
-        // eviction
-        if(req_type == 0){
-            
-            if(findPC != score.end()){
-                findPC->second.evict++;
-            }
-            else{
-                // during evixtion should not have happened;
-            }
-        }
-        // insert
-        else{
-            
-            if(findPC != score.end()){
-                findPC->second.insert++;
-            }
-            else{
-                score.insert({pc, Count()});
-            }
-        }
+    int fills;
+    int writebacks;
+    int score;
+    Count(){
+        score=fills=writebacks=0;
+    }
+    int get_score(){
+        return fills - writebacks;
     }
 };
+
 
 /**
  * @brief Address access table
@@ -129,28 +92,51 @@ class AATable{
 
     public:
 
-    LoopAddr *ll;
-
     WType type_of_writes;
     static int pos;
+    map<IntPtr, Count> prediciton;//1->write 0->dead
+    int thresh = 16;
 
-    AATable(){
-        ll = new LoopAddr();
+    AATable(){}
+
+    int insert(IntPtr pc, int req_type){
+        auto findPC = prediciton.find(pc);
+        if(findPC==prediciton.end()){
+            prediciton.insert({pc, Count()});
+        }
+
+        // evict
+        if(req_type==0){
+            findPC->second.score -= 1;
+            findPC->second.writebacks++;
+        }
+        // insert
+        else{
+            findPC->second.score += 2;
+            findPC->second.fills++;
+        }
+
+        if(findPC == prediciton.end()){
+            return -1;
+        }
+
+        return findPC->second.get_score() > thresh? 1:0;
+    }
+
+    // req_type: 0->evicted 1->inserted
+    //return notfound-1,dead0,intense1
+    int update_lx(IntPtr addr, int req_type){
+        return insert(addr, req_type);
     }
 
     void increase_write_count(int t){
         type_of_writes.inc(static_cast<WriteType>(t));
     }
 
-    // req_type: 0->evicted 1->inserted
-    void update_lx(IntPtr addr, bool req_type){
-        ll->insert(addr, req_type);
-    }
-
     vector<string> get_addr_loop(){
         vector<string> all_res;
-        for(auto m: ll->score){
-            string res = ""+to_string(m.first)+","+to_string(m.second.insert)+","+to_string(m.second.evict);
+        for(auto m: prediciton){
+            string res = ""+to_string(m.first)+","+to_string(m.second.fills)+","+to_string(m.second.writebacks);
             all_res.push_back(res);
         }
         return all_res;
