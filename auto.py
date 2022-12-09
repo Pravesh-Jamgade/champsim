@@ -36,9 +36,9 @@ BLOCK_SIZE = 64
 
 ways = [8] #llc
 all_size = [
-    0.5, 
+    # 0.5, 
     # 1, 
-    # 2
+    2
 ]#llc cache size in MB
 cache = ['LLC']
 
