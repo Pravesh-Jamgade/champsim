@@ -36,9 +36,9 @@ BLOCK_SIZE = 64
 
 ways = [8] #llc
 all_size = [
-    0.5, 
+    # 0.5, 
     # 1, 
-    # 2
+    2
 ]#llc cache size in MB
 
 cache = ['LLC']
@@ -114,7 +114,7 @@ for fol in inputs:
                 'make clean', 
                 './config.sh champsim_config.json', 
                 'make -s', 
-                "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} {} {} {} --trace_name {} --policy {} --size {}".format(trace_path1, trace_path2, trace_path3, trace_path4, folName, replace_policy, size)
+                "./bin/champsim --warmup_instructions 1000000 --simulation_instructions 200000000 {} {} {} {} --trace_name {} --policy {} --size {}".format(trace_path1, trace_path2, trace_path3, trace_path4, folName, replace_policy, size)
             ]
             
             for cmd in all_cmd:
