@@ -114,15 +114,7 @@ for fol in inputs:
                 'make clean', 
                 './config.sh champsim_config.json', 
                 'make -s', 
-<<<<<<< HEAD
-<<<<<<< HEAD
                 "./bin/champsim --warmup_instructions 50000000 --simulation_instructions 200000000 {} {} {} {} --trace_name {} --policy {} --size {}".format(trace_path1, trace_path2, trace_path3, trace_path4, folName, replace_policy, size)
-=======
-                "./bin/champsim --warmup_instructions 1000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path1, folName, replace_policy, size)
->>>>>>> 6286d3e... added # sim instr
-=======
-                "./bin/champsim --warmup_instructions 1000000 --simulation_instructions 20000000 {} --trace_name {} --policy {} --size {}".format(trace_path1, folName, replace_policy, size)
->>>>>>> c02f661... added
             ]
             
             for cmd in all_cmd:
