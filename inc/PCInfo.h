@@ -60,54 +60,6 @@ class PCinfo{
 
     bool use_pred = false;
     EpocManager epoc_mgr;
-<<<<<<< HEAD
-    PCinfo(){}
-    PCinfo(IntPtr cycle){
-        epoc_mgr = EpocManager(cycle);
-    }
-
-    // result hit->1, miss->0
-    bool feed(IntPtr pc, bool result, bool& should_use_pred, IntPtr cycle){
-
-        should_use_pred = use_pred;
-
-        auto findpc = bypass.find(pc);
-        if(findpc==bypass.end()){
-            bypass[pc]=EpocData();
-        }
-
-        // learn for first 100 access(read/write) of application start then do both learn and apply
-        bypass[pc].inc_access();
-        if(!result){
-            bypass[pc].inc_miss();
-        }
-        epoc_mgr.tick(cycle);
-       
-        // if it is end of epoc then calculate predicition 
-        if(epoc_mgr.cal_predi()){
-            // calculate avg miss ratio per pc
-            double avg_miss = 0;
-            for(auto pc: bypass){
-                double mr = pc.second.cal_miss_ratio();
-                avg_miss += mr;
-            }
-            avg_miss /= bypass.size();
-
-            // update predition; miss ratio above avg is bypass otherwise stay
-            for(auto pc: bypass){
-                bypass_pred[pc.first] = pc.second.cal_miss_ratio() > avg_miss ? true: false;
-            }
-            bypass.clear(); // clear to accumulate data for next epoc
-            use_pred = true; // start using prediciton right after end of first epoc
-            epoc_mgr.epoc_type = false; // start learning and prevent from calculating prediciton untill end of next epoc
-        }
-
-        if(use_pred){
-            auto find_pred = bypass_pred.find(pc);
-            if(find_pred!=bypass_pred.end())
-                return bypass_pred[pc];
-        }
-=======
     int epoc;
     FILE *out_fs;
 
@@ -132,7 +84,6 @@ class PCinfo{
         //     int pred = aatable.find_pred(pc);
         //     return pred;
         // }
->>>>>>> c02f661... added
 
         return -1;
     }

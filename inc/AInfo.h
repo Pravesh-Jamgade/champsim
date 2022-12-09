@@ -92,13 +92,6 @@ class AATable{
 
     public:
 
-<<<<<<< HEAD
-    class Count{
-        public:
-        IntPtr insert, evict;
-        Count(){
-            insert=evict=0;
-=======
     WType type_of_writes;
     static int pos;
     map<IntPtr, Count> prediciton;//1->write 0->dead
@@ -110,7 +103,6 @@ class AATable{
         auto findPC = prediciton.find(pc);
         if(findPC==prediciton.end()){
             prediciton.insert({pc, Count()});
->>>>>>> c02f661... added
         }
 
         // evict
