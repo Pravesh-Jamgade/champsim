@@ -62,7 +62,7 @@ class WType
         vector<string> vec;
         for(int i=0 ;i< 6; i++){
             string st = "";
-            st = get_type(i) + "," + to_string(wr_type[i]);
+            // st = get_type(i) + "," + to_string(wr_type[i]);
             vec.push_back(st);
         }
         return vec;
