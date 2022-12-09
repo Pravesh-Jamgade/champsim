@@ -679,6 +679,8 @@ int main(int argc, char** argv)
 
   for(auto begin = caches.begin(); begin != caches.end(); ++begin){
     CACHE* c = *begin;
+    if(c->aatable == nullptr)
+      continue;
     if(c->NAME.find("LLC") != string::npos || c->NAME.find("L2") != string::npos){
       for(auto line: c->aatable->get_addr_loop()){
         string wr = to_string(c->cpu) + "," + c->NAME + "," + line + '\n';
