@@ -108,7 +108,7 @@ public:
   AATable* aatable;
   PCinfo pcinfo;
   int bypass, others;
-  FILE* out_fs, count_fs;
+  FILE* out_fs, *count_fs, *track_ip_fs;
 
   // constructor
   CACHE(std::string v1, double freq_scale, unsigned fill_level, uint32_t v2, int v3, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8, uint32_t hit_lat,
@@ -120,8 +120,10 @@ public:
         repl_type(repl), pref_type(pref)
   {
     pcinfo = PCinfo(current_cycle);
+    
     string fileName="bypass.log";
     out_fs = fopen(fileName.c_str(), "w");
+    
     others=bypass=0;
     aatable = nullptr;
   }

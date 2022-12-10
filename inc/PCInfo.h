@@ -60,7 +60,7 @@ class PCinfo{
     PCinfo(){}
     PCinfo(IntPtr cycle){
         epoc_mgr = EpocManager(cycle);
-        out_fs = fopen("epoc.log", "w");
+        // out_fs = fopen("epoc.log", "w");
         epoc = 0;
     }
 

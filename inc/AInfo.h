@@ -15,6 +15,8 @@
 #include <set>
 #include "constant.h"
 
+#define SIZE 1000000
+
 using namespace std;
 
 // // CACHE ACCESS TYPE
@@ -60,11 +62,11 @@ class WType
 
     vector<string> print(){
         vector<string> vec;
-        for(int i=0 ;i< 6; i++){
-            string st = "";
-            // st = get_type(i) + "," + to_string(wr_type[i]);
-            vec.push_back(st);
-        }
+        // for(int i=0 ;i< 6; i++){
+        //     string st = "";
+        //     st = get_type(i) + "," + to_string(wr_type[i]);
+        //     vec.push_back(st);
+        // }
         return vec;
     }
 };
@@ -76,11 +78,10 @@ class Count{
     int writebacks;
     int score;
     Count(){
-        score=fills=writebacks=0;
+        score=writebacks=0;
+        fills=1;
     }
-    int get_score(){
-        return fills - writebacks;
-    }
+    int get_score(){return score;}
 };
 
 
@@ -96,6 +97,11 @@ class AATable{
     static int pos;
     map<IntPtr, Count> prediciton;//1->write 0->dead
     int thresh = 16;
+    IntPtr prev_diff = 0;
+
+        
+    string fileName="epoc.log";
+    FILE* epoc_fs = fopen(fileName.c_str(), "w");
 
     AATable(){}
 
@@ -103,6 +109,7 @@ class AATable{
         auto findPC = prediciton.find(pc);
         if(findPC==prediciton.end()){
             prediciton.insert({pc, Count()});
+            return -1;
         }
 
         // evict
@@ -115,12 +122,23 @@ class AATable{
             findPC->second.score += 2;
             findPC->second.fills++;
         }
+        return findPC->second.get_score() > thresh ? 1:0;
+    }
 
-        if(findPC == prediciton.end()){
-            return -1;
+    void decrease_score(IntPtr cycle){
+        IntPtr diff = cycle % SIZE;
+        if(diff < prev_diff){
+            cycle = cycle;
+            prev_diff = 0;
+
+            fprintf(epoc_fs, "%ld\n", cycle);
+            for(auto e: prediciton){
+                e.second.score--;
+            }
+
+            return;
         }
-
-        return findPC->second.get_score() > thresh? 1:0;
+        prev_diff = diff;
     }
 
     // req_type: 0->evicted 1->inserted
