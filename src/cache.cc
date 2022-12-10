@@ -102,7 +102,7 @@ void CACHE::handle_writeback()
       }
     }
     
-    if(NAME == "LLC" && false){
+    if(NAME == "LLC" && write_by_pass!=-1){
 
       // counting number of bypasses
       if(write_by_pass==1){
