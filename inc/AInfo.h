@@ -96,10 +96,9 @@ class AATable{
     WType type_of_writes;
     static int pos;
     map<IntPtr, Count> prediciton;//1->write 0->dead
-    int thresh = 16;
+    int thresh = 5;
     IntPtr prev_diff = 0;
 
-        
     string fileName="epoc.log";
     FILE* epoc_fs = fopen(fileName.c_str(), "w");
 
@@ -130,9 +129,14 @@ class AATable{
         if(diff < prev_diff){
             cycle = cycle;
             prev_diff = 0;
-
-            fprintf(epoc_fs, "%ld\n", cycle);
+            
+            fprintf(epoc_fs, "%ld,%d\n", cycle, prediciton.size());
             for(auto e: prediciton){
+                fprintf(epoc_fs, "%ld,%ld,%ld\n", e.first, e.second.score, cycle);
+            }
+            for(auto e: prediciton){
+                if(e.second.score < 0)
+                    continue;
                 e.second.score--;
             }
 

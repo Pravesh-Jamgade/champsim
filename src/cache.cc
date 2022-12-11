@@ -104,6 +104,11 @@ void CACHE::handle_writeback()
     
     if(NAME == "LLC" && write_by_pass!=-1){
 
+      if(first_time){
+        cout << "Bypass Enabled" << current_cycle << '\n';
+        first_time=false;
+      }
+        
       // counting number of bypasses
       if(write_by_pass==1){
         bypass++;

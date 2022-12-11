@@ -409,6 +409,8 @@ int main(int argc, char** argv)
 
   // ***
   AATable* aatable = new AATable();
+  CACHE *llc = caches.front();
+
   for(auto cache: caches){
     if(cache->NAME.find("L2C") == string::npos || cache->NAME.find("LLC") == string::npos){
       continue;
@@ -450,6 +452,10 @@ int main(int argc, char** argv)
     std::sort(std::begin(operables), std::end(operables), champsim::by_next_operate());
 
     for (std::size_t i = 0; i < ooo_cpu.size(); ++i) {
+      
+      //***
+      aatable->decrease_score(ooo_cpu[i]->current_cycle);
+
       // read from trace
       while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
         ooo_cpu[i]->init_instruction(traces[i]->get());
@@ -545,8 +551,6 @@ int main(int argc, char** argv)
   sim_stat_fs.open("simstat.log", fstream::in | fstream::out | fstream::app);
 
   string common_string = trace_name+","+policy_config+","+size_config;
-
-  CACHE *llc = caches.front();
 
   // summary report of remaining metrics
   for (uint32_t i = 0; i < NUM_CPUS; i++) {

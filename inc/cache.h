@@ -109,7 +109,7 @@ public:
   PCinfo pcinfo;
   int bypass, others;
   FILE* out_fs, *count_fs, *track_ip_fs;
-
+  bool first_time;
   // constructor
   CACHE(std::string v1, double freq_scale, unsigned fill_level, uint32_t v2, int v3, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8, uint32_t hit_lat,
         uint32_t fill_lat, uint32_t max_read, uint32_t max_write, std::size_t offset_bits, bool pref_load, bool wq_full_addr, bool va_pref,
@@ -126,6 +126,7 @@ public:
     
     others=bypass=0;
     aatable = nullptr;
+    first_time = true;
   }
 };
 
