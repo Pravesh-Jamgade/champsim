@@ -126,18 +126,14 @@ for fol in inputs:
             
             for cmd in all_cmd:
                 try:
-                    with subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
-                        op, er = proc.communicate()
-                        if proc.returncode < 0:
-                            raise Exception("*fail*")
+                    os.system(cmd)
                 except:
-                    frun.write("{} for {}..fail\n".format(combi_str, cmd))
-                    print("{} for {}..fail\n".format(combi_str, cmd))
+                    frun.write("{} for {} ..fail\n".format(cmd, combi_str))
+                    print("{} for {} ..fail\n".format(cmd, combi_str))
                     break
-            frun.write("{} ..pass\n".format(combi_str))
-            print("{} ..pass\n".format(combi_str))
+            
             frun.close()
             
 default_json_file.close()
-#, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+
             

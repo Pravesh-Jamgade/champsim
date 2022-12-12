@@ -1,5 +1,7 @@
 #include <iostream>
 #include <map>
+#include <fstream>
+
 #include "constant.h"
 
 #define SIZE 1000000
@@ -11,32 +13,24 @@ class EpocManager{
     bool epoc_type;
     IntPtr epocLength;// # memory references
     IntPtr cycle, prev_diff;
+
     EpocManager(){}
     EpocManager(IntPtr cycle){
-        epocLength = 100;
+        epocLength = SIZE;
         epoc_type = false; // learning
         this->cycle = cycle;
         this->prev_diff = 0;
     }
 
-    void tick(IntPtr curr_cycle){
-        IntPtr diff = (curr_cycle - cycle + 1) % SIZE;
-        if(prev_diff > diff){
-            epoc_type = true;
+    bool tick(IntPtr curr_cycle){
+        IntPtr diff = curr_cycle % SIZE;
+        if(diff < prev_diff){
             cycle = curr_cycle;
+            prev_diff = 0;
+            return true;
         }
         prev_diff = diff;
-            
-        // if(epocLength>0) epocLength--;
-        // else epocLength++;
-        // if(epocLength == 0){
-        //     epoc_type = true;
-        // }
-    }
-
-    // false->learn; true->apply
-    bool cal_predi(){
-        return epoc_type;
+        return false;
     }
 };
 
@@ -66,7 +60,7 @@ class PCinfo{
     PCinfo(){}
     PCinfo(IntPtr cycle){
         epoc_mgr = EpocManager(cycle);
-        out_fs = fopen("epoc.log", "w");
+        // out_fs = fopen("epoc.log", "w");
         epoc = 0;
     }
 
