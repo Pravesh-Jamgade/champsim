@@ -120,10 +120,6 @@ public:
         repl_type(repl), pref_type(pref)
   {
     pcinfo = PCinfo(current_cycle);
-    
-    string fileName="bypass.log";
-    out_fs = fopen(fileName.c_str(), "w");
-    
     others=bypass=0;
     aatable = nullptr;
     first_time = true;

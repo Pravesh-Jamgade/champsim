@@ -94,21 +94,13 @@ void CACHE::handle_writeback()
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
     bool is_it_hit = way < NUM_WAY;
-    int write_by_pass = handle_pkt.hint;
 
-    if(NAME.find("L2C")==string::npos){
-      if(write_by_pass){
-        fprintf(out_fs, "%d,", handle_pkt.ip);
-      }
-    }
-    
+    int write_by_pass = -1;
+    if(aatable!=nullptr)
+      write_by_pass = aatable->update_lx(handle_pkt.ip, -1);
+
     if(NAME == "LLC" && write_by_pass!=-1){
 
-      if(first_time){
-        cout << "Bypass Enabled" << current_cycle << '\n';
-        first_time=false;
-      }
-        
       // counting number of bypasses
       if(write_by_pass==1){
         bypass++;
@@ -122,11 +114,7 @@ void CACHE::handle_writeback()
         //bypass
         if(write_by_pass == 1){
           // invalid existing line + write to mm
-          fill_block.valid = 0;
-          lower_level->add_wq(&handle_pkt);
-
-          if(aatable!=nullptr)
-            aatable->update_lx(fill_block.ip, false);
+          filllike_miss(set, way, handle_pkt);
         }
         //donot bypass
         else{
@@ -447,7 +435,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.address = fill_block.address;
       writeback_packet.data = fill_block.data;
       writeback_packet.instr_id = handle_pkt.instr_id;
-      writeback_packet.ip = 0;
+      writeback_packet.ip = fill_block.ip;//*** 0
       writeback_packet.type = WRITEBACK;
 
       auto result = lower_level->add_wq(&writeback_packet);
@@ -456,12 +444,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         return false;
 
       // ***
-      int pred = -1;
       if(aatable!=nullptr){
-        pred = aatable->update_lx(fill_block.ip, false);
-        if(NAME.find("L2")!=string::npos){
-          writeback_packet.hint = pred;
-        }
+        aatable->update_lx(fill_block.ip, false);
       }
 
     }

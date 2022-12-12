@@ -412,11 +412,11 @@ int main(int argc, char** argv)
   CACHE *llc = caches.front();
 
   for(auto cache: caches){
-    if(cache->NAME.find("L2C") == string::npos || cache->NAME.find("LLC") == string::npos){
-      continue;
+    if(cache->NAME.find("L2") != string::npos || cache->NAME.find("LLC") != string::npos){
+      cache->set_aatable(aatable);
     }
-    cache->set_aatable(aatable);
   }
+
   // SHARED CACHE
   for (O3_CPU* cpu : ooo_cpu) {
     cpu->initialize_core();

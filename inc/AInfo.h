@@ -78,8 +78,9 @@ class Count{
     int writebacks;
     int score;
     Count(){
-        score=writebacks=0;
+        writebacks=0;
         fills=1;
+        score=2;
     }
     int get_score(){return score;}
 };
@@ -111,6 +112,10 @@ class AATable{
             return -1;
         }
 
+        if(req_type == -1){
+            return findPC->second.get_score() > thresh ? 1:0;
+        }
+
         // evict
         if(req_type==0){
             findPC->second.score -= 1;
@@ -121,6 +126,7 @@ class AATable{
             findPC->second.score += 2;
             findPC->second.fills++;
         }
+
         return findPC->second.get_score() > thresh ? 1:0;
     }
 
@@ -131,12 +137,11 @@ class AATable{
             prev_diff = 0;
             
             fprintf(epoc_fs, "%ld,%d\n", cycle, prediciton.size());
-            for(auto e: prediciton){
-                fprintf(epoc_fs, "%ld,%ld,%ld\n", e.first, e.second.score, cycle);
-            }
+           
             for(auto e: prediciton){
                 if(e.second.score < 0)
                     continue;
+                fprintf(epoc_fs, "%ld,%ld,%ld\n", e.first, e.second.score>thresh, cycle);
                 e.second.score--;
             }
 
