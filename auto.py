@@ -38,7 +38,7 @@ ways = [8] #llc
 all_size = [
     # 0.5, 
     # 1, 
-    2
+    4
 ]#llc cache size in MB
 cache = ['LLC']
 
