@@ -121,10 +121,8 @@ for fol in inputs:
                     os.system(cmd)
                 except:
                     frun.write("{} for {} ..fail\n".format(cmd, combi_str))
-                    print("{} for {} ..fail\n".format(cmd, combi_str))
                     exit()
-            frun.write("{} ..pass\n".format(combi_str))
-            print("{} ..pass\n".format(combi_str))
+                frun.write("{} for {} ..pass\n".format(cmd, combi_str))
             
             frun.close()
             
