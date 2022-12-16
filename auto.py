@@ -41,12 +41,8 @@ ways = [int(sys.argv[1])] #llc
 all_size = [
     # 0.5, 
     # 1, 
-<<<<<<< HEAD
-    4
-=======
     int(sys.argv[2])
->>>>>>> 4c38774... auto.py cmd parameters
-]#llc cache size in MB
+]#llc cache size inMB
 cache = ['LLC']
 
 replacement = [
