@@ -4,6 +4,7 @@ import json
 import os
 import shlex
 from os.path import exists
+import sys
 
 import shutil
 
@@ -41,11 +42,13 @@ def combi(depth, j, bag):
 # block size is 64B
 BLOCK_SIZE = 64
 
-ways = [8] #llc
+print("python3 auto.py ways cache_size")
+
+ways = [int(sys.argv[1])] #llc
 all_size = [
     # 0.5, 
     # 1, 
-    2
+    int(sys.argv[2])
 ]#llc cache size in MB
 cache = ['LLC']
 
