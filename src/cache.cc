@@ -175,13 +175,18 @@ void CACHE::handle_writeback()
                                                 handle_pkt.type);
 
             success = filllike_miss(set, way, handle_pkt);
+
+            //***
+            if(success){
+              if(aatable!=nullptr)
+                aatable->update_lx(handle_pkt.ip, true);
+              if(aainfo!=nullptr)
+                aainfo->insert(NAME, handle_pkt.address, true);
+            }
           }
 
           if (!success)
             return;
-
-          if(aatable!=nullptr)
-            aatable->update_lx(handle_pkt.ip, true);
         }
     }
    
@@ -448,6 +453,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         aatable->update_lx(fill_block.ip, false);
       }
 
+      if(aainfo!=nullptr)
+        aainfo->insert(NAME, writeback_packet.address, false);
     }
 
     if (ever_seen_data)
@@ -858,4 +865,9 @@ void CACHE::print_deadlock()
 void
 CACHE::set_aatable(AATable* aatable){
   this->aatable=aatable;
+}
+
+void 
+CACHE::set_aainfo(AAinfo* aainfo){
+  this->aainfo = aainfo;
 }

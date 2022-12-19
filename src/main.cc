@@ -21,6 +21,8 @@
 #include "tracereader.h"
 #include "vmem.h"
 
+#include "AAinfo.h"
+
 uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
 
@@ -409,11 +411,13 @@ int main(int argc, char** argv)
 
   // ***
   AATable* aatable = new AATable();
+  AAinfo *aainfo = new AAinfo();
   CACHE *llc = caches.front();
 
   for(auto cache: caches){
     if(cache->NAME.find("L2") != string::npos || cache->NAME.find("LLC") != string::npos){
       cache->set_aatable(aatable);
+      cache->set_aainfo(aainfo);
     }
   }
 
