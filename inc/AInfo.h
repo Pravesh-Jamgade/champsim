@@ -107,6 +107,9 @@ class AATable{
 
     AATable(){}
 
+    // return: true if bypass allowed otherwise false;
+    // bypass is allowed when score is less than thresh; 
+    // implies score value is not intensive
     int insert(IntPtr pc, int req_type){
         auto findPC = prediciton.find(pc);
         if(findPC==prediciton.end()){
@@ -126,7 +129,7 @@ class AATable{
         }
 
         if(findPC->second.invalid==true) return -1;
-        return findPC->second.get_score() > thresh ? 1:0;
+        return findPC->second.get_score() <= thresh ? 1:0;
     }
 
     void decrease_score(IntPtr cycle){
