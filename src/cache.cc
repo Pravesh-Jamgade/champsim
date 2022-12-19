@@ -175,13 +175,16 @@ void CACHE::handle_writeback()
                                                 handle_pkt.type);
 
             success = filllike_miss(set, way, handle_pkt);
+
+            //***
+            if(success){
+              if(aatable!=nullptr)
+                aatable->update_lx(handle_pkt.ip, true);
+            }
           }
 
           if (!success)
             return;
-
-          if(aatable!=nullptr)
-            aatable->update_lx(handle_pkt.ip, true);
         }
     }
    
