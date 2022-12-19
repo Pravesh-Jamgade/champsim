@@ -126,7 +126,7 @@ class AATable{
         }
 
         if(findPC->second.invalid==true) return -1;
-        return findPC->second.get_score() > thresh ? 1:0;
+        return findPC->second.get_score() < thresh ? 1:0;
     }
 
     void decrease_score(IntPtr cycle){
