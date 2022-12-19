@@ -77,10 +77,12 @@ class Count{
     int fills;
     int writebacks;
     int score;
+    bool invalid;
     Count(){
         writebacks=0;
         fills=1;
         score=2;
+        invalid=0;
     }
     int get_score(){return score;}
 };
@@ -112,21 +114,18 @@ class AATable{
             return -1;
         }
 
-        if(req_type == -1){
-            return findPC->second.get_score() > thresh ? 1:0;
-        }
-
         // evict
         if(req_type==0){
             findPC->second.score -= 1;
             findPC->second.writebacks++;
         }
         // insert
-        else{
+        else if(req_type==1){
             findPC->second.score += 2;
             findPC->second.fills++;
         }
 
+        if(findPC->second.invalid==true) return -1;
         return findPC->second.get_score() > thresh ? 1:0;
     }
 
@@ -137,12 +136,20 @@ class AATable{
             prev_diff = 0;
             
             fprintf(epoc_fs, "%ld,%d\n", cycle, prediciton.size());
-           
+
+            vector<IntPtr> rmlist;
             for(auto e: prediciton){
-                if(e.second.score < 0)
+                if(e.second.score < 0){
+                    rmlist.push_back(e.first);
+                    e.second.invalid = 1;
                     continue;
+                }
                 fprintf(epoc_fs, "%ld,%ld,%ld\n", e.first, e.second.score>thresh, cycle);
                 e.second.score--;
+            }
+
+            for(auto pc: rmlist){
+                prediciton.erase(pc);
             }
 
             return;
