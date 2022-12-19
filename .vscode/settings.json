@@ -8,6 +8,7 @@
         "array": "cpp",
         "iosfwd": "cpp",
         "set": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "functional": "cpp"
     }
 }
