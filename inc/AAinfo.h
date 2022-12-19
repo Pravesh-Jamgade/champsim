@@ -17,6 +17,7 @@ class Count{
     public:
     IntPtr insert[2]={0};
     IntPtr evict[2]={0};
+    IntPtr wb = 0; // writeback on LLC
     Count();
 };
 
@@ -62,5 +63,13 @@ class AAinfo{
         else{
             return ;
         }
+    }
+    std:vector<std::string> get_log(){
+        std::vector<std::string> all_log;
+        for(auto e: count){
+            std::string st = to_string(e.first)+","+to_string(e.second.insert[0])+","+to_string(e.second.evict[0])+","+to_string(e.second.insert[1])+","+to_string(e.second.evict[1]);
+            all_log.push_back(st);
+        }
+        return all_log;
     }
 };

@@ -61,6 +61,9 @@ void CACHE::handle_fill()
 
     if(aatable!=nullptr)
       aatable->update_lx(fill_mshr->ip, true);
+    
+    if(aainfo!=nullptr)
+      aainfo->insert(fill_mshr->address, true);
  
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
