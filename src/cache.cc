@@ -102,7 +102,7 @@ void CACHE::handle_writeback()
     if(aatable!=nullptr)
       write_by_pass = aatable->update_lx(handle_pkt.ip, -1);
 
-    if(NAME == "LLC" && write_by_pass!=-1){
+    if(NAME == "LLC" && write_by_pass!=-1 && false){
 
       // counting number of bypasses
       if(write_by_pass==1){
