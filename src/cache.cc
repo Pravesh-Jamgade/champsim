@@ -163,7 +163,7 @@ void CACHE::handle_writeback()
           if(NAME.find("LLC")!=std::string::npos) 
           {
             if(aainfo!=nullptr)
-              aainfo->insert(NAME, handle_pkt.address, true);
+              aainfo->insert(NAME, handle_pkt.address, true, true);
             if(aatable!=nullptr)
               aatable->update_lx(handle_pkt.ip, true);
           }
@@ -190,7 +190,7 @@ void CACHE::handle_writeback()
               if(aatable!=nullptr)
                 aatable->update_lx(handle_pkt.ip, true);
               if(aainfo!=nullptr)
-                aainfo->insert(NAME, handle_pkt.address, true);
+                aainfo->insert(NAME, handle_pkt.address, true, true);
             }
           }
 

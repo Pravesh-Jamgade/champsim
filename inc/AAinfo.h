@@ -17,24 +17,49 @@
 
 class TU{
     public:
-    IntPtr insert[2]={0};
+    IntPtr fill[2]={0};
     IntPtr evict[2]={0};
-    IntPtr wb = 0; // writeback on LLC
+    IntPtr writeback[2]={0};
     TU(){}
+    TU(bool l2, bool req, bool type_insert){
+        // insert
+        if(req){
+            //@l2
+            if(l2){
+                fill[0]++;
+            }
+            //@l3
+            else{
+                if(type_insert)
+                    writeback[1]++;
+                else
+                    fill[1]++;
+            }
+        }
+        // evict
+        else{
+            //@l2
+            if(l2)
+                evict[0]++;
+            //@l3
+            else 
+                evict[1]++;
+        }
+    }
 };
 
 class AAinfo{
     public:
     std::map<IntPtr, TU> count;
 
-    string fileName="aaexp.log";
+    std::string fileName="aaexp.log";
     FILE* aa_fs = fopen(fileName.c_str(), "w");
 
     AAinfo(){}
     
-    // insert: true, evict: false
-    void insert(std::string Name, IntPtr addr, bool req){
-        bool l2 = false;//Name.find("L2")!=std::string::npos;
+    // insert: true, evict: false, type_insert: false (fill) otherwise writeback
+    void insert(std::string Name, IntPtr addr, bool req, bool type_insert=false){
+        bool l2 = Name.find("L2")!=std::string::npos;
         bool l3 = Name.find("LLC")!=std::string::npos;
         if(l2 || l3){
             auto find_entry = count.find(addr);
@@ -43,7 +68,7 @@ class AAinfo{
                 if(l2){
                     if(req==true){
                         // insert @L2
-                        find_entry->second.insert[0]++;                     
+                        find_entry->second.fill[0]++;                     
                     }
                     else{
                         // evict from L2
@@ -53,7 +78,10 @@ class AAinfo{
                 // LLC
                 else{
                     if(req==true){
-                        find_entry->second.insert[1]++;
+                        if(type_insert)
+                            find_entry->second.writeback[1]++;
+                        else
+                            find_entry->second.fill[1]++;
                     }
                     else{
                         find_entry->second.evict[1]++;
@@ -61,17 +89,17 @@ class AAinfo{
                 }
             }
             else{
-                count[addr]=TU();
+                count[addr]=TU(l2,req,type_insert);
             }
         }
         else{
             return ;
         }
     }
-    vector<std::string> get_log(){
-        vector<std::string> all_log;
+    std::vector<std::string> get_log(){
+        std::vector<std::string> all_log;
         for(auto e: count){
-            std::string st = to_string(e.first)+","+to_string(e.second.insert[0])+","+to_string(e.second.evict[0])+","+to_string(e.second.insert[1])+","+to_string(e.second.evict[1]);
+            std::string st = std::to_string(e.first)+","+std::to_string(e.second.fill[0])+","+std::to_string(e.second.evict[0])+","+std::to_string(e.second.writeback[0])+","+std::to_string(e.second.fill[1])+","+std::to_string(e.second.evict[1])+","+std::to_string(e.second.writeback[1]);
             all_log.push_back(st);
             fprintf(aa_fs, "%s\n", st.c_str());
         }
