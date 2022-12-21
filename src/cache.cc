@@ -183,6 +183,8 @@ void CACHE::handle_writeback()
             if(success){
               if(aatable!=nullptr)
                 aatable->update_lx(handle_pkt.ip, true);
+              if(aainfo!=nullptr)
+                aainfo->insert(NAME, handle_pkt.address, true);
             }
           }
 
