@@ -63,7 +63,7 @@ void CACHE::handle_fill()
       aatable->update_lx(fill_mshr->ip, true);
     
     if(aainfo!=nullptr)
-      aainfo->insert(fill_mshr->address, true);
+      aainfo->insert(NAME, fill_mshr->address, true);
  
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
@@ -102,7 +102,7 @@ void CACHE::handle_writeback()
     if(aatable!=nullptr)
       write_by_pass = aatable->update_lx(handle_pkt.ip, -1);
 
-    if(NAME == "LLC" && write_by_pass!=-1 && false){
+    if(NAME == "LLC" && write_by_pass!=-1){
 
       // counting number of bypasses
       if(write_by_pass==1){
@@ -160,9 +160,15 @@ void CACHE::handle_writeback()
           fill_block.dirty = 1;
 
           // ***
-          hit = true;
-
-        } else // MISS
+          if(NAME.find("LLC")!=std::string::npos) 
+          {
+            if(aainfo!=nullptr)
+              aainfo->insert(NAME, handle_pkt.address, true);
+            if(aatable!=nullptr)
+              aatable->update_lx(handle_pkt.ip, true);
+          }
+        } 
+        else // MISS
         {
           bool success;
           if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) {
@@ -443,7 +449,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.address = fill_block.address;
       writeback_packet.data = fill_block.data;
       writeback_packet.instr_id = handle_pkt.instr_id;
-      writeback_packet.ip = fill_block.ip;//*** 0
+      writeback_packet.ip = 0; //fill_block.ip;//*** 0
       writeback_packet.type = WRITEBACK;
 
       auto result = lower_level->add_wq(&writeback_packet);

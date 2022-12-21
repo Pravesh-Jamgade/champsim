@@ -1,3 +1,5 @@
+#ifndef AAINFO_H
+#define AAINFO_H
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -13,24 +15,26 @@
 #include <map>
 #include "constant.h"
 
-class Count{
+class TU{
     public:
     IntPtr insert[2]={0};
     IntPtr evict[2]={0};
     IntPtr wb = 0; // writeback on LLC
-    Count();
+    TU(){}
 };
 
 class AAinfo{
     public:
+    std::map<IntPtr, TU> count;
 
-    std::map<IntPtr, Count> count;
+    string fileName="aaexp.log";
+    FILE* aa_fs = fopen(fileName.c_str(), "w");
 
     AAinfo(){}
     
     // insert: true, evict: false
     void insert(std::string Name, IntPtr addr, bool req){
-        bool l2 = Name.find("L2")!=std::string::npos;
+        bool l2 = false;//Name.find("L2")!=std::string::npos;
         bool l3 = Name.find("LLC")!=std::string::npos;
         if(l2 || l3){
             auto find_entry = count.find(addr);
@@ -57,19 +61,22 @@ class AAinfo{
                 }
             }
             else{
-                count[addr]=Count();
+                count[addr]=TU();
             }
         }
         else{
             return ;
         }
     }
-    std:vector<std::string> get_log(){
-        std::vector<std::string> all_log;
+    vector<std::string> get_log(){
+        vector<std::string> all_log;
         for(auto e: count){
             std::string st = to_string(e.first)+","+to_string(e.second.insert[0])+","+to_string(e.second.evict[0])+","+to_string(e.second.insert[1])+","+to_string(e.second.evict[1]);
             all_log.push_back(st);
+            fprintf(aa_fs, "%s\n", st.c_str());
         }
         return all_log;
     }
 };
+
+#endif

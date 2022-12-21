@@ -697,7 +697,9 @@ int main(int argc, char** argv)
     }
   }
   
-
+  //*** address access experiment
+  aainfo->get_log();
+  
 #ifndef CRC2_COMPILE
   print_dram_stats();
   print_branch_stats();
