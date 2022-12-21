@@ -138,8 +138,6 @@ class AATable{
             cycle = cycle;
             prev_diff = 0;
             
-            fprintf(epoc_fs, "%ld,%d\n", cycle, prediciton.size());
-
             vector<IntPtr> rmlist;
             for(auto e: prediciton){
                 if(e.second.score < 0){
@@ -147,7 +145,6 @@ class AATable{
                     e.second.invalid = 1;
                     continue;
                 }
-                fprintf(epoc_fs, "%ld,%ld,%ld\n", e.first, e.second.score>thresh, cycle);
                 e.second.score--;
             }
 

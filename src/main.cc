@@ -697,7 +697,6 @@ int main(int argc, char** argv)
     }
   }
   
-  cout << llc->bypass << "," << llc->others << '\n';
 
 #ifndef CRC2_COMPILE
   print_dram_stats();
