@@ -31,6 +31,7 @@ public:
   uint8_t translation_level = 0, init_translation_level = 0;
 
   bool hint=false;
+  bool from=false; // from L1=true, from others=false
 };
 
 template <>
