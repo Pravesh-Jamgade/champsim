@@ -35,7 +35,7 @@ def combi(depth, j, bag):
 # block size is 64B
 BLOCK_SIZE = 64
 
-print("python3 auto.py ways cache_size")
+print("python3 auto.py $(ways) $(cache_size) $(warminstr)M $(siminstr)M")
 
 ways = [int(sys.argv[1])] #llc
 all_size = [
@@ -44,6 +44,10 @@ all_size = [
     int(sys.argv[2])
 ]#llc cache size inMB
 cache = ['LLC']
+
+onemil = 1000000
+warmup = int(sys.argv[3]) * onemil 
+sim = int(sys.argv[4]) * onemil
 
 replacement = [
     'lru', 
@@ -124,7 +128,7 @@ for fol in inputs:
                 'make clean', 
                 './config.sh champsim_config.json', 
                 'make -s', 
-                "./bin/champsim --warmup_instructions 1000000 --simulation_instructions 20000000 {} {} {} {} {} {} {} {} --trace_name {} --policy {} --size {}".format(trace_path1, trace_path2, trace_path3, trace_path4, trace_path5, trace_path6, trace_path7, trace_path8, folName, replace_policy, size)
+                "./bin/champsim --warmup_instructions {} --simulation_instructions {} {} {} {} {} {} {} {} {} --trace_name {} --policy {} --size {}".format(warmup, sim, trace_path1, trace_path2, trace_path3, trace_path4, trace_path5, trace_path6, trace_path7, trace_path8, folName, replace_policy, size)
             ]
             
             for cmd in all_cmd:
