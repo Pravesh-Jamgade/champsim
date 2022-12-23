@@ -9,9 +9,16 @@ import sys
 import shutil
 
 inputs = [
-    # ('410.bwaves-945B.champsimtrace.xz','444.namd-120B.champsimtrace.xz', '445.gobmk-17B.champsimtrace.xz','447.dealII-3B.champsimtrace.xz'),
-    # ('433.milc-127B.champsimtrace.xz','434.zeusmp-10B.champsimtrace.xz', '435.gromacs-111B.champsimtrace.xz','436.cactusADM-1804B.champsimtrace.xz'),
-    ('437.leslie3d-134B.champsimtrace.xz','429.mcf-217B.champsimtrace.xz', '410.bwaves-945B.champsimtrace.xz', '445.gobmk-17B.champsimtrace.xz')
+    # '410.bwaves-945B.champsimtrace.xz',
+    # '444.namd-120B.champsimtrace.xz',
+    # '445.gobmk-17B.champsimtrace.xz',
+    # '447.dealII-3B.champsimtrace.xz',
+    # '433.milc-127B.champsimtrace.xz',
+    # '434.zeusmp-10B.champsimtrace.xz',
+    # '435.gromacs-111B.champsimtrace.xz',
+    # '436.cactusADM-1804B.champsimtrace.xz',
+    # '437.leslie3d-134B.champsimtrace.xz',
+    '429.mcf-217B.champsimtrace.xz'
 ]
 
 allCombi=[]
@@ -49,12 +56,6 @@ onemil = 1000000
 warmup = int(sys.argv[3]) * onemil 
 sim = int(sys.argv[4]) * onemil
 
-replacement = [
-    'lru', 
-    # 'random', 
-    # 'srrip'
-]
-
 curdir = os.getcwd()
 default_file_name = "default_config.json"#read from
 config_file_name = "champsim_config.json"#write to
@@ -71,20 +72,17 @@ cj = json.load(default_json_file)
 #     bag=[]
 #     combi(3, i, bag)
 
+replacement = [
+    'lru'
+]
 
 result_status = []
 
-update("num_cores", "", 4)
-cj['ooo_cpu'].append(cj['ooo_cpu'][0])
-cj['ooo_cpu'].append(cj['ooo_cpu'][0])
-cj['ooo_cpu'].append(cj['ooo_cpu'][0])
-
+update("num_cores", "", 1)
 for fol in inputs:
 
-    folName = ""
-    for wl in fol:
-        folName = folName + "-" + wl.split('.')[1]
-    
+    folName = fol.split('.')[1]
+
     #foreach trace use reaplce policy
     for replace_policy in replacement:
 
@@ -104,23 +102,20 @@ for fol in inputs:
             update(cache[0], "sets", sets)
             update(cache[0], "replacement", replace_policy)
 
+            combi_str = "{},{},{}".format(size, replace_policy, folName)
+
             #saving new setting
             json_string = json.dumps(cj)
             with open(config_file_path, 'w') as outfile:
                 outfile.write(json_string)
 
-            trace_path1 = "traces/{}".format(fol[0])
-            trace_path2 = "traces/{}".format(fol[1])
-            trace_path3 = "traces/{}".format(fol[2])
-            trace_path4 = "traces/{}".format(fol[3])
-
-            combi_str = "{},{},{}".format(size, replace_policy, folName)
+            trace_path1 = "traces/{}".format(fol)
             
             all_cmd = [
                 'make clean', 
                 './config.sh champsim_config.json', 
                 'make -s', 
-                "./bin/champsim --warmup_instructions {} --simulation_instructions {} {} {} {} {} --trace_name {} --policy {} --size {}".format(warmup, sim, trace_path1, trace_path2, trace_path3, trace_path4, folName, replace_policy, size)
+                "./bin/champsim --warmup_instructions {} --simulation_instructions {} {} --trace_name {} --policy {} --size {}".format(warmup, sim, trace_path1, folName, replace_policy, size)
             ]
             
             for cmd in all_cmd:
@@ -128,11 +123,11 @@ for fol in inputs:
                     os.system(cmd)
                 except:
                     frun.write("{} for {} ..fail\n".format(cmd, combi_str))
-                    exit()
-                frun.write("{} for {} ..pass\n".format(cmd, combi_str))
+                    print("{} for {} ..fail\n".format(cmd, combi_str))
+                    break
             
             frun.close()
             
 default_json_file.close()
-#
+
             
