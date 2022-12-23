@@ -61,6 +61,9 @@ void CACHE::handle_fill()
 
     if(aatable!=nullptr)
       aatable->update_lx(fill_mshr->ip, true);
+    
+    if(aainfo!=nullptr)
+      aainfo->insert(NAME, fill_mshr->address, true);
  
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
@@ -114,7 +117,9 @@ void CACHE::handle_writeback()
         //bypass
         if(write_by_pass == 1){
           // invalid existing line + write to mm
-          filllike_miss(set, way, handle_pkt);
+          fill_block.valid = false;
+          lower_level->add_wq(&handle_pkt);
+          aainfo->insert_bypass(handle_pkt.address);          
         }
         //donot bypass
         else{
@@ -127,6 +132,11 @@ void CACHE::handle_writeback()
 
           // mark dirty
           fill_block.dirty = 1;
+
+          if(aainfo!=nullptr)
+            aainfo->insert(NAME, handle_pkt.address, true, true);
+          if(aatable!=nullptr)
+            aatable->update_lx(handle_pkt.ip, true);
         }
       }
       //miss
@@ -135,6 +145,7 @@ void CACHE::handle_writeback()
         if(write_by_pass == 1){
           // write to mm
           lower_level->add_wq(&handle_pkt);
+          aainfo->insert_bypass(handle_pkt.address);
         }
         //donot bypass
         else{
@@ -157,9 +168,15 @@ void CACHE::handle_writeback()
           fill_block.dirty = 1;
 
           // ***
-          hit = true;
-
-        } else // MISS
+          if(NAME.find("LLC")!=std::string::npos) 
+          {
+            if(aainfo!=nullptr)
+              aainfo->insert(NAME, handle_pkt.address, true, true);
+            if(aatable!=nullptr)
+              aatable->update_lx(handle_pkt.ip, true);
+          }
+        } 
+        else // MISS
         {
           bool success;
           if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) {
@@ -180,6 +197,8 @@ void CACHE::handle_writeback()
             if(success){
               if(aatable!=nullptr)
                 aatable->update_lx(handle_pkt.ip, true);
+              if(aainfo!=nullptr)
+                aainfo->insert(NAME, handle_pkt.address, true, true);
             }
           }
 
@@ -438,7 +457,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.address = fill_block.address;
       writeback_packet.data = fill_block.data;
       writeback_packet.instr_id = handle_pkt.instr_id;
-      writeback_packet.ip = fill_block.ip;//*** 0
+      writeback_packet.ip = 0; //fill_block.ip;//*** 0
       writeback_packet.type = WRITEBACK;
 
       auto result = lower_level->add_wq(&writeback_packet);
@@ -451,6 +470,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         aatable->update_lx(fill_block.ip, false);
       }
 
+      if(aainfo!=nullptr)
+        aainfo->insert(NAME, writeback_packet.address, false);
     }
 
     if (ever_seen_data)
@@ -861,4 +882,9 @@ void CACHE::print_deadlock()
 void
 CACHE::set_aatable(AATable* aatable){
   this->aatable=aatable;
+}
+
+void 
+CACHE::set_aainfo(AAinfo* aainfo){
+  this->aainfo = aainfo;
 }

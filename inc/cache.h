@@ -15,7 +15,7 @@
 
 // ***
 #include "AInfo.h"
-#include "PCInfo.h"
+#include "AAinfo.h"
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -98,6 +98,7 @@ public:
   void print_deadlock() override;
 
   void set_aatable(AATable* aatable);
+  void set_aainfo(AAinfo* aainfo);
 
 #include "cache_modules.inc"
 
@@ -106,7 +107,8 @@ public:
 
   // ***
   AATable* aatable;
-  PCinfo pcinfo;
+  AAinfo* aainfo;
+
   int bypass, others;
   FILE* out_fs, *count_fs, *track_ip_fs;
   bool first_time;
@@ -119,9 +121,9 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
-    pcinfo = PCinfo(current_cycle);
     others=bypass=0;
     aatable = nullptr;
+    aainfo = nullptr;
     first_time = true;
   }
 };
