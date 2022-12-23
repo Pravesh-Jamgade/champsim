@@ -20,7 +20,11 @@ class TU{
     IntPtr fill[2]={0};
     IntPtr evict[2]={0};
     IntPtr writeback[2]={0};
+    IntPtr l3_bypass = 0;
     TU(){}
+    TU(bool bypass){
+        l3_bypass++;
+    }
     TU(bool l2, bool req, bool type_insert){
         // insert
         if(req){
@@ -51,6 +55,8 @@ class TU{
 class AAinfo{
     public:
     std::map<IntPtr, TU> count;
+
+    IntPtr should_not_be_there = 0;
 
     std::string fileName="aaexp.log";
     FILE* aa_fs = fopen(fileName.c_str(), "w");
@@ -96,10 +102,21 @@ class AAinfo{
             return ;
         }
     }
+
+    void insert_bypass(IntPtr addr){
+        auto find_entry = count.find(addr);
+        if(find_entry!=count.end()){
+            find_entry->second.l3_bypass++;
+        }
+        else{
+            count[addr] = TU(true);
+        }
+    }
+
     std::vector<std::string> get_log(){
         std::vector<std::string> all_log;
         for(auto e: count){
-            std::string st = std::to_string(e.first)+","+std::to_string(e.second.fill[0])+","+std::to_string(e.second.evict[0])+","+std::to_string(e.second.writeback[0])+","+std::to_string(e.second.fill[1])+","+std::to_string(e.second.evict[1])+","+std::to_string(e.second.writeback[1]);
+            std::string st = std::to_string(e.first)+","+std::to_string(e.second.fill[0])+","+std::to_string(e.second.evict[0])+","+std::to_string(e.second.writeback[0])+","+std::to_string(e.second.fill[1])+","+std::to_string(e.second.evict[1])+","+std::to_string(e.second.writeback[1])+","+std::to_string(e.second.l3_bypass);
             all_log.push_back(st);
             fprintf(aa_fs, "%s\n", st.c_str());
         }

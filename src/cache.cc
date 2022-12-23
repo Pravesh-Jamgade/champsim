@@ -102,7 +102,7 @@ void CACHE::handle_writeback()
     if(aatable!=nullptr)
       write_by_pass = aatable->update_lx(handle_pkt.ip, -1);
 
-    if(NAME == "LLC" && write_by_pass!=-1 && false){
+    if(NAME == "LLC" && write_by_pass!=-1){
 
       // counting number of bypasses
       if(write_by_pass==1){
@@ -117,7 +117,9 @@ void CACHE::handle_writeback()
         //bypass
         if(write_by_pass == 1){
           // invalid existing line + write to mm
-          filllike_miss(set, way, handle_pkt);
+          fill_block.valid = false;
+          lower_level->add_wq(&handle_pkt);
+          aainfo->insert_bypass(handle_pkt.address);          
         }
         //donot bypass
         else{
@@ -130,6 +132,11 @@ void CACHE::handle_writeback()
 
           // mark dirty
           fill_block.dirty = 1;
+
+          if(aainfo!=nullptr)
+            aainfo->insert(NAME, handle_pkt.address, true, true);
+          if(aatable!=nullptr)
+            aatable->update_lx(handle_pkt.ip, true);
         }
       }
       //miss
@@ -138,6 +145,7 @@ void CACHE::handle_writeback()
         if(write_by_pass == 1){
           // write to mm
           lower_level->add_wq(&handle_pkt);
+          aainfo->insert_bypass(handle_pkt.address);
         }
         //donot bypass
         else{
