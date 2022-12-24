@@ -545,13 +545,11 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  fstream cache_file_stream, ipc_file_stream, wr_type_fs, llc_data_fs, loop_fs, sim_stat_fs;
+  fstream cache_file_stream, ipc_file_stream, llc_data_fs, sim_stat_fs;
 
   cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
   ipc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
-  wr_type_fs.open("wrtype.log", fstream::in | fstream::out | fstream::app);
   llc_data_fs.open("data.log", fstream::in | fstream::out | fstream::app);
-  loop_fs.open("Loop_"+trace_name+"_"+policy_config+"_"+size_config+".log", fstream::in | fstream::out | fstream::app);
   sim_stat_fs.open("simstat.log", fstream::in | fstream::out | fstream::app);
 
   string common_string = trace_name+","+policy_config+","+size_config;
@@ -670,12 +668,6 @@ int main(int argc, char** argv)
   total_expect = sqrt(total_expect);
   double inter = total_expect/total_avg_wr;
 
-  vector<string> vec = llc->aatable->type_of_writes.print();
-  for(auto st: vec){
-    wr_type_fs << common_string << "," << st << '\n';
-  }
-  wr_type_fs.close();
-
   double write_var = total_avg_wr * (inter + intra);
   double sim_time = elapsed_hour * 3600 + elapsed_minute * 60 + elapsed_second;
 
@@ -684,18 +676,6 @@ int main(int argc, char** argv)
 
   llc_data_fs << common_string << "," << output << '\n';
   llc_data_fs.close();
-
-  for(auto begin = caches.begin(); begin != caches.end(); ++begin){
-    CACHE* c = *begin;
-    if(c->aatable == nullptr)
-      continue;
-    if(c->NAME.find("LLC") != string::npos || c->NAME.find("L2") != string::npos){
-      for(auto line: c->aatable->get_addr_loop()){
-        string wr = to_string(c->cpu) + "," + c->NAME + "," + line + '\n';
-        loop_fs << wr ;
-      }
-    }
-  }
   
   //*** address access experiment
   aainfo->get_log();
