@@ -21,6 +21,8 @@
 #include "tracereader.h"
 #include "vmem.h"
 
+#include "AAinfo.h"
+
 uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
 
@@ -409,12 +411,16 @@ int main(int argc, char** argv)
 
   // ***
   AATable* aatable = new AATable();
+  AAinfo *aainfo = new AAinfo();
+  CACHE *llc = caches.front();
+
   for(auto cache: caches){
-    if(cache->NAME.find("L2C") == string::npos || cache->NAME.find("LLC") == string::npos){
-      continue;
+    if(cache->NAME.find("L2") != string::npos || cache->NAME.find("LLC") != string::npos){
+      cache->set_aatable(aatable);
+      cache->set_aainfo(aainfo);
     }
-    cache->set_aatable(aatable);
   }
+
   // SHARED CACHE
   for (O3_CPU* cpu : ooo_cpu) {
     cpu->initialize_core();
@@ -450,6 +456,10 @@ int main(int argc, char** argv)
     std::sort(std::begin(operables), std::end(operables), champsim::by_next_operate());
 
     for (std::size_t i = 0; i < ooo_cpu.size(); ++i) {
+      
+      //***
+      aatable->decrease_score(ooo_cpu[i]->current_cycle);
+
       // read from trace
       while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
         ooo_cpu[i]->init_instruction(traces[i]->get());
@@ -545,8 +555,6 @@ int main(int argc, char** argv)
   sim_stat_fs.open("simstat.log", fstream::in | fstream::out | fstream::app);
 
   string common_string = trace_name+","+policy_config+","+size_config;
-
-  CACHE *llc = caches.front();
 
   // summary report of remaining metrics
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
@@ -685,6 +693,8 @@ int main(int argc, char** argv)
 
   for(auto begin = caches.begin(); begin != caches.end(); ++begin){
     CACHE* c = *begin;
+    if(c->aatable == nullptr)
+      continue;
     if(c->NAME.find("LLC") != string::npos || c->NAME.find("L2") != string::npos){
       for(auto line: c->aatable->get_addr_loop()){
         string wr = to_string(c->cpu) + "," + c->NAME + "," + line + '\n';
@@ -693,8 +703,11 @@ int main(int argc, char** argv)
     }
   }
   
-  cout << llc->bypass << "," << llc->others << '\n';
-
+  //*** address access experiment
+  aainfo->get_log();
+  
+  cout << "[Bypass On]" << llc->bypass << "," << llc->others << '\n';
+  
 #ifndef CRC2_COMPILE
   print_dram_stats();
   print_branch_stats();

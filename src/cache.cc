@@ -63,6 +63,9 @@ void CACHE::handle_fill()
 
     if(aatable!=nullptr)
       aatable->update_lx(fill_mshr->ip, true);
+    
+    if(aainfo!=nullptr)
+      aainfo->insert(NAME, fill_mshr->address, true);
  
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
@@ -96,15 +99,12 @@ void CACHE::handle_writeback()
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
     bool is_it_hit = way < NUM_WAY;
-    int write_by_pass = handle_pkt.hint;
 
-    if(NAME.find("L2C")==string::npos){
-      if(write_by_pass){
-        fprintf(out_fs, "%d,", handle_pkt.ip);
-      }
-    }
-    
-    if(NAME == "LLC" && false){
+    int write_by_pass = -1;
+    if(aatable!=nullptr)
+      write_by_pass = aatable->update_lx(handle_pkt.ip, -1);
+
+    if(NAME == "LLC" && write_by_pass!=-1 && false){
 
       // counting number of bypasses
       if(write_by_pass==1){
@@ -119,11 +119,9 @@ void CACHE::handle_writeback()
         //bypass
         if(write_by_pass == 1){
           // invalid existing line + write to mm
-          fill_block.valid = 0;
+          fill_block.valid = false;
           lower_level->add_wq(&handle_pkt);
-
-          if(aatable!=nullptr)
-            aatable->update_lx(fill_block.ip, false);
+          aainfo->insert_bypass(handle_pkt.address);          
         }
         //donot bypass
         else{
@@ -136,6 +134,11 @@ void CACHE::handle_writeback()
 
           // mark dirty
           fill_block.dirty = 1;
+
+          if(aainfo!=nullptr)
+            aainfo->insert(NAME, handle_pkt.address, true, true);
+          if(aatable!=nullptr)
+            aatable->update_lx(handle_pkt.ip, true);
         }
       }
       //miss
@@ -144,6 +147,7 @@ void CACHE::handle_writeback()
         if(write_by_pass == 1){
           // write to mm
           lower_level->add_wq(&handle_pkt);
+          aainfo->insert_bypass(handle_pkt.address);
         }
         //donot bypass
         else{
@@ -166,9 +170,15 @@ void CACHE::handle_writeback()
           fill_block.dirty = 1;
 
           // ***
-          hit = true;
-
-        } else // MISS
+          if(NAME.find("LLC")!=std::string::npos) 
+          {
+            if(aainfo!=nullptr)
+              aainfo->insert(NAME, handle_pkt.address, true, true);
+            if(aatable!=nullptr)
+              aatable->update_lx(handle_pkt.ip, true);
+          }
+        } 
+        else // MISS
         {
           bool success;
           if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) {
@@ -184,6 +194,14 @@ void CACHE::handle_writeback()
                                                 handle_pkt.type);
 
             success = filllike_miss(set, way, handle_pkt);
+
+            //***
+            if(success){
+              if(aatable!=nullptr)
+                aatable->update_lx(handle_pkt.ip, true);
+              if(aainfo!=nullptr)
+                aainfo->insert(NAME, handle_pkt.address, true, true);
+            }
           }
 
           if (!success)
@@ -446,7 +464,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.address = fill_block.address;
       writeback_packet.data = fill_block.data;
       writeback_packet.instr_id = handle_pkt.instr_id;
-      writeback_packet.ip = 0;
+      writeback_packet.ip = 0; //fill_block.ip;//*** 0
       writeback_packet.type = WRITEBACK;
 
       auto result = lower_level->add_wq(&writeback_packet);
@@ -455,14 +473,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         return false;
 
       // ***
-      int pred = -1;
       if(aatable!=nullptr){
-        pred = aatable->update_lx(fill_block.ip, false);
-        if(NAME.find("L2")!=string::npos){
-          writeback_packet.hint = pred;
-        }
+        aatable->update_lx(fill_block.ip, false);
       }
 
+      if(aainfo!=nullptr)
+        aainfo->insert(NAME, writeback_packet.address, false);
     }
 
     if (ever_seen_data)
@@ -873,4 +889,9 @@ void CACHE::print_deadlock()
 void
 CACHE::set_aatable(AATable* aatable){
   this->aatable=aatable;
+}
+
+void 
+CACHE::set_aainfo(AAinfo* aainfo){
+  this->aainfo = aainfo;
 }

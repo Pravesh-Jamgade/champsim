@@ -15,6 +15,8 @@
 #include <set>
 #include "constant.h"
 
+#define SIZE 1000000
+
 using namespace std;
 
 // // CACHE ACCESS TYPE
@@ -60,11 +62,11 @@ class WType
 
     vector<string> print(){
         vector<string> vec;
-        for(int i=0 ;i< 6; i++){
-            string st = "";
-            st = get_type(i) + "," + to_string(wr_type[i]);
-            vec.push_back(st);
-        }
+        // for(int i=0 ;i< 6; i++){
+        //     string st = "";
+        //     st = get_type(i) + "," + to_string(wr_type[i]);
+        //     vec.push_back(st);
+        // }
         return vec;
     }
 };
@@ -75,12 +77,14 @@ class Count{
     int fills;
     int writebacks;
     int score;
+    bool invalid;
     Count(){
-        score=fills=writebacks=0;
+        writebacks=0;
+        fills=1;
+        score=2;
+        invalid=0;
     }
-    int get_score(){
-        return fills - writebacks;
-    }
+    int get_score(){return score;}
 };
 
 
@@ -95,14 +99,22 @@ class AATable{
     WType type_of_writes;
     static int pos;
     map<IntPtr, Count> prediciton;//1->write 0->dead
-    int thresh = 16;
+    int thresh = 5;
+    IntPtr prev_diff = 0;
+
+    string fileName="epoc.log";
+    FILE* epoc_fs = fopen(fileName.c_str(), "w");
 
     AATable(){}
 
+    // return: true if bypass allowed otherwise false;
+    // bypass is allowed when score is less than thresh; 
+    // implies score value is not intensive
     int insert(IntPtr pc, int req_type){
         auto findPC = prediciton.find(pc);
         if(findPC==prediciton.end()){
             prediciton.insert({pc, Count()});
+            return -1;
         }
 
         // evict
@@ -111,16 +123,38 @@ class AATable{
             findPC->second.writebacks++;
         }
         // insert
-        else{
+        else if(req_type==1){
             findPC->second.score += 2;
             findPC->second.fills++;
         }
 
-        if(findPC == prediciton.end()){
-            return -1;
-        }
+        if(findPC->second.invalid==true) return -1;
+        return findPC->second.get_score() < thresh ? 1:0;
+    }
 
-        return findPC->second.get_score() > thresh? 1:0;
+    void decrease_score(IntPtr cycle){
+        IntPtr diff = cycle % SIZE;
+        if(diff < prev_diff){
+            cycle = cycle;
+            prev_diff = 0;
+            
+            vector<IntPtr> rmlist;
+            for(auto e: prediciton){
+                if(e.second.score < 0){
+                    rmlist.push_back(e.first);
+                    e.second.invalid = 1;
+                    continue;
+                }
+                e.second.score--;
+            }
+
+            for(auto pc: rmlist){
+                prediciton.erase(pc);
+            }
+
+            return;
+        }
+        prev_diff = diff;
     }
 
     // req_type: 0->evicted 1->inserted
