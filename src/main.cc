@@ -566,6 +566,10 @@ int main(int argc, char** argv)
   // number of bypassses at LLC
   sim_stat_fs << common_string << ",LLC-Bypass," << llc->bypass << "," << llc->others << '\n';
 
+  fstream f;
+  f.open("workload_stat.txt", ios::app | ios::out);
+
+  cout << "cache writes: \n";
   for(auto cache: caches){
 
     uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;
@@ -575,9 +579,12 @@ int main(int argc, char** argv)
       TOTAL_HIT += cache->sim_hit[cpu][i];
       TOTAL_MISS += cache->sim_miss[cpu][i];
     }
+    f << trace_name << "," << cache->NAME << "," << cache->writes_available_this_cycle << "," << cache->reads_available_this_cycle << ","<<cache->eviction<<'\n';
+
     string result = trace_name + "," + policy_config+ ","+ size_config+ "," + cache->NAME + "," + to_string(cpu) + "," +to_string(TOTAL_MISS)+","+to_string(TOTAL_HIT)+","+to_string(TOTAL_ACCESS);
     cache_file_stream << result << '\n';
   }
+  f.close(); 
 
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
     float ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);

@@ -42,6 +42,9 @@ public:
   std::vector<Set> set_stat{NUM_SET};
   uint32_t bypassed_writes[4]={0};
 
+  //#
+  uint32_t eviction = 0;
+
   // prefetch stats
   uint64_t pf_requested = 0, pf_issued = 0, pf_useful = 0, pf_useless = 0, pf_fill = 0;
 

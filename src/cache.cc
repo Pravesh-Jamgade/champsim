@@ -47,6 +47,8 @@ void CACHE::handle_fill()
     if (!success)
       return;
 
+    eviction++;
+
     if (way != NUM_WAY) {
       // update processed packets
       fill_mshr->data = block[set * NUM_WAY + way].data;
@@ -187,6 +189,8 @@ void CACHE::handle_writeback()
           if (!success)
             return;
 
+          eviction++;
+          
           if(aatable!=nullptr)
             aatable->update_lx(handle_pkt.ip, true);
         }

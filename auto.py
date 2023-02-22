@@ -8,7 +8,7 @@ from os.path import exists
 import shutil
 
 inputs = [
-    # '410.bwaves-945B.champsimtrace.xz',
+    '410.bwaves-945B.champsimtrace.xz',
     # '444.namd-120B.champsimtrace.xz',
     # '445.gobmk-17B.champsimtrace.xz',
     # '447.dealII-3B.champsimtrace.xz',
@@ -17,7 +17,7 @@ inputs = [
     # '435.gromacs-111B.champsimtrace.xz',
     # '436.cactusADM-1804B.champsimtrace.xz',
     # '437.leslie3d-134B.champsimtrace.xz',
-    '429.mcf-217B.champsimtrace.xz'
+    # '429.mcf-217B.champsimtrace.xz'
 ]
 
 allCombi=[]
@@ -38,98 +38,97 @@ def combi(depth, j, bag):
         combi(depth-1, i, bag)
         bag.pop()
 
-# block size is 64B
-BLOCK_SIZE = 64
+def aca_term_ppr():
+        # block size is 64B
+    BLOCK_SIZE = 64
 
-ways = [8] #llc
-all_size = [
-    # 0.5, 
-    # 1, 
-    2
-]#llc cache size in MB
-cache = ['LLC']
+    ways = [8] #llc
+    all_size = [
+        # 0.5, 
+        # 1, 
+        2
+    ]#llc cache size in MB
+    cache = ['LLC']
 
-replacement = [
-    'lru', 
-    # 'random', 
-    # 'srrip'
-]
+    replacement = [
+        # 'lru', 
+        # 'random', 
+        'srrip'
+    ]
 
-curdir = os.getcwd()
-default_file_name = "default_config.json"#read from
-config_file_name = "champsim_config.json"#write to
+    curdir = os.getcwd()
+    default_file_name = "default_config.json"#read from
+    config_file_name = "champsim_config.json"#write to
 
-default_file_path = os.path.join(curdir, default_file_name)
-config_file_path = os.path.join(curdir, config_file_name)
+    default_file_path = os.path.join(curdir, default_file_name)
+    config_file_path = os.path.join(curdir, config_file_name)
 
-print(default_file_path)
-default_json_file = open(default_file_path, "r") 
+    print(default_file_path)
+    default_json_file = open(default_file_path, "r") 
 
-cj = json.load(default_json_file)
+    cj = json.load(default_json_file)
 
-# for i in range(len(ways)):
-#     bag=[]
-#     combi(3, i, bag)
+    # for i in range(len(ways)):
+    #     bag=[]
+    #     combi(3, i, bag)
 
 
-result_status = []
+    result_status = []
 
-update("num_cores", "", 1)
-for fol in inputs:
+    update("num_cores", "", 8)
+    for fol in inputs:
 
-    folName = fol.split('.')[1]
+        folName = fol.split('.')[1]
 
-    #foreach trace use reaplce policy
-    for replace_policy in replacement:
+        #foreach trace use reaplce policy
+        for replace_policy in replacement:
 
-        #with LLC size
-        for size in all_size:
-            combi_str = ""
-            
-            frun = open("run.log", 'a')
+            #with LLC size
+            for size in all_size:
+                combi_str = ""
+                
+                frun = open("run.log", 'a')
 
-            #no. of sets
-            byteSize = size * pow(2, 20) #MB to B
-            setsize = BLOCK_SIZE * ways[0] #
-            sets=int(byteSize/setsize)
+                #no. of sets
+                byteSize = size * pow(2, 20) #MB to B
+                setsize = BLOCK_SIZE * ways[0] #
+                sets=int(byteSize/setsize)
 
-            #update llc
-            update(cache[0], "ways", ways[0])
-            update(cache[0], "sets", sets)
-            update(cache[0], "replacement", replace_policy)
+                #update llc
+                update(cache[0], "ways", ways[0])
+                update(cache[0], "sets", sets)
+                update(cache[0], "replacement", replace_policy)
 
-            combi_str = "{},{},{}".format(size, replace_policy, folName)
+                combi_str = "{},{},{}".format(size, replace_policy, folName)
 
-            #saving new setting
-            json_string = json.dumps(cj)
-            with open(config_file_path, 'w') as outfile:
-                outfile.write(json_string)
+                #saving new setting
+                json_string = json.dumps(cj)
+                with open(config_file_path, 'w') as outfile:
+                    outfile.write(json_string)
 
-            trace_path1 = "traces/{}".format(fol)
-            
-            all_cmd = [
-                'make clean', 
-                './config.sh champsim_config.json', 
-                'make -s', 
-                "./bin/champsim --warmup_instructions 1000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path1, folName, replace_policy, size)
-            ]
-            
-            for cmd in all_cmd:
-                try:
-                    with subprocess.Popen(shlex.split(cmd)) as proc:
-                        op, er = proc.communicate()
-                        if proc.returncode < 0:
-                            raise Exception("fail")
+                trace_path1 = "traces/{}".format(fol)
+                
+                all_cmd = [
+                    'make clean', 
+                    './config.sh champsim_config.json', 
+                    'make -s', 
+                    "./bin/champsim --warmup_instructions 1000000 --simulation_instructions 200000000 {} --trace_name {} --policy {} --size {}".format(trace_path1, folName, replace_policy, size)
+                ]
+                
+                for cmd in all_cmd:
+                    try:
+                        with subprocess.Popen(shlex.split(cmd)) as proc:
+                            op, er = proc.communicate()
+                            if proc.returncode < 0:
+                                raise Exception("fail")
 
-                except:
-                    frun.write("{} for {} ..fail\n".format(cmd, combi_str))
-                    print("{} for {} ..fail\n".format(cmd, combi_str))
-                    break
-            frun.write("{} for {} ..pass\n".format(cmd, combi_str))
-            print("{} for {} ..pass\n".format(cmd, combi_str))
-            
-            frun.close()
-            
-default_json_file.close()
-
+                    except:
+                        frun.write("{} for {} ..fail\n".format(cmd, combi_str))
+                        print("{} for {} ..fail\n".format(cmd, combi_str))
+                        break
+                frun.write("{} for {} ..pass\n".format(cmd, combi_str))
+                print("{} for {} ..pass\n".format(cmd, combi_str))
+                
+                frun.close()
+    default_json_file.close()
             
