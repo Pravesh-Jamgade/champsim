@@ -47,8 +47,8 @@ void CACHE::handle_fill()
     if (!success)
       return;
 
-    eviction++;
-
+    //#
+    writes++;
     if (way != NUM_WAY) {
       // update processed packets
       fill_mshr->data = block[set * NUM_WAY + way].data;
@@ -177,6 +177,8 @@ void CACHE::handle_writeback()
             if(aatable!=nullptr)
               aatable->update_lx(handle_pkt.ip, true);
           }
+          //#
+          writes++;
         } 
         else // MISS
         {
@@ -202,13 +204,14 @@ void CACHE::handle_writeback()
               if(aainfo!=nullptr)
                 aainfo->insert(NAME, handle_pkt.address, true, true);
             }
+
+            //#
+            writes++;
           }
 
           if (!success)
             return;
 
-          eviction++;
-          
           if(aatable!=nullptr)
             aatable->update_lx(handle_pkt.ip, true);
         }
@@ -256,6 +259,9 @@ void CACHE::handle_read()
       if (!success)
         return;
     }
+
+    //#
+    reads++;
 
     // ***
     // set_stat[set].reads++;
@@ -479,6 +485,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       if(aainfo!=nullptr)
         aainfo->insert(NAME, writeback_packet.address, false);
+
+      //#
+      eviction++;
     }
 
     if (ever_seen_data)

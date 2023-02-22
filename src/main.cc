@@ -576,7 +576,7 @@ int main(int argc, char** argv)
 
   fstream f;
   f.open("llc_stat.log", ios::app | ios::out);
-  f << trace_name << "," << llc->NAME << "," << llc->writes_available_this_cycle << "," << llc->reads_available_this_cycle << ","<<llc->eviction<<'\n';
+  f << trace_name << "," << llc->NAME << "," << llc->writes << "," << llc->reads << ","<<llc->eviction<<'\n';
   f.close(); 
 
   cout << "cache writes: \n";
