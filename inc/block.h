@@ -32,6 +32,8 @@ public:
 
   bool hint=false;
   bool from=false; // from L1=true, from others=false
+  //#
+  bool packet_type=false;//false=data packet true=instr packet
 };
 
 template <>

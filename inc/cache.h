@@ -44,6 +44,8 @@ public:
 
   //#
   uint32_t eviction = 0, reads = 0, writes = 0;
+  uint32_t ieviction = 0, ireads = 0, iwrites = 0;
+  uint32_t deviction = 0, dreads = 0, dwrites = 0;
 
   // prefetch stats
   uint64_t pf_requested = 0, pf_issued = 0, pf_useful = 0, pf_useless = 0, pf_fill = 0;

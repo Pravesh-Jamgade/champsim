@@ -49,6 +49,13 @@ void CACHE::handle_fill()
 
     //#
     writes++;
+    if(fill_mshr->packet_type){
+      iwrites++;
+    }
+    else{
+      dwrites++;
+    }
+
     if (way != NUM_WAY) {
       // update processed packets
       fill_mshr->data = block[set * NUM_WAY + way].data;
@@ -179,6 +186,11 @@ void CACHE::handle_writeback()
           }
           //#
           writes++;
+          if(handle_pkt.packet_type){
+            iwrites++;
+          }else{
+            dwrites++;
+          }
         } 
         else // MISS
         {
@@ -207,6 +219,11 @@ void CACHE::handle_writeback()
 
             //#
             writes++;
+            if(handle_pkt.packet_type){
+              iwrites++;
+            }else{
+              dwrites++;
+            }
           }
 
           if (!success)
@@ -262,6 +279,12 @@ void CACHE::handle_read()
 
     //#
     reads++;
+    if(handle_pkt.packet_type){
+      ireads++;
+    }
+    else{
+      dreads++;
+    }
 
     // ***
     // set_stat[set].reads++;
@@ -488,6 +511,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       //#
       eviction++;
+      if(handle_pkt.packet_type){
+        ieviction++;
+      }
+      else{
+        deviction++;
+      }
     }
 
     if (ever_seen_data)
