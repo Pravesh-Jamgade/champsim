@@ -15,7 +15,7 @@ traces = [
 def task1():
     for trace in traces:
         trace_list = f"traces/{trace} traces/{trace} traces/{trace} traces/{trace} traces/{trace} traces/{trace} traces/{trace} traces/{trace}"
-        cmd = f"./bin/champsim --warmup_instructions 1000000 --simulation_instructions 2000000 {trace_list} --trace_name {trace} --policy srrip --size 8"
+        cmd = f"./bin/champsim --warmup_instructions 200000000 --simulation_instructions 500000000 {trace_list} --trace_name {trace} --policy srrip --size 8"
         try:
             print(f"running... {cmd}")
             subprocess.run(shlex.split(cmd))
