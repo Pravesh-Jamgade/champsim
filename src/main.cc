@@ -599,7 +599,16 @@ int main(int argc, char** argv)
     cache_file_stream << result << '\n';
 
     //#
-    if(cache->NAME.find("L2") != string::npos || cache->NAME.find("L1") != string::npos){
+    if(cache->NAME.find("L1") != string::npos){
+      total_cache_stat << trace_name << "," << cache->NAME << "," << cpu << "," << cache->writes << "," << cache->reads <<"," <<cache->eviction <<",Total"<<'\n';
+      if(cache->NAME.find("L1I") != string::npos){
+        total_cache_stat << trace_name << "," << cache->NAME << "," << cpu << "," << cache->iwrites << "," << cache->ireads <<"," <<cache->ieviction <<",I"<<'\n';
+      }else{
+        total_cache_stat << trace_name << "," << cache->NAME << "," << cpu << "," << cache->dwrites << "," << cache->dreads <<"," <<cache->deviction <<",D"<<'\n';
+      }
+    }
+
+    if(cache->NAME.find("L2") != string::npos){
       total_cache_stat << trace_name << "," << cache->NAME << "," << cpu << "," << cache->writes << "," << cache->reads <<"," <<cache->eviction <<",Total"<<'\n';
       total_cache_stat << trace_name << "," << cache->NAME << "," << cpu << "," << cache->iwrites << "," << cache->ireads <<"," <<cache->ieviction <<",I"<<'\n';
       total_cache_stat << trace_name << "," << cache->NAME << "," << cpu << "," << cache->dwrites << "," << cache->dreads <<"," <<cache->deviction <<",D"<<'\n';
