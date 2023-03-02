@@ -4,12 +4,13 @@
     "page_size": 4096,
     "heartbeat_frequency": 10000000,
     "num_cores": 4,
+
     "ooo_cpu": [
         {
             "frequency": 4000,
-            "ifetch_buffer_size": 64,
-            "decode_buffer_size": 32,
-            "dispatch_buffer_size": 32,
+            "ifetch_buffer_size":64,
+            "decode_buffer_size":32,
+            "dispatch_buffer_size":32,
             "rob_size": 352,
             "lq_size": 128,
             "sq_size": 72,
@@ -31,9 +32,9 @@
         },
         {
             "frequency": 4000,
-            "ifetch_buffer_size": 64,
-            "decode_buffer_size": 32,
-            "dispatch_buffer_size": 32,
+            "ifetch_buffer_size":64,
+            "decode_buffer_size":32,
+            "dispatch_buffer_size":32,
             "rob_size": 352,
             "lq_size": 128,
             "sq_size": 72,
@@ -55,9 +56,9 @@
         },
         {
             "frequency": 4000,
-            "ifetch_buffer_size": 64,
-            "decode_buffer_size": 32,
-            "dispatch_buffer_size": 32,
+            "ifetch_buffer_size":64,
+            "decode_buffer_size":32,
+            "dispatch_buffer_size":32,
             "rob_size": 352,
             "lq_size": 128,
             "sq_size": 72,
@@ -79,9 +80,9 @@
         },
         {
             "frequency": 4000,
-            "ifetch_buffer_size": 64,
-            "decode_buffer_size": 32,
-            "dispatch_buffer_size": 32,
+            "ifetch_buffer_size":64,
+            "decode_buffer_size":32,
+            "dispatch_buffer_size":32,
             "rob_size": 352,
             "lq_size": 128,
             "sq_size": 72,
@@ -102,11 +103,13 @@
             "btb": "basic_btb"
         }
     ],
+
     "DIB": {
         "window_size": 16,
         "sets": 32,
         "ways": 8
     },
+
     "L1I": {
         "sets": 128,
         "ways": 4,
@@ -122,6 +125,7 @@
         "prefetch_activate": "LOAD,PREFETCH",
         "prefetcher": "no_instr"
     },
+
     "L1D": {
         "sets": 128,
         "ways": 4,
@@ -137,7 +141,23 @@
         "prefetch_activate": "LOAD,PREFETCH",
         "prefetcher": "no"
     },
-    
+
+    "L2C": {
+        "sets": 1024,
+        "ways": 4,
+        "rq_size": 32,
+        "wq_size": 32,
+        "pq_size": 16,
+        "mshr_size": 32,
+        "latency": 10,
+        "max_read": 1,
+        "max_write": 1,
+        "prefetch_as_load": false,
+        "virtual_prefetch": false,
+        "prefetch_activate": "LOAD,PREFETCH",
+        "prefetcher": "no"
+    },
+
     "ITLB": {
         "sets": 16,
         "ways": 4,
@@ -150,6 +170,7 @@
         "max_write": 2,
         "prefetch_as_load": false
     },
+
     "DTLB": {
         "sets": 16,
         "ways": 4,
@@ -162,6 +183,7 @@
         "max_write": 2,
         "prefetch_as_load": false
     },
+
     "STLB": {
         "sets": 128,
         "ways": 12,
@@ -174,20 +196,22 @@
         "max_write": 1,
         "prefetch_as_load": false
     },
-    "PTW": {
-        "pscl5_set": 1,
-        "pscl5_way": 2,
-        "pscl4_set": 1,
-        "pscl4_way": 4,
-        "pscl3_set": 2,
-        "pscl3_way": 4,
-        "pscl2_set": 4,
-        "pscl2_way": 8,
-        "ptw_rq_size": 16,
-        "ptw_mshr_size": 5,
-        "ptw_max_read": 2,
-        "ptw_max_write": 2
-    },
+
+	"PTW": {
+		"pscl5_set": 1,
+		"pscl5_way": 2,
+		"pscl4_set": 1,
+		"pscl4_way": 4,
+		"pscl3_set": 2,
+		"pscl3_way": 4,
+		"pscl2_set": 4,
+		"pscl2_way": 8,
+		"ptw_rq_size": 16,
+		"ptw_mshr_size": 5,
+		"ptw_max_read": 2,
+		"ptw_max_write": 2
+	},
+
     "LLC": {
         "frequency": 4000,
         "sets": 4096,
@@ -205,6 +229,7 @@
         "prefetcher": "no",
         "replacement": "lru"
     },
+
     "physical_memory": {
         "frequency": 3200,
         "channels": 1,
@@ -220,6 +245,7 @@
         "tCAS": 12.5,
         "turn_around_time": 7.5
     },
+
     "virtual_memory": {
         "size": 8589934592,
         "num_levels": 5,

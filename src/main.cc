@@ -585,6 +585,9 @@ int main(int argc, char** argv)
   fstream total_cache_stat;
   total_cache_stat.open("total_cache_stat.log", ios::app | ios::out);
 
+  fstream cache_fills_stat;
+  cache_fills_stat.open("cache_fill_stat.log", ios::app | ios::out);
+
   cout << "cache writes: \n";
   for(auto cache: caches){
 
@@ -613,8 +616,15 @@ int main(int argc, char** argv)
       total_cache_stat << trace_name << "," << cache->NAME << "," << cpu << "," << cache->iwrites << "," << cache->ireads <<"," <<cache->ieviction <<",I"<<'\n';
       total_cache_stat << trace_name << "," << cache->NAME << "," << cpu << "," << cache->dwrites << "," << cache->dreads <<"," <<cache->deviction <<",D"<<'\n';
     }
+
+    if((cache->NAME.find("L2")!=string::npos)|| 
+      (cache->NAME.find("LLC")!=string::npos)|| 
+      (cache->NAME.find("L1")!=string::npos) )
+    {
+      cache_fills_stat << trace_name <<","<< cache->NAME <<","<< cpu <<","<< cache->ifills <<","<< cache->dfills << '\n';
+    }
   }
-  
+  cache_file_stream.close();
   total_cache_stat.close();
 
   for (uint32_t i = 0; i < NUM_CPUS; i++) {

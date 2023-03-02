@@ -11,9 +11,9 @@
 #define PAGE_SIZE 4096ul
 #define LOG2_PAGE_SIZE lg2(PAGE_SIZE)
 #define STAT_PRINTING_PERIOD 10000000ul
-#define NUM_CPUS 8ul
-#define NUM_CACHES 49u
-#define NUM_OPERABLES 66u
+#define NUM_CPUS 4ul
+#define NUM_CACHES 25u
+#define NUM_OPERABLES 34u
 #define DRAM_IO_FREQ 3200ul
 #define DRAM_CHANNELS 1ul
 #define DRAM_RANKS 1ul

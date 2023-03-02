@@ -51,9 +51,11 @@ void CACHE::handle_fill()
     writes++;
     if(fill_mshr->packet_type){
       iwrites++;
+      ifills++;
     }
     else{
       dwrites++;
+      dfills++;
     }
 
     if (way != NUM_WAY) {
