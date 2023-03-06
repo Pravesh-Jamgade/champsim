@@ -25,25 +25,23 @@ mixes = [
 
 def task1():
     # trace_list = f"traces/{trace} traces/{trace} traces/{trace} traces/{trace}"
-    trace_list = ""
 
     for mix in mixes:
         tag = ""
         path = ""
         for trace in mix:
             path = path + f"traces/{trace} "
-            trace_list =  trace_list + path
             if tag == "":
                 tag = trace.split('.')[0]
             else:
                 tag = tag + "-" + trace.split('.')[0]
         
         print(f"{tag}\n{path}")
-        cmd = f"./bin/champsim --warmup_instructions 100000000 --simulation_instructions 200000000 {trace_list} --trace_name {tag} --policy lru --size 4"
+        cmd = f"./bin/champsim --warmup_instructions 100000000 --simulation_instructions 200000000 {path} --trace_name {tag} --policy lru --size 4"
         try:
             print(f"running... {cmd}")
             subprocess.run(shlex.split(cmd))
         except subprocess.CalledProcessError as e:
             print("error: ", e.output, trace)
-
+        break
 task1()
