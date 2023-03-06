@@ -4,6 +4,7 @@ import json
 import os
 import shlex
 from os.path import exists
+import sys
 
 traces = [
     '429.mcf-51B.champsimtrace.xz',
@@ -25,7 +26,10 @@ mixes = [
 
 def task1():
     # trace_list = f"traces/{trace} traces/{trace} traces/{trace} traces/{trace}"
-
+    if len(sys.argv) < 2:
+        print("warm and sim missing\n")
+        exit(0)
+    
     for mix in mixes:
         tag = ""
         path = ""
@@ -37,7 +41,7 @@ def task1():
                 tag = tag + "-" + trace.split('.')[0]
         
         print(f"{tag}\n{path}")
-        cmd = f"./bin/champsim --warmup_instructions 100000000 --simulation_instructions 200000000 {path} --trace_name {tag} --policy lru --size 4"
+        cmd = f"./bin/champsim --warmup_instructions {sys.argv[1]}000000 --simulation_instructions {sys.argv[2]}000000 {path} --trace_name {tag} --policy lru --size 4"
         try:
             print(f"running... {cmd}")
             subprocess.run(shlex.split(cmd))
