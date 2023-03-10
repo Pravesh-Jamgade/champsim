@@ -58,6 +58,10 @@ void CACHE::handle_fill()
       dfills++;
     }
 
+    if(NAME.find("LLC")!=string::npos){
+      requests_fs << fill_mshr->address <<","<< fill_mshr->packet_type <<","<< current_cycle << '\n';
+    }
+
     if (way != NUM_WAY) {
       // update processed packets
       fill_mshr->data = block[set * NUM_WAY + way].data;
@@ -233,6 +237,10 @@ void CACHE::handle_writeback()
 
           if(aatable!=nullptr)
             aatable->update_lx(handle_pkt.ip, true);
+          
+          if(NAME.find("LLC")!=string::npos){
+            requests_fs << handle_pkt.address <<","<< handle_pkt.packet_type <<","<< current_cycle << '\n';
+          }
         }
     }
    

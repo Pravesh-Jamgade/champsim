@@ -545,10 +545,10 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
   // ***
-  fstream cache_file_stream, ipc_file_stream, wr_type_fs, llc_data_fs, loop_fs, sim_stat_fs;
+  fstream cache_fs, ipc_fs, wr_type_fs, llc_data_fs, loop_fs, sim_stat_fs;
 
-  cache_file_stream.open("cache.log", fstream::in | fstream::out | fstream::app);
-  ipc_file_stream.open("ipc.log", fstream::in | fstream::out | fstream::app);
+  cache_fs.open("cache.log", fstream::in | fstream::out | fstream::app);
+  ipc_fs.open("ipc.log", fstream::in | fstream::out | fstream::app);
   wr_type_fs.open("wrtype.log", fstream::in | fstream::out | fstream::app);
   llc_data_fs.open("data.log", fstream::in | fstream::out | fstream::app);
   loop_fs.open("Loop_"+trace_name+"_"+policy_config+"_"+size_config+".log", fstream::in | fstream::out | fstream::app);
@@ -598,8 +598,8 @@ int main(int argc, char** argv)
       TOTAL_HIT += cache->sim_hit[cpu][i];
       TOTAL_MISS += cache->sim_miss[cpu][i];
     }
-    string result = trace_name + "," + policy_config+ ","+ size_config+ "," + cache->NAME + "," + to_string(cpu) + "," +to_string(TOTAL_MISS)+","+to_string(TOTAL_HIT)+","+to_string(TOTAL_ACCESS);
-    cache_file_stream << result << '\n';
+    string result = common_string+ "," + cache->NAME + "," + to_string(cpu) + "," +to_string(TOTAL_MISS)+","+to_string(TOTAL_HIT)+","+to_string(TOTAL_ACCESS);
+    cache_fs << result << '\n';
 
     //#
     if(cache->NAME.find("L1") != string::npos){
@@ -624,13 +624,13 @@ int main(int argc, char** argv)
       cache_fills_stat << trace_name <<","<< cache->NAME <<","<< cpu <<","<< cache->ifills <<","<< cache->dfills << '\n';
     }
   }
-  cache_file_stream.close();
+  cache_fs.close();
   total_cache_stat.close();
 
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
     float ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
     string result = trace_name+","+policy_config+","+size_config+","+to_string(i)+","+to_string(ipc); 
-    ipc_file_stream << result << '\n';
+    ipc_fs << result << '\n';
   }
 
   // LLC cache, tracking per block counter
