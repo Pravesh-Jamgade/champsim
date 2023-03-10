@@ -133,7 +133,8 @@ public:
     aatable = nullptr;
     aainfo = nullptr;
     first_time = true;
-    requests_fs.open( NAME+"_request.log", fstream::in | fstream::out | fstream::app);
+    if(NAME.find("LLC")!=string::npos)
+      requests_fs.open( NAME+"_request.log", fstream::in | fstream::out | fstream::app);
   }
 };
 

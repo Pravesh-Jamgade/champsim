@@ -47,4 +47,5 @@ def task1():
             subprocess.run(shlex.split(cmd))
         except subprocess.CalledProcessError as e:
             print("error: ", e.output, trace)
+        break
 task1()
