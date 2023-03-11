@@ -59,7 +59,7 @@ void CACHE::handle_fill()
     }
 
     if(NAME.find("LLC")!=string::npos){
-      requests_fs << fill_mshr->address <<","<< fill_mshr->packet_type <<","<< current_cycle << '\n';
+      requests_fs << fill_mshr->address <<","<< fill_mshr->packet_type <<","<< current_cycle << std::endl;
     }
 
     if (way != NUM_WAY) {
@@ -239,7 +239,7 @@ void CACHE::handle_writeback()
             aatable->update_lx(handle_pkt.ip, true);
           
           if(NAME.find("LLC")!=string::npos){
-            requests_fs << handle_pkt.address <<","<< handle_pkt.packet_type <<","<< current_cycle << '\n';
+            requests_fs << handle_pkt.address <<","<< handle_pkt.packet_type <<","<< current_cycle << std::endl;
           }
         }
     }
