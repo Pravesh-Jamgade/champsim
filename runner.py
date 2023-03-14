@@ -19,33 +19,34 @@ traces = [
 
 mixes = [
     [traces[0], traces[1], traces[4], traces[5]],
-    [traces[0], traces[2], traces[6], traces[7]],
+    [traces[0], traces[1], traces[6], traces[7]],
     [traces[0], traces[1], traces[2], traces[3]],
+    [traces[2], traces[3], traces[4], traces[5]],
+    [traces[2], traces[3], traces[6], traces[7]],
     [traces[4], traces[5], traces[6], traces[7]],
+    [traces[0], traces[2], traces[4], traces[6]],
 ]
 
 def task1():
     # trace_list = f"traces/{trace} traces/{trace} traces/{trace} traces/{trace}"
-    if len(sys.argv) < 2:
-        print("warm and sim missing\n")
+    if len(sys.argv) < 3:
+        print("warm, sim and workload mix [0..6] missing\n")
         exit(0)
     
-    for mix in mixes:
-        tag = ""
-        path = ""
-        for trace in mix:
-            path = path + f"traces/{trace} "
-            if tag == "":
-                tag = trace.split('.')[0]
-            else:
-                tag = tag + "-" + trace.split('.')[0]
-        
-        print(f"{tag}\n{path}")
-        cmd = f"./bin/champsim --warmup_instructions {sys.argv[1]}000000 --simulation_instructions {sys.argv[2]}000000 {path} --trace_name {tag} --policy lru --size 4"
-        try:
-            print(f"running... {cmd}")
-            subprocess.run(shlex.split(cmd))
-        except subprocess.CalledProcessError as e:
-            print("error: ", e.output, trace)
-        break
+    tag = ""
+    path = ""
+    for trace in mixes[sys.argv[3]]:
+        path = path + f"../traces/{trace} "
+        if tag == "":
+            tag = trace.split('.')[0]
+        else:
+            tag = tag + "-" + trace.split('.')[0]
+    
+    print(f"{tag}\n{path}")
+    cmd = f"./bin/champsim --warmup_instructions {sys.argv[1]}000000 --simulation_instructions {sys.argv[2]}000000 {path} --trace_name {tag} --policy lru --size 4"
+    try:
+        print(f"running... {cmd}")
+        subprocess.run(shlex.split(cmd))
+    except subprocess.CalledProcessError as e:
+        print("error: ", e.output, trace)
 task1()
