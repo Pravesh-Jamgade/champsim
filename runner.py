@@ -35,7 +35,7 @@ def task1():
     
     tag = ""
     path = ""
-    for trace in mixes[sys.argv[3]]:
+    for trace in mixes[int(sys.argv[3])]:
         path = path + f"../traces/{trace} "
         if tag == "":
             tag = trace.split('.')[0]
