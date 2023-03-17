@@ -94,7 +94,7 @@ void CACHE::handle_writeback()
       // mark dirty
       fill_block.dirty = 1;
       //***
-      post_write_success(handle_pkt, WRITE::WRITEBACK);
+      post_write_success(handle_pkt, WRITE::WRITE_BACK);
     } else // MISS
     {
       bool success;
@@ -113,7 +113,7 @@ void CACHE::handle_writeback()
         success = filllike_miss(set, way, handle_pkt);
         //***
         if(success){
-          post_write_success(handle_pkt, WRITE::WRITEBACK);
+          post_write_success(handle_pkt, WRITE::WRITE_BACK);
         }
       }
 

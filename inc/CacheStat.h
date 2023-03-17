@@ -15,7 +15,7 @@ using namespace std;
 
 class CacheStat{
     public:
-    CacheStat(){}
+    
     CacheStat(){
         iwrites=dwrites=0;
         ifills=dfills=0;

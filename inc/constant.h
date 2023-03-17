@@ -17,7 +17,7 @@ enum LOG{
 #pragma once
 enum WRITE{
     FILL=0,
-    WRITEBACK,
+    WRITE_BACK,
     IFILL=0,
     IWRITEBACK,
     DFILL=2,
