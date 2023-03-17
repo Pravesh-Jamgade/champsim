@@ -59,7 +59,27 @@ void CACHE::handle_fill()
     }
 
     if(NAME.find("LLC")!=string::npos){
-      requests_fs << fill_mshr->address <<","<< fill_mshr->packet_type <<","<< current_cycle << std::endl;
+      // unique instruction blocks at LLC
+      if(fill_mshr->packet_type == 1){
+        if(unique_i.find(fill_mshr->address)!=unique_i.end()){
+          unique_i.erase(fill_mshr->address);
+        }
+        else{
+          unique_i.insert(fill_mshr->address);
+        }
+      }
+      // unique data blocks at LLC
+      else{
+        if(unique_d.find(fill_mshr->address)!=unique_d.end()){
+          unique_d.erase(fill_mshr->address);
+        }
+        else{
+          unique_d.insert(fill_mshr->address);
+        }
+      }
+
+      string out = to_string(fill_mshr->address)+","+to_string(fill_mshr->packet_type)+","+to_string(current_cycle)+"\n";
+      requests_fs << out;
     }
 
     if (way != NUM_WAY) {
@@ -238,8 +258,25 @@ void CACHE::handle_writeback()
           if(aatable!=nullptr)
             aatable->update_lx(handle_pkt.ip, true);
           
-          if(NAME.find("LLC")!=string::npos){
-            requests_fs << handle_pkt.address <<","<< handle_pkt.packet_type <<","<< current_cycle << std::endl;
+            if(NAME.find("LLC")!=string::npos){
+                  if(handle_pkt.packet_type == 1){
+              if(unique_i.find(handle_pkt.address)!=unique_i.end()){
+                unique_i.erase(handle_pkt.address);
+              }
+              else{
+                unique_i.insert(handle_pkt.address);
+              }
+            }
+            else{
+              if(unique_d.find(handle_pkt.address)!=unique_d.end()){
+                unique_d.erase(handle_pkt.address);
+              }
+              else{
+                unique_d.insert(handle_pkt.address);
+              }
+            }
+            string out = to_string(handle_pkt.address) + "," + to_string(handle_pkt.packet_type)+","+to_string(current_cycle)+"\n";
+            requests_fs << out ;
           }
         }
     }

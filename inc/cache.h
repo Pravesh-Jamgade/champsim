@@ -118,6 +118,7 @@ public:
   int bypass, others;
   FILE* out_fs, *count_fs, *track_ip_fs;
   fstream requests_fs;
+  set<uint64_t> unique_i, unique_d;
 
   bool first_time;
   // constructor

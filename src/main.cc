@@ -588,7 +588,11 @@ int main(int argc, char** argv)
   fstream cache_fills_stat;
   cache_fills_stat.open("cache_fill_stat.log", ios::app | ios::out);
 
-  cout << "cache writes: \n";
+  fstream cache_unique_block;
+  cache_unique_block.open("cache_unique_blocks.log", ios::app|ios::out);
+  cache_unique_block << trace_name <<","<< llc->unique_i.size() << "," << llc->unique_d.size() << "\n";
+  cache_unique_block.close();
+
   for(auto cache: caches){
 
     uint64_t TOTAL_ACCESS = 0, TOTAL_HIT = 0, TOTAL_MISS = 0;
@@ -598,6 +602,7 @@ int main(int argc, char** argv)
       TOTAL_HIT += cache->sim_hit[cpu][i];
       TOTAL_MISS += cache->sim_miss[cpu][i];
     }
+
     string result = common_string+ "," + cache->NAME + "," + to_string(cpu) + "," +to_string(TOTAL_MISS)+","+to_string(TOTAL_HIT)+","+to_string(TOTAL_ACCESS);
     cache_fs << result << '\n';
 
@@ -626,6 +631,7 @@ int main(int argc, char** argv)
   }
   cache_fs.close();
   total_cache_stat.close();
+  cache_fills_stat.close();
 
   for (uint32_t i = 0; i < NUM_CPUS; i++) {
     float ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
@@ -640,7 +646,7 @@ int main(int argc, char** argv)
   FILE* fptr = fopen(fileName.c_str(), "w");
 
   if(fptr ==  NULL){
-    cout<< "[ERR] error opening log file\n";
+    std::cout<< "[ERR] error opening log file\n";
     exit(0);
   }
 
@@ -719,8 +725,9 @@ int main(int argc, char** argv)
   double write_var = total_avg_wr * (inter + intra);
   double sim_time = elapsed_hour * 3600 + elapsed_minute * 60 + elapsed_second;
 
-  string output = to_string(llc->WQ_TO_CACHE) + "," + to_string(llc->RQ_TO_CACHE) + "," + to_string(llc->PQ_TO_CACHE)+
-  ","+to_string(total_avg_wr) +"," + to_string(write_var) + "," + to_string(sim_time) + "," + to_string(inter) + "," + to_string(intra);
+  string output = to_string(llc->WQ_TO_CACHE) + "," + to_string(llc->RQ_TO_CACHE) + "," + 
+  to_string(llc->PQ_TO_CACHE)+","+to_string(total_avg_wr) +"," + to_string(write_var) + "," + 
+  to_string(sim_time) + "," + to_string(inter) + "," + to_string(intra);
 
   llc_data_fs << common_string << "," << output << '\n';
   llc_data_fs.close();
