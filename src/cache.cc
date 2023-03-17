@@ -15,6 +15,21 @@
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
+void CACHE::post_write_success(PACKET pkt, WRITE write){
+  if(NAME.find("LLC")==string::npos) return;
+  bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
+  if(epoc_end){
+    predictor->epoc_end_judgement_day(ooo_cpu[pkt.cpu]->get_current_cycle());
+  }
+  else {
+    predictor->insert(pkt.pc);
+  }
+
+  assert(pkt.packet_type == PACKET_TYPE::INVALID);
+  cacheStat->increase(static_cast<WRITE>(write + pkt.packet_type));
+  cacheStat->add_addr(pkt.address, pkt.packet_type==PACKET_TYPE::IPACKET);
+}
+
 void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
@@ -47,6 +62,9 @@ void CACHE::handle_fill()
 
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
+
+    post_write_success(*fill_mshr, WRITE::FILL);
+    
   }
 }
 
@@ -75,6 +93,8 @@ void CACHE::handle_writeback()
 
       // mark dirty
       fill_block.dirty = 1;
+      //***
+      post_write_success(handle_pkt, WRITE::WRITEBACK);
     } else // MISS
     {
       bool success;
@@ -91,6 +111,10 @@ void CACHE::handle_writeback()
                                              handle_pkt.type);
 
         success = filllike_miss(set, way, handle_pkt);
+        //***
+        if(success){
+          post_write_success(handle_pkt, WRITE::WRITEBACK);
+        }
       }
 
       if (!success)
@@ -309,6 +333,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.instr_id = handle_pkt.instr_id;
       writeback_packet.ip = 0;
       writeback_packet.type = WRITEBACK;
+      writeback_packet.pc = fill_block.pc;
 
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
@@ -335,6 +360,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.ip = handle_pkt.ip;
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
+    fill_block.pc = handle_pkt.pc;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

@@ -12,6 +12,8 @@
 #include "memory_class.h"
 #include "operable.h"
 
+#include "EpocManager.h"
+
 using namespace std;
 
 class CACHE;
@@ -124,6 +126,18 @@ public:
   void print_deadlock() override;
 
   int prefetch_code_line(uint64_t pf_v_addr);
+
+  //***
+  EpocManager* epoc_manager;
+  void init_epoc_manager(){
+    epoc_manager = new EpocManager(current_cycle);
+  }
+  bool test_epoc(){
+    return epoc_manager->tick(current_cycle);
+  }
+  IntPtr get_current_cycle(){
+    return current_cycle;
+  }
 
 #include "ooo_cpu_modules.inc"
 

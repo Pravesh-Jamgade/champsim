@@ -320,6 +320,8 @@ void O3_CPU::do_translate_fetch(champsim::circular_buffer<ooo_model_instr>::iter
   trace_packet.asid[0] = 0;
   trace_packet.asid[1] = 0;
   trace_packet.to_return = {&ITLB_bus};
+  trace_packet.packet_type = PACKET_TYPE::IPACKET;
+  
   for (; begin != end; ++begin)
     trace_packet.instr_depend_on_me.push_back(begin);
 
@@ -374,6 +376,11 @@ void O3_CPU::do_fetch_instruction(champsim::circular_buffer<ooo_model_instr>::it
   fetch_packet.asid[0] = 0;
   fetch_packet.asid[1] = 0;
   fetch_packet.to_return = {&L1I_bus};
+  fetch_packet.packet_type = PACKET_TYPE::IPACKET;
+  
+  //*** mine
+  fetch_packet.pc = begin->ip;
+  
   for (; begin != end; ++begin)
     fetch_packet.instr_depend_on_me.push_back(begin);
 

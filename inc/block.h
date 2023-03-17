@@ -8,6 +8,9 @@
 #include "circular_buffer.hpp"
 #include "instruction.h"
 
+//***
+#include "constant.h"
+
 class MemoryRequestProducer;
 class LSQ_ENTRY;
 
@@ -29,6 +32,10 @@ public:
   std::vector<MemoryRequestProducer*> to_return;
 
   uint8_t translation_level = 0, init_translation_level = 0;
+
+  //***
+  IntPtr pc = 0;
+  PACKET_TYPE packet_type =  PACKET_TYPE::INVALID;
 };
 
 template <>

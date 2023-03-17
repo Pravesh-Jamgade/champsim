@@ -17,6 +17,9 @@
 #include "tracereader.h"
 #include "vmem.h"
 
+//***
+#include "V1Predictor.h"
+
 uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
 
@@ -384,9 +387,15 @@ int main(int argc, char** argv)
   }
   // end trace file setup
 
+  //***
+  CACHE* llc = caches.front();
+  V1Predictor *v1_pred = new V1Predictor();
+  llc->initalize_extras(v1_pred);
+  
   // SHARED CACHE
   for (O3_CPU* cpu : ooo_cpu) {
     cpu->initialize_core();
+    cpu->init_epoc_manager();
   }
 
   for (auto it = caches.rbegin(); it != caches.rend(); ++it) {
@@ -507,6 +516,14 @@ int main(int argc, char** argv)
   print_dram_stats();
   print_branch_stats();
 #endif
+
+/**
+ * @brief  Pravesh's Territory
+ * 
+ */
+
+v1_pred->print();
+llc->cacheStat->print();
 
   return 0;
 }

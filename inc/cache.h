@@ -12,6 +12,10 @@
 #include "ooo_cpu.h"
 #include "operable.h"
 
+#include "V1Predictor.h"
+#include "CacheStat.h"
+#include "constant.h"
+
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
@@ -88,6 +92,26 @@ public:
 
   void print_deadlock() override;
 
+
+  public:
+  /**
+   * @author Pravesh
+   * @brief after successful writes do bookkeping here
+   */
+  void post_write_success(PACKET pkt, WRITE write);
+
+  IntPtr get_cycle_number(int cpu){
+    ooo_cpu[cpu]->current_cycle;
+  }
+  
+  V1Predictor* predictor;
+  CacheStat* cacheStat;
+  
+  void initalize_extras(V1Predictor* t){
+    predictor = t;
+    cacheStat = new CacheStat();
+  }
+
 #include "cache_modules.inc"
 
   const repl_t repl_type;
@@ -102,6 +126,8 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+    cacheStat = nullptr;
+    predictor = nullptr;
   }
 };
 
