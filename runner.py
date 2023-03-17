@@ -17,7 +17,7 @@ traces = [
     'cc-13.trace.gz'
 ]
 
-mixes = [
+four = [
     [traces[0], traces[1], traces[4], traces[5]],
     [traces[0], traces[1], traces[6], traces[7]],
     [traces[0], traces[1], traces[2], traces[3]],
@@ -27,14 +27,44 @@ mixes = [
     [traces[0], traces[2], traces[4], traces[6]],
 ]
 
+two = [
+    [traces[0], traces[4]],
+    [traces[1], traces[5]],
+    [traces[2], traces[6]],
+    [traces[3], traces[7]],
+    [traces[4], traces[5]],
+    [traces[5], traces[6]],
+    [traces[6], traces[7]],
+]
+
+one = [
+    [traces[0]],
+    [traces[1]],
+    [traces[2]],
+    [traces[3]],
+    [traces[4]],
+    [traces[5]],
+    [traces[6]],
+]
+
+mixes = []
+
 def task1():
     # trace_list = f"traces/{trace} traces/{trace} traces/{trace} traces/{trace}"
-    if len(sys.argv) < 3:
-        print("warm, sim and workload mix [0..6] missing\n")
+    if len(sys.argv) < 5:
+        print("warm, sim, workload mix [0..6], #cores  missing\n")
         exit(0)
     
     tag = ""
     path = ""
+
+    if str(sys.argv[4]) == "one":
+        mixes=one
+    if str(sys.argv[4]) == "two":
+        mixes=two
+    if str(sys.argv[4]) == "four":
+        mixes=four
+
     for trace in mixes[int(sys.argv[3])]:
         path = path + f"../traces/{trace} "
         if tag == "":
