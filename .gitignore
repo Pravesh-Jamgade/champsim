@@ -10,6 +10,7 @@ obj/
 
 **/*.o
 **/*.d
-
+.vscode/
+server/
 tracer/pin/obj-intel64/
 traces/
