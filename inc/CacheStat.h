@@ -20,6 +20,7 @@ class CacheStat{
         iwrites=dwrites=0;
         ifills=dfills=0;
         iwrite_back=dwrite_back=0;
+        pkt_inv=0;
     }
 
     /*
@@ -62,7 +63,14 @@ class CacheStat{
         
     }
 
+    void count_inv(){
+        pkt_inv++;
+    }
+
     void print(){
+        cout << "******************\n";
+        cout << "pkt invalid: " << pkt_inv << '\n';
+        cout << "******************\n";
         string s = "llc_write_type.log";
         fstream f = Log::get_file_stream(s);
         f<<"iwrite,dwrite,iwrite_back,dwrite_back,ifills,dfills,uniq_i,uniq_d\n";
@@ -74,6 +82,7 @@ class CacheStat{
     IntPtr iwrites, dwrites;
     IntPtr ifills, dfills;
     IntPtr iwrite_back, dwrite_back;
+    IntPtr pkt_inv;
     set<IntPtr> uniq_i, uniq_d;
 };
 

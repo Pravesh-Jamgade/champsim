@@ -25,7 +25,10 @@ void CACHE::post_write_success(PACKET pkt, WRITE write){
     predictor->insert(pkt.pc);
   }
 
-  assert(pkt.packet_type == PACKET_TYPE::INVALID);
+  if(pkt.packet_type == PACKET_TYPE::INVALID){
+    cacheStat->count_inv();
+    return;
+  }
   cacheStat->increase(static_cast<WRITE>(write + pkt.packet_type));
   cacheStat->add_addr(pkt.address, pkt.packet_type==PACKET_TYPE::IPACKET);
 }
@@ -334,6 +337,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.ip = 0;
       writeback_packet.type = WRITEBACK;
       writeback_packet.pc = fill_block.pc;
+      writeback_packet.packet_type = fill_block.packet_type;
 
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
@@ -361,6 +365,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
     fill_block.pc = handle_pkt.pc;
+    fill_block.packet_type = handle_pkt.packet_type;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
