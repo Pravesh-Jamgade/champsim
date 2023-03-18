@@ -15,7 +15,7 @@
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
-void CACHE::post_write_success(PACKET pkt, WRITE write){
+void CACHE::post_write_success(PACKET& pkt, WRITE write){
   if(NAME.find("LLC")==string::npos) return;
   bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
   if(epoc_end){

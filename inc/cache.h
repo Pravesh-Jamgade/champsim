@@ -98,7 +98,7 @@ public:
    * @author Pravesh
    * @brief after successful writes do bookkeping here
    */
-  void post_write_success(PACKET pkt, WRITE write);
+  void post_write_success(PACKET& pkt, WRITE write);
 
   IntPtr get_cycle_number(int cpu){
     ooo_cpu[cpu]->current_cycle;
