@@ -9,6 +9,7 @@
 #include <algorithm>
 #include "constant.h"
 #include "log.h"
+#include "PredictorHealth.h"
 using namespace std;
 
 
@@ -31,8 +32,13 @@ class V1Predictor
 
     map<IntPtr, int> gate;
     map<IntPtr, Status> judgement;
+    bool prediction_warmup_finish;
+    Coverage *coverage;
 
     public:
+    V1Predictor(){
+        prediction_warmup_finish=false;
+    }
     /*
         Phase 1: 
         find out PC <--> Write pairs
@@ -51,15 +57,16 @@ class V1Predictor
     
     */
     void print(IntPtr cycle = 0, string tag="end"){
-        string s = "epoc_"+tag+".log";
-        fstream f = Log::get_file_stream(s);
-
+        
         if(tag == "end"){
+            string s = "epoc_"+tag+".log";
+            fstream f = Log::get_file_stream(s);
             // at the end of simulation
             for(auto entry: gate){
                 string out = to_string(entry.first) +","+to_string(entry.second)+"\n";
                 f << out;
             }
+            f.close();
         }
         else{
             // after each epoc end
@@ -69,11 +76,15 @@ class V1Predictor
                 if(entry.second.get_status() == PREDICTION::ALIVE) active++;
                 else dead++; 
             }
-            string out = to_string(cycle) + "," +to_string(active) + "," +to_string(dead) +"\n";
-            f << out;
+            
         }
-
-        f.close();
+        {
+            string s = "predictor_health.log";
+            fstream fph=Log::get_file_stream(s);
+            fph << "fn,fp,tn,tp\n";
+            fph << coverage->health() << '\n';
+        }
+        
     }
 
     /*
@@ -105,6 +116,9 @@ class V1Predictor
                 judgement[entry.second]=Status(PREDICTION::DEAD);
             }
         }
+
+        if(!prediction_warmup_finish)
+            prediction_warmup_finish=true;
         
         // in order to analyze epoc wise, we should reset existing gate map, as it will have write intensity of previous
         // epocs data
@@ -112,12 +126,23 @@ class V1Predictor
 
     }
 
+    /*
+    1. checks if prediction table is warmup (1st epoc is done and predictions are ready to serve)
+    2. checks if prediction for key exists
+    */
     PREDICTION get_judgement(IntPtr key){
-        PREDICTION pred = PREDICTION::DEAD;
+        PREDICTION pred = PREDICTION::NO_PREDICTION;
+        if(!prediction_warmup_finish)
+            return pred;
+        
         if(judgement.find(key)!=judgement.end()){
             pred=static_cast<PREDICTION>(judgement[key].get_status());
         }
         return pred;
+    }
+
+    void add_prediction_health(STAT stat){
+        coverage->increase(stat);
     }
 
 };

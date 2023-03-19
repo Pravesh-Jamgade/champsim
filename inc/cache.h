@@ -100,13 +100,15 @@ public:
    */
   void post_write_success(PACKET& pkt, WRITE write);
 
+  PREDICTION pre_write_action(PACKET& pkt, int set);
+
   IntPtr get_cycle_number(int cpu){
     ooo_cpu[cpu]->current_cycle;
   }
   
   V1Predictor* predictor;
   CacheStat* cacheStat;
-  
+    
   void initalize_extras(V1Predictor* t){
     predictor = t;
     cacheStat = new CacheStat();
@@ -128,6 +130,7 @@ public:
   {
     cacheStat = nullptr;
     predictor = nullptr;
+    
   }
 };
 

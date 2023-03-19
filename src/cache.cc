@@ -15,6 +15,39 @@
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
+PREDICTION CACHE::pre_write_action(PACKET& pkt, int set){
+  if(NAME.find("LLC")==string::npos) return;
+  PREDICTION pred = predictor->get_judgement(pkt.pc);
+  if(pred == PREDICTION::NO_PREDICTION)
+    return;
+  
+  // this is just to see how our predictor is doing, by looking at prediction and actual write intensity at block
+  bool write_intense = cacheStat->is_set_write_intensive(set);
+  if(write_intense){//actual
+    switch(pred){//result
+      case PREDICTION::ALIVE:
+        predictor->add_prediction_health(STAT::TP);
+        break;
+      case PREDICTION::DEAD:
+        predictor->add_prediction_health(STAT::FN);
+        break;
+    }
+  }
+  else{
+    switch(pred){
+      case PREDICTION::ALIVE:
+        predictor->add_prediction_health(STAT::FP);
+        break;
+      case PREDICTION::DEAD:
+        predictor->add_prediction_health(STAT::TN);
+        break;
+    }
+  }
+
+  // do not confused with write intensity value, that is for accounting how good or bad predictor is performing
+  return pred;
+}
+
 void CACHE::post_write_success(PACKET& pkt, WRITE write){
   if(NAME.find("LLC")==string::npos) return;
   bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
@@ -51,6 +84,9 @@ void CACHE::handle_fill()
       way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                          fill_mshr->type);
 
+    //***
+    PREDICTION prediction = pre_write_action(*fill_mshr, set);
+
     bool success = filllike_miss(set, way, *fill_mshr);
     if (!success)
       return;
@@ -85,6 +121,9 @@ void CACHE::handle_writeback()
     uint32_t way = get_way(handle_pkt.address, set);
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
+
+    //***
+    PREDICTION prediction = pre_write_action(handle_pkt, set);
 
     if (way < NUM_WAY) // HIT
     {

@@ -31,4 +31,12 @@ enum PACKET_TYPE{
     DPACKET=2
 };
 
+#pragma once
+enum STAT{
+    FP=0,
+    FN,
+    TP,
+    TN
+};
+
 #define EPOC_SCALE 1000000
