@@ -131,8 +131,8 @@ class CacheStat{
         f << evicts <<","<<ievicts<<","<<devicts<<","<<invalid_evicts<<"\n";
 
         f << "ALL UNIQUE\n";
-        f << "uniq_i, uniq_d\n";
-        f << uniq_i.size() << "," << uniq_d.size() << '\n';
+        f << "uniq_i, uniq_d, uniq_inv\n";
+        f << uniq_i.size() << "," << uniq_d.size() << "," << uniq_inv.size() << '\n';
        
         f.close();
     }

@@ -819,6 +819,8 @@ int O3_CPU::do_translate_store(std::vector<LSQ_ENTRY>::iterator sq_it)
   data_packet.asid[1] = sq_it->asid[1];
   data_packet.to_return = {&DTLB_bus};
   data_packet.sq_index_depend_on_me = {sq_it};
+  data_packet.pc = sq_it->ip;
+  data_packet.packet_type = PACKET_TYPE::DPACKET;
 
   DP(if (warmup_complete[cpu]) {
     std::cout << "[RTS0] " << __func__ << " instr_id: " << sq_it->instr_id << " rob_index: " << sq_it->rob_index << " is popped from to RTS0" << std::endl;
@@ -883,6 +885,9 @@ int O3_CPU::do_translate_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.to_return = {&DTLB_bus};
   data_packet.lq_index_depend_on_me = {lq_it};
 
+  data_packet.pc = lq_it->ip;
+  data_packet.packet_type = PACKET_TYPE::DPACKET;
+
   DP(if (warmup_complete[cpu]) {
     std::cout << "[RTL0] " << __func__ << " instr_id: " << lq_it->instr_id << " rob_index: " << lq_it->rob_index << " is popped to RTL0" << std::endl;
   })
@@ -910,6 +915,9 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.asid[1] = lq_it->asid[1];
   data_packet.to_return = {&L1D_bus};
   data_packet.lq_index_depend_on_me = {lq_it};
+
+  data_packet.pc = lq_it->ip;
+  data_packet.packet_type = PACKET_TYPE::DPACKET;
 
   int rq_index = L1D_bus.lower_level->add_rq(&data_packet);
 

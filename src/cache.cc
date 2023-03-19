@@ -336,6 +336,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.instr_id = handle_pkt.instr_id;
       writeback_packet.ip = 0;
       writeback_packet.type = WRITEBACK;
+
       writeback_packet.pc = fill_block.pc;
       writeback_packet.packet_type = fill_block.packet_type;
 
@@ -343,8 +344,13 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       if (result == -2)
         return false;
       
+      if(NAME.find("L1I")!=string::npos){
+        int a = 0+result;
+        printf("[DEBUG] %d", a);
+      }
       //*** replacement candidate successfully sent to lower level
-      cacheStat->increase_evicts(fill_block.pc, fill_block.packet_type);
+      if(cacheStat!=nullptr)//only initalized at LLC
+        cacheStat->increase_evicts(fill_block.pc, fill_block.packet_type);
     }
 
     if (ever_seen_data)
@@ -367,6 +373,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.ip = handle_pkt.ip;
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
+
     fill_block.pc = handle_pkt.pc;
     fill_block.packet_type = handle_pkt.packet_type;
   }
@@ -443,6 +450,7 @@ int CACHE::invalidate_entry(uint64_t inval_addr)
 
 int CACHE::add_rq(PACKET* packet)
 {
+  cout << "[RQ] " << packet->pc << ", "<< packet->ip << ", " << packet->packet_type <<","<<NAME<<"\n";  
   assert(packet->address != 0);
   RQ_ACCESS++;
 
