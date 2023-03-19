@@ -26,11 +26,11 @@ void CACHE::post_write_success(PACKET& pkt, WRITE write){
   }
 
   if(pkt.packet_type == PACKET_TYPE::INVALID){
-    cacheStat->count_inv();
+    cacheStat->increase_invalid_inserts(write);
     return;
   }
   cacheStat->increase(static_cast<WRITE>(write + pkt.packet_type));
-  cacheStat->add_addr(pkt.address, pkt.packet_type==PACKET_TYPE::IPACKET);
+  cacheStat->add_addr(pkt.address, pkt.packet_type);
 }
 
 void CACHE::handle_fill()
@@ -342,6 +342,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
         return false;
+      
+      //*** replacement candidate successfully sent to lower level
+      cacheStat->increase_evicts(fill_block.pc, fill_block.packet_type);
     }
 
     if (ever_seen_data)
