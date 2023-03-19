@@ -48,7 +48,7 @@ PREDICTION CACHE::pre_write_action(PACKET& pkt, int set){
   return pred;
 }
 
-void CACHE::post_write_success(PACKET& pkt, WRITE write){
+void CACHE::post_write_success(PACKET& pkt, WRITE write, int set){
   if(NAME.find("LLC")==string::npos) return;
   bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
   if(epoc_end){
@@ -64,6 +64,8 @@ void CACHE::post_write_success(PACKET& pkt, WRITE write){
   }
   cacheStat->increase(static_cast<WRITE>(write + pkt.packet_type));
   cacheStat->add_addr(pkt.address, pkt.packet_type);
+  cacheStat->update_setstatus_on_write(set);
+  cacheStat->update_setstatus_on_write(set);
 }
 
 void CACHE::handle_fill()
@@ -102,7 +104,7 @@ void CACHE::handle_fill()
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
 
-    post_write_success(*fill_mshr, WRITE::FILL);
+    post_write_success(*fill_mshr, WRITE::FILL, set);
     
   }
 }
@@ -136,7 +138,7 @@ void CACHE::handle_writeback()
       // mark dirty
       fill_block.dirty = 1;
       //***
-      post_write_success(handle_pkt, WRITE::WRITE_BACK);
+      post_write_success(handle_pkt, WRITE::WRITE_BACK, set);
     } else // MISS
     {
       bool success;
@@ -155,7 +157,7 @@ void CACHE::handle_writeback()
         success = filllike_miss(set, way, handle_pkt);
         //***
         if(success){
-          post_write_success(handle_pkt, WRITE::WRITE_BACK);
+          post_write_success(handle_pkt, WRITE::WRITE_BACK, set);
         }
       }
 

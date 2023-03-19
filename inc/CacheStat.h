@@ -170,7 +170,10 @@ class CacheStat{
 
     bool is_set_write_intensive(int set){
         double avg = (double)counter->get_total_writes()/(double)set_status.size();
-        IntPtr set_writes = set_status[set].get_writes();
+        IntPtr set_writes=0;
+        if(set_status.find(set)!=set_status.end()){
+            set_writes = set_status[set].get_writes();
+        }
         if(set_writes > avg) return true; // write intensize set
         return false; //else not
     }

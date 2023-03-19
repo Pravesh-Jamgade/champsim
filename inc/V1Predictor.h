@@ -38,6 +38,7 @@ class V1Predictor
     public:
     V1Predictor(){
         prediction_warmup_finish=false;
+        coverage = new Coverage();
     }
     /*
         Phase 1: 
