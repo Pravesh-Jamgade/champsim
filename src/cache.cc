@@ -16,10 +16,10 @@ extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
 PREDICTION CACHE::pre_write_action(PACKET& pkt, int set){
-  if(NAME.find("LLC")==string::npos) return;
+  if(NAME.find("LLC")==string::npos) return PREDICTION::NO_PREDICTION;
   PREDICTION pred = predictor->get_judgement(pkt.pc);
   if(pred == PREDICTION::NO_PREDICTION)
-    return;
+    return pred;
   
   // this is just to see how our predictor is doing, by looking at prediction and actual write intensity at block
   bool write_intense = cacheStat->is_set_write_intensive(set);
