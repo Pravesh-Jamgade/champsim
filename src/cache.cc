@@ -450,7 +450,6 @@ int CACHE::invalidate_entry(uint64_t inval_addr)
 
 int CACHE::add_rq(PACKET* packet)
 {
-  cout << "[RQ] " << packet->pc << ", "<< packet->ip << ", " << packet->packet_type <<","<<NAME<<"\n";  
   assert(packet->address != 0);
   RQ_ACCESS++;
 
