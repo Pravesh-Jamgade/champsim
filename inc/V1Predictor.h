@@ -34,11 +34,13 @@ class V1Predictor
     map<IntPtr, Status> judgement;
     bool prediction_warmup_finish;
     Coverage *coverage;
-
+    fstream epoc_data_fs;
     public:
     V1Predictor(){
         prediction_warmup_finish=false;
         coverage = new Coverage();
+        string s = "epoc_write_instense_number_of_sets.log";
+        epoc_data_fs = Log::get_file_stream(s);
     }
     /*
         Phase 1: 
