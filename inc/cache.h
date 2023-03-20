@@ -105,6 +105,8 @@ public:
   IntPtr get_cycle_number(int cpu){
     ooo_cpu[cpu]->current_cycle;
   }
+
+  void post_read_success(PACKET& pkt, int set);
   
   V1Predictor* predictor;
   CacheStat* cacheStat;

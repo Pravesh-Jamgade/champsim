@@ -51,10 +51,13 @@ class SetStatus{
     private:
         Counter counter;
     public:
-        void increase_write_count(){counter.total_writes++;}
-        void increase_read_count(){counter.total_reads++;}
-        IntPtr get_writes(){return counter.total_reads;}
-        IntPtr get_reads(){return counter.total_reads;}
+    SetStatus(){
+        counter = Counter();
+    }
+    void increase_write_count(){counter.total_writes++;}
+    void increase_read_count(){counter.total_reads++;}
+    IntPtr get_writes(){return counter.total_writes;}
+    IntPtr get_reads(){return counter.total_reads;}
 };
 
 class CacheStat{
@@ -110,21 +113,26 @@ class CacheStat{
     }
 
     void add_addr(IntPtr addr, PACKET_TYPE pkt_type){
+        if(seen_before.find(addr)!=seen_before.end()) return;
+
         if(pkt_type == PACKET_TYPE::IPACKET){
             if(uniq_i.find(addr)!=uniq_i.end()){
                 uniq_i.erase(addr);
+                seen_before.insert(addr);
             }
             else uniq_i.insert(addr);
         }
         else if(pkt_type == PACKET_TYPE::DPACKET){
             if(uniq_d.find(addr)!=uniq_d.end()){
                 uniq_d.erase(addr);
+                seen_before.insert(addr);
             }
             else uniq_d.insert(addr);
         }
         else{
             if(uniq_inv.find(addr)!=uniq_inv.end()){
                 uniq_inv.erase(addr);
+                seen_before.insert(addr);
             }
             else uniq_inv.insert(addr);
         }
@@ -239,6 +247,7 @@ class CacheStat{
 
     // at LLC
     set<IntPtr> uniq_i, uniq_d, uniq_inv;
+    set<IntPtr> seen_before;
 
     map<IntPtr, SetStatus> set_status; 
 };

@@ -15,6 +15,10 @@
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
+void CACHE::post_read_success(PACKET& pkt, int set){
+  cacheStat->update_setstatus_on_read(set);
+}
+
 PREDICTION CACHE::pre_write_action(PACKET& pkt, int set){
   if(NAME.find("LLC")==string::npos) return PREDICTION::NO_PREDICTION;
   PREDICTION pred = predictor->get_judgement(pkt.pc);
@@ -64,7 +68,6 @@ void CACHE::post_write_success(PACKET& pkt, WRITE write, int set){
   }
   cacheStat->increase(static_cast<WRITE>(write + pkt.packet_type));
   cacheStat->add_addr(pkt.address, pkt.packet_type);
-  cacheStat->update_setstatus_on_write(set);
   cacheStat->update_setstatus_on_write(set);
 }
 
@@ -191,6 +194,7 @@ void CACHE::handle_read()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
+      
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
