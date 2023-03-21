@@ -49,31 +49,42 @@ one = [
 
 mixes = []
 
+comm = [
+    f''
+]
+
 def task1():
     # trace_list = f"traces/{trace} traces/{trace} traces/{trace} traces/{trace}"
-    if len(sys.argv) < 6:
-        print("warm[1], sim[2], workload mix [0..6][3], #cores[4], binary[5]  missing\n")
+    if len(sys.argv) < 3:
+        print("workload mix [0..6] [1], #cores [2] missing\n")
         exit(0)
     
     tag = ""
     path = ""
-  
-    if str(sys.argv[4]) == "one":
-        mixes=one
-    if str(sys.argv[4]) == "two":
-        mixes=two
-    if str(sys.argv[4]) == "four":
-        mixes=four
 
-    for trace in mixes[int(sys.argv[3])]:
+    cmd1 = f".././champsim_1CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 {path}"
+    cmd2 = f".././champsim_2CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 {path}"
+    cmd4 = f".././champsim_4CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 {path}"
+    
+    cmd = ""
+
+    if str(sys.argv[2]) == "one":
+        mixes=one
+        cmd = cmd1
+    if str(sys.argv[2]) == "two":
+        mixes=two
+        cmd = cmd2
+    if str(sys.argv[2]) == "four":
+        mixes=four
+        cmd = cmd4
+
+    for trace in mixes[int(sys.argv[1])]:
         path = path + f"../traces/{trace} "
         if tag == "":
             tag = trace.split('.')[0]
         else:
             tag = tag + "-" + trace.split('.')[0]
-    
-    print(f"{tag}\ntraces={path}\nwarm={sys.argv[1]}\nsim={sys.argv[2]}\ncores={sys.argv[4]}\nbin={sys.argv[5]}\n")
-    cmd = f"./bin/{sys.argv[5]} --warmup_instructions {sys.argv[1]}000000 --simulation_instructions {sys.argv[2]}000000 {path}"
+        
     try:
         print(f"running... {cmd}")
         subprocess.run(shlex.split(cmd))
