@@ -108,11 +108,11 @@ public:
 
   void post_read_success(PACKET& pkt, int set);
   
-  V1Predictor* predictor;
+  IPredictor* ipredictor;
   CacheStat* cacheStat;
     
-  void initalize_extras(V1Predictor* t){
-    predictor = t;
+  void initalize_extras(IPredictor* predictor){
+    ipredictor = predictor;
     cacheStat = new CacheStat();
   }
 
@@ -131,7 +131,7 @@ public:
         repl_type(repl), pref_type(pref)
   {
     cacheStat = nullptr;
-    predictor = nullptr;
+    ipredictor = nullptr;
     
   }
 };

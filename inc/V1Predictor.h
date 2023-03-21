@@ -10,23 +10,11 @@
 #include "constant.h"
 #include "log.h"
 #include "PredictorHealth.h"
+#include "IPredictor.h"
+
 using namespace std;
 
-
-class Status{
-    private:
-    int prediction;
-    int confidence;
-    public:
-    Status(){}
-    Status(int pred){
-        prediction = pred;
-        confidence = 0;
-    }
-    int get_status(){return prediction;}
-};
-
-class V1Predictor
+class V1Predictor: public IPredictor
 {
     private:
 
@@ -46,7 +34,8 @@ class V1Predictor
         Phase 1: 
         find out PC <--> Write pairs
     */
-    void insert(IntPtr key){
+    void insert(PACKET& pkt){
+        IntPtr key = pkt.pc;
        auto foundKey = gate.find(key);
        if(foundKey!=gate.end()){
         gate[key]++;
@@ -64,6 +53,7 @@ class V1Predictor
         if(tag == "end"){
             string s = "epoc_"+tag+".log";
             fstream f = Log::get_file_stream(s);
+            f<<"pc,count\n";
             // at the end of simulation
             for(auto entry: gate){
                 string out = to_string(entry.first) +","+to_string(entry.second)+"\n";
@@ -79,7 +69,6 @@ class V1Predictor
                 if(entry.second.get_status() == PREDICTION::ALIVE) active++;
                 else dead++; 
             }
-            
         }
         {
             string s = "predictor_health.log";

@@ -21,7 +21,7 @@ void CACHE::post_read_success(PACKET& pkt, int set){
 
 PREDICTION CACHE::pre_write_action(PACKET& pkt, int set){
   if(NAME.find("LLC")==string::npos) return PREDICTION::NO_PREDICTION;
-  PREDICTION pred = predictor->get_judgement(pkt.pc);
+  PREDICTION pred = ipredictor->get_judgement(pkt.pc);
   if(pred == PREDICTION::NO_PREDICTION)
     return pred;
   
@@ -30,20 +30,20 @@ PREDICTION CACHE::pre_write_action(PACKET& pkt, int set){
   if(write_intense){//actual
     switch(pred){//result
       case PREDICTION::ALIVE:
-        predictor->add_prediction_health(STAT::TP);
+        ipredictor->add_prediction_health(STAT::TP);
         break;
       case PREDICTION::DEAD:
-        predictor->add_prediction_health(STAT::FN);
+        ipredictor->add_prediction_health(STAT::FN);
         break;
     }
   }
   else{
     switch(pred){
       case PREDICTION::ALIVE:
-        predictor->add_prediction_health(STAT::FP);
+        ipredictor->add_prediction_health(STAT::FP);
         break;
       case PREDICTION::DEAD:
-        predictor->add_prediction_health(STAT::TN);
+        ipredictor->add_prediction_health(STAT::TN);
         break;
     }
   }
@@ -56,10 +56,10 @@ void CACHE::post_write_success(PACKET& pkt, WRITE write, int set){
   if(NAME.find("LLC")==string::npos) return;
   bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
   if(epoc_end){
-    predictor->epoc_end_judgement_day(ooo_cpu[pkt.cpu]->get_current_cycle());
+    ipredictor->epoc_end_judgement_day(ooo_cpu[pkt.cpu]->get_current_cycle());
   }
   else {
-    predictor->insert(pkt.pc);
+    ipredictor->insert(pkt);
   }
 
   if(pkt.packet_type == PACKET_TYPE::INVALID){

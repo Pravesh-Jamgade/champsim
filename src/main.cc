@@ -19,6 +19,8 @@
 
 //***
 #include "V1Predictor.h"
+#include "V2Predictor.h"
+#include "IPredictor.h"
 
 uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
@@ -389,8 +391,8 @@ int main(int argc, char** argv)
 
   //***
   CACHE* llc = caches.front();
-  V1Predictor *v1_pred = new V1Predictor();
-  llc->initalize_extras(v1_pred);
+  IPredictor* ipred = new V2Predictor(); 
+  llc->initalize_extras(ipred);
   
   // SHARED CACHE
   for (O3_CPU* cpu : ooo_cpu) {
@@ -522,7 +524,7 @@ int main(int argc, char** argv)
  * 
  */
 
-v1_pred->print();
+ipred->print();
 llc->cacheStat->print();
 
   return 0;

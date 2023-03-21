@@ -689,9 +689,10 @@ with open('Makefile', 'wt') as wfp:
     wfp.write('CPPFLAGS := ' + config_file.get('CPPFLAGS', '') + ' -Iinc -MMD -MP\n')
     wfp.write('LDFLAGS := ' + config_file.get('LDFLAGS', '') + '\n')
     wfp.write('LDLIBS := ' + config_file.get('LDLIBS', '') + '\n')
+    wfp.write('TAG := ' + '\n')
     wfp.write('\n')
     wfp.write('.phony: all clean\n\n')
-    wfp.write('all: ' + config_file['executable_name'] + '\n\n')
+    wfp.write('all: ' + config_file['executable_name']+ '$(TAG)' + '\n\n')
     wfp.write('clean: \n')
     wfp.write('\t$(RM) ' + constants_header_name + '\n')
     wfp.write('\t$(RM) ' + instantiation_file_name + '\n')
@@ -701,7 +702,7 @@ with open('Makefile', 'wt') as wfp:
     for v in libfilenames.values():
         wfp.write('\t find {0} -name \*.o -delete\n\t find {0} -name \*.d -delete\n'.format(*v))
     wfp.write('\n')
-    wfp.write(config_file['executable_name'] + ': $(patsubst %.cc,%.o,$(wildcard src/*.cc)) ' + ' '.join('obj/' + k for k in libfilenames) + '\n')
+    wfp.write(config_file['executable_name']+ '$(TAG)' + ': $(patsubst %.cc,%.o,$(wildcard src/*.cc)) ' + ' '.join('obj/' + k for k in libfilenames) + '\n')
     wfp.write('\t$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)\n\n')
 
     for k,v in libfilenames.items():
