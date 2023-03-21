@@ -62,9 +62,9 @@ def task1():
     tag = ""
     path = ""
 
-    cmd1 = f".././champsim_1CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 {path}"
-    cmd2 = f".././champsim_2CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 {path}"
-    cmd4 = f".././champsim_4CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 {path}"
+    cmd1 = f".././champsim_1CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 "
+    cmd2 = f".././champsim_2CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 "
+    cmd4 = f".././champsim_4CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 "
     
     cmd = ""
 
@@ -84,7 +84,8 @@ def task1():
             tag = trace.split('.')[0]
         else:
             tag = tag + "-" + trace.split('.')[0]
-        
+    
+    cmd = cmd + path
     try:
         print(f"running... {cmd}")
         subprocess.run(shlex.split(cmd))
