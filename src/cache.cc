@@ -21,7 +21,7 @@ void CACHE::post_read_success(PACKET& pkt, int set){
 
 PREDICTION CACHE::pre_write_action(PACKET& pkt, int set){
   if(NAME.find("LLC")==string::npos) return PREDICTION::NO_PREDICTION;
-  PREDICTION pred = ipredictor->get_judgement(pkt.pc);
+  PREDICTION pred = ipredictor->get_judgement(pkt);
   if(pred == PREDICTION::NO_PREDICTION)
     return pred;
   

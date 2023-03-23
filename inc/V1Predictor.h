@@ -122,7 +122,8 @@ class V1Predictor: public IPredictor
     1. checks if prediction table is warmup (1st epoc is done and predictions are ready to serve)
     2. checks if prediction for key exists
     */
-    PREDICTION get_judgement(IntPtr key){
+    PREDICTION get_judgement(PACKET& pkt){
+        IntPtr key = pkt.pc;
         PREDICTION pred = PREDICTION::NO_PREDICTION;
         if(!prediction_warmup_finish)
             return pred;

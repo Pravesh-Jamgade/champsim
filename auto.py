@@ -56,15 +56,23 @@ comm = [
 def task1():
     # trace_list = f"traces/{trace} traces/{trace} traces/{trace} traces/{trace}"
     if len(sys.argv) < 3:
-        print("workload mix [0..6] [1], #cores [2] missing\n")
+        print("workload mix [0 to 6] [1], #cores [2]missing\n")
         exit(0)
     
+    print('hardcoded: #Predictor(v1/v2) [3] ')
     tag = ""
     path = ""
+    V = "V2"
 
-    cmd1 = f".././champsim_1CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 "
-    cmd2 = f".././champsim_2CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 "
-    cmd4 = f".././champsim_4CoreV2 --warmup_instructions 0 --simulation_instructions 200000000 "
+    ''' right now i need to check V2 only'''
+    # if sys.argv[3] == "v1":
+    #     V="V1"
+    # else:
+    #     V="V2"
+
+    cmd1 = f"./bin/champsim_1Core{V} --warmup_instructions 0 --simulation_instructions 200000000 "
+    cmd2 = f"./bin/champsim_2Core{V} --warmup_instructions 0 --simulation_instructions 200000000 "
+    cmd4 = f"./bin/champsim_4Core{V} --warmup_instructions 0 --simulation_instructions 200000000 "
     
     cmd = ""
 
@@ -87,6 +95,9 @@ def task1():
     
     cmd = cmd + path
     try:
+        print(f'traces={path}')
+        print(f'Predictor V#={V}')
+        print(f'0M, 200M')
         print(f"running... {cmd}")
         subprocess.run(shlex.split(cmd))
     except subprocess.CalledProcessError as e:
