@@ -36,6 +36,7 @@ public:
   //***
   IntPtr pc = 0;
   PACKET_TYPE packet_type =  PACKET_TYPE::INVALID;
+  PACKET_LIFE packet_life = PACKET_LIFE::INVALID;
 };
 
 template <>

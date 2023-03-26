@@ -15,7 +15,7 @@ enum LOG{
 };
 
 #pragma once
-enum WRITE{
+enum WRITE_TYPE{
     FILL=0,
     WRITE_BACK,
     IFILL=0,
@@ -37,6 +37,19 @@ enum STAT{
     FN,
     TP,
     TN
+};
+
+/*Block found in cache?, Miss=0 Hit=1*/
+enum RESULT{
+    MISS=0,
+    HIT
+};
+
+#pragma once
+enum class PACKET_LIFE{
+    INVALID =-1,
+    DEAD,
+    ALIVE
 };
 
 #define EPOC_SCALE 1000000

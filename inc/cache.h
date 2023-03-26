@@ -98,9 +98,16 @@ public:
    * @author Pravesh
    * @brief after successful writes do bookkeping here
    */
-  void post_write_success(PACKET& pkt, WRITE write, int set);
+  void post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way);
 
-  PREDICTION pre_write_action(PACKET& pkt, int set);
+  PREDICTION pre_write_action(PACKET& pkt, int set, RESULT result);
+
+  PACKET_LIFE what_is_packet_life(RESULT res){
+    return res == RESULT::HIT ? PACKET_LIFE::ALIVE : PACKET_LIFE::DEAD;
+  }
+  void update_blocks_life(BLOCK* block, PACKET_LIFE pkt_life){
+    block->packet_life = pkt_life;
+  }
 
   IntPtr get_cycle_number(int cpu){
     ooo_cpu[cpu]->current_cycle;

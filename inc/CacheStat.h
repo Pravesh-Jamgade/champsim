@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <algorithm>
+#include "block.h"
 #include "constant.h"
 #include "log.h"
 
@@ -30,7 +31,7 @@ class Counter{
 
     // set
     // total
-    IntPtr total_writes, total_reads;
+    IntPtr total_writes, total_reads, total_deads, total_alive;
 
     Counter(){
         iwrites=dwrites=0;
@@ -41,6 +42,9 @@ class Counter{
         // set
         total_writes = 0;
         total_reads = 0;
+        // deads
+        total_deads = 0;
+        total_alive = 0;
     }
     
     // cache
@@ -56,8 +60,13 @@ class SetStatus{
     }
     void increase_write_count(){counter.total_writes++;}
     void increase_read_count(){counter.total_reads++;}
+    void increase_dead_count(){counter.total_deads++;}
+    void increase_alive_count(){counter.total_alive++;}
+
     IntPtr get_writes(){return counter.total_writes;}
     IntPtr get_reads(){return counter.total_reads;}
+    IntPtr get_deads(){return counter.total_deads;}
+    IntPtr get_alive(){return counter.total_alive;}
 };
 
 class CacheStat{
@@ -71,23 +80,23 @@ class CacheStat{
 
     /*
         exmample, if your catching all writes at LLC then writebacks here implies writes from L2 not the writeback because eviction from LLC those will be evicts.
-        1.[ PACKET_TYPE (ipkt=0/dpkt=2) x WRITE (fill=0/wb=1) ] => [ ipkt+fill=0 / ipkt+wb=1 / dpkt+fill=2 / dpkt+wb=3 ]
+        1.[ PACKET_TYPE (ipkt=0/dpkt=2) x WRITE_TYPE (fill=0/wb=1) ] => [ ipkt+fill=0 / ipkt+wb=1 / dpkt+fill=2 / dpkt+wb=3 ]
     */
-    void increase(WRITE type){
+    void increase(WRITE_TYPE type){
         switch(type){
-            case WRITE::DFILL:
+            case WRITE_TYPE::DFILL:
                 counter->dfills++;
                 counter->dwrites++;
                 break;
-            case WRITE::DWRITEBACK:
+            case WRITE_TYPE::DWRITEBACK:
                 counter->dwrite_back++;
                 counter->dwrites++;
                 break;
-            case WRITE::IFILL:
+            case WRITE_TYPE::IFILL:
                 counter->ifills++;
                 counter->iwrites++;
                 break;
-            case WRITE::IWRITEBACK:
+            case WRITE_TYPE::IWRITEBACK:
                 counter->iwrite_back++;
                 counter->iwrites++;
                 break;
@@ -96,9 +105,10 @@ class CacheStat{
 
     /*
     1.count evicts from LLC
-    2.count what pc's that evicted block belongs to (instruction/data)x(write-live/write-dead)
+    2.count dead blocks corresponding to set
     */
-    void increase_evicts(IntPtr pc, PACKET_TYPE pkt_type){
+    void process_evicts(PACKET pkt){
+        PACKET_TYPE pkt_type = pkt.packet_type;
         counter->evicts++;
         switch(pkt_type){
             case PACKET_TYPE::DPACKET:
@@ -109,6 +119,27 @@ class CacheStat{
                 break;
             case PACKET_TYPE::IPACKET:
                 counter->ievicts++;
+        }
+    }
+
+    void process_evicted_blocks_life(PACKET& pkt, int set){
+        switch(pkt.packet_life){
+            case PACKET_LIFE::DEAD:
+                    if(set_status.find(set)!=set_status.end()){
+                        set_status[set].increase_dead_count();
+                    }
+                    else{
+                        set_status[set]=SetStatus();
+                    }
+                break;
+            case PACKET_LIFE::ALIVE:
+                    if(set_status.find(set)!=set_status.end()){
+                        set_status[set].increase_alive_count();
+                    }
+                    else{
+                        set_status[set]=SetStatus();
+                    }
+                break;
         }
     }
 
@@ -144,13 +175,13 @@ class CacheStat{
     If in the end of simualtion if  invalid != 0, then some blocks are not labelled or missed.
     As of now it is correct, we can remove all invalid related booking
     */
-    void increase_invalid_inserts(WRITE write){
+    void increase_invalid_inserts(WRITE_TYPE write){
         invalid_writes++;
         switch(write){
-            case WRITE::FILL:
+            case WRITE_TYPE::FILL:
                 invalid_fill++;
                 break;
-            case WRITE::WRITE_BACK:
+            case WRITE_TYPE::WRITE_BACK:
                 invalid_writeback++;
                 break;
         }
@@ -228,9 +259,9 @@ class CacheStat{
         {
             string s = "llc_set_status.log";
             fstream f = Log::get_file_stream(s);
-            f << "set,writes,reads\n";
+            f << "set,writes,reads,dead\n";
             for(auto set: set_status){
-                f << set.first << "," << set.second.get_writes() << "," << set.second.get_reads() << "\n"; 
+                f << set.first << "," << set.second.get_writes() << "," << set.second.get_reads() <<","<<set.second.get_deads() << "\n"; 
             }
         }
     }

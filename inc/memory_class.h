@@ -23,6 +23,7 @@ public:
   uint64_t address = 0, v_address = 0, tag = 0, data = 0, ip = 0, cpu = 0, instr_id = 0;
   IntPtr pc = 0;
   PACKET_TYPE packet_type = PACKET_TYPE::INVALID;
+  PACKET_LIFE packet_life = PACKET_LIFE::INVALID;
 
   // replacement state
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;

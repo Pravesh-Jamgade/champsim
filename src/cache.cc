@@ -19,40 +19,22 @@ void CACHE::post_read_success(PACKET& pkt, int set){
   cacheStat->update_setstatus_on_read(set);
 }
 
-PREDICTION CACHE::pre_write_action(PACKET& pkt, int set){
+PREDICTION CACHE::pre_write_action(PACKET& pkt, int set, RESULT result){
   if(NAME.find("LLC")==string::npos) return PREDICTION::NO_PREDICTION;
+
   PREDICTION pred = ipredictor->get_judgement(pkt);
   if(pred == PREDICTION::NO_PREDICTION)
     return pred;
   
-  // this is just to see how our predictor is doing, by looking at prediction and actual write intensity at block
-  bool write_intense = cacheStat->is_set_write_intensive(set);
-  if(write_intense){//actual
-    switch(pred){//result
-      case PREDICTION::ALIVE:
-        ipredictor->add_prediction_health(STAT::TP);
-        break;
-      case PREDICTION::DEAD:
-        ipredictor->add_prediction_health(STAT::FN);
-        break;
-    }
-  }
-  else{
-    switch(pred){
-      case PREDICTION::ALIVE:
-        ipredictor->add_prediction_health(STAT::FP);
-        break;
-      case PREDICTION::DEAD:
-        ipredictor->add_prediction_health(STAT::TN);
-        break;
-    }
-  }
+  // // this is just to see how our predictor is doing, by looking at prediction and actual write intensity at block
+  // bool write_intense = cacheStat->is_set_write_intensive(set);
+ 
 
   // do not confused with write intensity value, that is for accounting how good or bad predictor is performing
   return pred;
 }
 
-void CACHE::post_write_success(PACKET& pkt, WRITE write, int set){
+void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way){
   if(NAME.find("LLC")==string::npos) return;
   bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
   if(epoc_end){
@@ -62,11 +44,14 @@ void CACHE::post_write_success(PACKET& pkt, WRITE write, int set){
     ipredictor->insert(pkt);
   }
 
+  update_blocks_life(&block[set*NUM_WAY + way], what_is_packet_life(static_cast<RESULT>(set<way)));
+  
   if(pkt.packet_type == PACKET_TYPE::INVALID){
     cacheStat->increase_invalid_inserts(write);
     return;
   }
-  cacheStat->increase(static_cast<WRITE>(write + pkt.packet_type));
+
+  cacheStat->increase(static_cast<WRITE_TYPE>(write + pkt.packet_type));
   cacheStat->add_addr(pkt.address, pkt.packet_type);
   cacheStat->update_setstatus_on_write(set);
 }
@@ -85,12 +70,13 @@ void CACHE::handle_fill()
     auto set_end = std::next(set_begin, NUM_WAY);
     auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
     uint32_t way = std::distance(set_begin, first_inv);
+
+    //***
+    PREDICTION prediction = pre_write_action(*fill_mshr, set, static_cast<RESULT>(set<NUM_WAY));
+
     if (way == NUM_WAY)
       way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                          fill_mshr->type);
-
-    //***
-    PREDICTION prediction = pre_write_action(*fill_mshr, set);
 
     bool success = filllike_miss(set, way, *fill_mshr);
     if (!success)
@@ -107,8 +93,7 @@ void CACHE::handle_fill()
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
 
-    post_write_success(*fill_mshr, WRITE::FILL, set);
-    
+    post_write_success(*fill_mshr, WRITE_TYPE::FILL, set, way);
   }
 }
 
@@ -128,7 +113,7 @@ void CACHE::handle_writeback()
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
     //***
-    PREDICTION prediction = pre_write_action(handle_pkt, set);
+    PREDICTION prediction = pre_write_action(handle_pkt, set, static_cast<RESULT>(way<NUM_WAY));
 
     if (way < NUM_WAY) // HIT
     {
@@ -141,7 +126,7 @@ void CACHE::handle_writeback()
       // mark dirty
       fill_block.dirty = 1;
       //***
-      post_write_success(handle_pkt, WRITE::WRITE_BACK, set);
+      post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way);
     } else // MISS
     {
       bool success;
@@ -160,7 +145,7 @@ void CACHE::handle_writeback()
         success = filllike_miss(set, way, handle_pkt);
         //***
         if(success){
-          post_write_success(handle_pkt, WRITE::WRITE_BACK, set);
+          post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way);
         }
       }
 
@@ -384,18 +369,20 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       writeback_packet.pc = fill_block.pc;
       writeback_packet.packet_type = fill_block.packet_type;
+      writeback_packet.packet_life = fill_block.packet_life;
 
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
         return false;
       
-      if(NAME.find("L1I")!=string::npos){
-        int a = 0+result;
-        printf("[DEBUG] %d", a);
-      }
       //*** replacement candidate successfully sent to lower level
       if(cacheStat!=nullptr)//only initalized at LLC
-        cacheStat->increase_evicts(fill_block.pc, fill_block.packet_type);
+      {
+        cacheStat->process_evicts(writeback_packet);
+        cacheStat->process_evicted_blocks_life(writeback_packet, set);
+        ipredictor->insert_actual_life_status(writeback_packet);
+      }
+        
     }
 
     if (ever_seen_data)
@@ -421,6 +408,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     fill_block.pc = handle_pkt.pc;
     fill_block.packet_type = handle_pkt.packet_type;
+    fill_block.packet_life = PACKET_LIFE::DEAD;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

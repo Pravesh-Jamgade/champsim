@@ -391,7 +391,7 @@ int main(int argc, char** argv)
 
   //***
   CACHE* llc = caches.front();
-  IPredictor* ipred = new V2Predictor(); 
+  IPredictor* ipred = new V1Predictor(); 
   llc->initalize_extras(ipred);
   
   // SHARED CACHE
