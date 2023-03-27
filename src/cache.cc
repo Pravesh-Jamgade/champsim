@@ -44,7 +44,7 @@ void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way){
     ipredictor->insert(pkt);
   }
 
-  update_blocks_life(&block[set*NUM_WAY + way], what_is_packet_life(static_cast<RESULT>(set<way)));
+  update_blocks_life(&block[set*NUM_WAY + way], way < NUM_WAY);
   
   if(pkt.packet_type == PACKET_TYPE::INVALID){
     cacheStat->increase_invalid_inserts(write);

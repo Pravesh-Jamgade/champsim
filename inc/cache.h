@@ -102,11 +102,14 @@ public:
 
   PREDICTION pre_write_action(PACKET& pkt, int set, RESULT result);
 
-  PACKET_LIFE what_is_packet_life(RESULT res){
-    return res == RESULT::HIT ? PACKET_LIFE::ALIVE : PACKET_LIFE::DEAD;
-  }
-  void update_blocks_life(BLOCK* block, PACKET_LIFE pkt_life){
-    block->packet_life = pkt_life;
+  /*if block is present (hit), and it is DEAD (upon readmiss) then set it to ALIVE. And if it is ALIVE, then keep as it is*/
+  void update_blocks_life(BLOCK* block, bool is_block_hit){
+    if(is_block_hit){
+      PACKET_LIFE pkt_life = block->packet_life;
+      if(pkt_life == PACKET_LIFE::DEAD){
+        block->packet_life = PACKET_LIFE::ALIVE;
+      }
+    }
   }
 
   IntPtr get_cycle_number(int cpu){
