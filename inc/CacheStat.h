@@ -70,14 +70,47 @@ class SetStatus{
 };
 
 class CacheStat{
+    private:
+  
+    Counter* counter;
+    
+    // We can remove Invailid related bookkeeping, as it is verified and we dont see invalid blocks anymore
+    // from LLC
+    IntPtr invalid_writes, invalid_evicts;
+    // to LLC
+    IntPtr invalid_fill, invalid_writeback;
+
+    // at LLC
+    set<IntPtr> uniq_i, uniq_d, uniq_inv;
+    set<IntPtr> seen_before;
+
+    // map<int, SetStatus> set_status; 
+    vector<pair<int, SetStatus>> set_status;
+
+    // nvm profile
+    double avg_write_per_block, avg_write_per_set;
+    double inter_set_wv, intra_set_wv;
+
     public:
+    int fill_bypass, writeback_bypass;
     
     CacheStat(){
         counter = new Counter();
         invalid_writes=invalid_evicts=0;
         invalid_fill=invalid_writeback=0;
+
+        avg_write_per_block=avg_write_per_set=inter_set_wv=intra_set_wv=0;
+        fill_bypass=writeback_bypass = 0;
     }
 
+    int search(int set){
+        for(int i=0; i< set_status.size(); i++){
+            if(set_status[i].first == set){
+                return i;
+            }
+        }
+        return -1;
+    }
     /*
         exmample, if your catching all writes at LLC then writebacks here implies writes from L2 not the writeback because eviction from LLC those will be evicts.
         1.[ PACKET_TYPE (ipkt=0/dpkt=2) x WRITE_TYPE (fill=0/wb=1) ] => [ ipkt+fill=0 / ipkt+wb=1 / dpkt+fill=2 / dpkt+wb=3 ]
@@ -123,21 +156,24 @@ class CacheStat{
     }
 
     void process_evicted_blocks_life(PACKET& pkt, int set){
+        int index = search(set);
         switch(pkt.packet_life){
             case PACKET_LIFE::DEAD:
-                    if(set_status.find(set)!=set_status.end()){
-                        set_status[set].increase_dead_count();
+                    if(index!=-1)
+                    {
+                        set_status[index].second.increase_dead_count();
                     }
                     else{
-                        set_status[set]=SetStatus();
+                        set_status.push_back({set, SetStatus()});
                     }
                 break;
             case PACKET_LIFE::ALIVE:
-                    if(set_status.find(set)!=set_status.end()){
-                        set_status[set].increase_alive_count();
+                    if(index!=-1)
+                    {
+                        set_status[index].second.increase_alive_count();
                     }
                     else{
-                        set_status[set]=SetStatus();
+                        set_status.push_back({set, SetStatus()});
                     }
                 break;
         }
@@ -191,30 +227,50 @@ class CacheStat{
     1.update write counter on set
     */
     void update_setstatus_on_write(int set){
-        if(set_status.find(set)!=set_status.end()){
-            set_status[set].increase_write_count();
+        int index = search(set);
+        if(index == -1){
+            set_status.push_back({set, SetStatus()});
+            return;
         }
-        else{
-            set_status[set]=SetStatus();
-        }
+        set_status[index].second.increase_write_count();
     }
+
     void update_setstatus_on_read(int set){
-        if(set_status.find(set)!=set_status.end()){
-            set_status[set].increase_read_count();
+        auto index = search(set);
+        if(index==-1){
+            set_status.push_back({set, SetStatus()});
+            return;
         }
-        else{
-            set_status[set]=SetStatus();
-        }
+        set_status[index].second.increase_read_count();
     }
 
     bool is_set_write_intensive(int set){
         double avg = (double)counter->get_total_writes()/(double)set_status.size();
         IntPtr set_writes=0;
-        if(set_status.find(set)!=set_status.end()){
-            set_writes = set_status[set].get_writes();
+        int index = search(set);
+        if(index!=-1){
+            set_writes = set_status[index].second.get_writes();
         }
         if(set_writes > avg) return true; // write intensize set
         return false; //else not
+    }
+
+    /*
+    1.store for printing: intra, inter, avg_wrt_block, avg_wrt_set
+    */
+    void store_nvm_profile(double intra, double inter, double avg_block, double avg_set){
+        avg_write_per_block = avg_block;
+        avg_write_per_set = avg_set;
+        inter_set_wv = inter;
+        intra_set_wv = intra;
+    }
+
+    double get_total_writes(){
+        double total=0;
+        for(auto set: set_status){
+            total+=set.second.get_writes();
+        }
+        return total;
     }
 
     /*
@@ -251,7 +307,15 @@ class CacheStat{
             f << "ALL UNIQUE\n";
             f << "uniq_i, uniq_d, uniq_inv\n";
             f << uniq_i.size() << "," << uniq_d.size() << "," << uniq_inv.size() << '\n';
-        
+
+            f << "Write Characteristics\n";
+            f << "avg_wrt_block, avg_wrt_set\n";
+            f << avg_write_per_block <<","<<avg_write_per_set<<"\n";
+            f << "inter_wv, intra_wv\n";
+            f <<inter_set_wv<<","<<intra_set_wv<<'\n';
+            f << "fillbypass, writebackbypass\n";
+            f << fill_bypass <<","<<writeback_bypass<<'\n';
+
             f.close();
         }
 
@@ -265,22 +329,6 @@ class CacheStat{
             }
         }
     }
-
-    private:
-  
-    Counter* counter;
-    
-    // We can remove Invailid related bookkeeping, as it is verified and we dont see invalid blocks anymore
-    // from LLC
-    IntPtr invalid_writes, invalid_evicts;
-    // to LLC
-    IntPtr invalid_fill, invalid_writeback;
-
-    // at LLC
-    set<IntPtr> uniq_i, uniq_d, uniq_inv;
-    set<IntPtr> seen_before;
-
-    map<IntPtr, SetStatus> set_status; 
 };
 
 #endif

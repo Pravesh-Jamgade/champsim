@@ -28,7 +28,7 @@ four = [
 ]
 
 two = [
-    [traces[0], traces[4]],
+    [traces[0], traces[3]],
     [traces[1], traces[5]],
     [traces[2], traces[6]],
     [traces[3], traces[7]],

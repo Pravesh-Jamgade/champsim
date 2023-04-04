@@ -7,6 +7,7 @@
 #include "champsim_constants.h"
 #include "util.h"
 #include "vmem.h"
+#include "constant.h"
 
 #ifndef SANITY_CHECK
 #define NDEBUG
@@ -15,8 +16,41 @@
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
-void CACHE::post_read_success(PACKET& pkt, int set){
+//::TODO1:: while invalidating block should we do its lifeupdate to predictior, possibly it could be alive at the time of invalidation
+//::TODO2:: shall calculate hit+access count ??
+//::TODO3:: shall we decrease writes available in these cycle ??
+void CACHE::apply_bypass_on_writeback(int set, int way, PACKET& writeback_packet)
+{
+  //1.check if it is cache hit
+  bool cache_hit = way < NUM_WAY;
+  //2.upon hit invalidate block
+  if(cache_hit){
+    block[set*NUM_WAY+way].valid = 0;
+  }
+  //3.push writeback packet to DRAM queue 
+  lower_level->add_wq(&writeback_packet);
+  
+  //4.remove request
+  WQ.pop_front();
+  cacheStat->writeback_bypass++;
+}
+
+//::TODO1::shall we decrease writes available in these cycle ??
+void CACHE::apply_bypass_on_fillback(int set, int way, PACKET& fill_mshr){
+    // update processed packets
+    fill_mshr.data = block[set * NUM_WAY + way].data;
+
+    for (auto ret : fill_mshr.to_return)
+      ret->return_data(&fill_mshr);
+    
+    MSHR.erase(MSHR.begin());
+    cacheStat->fill_bypass++;
+}
+
+void CACHE::post_read_success(int set, int way, bool cacheHit){
+  if(NAME.find("LLC")==string::npos) return;
   cacheStat->update_setstatus_on_read(set);
+  update_blocks_life(&block[set*NUM_WAY + way], cacheHit);
 }
 
 PREDICTION CACHE::pre_write_action(PACKET& pkt, int set, RESULT result){
@@ -34,7 +68,7 @@ PREDICTION CACHE::pre_write_action(PACKET& pkt, int set, RESULT result){
   return pred;
 }
 
-void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way){
+void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way, bool cacheHit){
   if(NAME.find("LLC")==string::npos) return;
   bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
   if(epoc_end){
@@ -44,7 +78,7 @@ void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way){
     ipredictor->insert(pkt);
   }
 
-  update_blocks_life(&block[set*NUM_WAY + way], way < NUM_WAY);
+  update_blocks_life(&block[set*NUM_WAY + way], cacheHit);
   
   if(pkt.packet_type == PACKET_TYPE::INVALID){
     cacheStat->increase_invalid_inserts(write);
@@ -54,6 +88,7 @@ void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way){
   cacheStat->increase(static_cast<WRITE_TYPE>(write + pkt.packet_type));
   cacheStat->add_addr(pkt.address, pkt.packet_type);
   cacheStat->update_setstatus_on_write(set);
+  block[set*NUM_WAY + way]++;
 }
 
 void CACHE::handle_fill()
@@ -74,6 +109,11 @@ void CACHE::handle_fill()
     //***
     PREDICTION prediction = pre_write_action(*fill_mshr, set, static_cast<RESULT>(set<NUM_WAY));
 
+    if(prediction==PREDICTION::DEAD && SUPER_USER_BYPASS){
+      apply_bypass_on_fillback(set, way, *fill_mshr);
+      return;
+    }
+
     if (way == NUM_WAY)
       way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                          fill_mshr->type);
@@ -85,7 +125,7 @@ void CACHE::handle_fill()
     if (way != NUM_WAY) {
       // update processed packets
       fill_mshr->data = block[set * NUM_WAY + way].data;
-
+      
       for (auto ret : fill_mshr->to_return)
         ret->return_data(&(*fill_mshr));
     }
@@ -93,7 +133,7 @@ void CACHE::handle_fill()
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
 
-    post_write_success(*fill_mshr, WRITE_TYPE::FILL, set, way);
+    post_write_success(*fill_mshr, WRITE_TYPE::FILL, set, way, false);
   }
 }
 
@@ -115,6 +155,11 @@ void CACHE::handle_writeback()
     //***
     PREDICTION prediction = pre_write_action(handle_pkt, set, static_cast<RESULT>(way<NUM_WAY));
 
+    if(prediction == PREDICTION::DEAD && SUPER_USER_BYPASS){
+      apply_bypass_on_writeback(set, way, handle_pkt);
+      return;
+    }
+
     if (way < NUM_WAY) // HIT
     {
       impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
@@ -126,7 +171,7 @@ void CACHE::handle_writeback()
       // mark dirty
       fill_block.dirty = 1;
       //***
-      post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way);
+      post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way, true);
     } else // MISS
     {
       bool success;
@@ -145,7 +190,7 @@ void CACHE::handle_writeback()
         success = filllike_miss(set, way, handle_pkt);
         //***
         if(success){
-          post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way);
+          post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way, false);
         }
       }
 
@@ -179,7 +224,7 @@ void CACHE::handle_read()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
-      
+      post_read_success(set, way, true);
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)

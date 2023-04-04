@@ -53,3 +53,4 @@ enum class PACKET_LIFE{
 };
 
 #define EPOC_SCALE 1000000
+#define SUPER_USER_BYPASS 1

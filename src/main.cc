@@ -20,6 +20,7 @@
 //***
 #include "V1Predictor.h"
 #include "V2Predictor.h"
+#include "V3Predictor.h"
 #include "IPredictor.h"
 
 uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
@@ -391,8 +392,13 @@ int main(int argc, char** argv)
 
   //***
   CACHE* llc = caches.front();
-  IPredictor* ipred = new V1Predictor(); 
+  IPredictor* ipred = new V2Predictor(); 
   llc->initalize_extras(ipred);
+  cout << "**************************************************\n";
+  cout << "************ CHECKS **************\n";
+  cout << "Predictor: " << ipred->NAME <<'\n';
+  cout << "Bypassing Enabled: " << SUPER_USER_BYPASS << '\n'; 
+  cout << "**************************************************\n";
   
   // SHARED CACHE
   for (O3_CPU* cpu : ooo_cpu) {
@@ -525,6 +531,7 @@ int main(int argc, char** argv)
  */
 
 ipred->print();
+llc->write_profile();
 llc->cacheStat->print();
 
   return 0;

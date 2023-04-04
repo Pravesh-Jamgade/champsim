@@ -25,6 +25,7 @@ class EpocManager{
         IntPtr rem = total % epoc_size;
         if(rem < total){
             curr = now;
+            cout << "[EPOC]" << curr << '\n';
             return true;
         }
         return false;

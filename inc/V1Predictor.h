@@ -42,8 +42,7 @@ class V1Predictor: public IPredictor
     V1Predictor(){
         prediction_warmup_finish=false;
         coverage = new Coverage();
-        string s = "epoc_write_instense_number_of_sets.log";
-        epoc_data_fs = Log::get_file_stream(s);
+        NAME = "V1";
     }
     /*
         Phase 1: 
@@ -68,7 +67,7 @@ class V1Predictor: public IPredictor
             f<<"pc,write,dead,alive\n";
             // at the end of simulation
             for(auto entry: gate){
-                string dead_alive = ",0,0";
+                string dead_alive = ",-1,-1";//pc not found
                 auto findPC = gate_to_life.find(entry.first);
                 if(findPC!=gate_to_life.end()){
                     dead_alive = "," + to_string(findPC->second.dead) + "," + to_string(findPC->second.alive);
@@ -106,7 +105,7 @@ class V1Predictor: public IPredictor
             if(judgement.find(entry.first)==judgement.end()){
                 judgement[entry.first]=Status();
             }
-            if(entry.first > avg){
+            if(entry.second > avg){
                 judgement[entry.first].set_prediction(PREDICTION::ALIVE);// predicted to be write intensive
             }else{
                 judgement[entry.first].set_prediction(PREDICTION::DEAD);
@@ -120,8 +119,8 @@ class V1Predictor: public IPredictor
                 continue; 
             }
             PACKET_LIFE pkt_life = entry.second.pc_status();
-            judgement[entry.first].set_dead_or_alive(static_cast<int>(pkt_life));
-            PREDICTION prediction = static_cast<PREDICTION>(judgement[entry.first].get_status());
+            judgement[entry.first].set_dead_or_alive(pkt_life);
+            PREDICTION prediction = static_cast<PREDICTION>(judgement[entry.first].get_prediction());
             add_prediction_health(prediction, pkt_life);
 
         }
@@ -145,7 +144,7 @@ class V1Predictor: public IPredictor
             return pred;
         
         if(judgement.find(key)!=judgement.end()){
-            pred=static_cast<PREDICTION>(judgement[key].get_status());
+            pred=static_cast<PREDICTION>(judgement[key].get_prediction());
         }
         return pred;
     }

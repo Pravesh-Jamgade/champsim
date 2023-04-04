@@ -15,6 +15,7 @@
 #include "V1Predictor.h"
 #include "CacheStat.h"
 #include "constant.h"
+#include <math.h>
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -98,7 +99,7 @@ public:
    * @author Pravesh
    * @brief after successful writes do bookkeping here
    */
-  void post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way);
+  void post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way, bool cacheHit);
 
   PREDICTION pre_write_action(PACKET& pkt, int set, RESULT result);
 
@@ -116,14 +117,83 @@ public:
     ooo_cpu[cpu]->current_cycle;
   }
 
-  void post_read_success(PACKET& pkt, int set);
-  
+  void post_read_success(int set, int way, bool cacheHit);
+  void apply_bypass_on_writeback(int set, int way, PACKET& writeback);
+  void apply_bypass_on_fillback(int set, int way, PACKET& fill_mshr);
+
   IPredictor* ipredictor;
   CacheStat* cacheStat;
     
   void initalize_extras(IPredictor* predictor){
     ipredictor = predictor;
     cacheStat = new CacheStat();
+  }
+
+  /*should be called only before print() call of  CacheStat*/
+  void write_profile(){
+    IntPtr total_block = NUM_WAY*NUM_SET;
+
+    double total_writes_by_cacheStat = cacheStat->get_total_writes();
+    double avg_by_cacheStat = (double)total_writes_by_cacheStat/total_block;
+    
+    IntPtr total_write = 0;
+    double total_set_expect = 0;
+
+    for(int set=0; set< NUM_SET; set++){
+      
+      // per set ==> total write, and avg write per block
+      IntPtr per_set_write = 0;
+      double per_set_per_block_avg_write = 0;
+      for(int way=0; way< NUM_WAY; way++){
+        per_set_write += block[set * NUM_WAY + way].writes;
+      }
+      per_set_per_block_avg_write = (double)per_set_write/(double)NUM_WAY;
+
+      // sum of squared expectation value
+      double per_set_expect = 0;
+      for(int way=0; way< NUM_WAY; way++){
+        // expectation
+        double expect = block[set * NUM_WAY + way].writes - per_set_per_block_avg_write;
+        // square
+        expect = expect * expect;
+        // total
+        per_set_expect += expect;
+      }
+
+      per_set_expect = per_set_expect/NUM_WAY;
+      per_set_expect = sqrt(per_set_expect);
+      total_set_expect += per_set_expect;
+      total_write += per_set_write;
+    }
+
+    double avg_write_per_block = (double)total_write/(double)total_block;
+    double avg_write_per_set = (double)total_write/(double)NUM_SET;
+    double intra = ((double)1/(double)(NUM_SET*avg_write_per_block)) * total_set_expect;
+
+    total_set_expect = 0;
+    for(int set=0; set< NUM_SET; set++){
+      IntPtr per_set_write = 0;
+      double per_set_per_block_avg_write = 0;
+      for(int way=0; way< NUM_WAY; way++){
+        per_set_write += block[set * NUM_WAY + way].writes;
+      }
+      per_set_per_block_avg_write = (double)per_set_write/(double)NUM_WAY;
+
+      double per_set_expect = 0;
+      per_set_expect = per_set_per_block_avg_write - avg_write_per_block;
+      per_set_expect = per_set_expect * per_set_expect;
+      total_set_expect = total_set_expect + per_set_expect;
+    }
+    total_set_expect = total_set_expect/(double)(NUM_SET-1);
+    total_set_expect = sqrt(total_set_expect);
+    double inter = total_set_expect/avg_write_per_block;
+    cacheStat->store_nvm_profile(intra, inter, avg_write_per_block, avg_write_per_set);
+
+    cout<< "*****************************************************\n";
+    cout << "By CacheStat, By block\n";
+    cout<<"total:"<<total_writes_by_cacheStat<<","<<total_write<<'\n';
+    cout<<"avg:"<<avg_by_cacheStat<<","<<avg_write_per_block<<'\n';
+    cout<< "*****************************************************\n";
   }
 
 #include "cache_modules.inc"
