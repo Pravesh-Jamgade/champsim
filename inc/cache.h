@@ -160,7 +160,7 @@ public:
         per_set_expect += expect;
       }
 
-      per_set_expect = per_set_expect/NUM_WAY;
+      per_set_expect = per_set_expect/(NUM_WAY-1);
       per_set_expect = sqrt(per_set_expect);
       total_set_expect += per_set_expect;
       total_write += per_set_write;

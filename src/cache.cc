@@ -27,6 +27,8 @@ void CACHE::apply_bypass_on_writeback(int set, int way, PACKET& writeback_packet
   if(cache_hit){
     block[set*NUM_WAY+way].valid = 0;
   }
+  
+  writeback_packet.fill_level = lower_level->fill_level;
   //3.push writeback packet to DRAM queue 
   lower_level->add_wq(&writeback_packet);
   
@@ -109,7 +111,7 @@ void CACHE::handle_fill()
     //***
     PREDICTION prediction = pre_write_action(*fill_mshr, set, static_cast<RESULT>(set<NUM_WAY));
 
-    if(prediction==PREDICTION::DEAD && SUPER_USER_BYPASS){
+    if(prediction==PREDICTION::DEAD && SUPER_USER_BYPASS && cacheStat->is_set_write_intensive(set)){
       apply_bypass_on_fillback(set, way, *fill_mshr);
       return;
     }
@@ -155,7 +157,7 @@ void CACHE::handle_writeback()
     //***
     PREDICTION prediction = pre_write_action(handle_pkt, set, static_cast<RESULT>(way<NUM_WAY));
 
-    if(prediction == PREDICTION::DEAD && SUPER_USER_BYPASS){
+    if(prediction == PREDICTION::DEAD && SUPER_USER_BYPASS && cacheStat->is_set_write_intensive(set)){
       apply_bypass_on_writeback(set, way, handle_pkt);
       return;
     }

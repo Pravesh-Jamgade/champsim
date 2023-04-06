@@ -309,8 +309,14 @@ class CacheStat{
             f << uniq_i.size() << "," << uniq_d.size() << "," << uniq_inv.size() << '\n';
 
             f << "Write Characteristics\n";
-            f << "avg_wrt_block, avg_wrt_set\n";
-            f << avg_write_per_block <<","<<avg_write_per_set<<"\n";
+            int mX = 0;
+            for(auto e: set_status){
+                if(e.second.get_writes()>mX){
+                    mX=e.second.get_writes();
+                }
+            }
+            f << "avg_wrt_block, avg_wrt_set, max_writes\n";
+            f << avg_write_per_block <<","<<avg_write_per_set<<","<<mX<<"\n";
             f << "inter_wv, intra_wv\n";
             f <<inter_set_wv<<","<<intra_set_wv<<'\n';
             f << "fillbypass, writebackbypass\n";
@@ -323,6 +329,7 @@ class CacheStat{
         {
             string s = "llc_set_status.log";
             fstream f = Log::get_file_stream(s);
+            
             f << "set,writes,reads,dead\n";
             for(auto set: set_status){
                 f << set.first << "," << set.second.get_writes() << "," << set.second.get_reads() <<","<<set.second.get_deads() << "\n"; 
