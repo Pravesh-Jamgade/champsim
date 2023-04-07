@@ -15,13 +15,14 @@ enum LOG{
 };
 
 #pragma once
-enum WRITE_TYPE{
+enum class WRITE_TYPE{
     FILL=0,
     WRITE_BACK,
     IFILL=0,
     IWRITEBACK,
     DFILL=2,
     DWRITEBACK,
+    INVALID=-1
 };
 
 #pragma once

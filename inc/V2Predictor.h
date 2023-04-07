@@ -179,7 +179,7 @@ class V2Predictor: public IPredictor
         }
     }
 
-    void insert_actual_life_status(PACKET& pkt){
+    void insert_actual_life_status(PACKET& pkt, WRITE_TYPE wrtype=WRITE_TYPE::INVALID){
         IntPtr key = pkt.address >> LOG2_PAGE_SIZE;
         PACKET_LIFE life_status = pkt.packet_life;
         if(gate_to_life.find(key)==gate_to_life.end()){

@@ -87,7 +87,7 @@ void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way, 
     return;
   }
 
-  cacheStat->increase(static_cast<WRITE_TYPE>(write + pkt.packet_type));
+  cacheStat->increase(static_cast<WRITE_TYPE>(int(write) + int(pkt.packet_type)));
   cacheStat->add_addr(pkt.address, pkt.packet_type);
   cacheStat->update_setstatus_on_write(set);
   block[set*NUM_WAY + way]++;
@@ -427,7 +427,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       {
         cacheStat->process_evicts(writeback_packet);
         cacheStat->process_evicted_blocks_life(writeback_packet, set);
-        ipredictor->insert_actual_life_status(writeback_packet);
+        ipredictor->insert_actual_life_status(writeback_packet, handle_pkt.type==WRITEBACK?WRITE_TYPE::WRITE_BACK:WRITE_TYPE::FILL);
       }
         
     }
