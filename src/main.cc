@@ -530,9 +530,55 @@ int main(int argc, char** argv)
  * 
  */
 
+for(auto cache: caches){
+  cache->compute_total_access();
+}
 ipred->print();
 llc->write_profile();
 llc->cacheStat->print();
+
+string s = "total.log";
+fstream tfs = Log::get_file_stream(s);
+
+s = "roi.log";
+fstream rfs = Log::get_file_stream(s);
+
+//tIPC, rIPC,	L2 misses,	LLC accesses,	LLC writeback access,	LLC misses, LLC LD access,	LLC RFO access,	Intra,	Inter,	Set,	Block,	Fillback,	Writeback
+for(int i=0; i< ooo_cpu.size(); i++){
+  // total ipc
+  double ipc = (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
+  tfs <<"totalIPC,cpu"<<ooo_cpu[i]->cpu<<",tIPC,"<<ipc<<'\n';
+  
+  // roi ipc
+  ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
+  rfs <<"roiIPC,cpu"<<ooo_cpu[i]->cpu<<",rIPC,"<<ipc<<'\n';
+}
+
+  vector<int> num_types = {0,1,3};
+  vector<string> types_name = {"load access", "rfo access", "writeback access"};
+  for(auto cache: caches){
+    if(cache->NAME.find("L2")!=string::npos){
+
+      tfs << "L2,cpu"<<cache->cpu<<","<<"total access," << cache->sim_total_access<<'\n';
+      tfs << "L2,cpu"<<cache->cpu<<","<<"total misses," << cache->sim_total_miss<<'\n';
+
+      rfs << "L2,cpu"<<cache->cpu<<","<<"total access,"<<cache->roi_total_access<<'\n';
+      rfs << "L2,cpu"<<cache->cpu<<","<<"total misses," << cache->roi_total_miss<<'\n';
+    }
+    if(cache->NAME.find("LLC")!=string::npos){
+
+      tfs << "LLC,cpu"<<cache->cpu<<","<<"total access," << cache->sim_total_access<<'\n';
+      tfs << "LLC,cpu"<<cache->cpu<<","<<"total misses," << cache->sim_total_miss<<'\n';
+
+      rfs << "LLC,cpu"<<cache->cpu<<","<<"total access,"<<cache->roi_total_access<<'\n';
+      rfs << "LLC,cpu"<<cache->cpu<<","<<"total misses," << cache->roi_total_miss<<'\n';
+
+      for(int j=0; j< num_types.size(); j++){
+        tfs << "LLC,cpu"<<cache->cpu<<","<<types_name[j]<<","<<cache->sim_access[cache->cpu][num_types[j]]<<'\n';
+        rfs << "LLC,cpu"<<cache->cpu<<","<<types_name[j]<<","<<cache->roi_access[cache->cpu][num_types[j]]<<'\n';
+      }
+    }
+  }
 
   return 0;
 }

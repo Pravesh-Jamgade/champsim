@@ -60,6 +60,8 @@ public:
 
   // ***Pravesh
   uint32_t read_hit_lat=0,  write_hit_lat=0;
+  uint32_t sim_total_access=0, roi_total_access=0;
+  uint32_t sim_total_miss=0, roi_total_miss=0;
 
   // functions
   int add_rq(PACKET* packet) override;
@@ -198,6 +200,19 @@ public:
     cout<<"total:"<<total_writes_by_cacheStat<<","<<total_write<<'\n';
     cout<<"avg:"<<avg_by_cacheStat<<","<<avg_write_per_block<<'\n';
     cout<< "*****************************************************\n";
+  }
+
+  void compute_total_access(){
+    sim_total_access = sim_total_miss = 0;
+    roi_total_access = roi_total_miss = 0;
+    
+    for(int i=0; i< NUM_TYPES; i++){
+      sim_total_access += sim_access[cpu][i];
+      roi_total_access += roi_access[cpu][i];
+
+      sim_total_miss += sim_miss[cpu][i];
+      roi_total_miss += roi_miss[cpu][i];
+    }
   }
 
 #include "cache_modules.inc"
