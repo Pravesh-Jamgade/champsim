@@ -28,7 +28,7 @@ public:
   uint32_t cpu;
   const std::string NAME;
   const uint32_t NUM_SET, NUM_WAY, WQ_SIZE, RQ_SIZE, PQ_SIZE, MSHR_SIZE;
-  const uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS;
+  const uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS, RD_LATENCY, WR_LATENCY;
   std::vector<BLOCK> block{NUM_SET * NUM_WAY};
   const uint32_t MAX_READ, MAX_WRITE;
   uint32_t reads_available_this_cycle, writes_available_this_cycle;
@@ -42,10 +42,10 @@ public:
   uint64_t pf_requested = 0, pf_issued = 0, pf_useful = 0, pf_useless = 0, pf_fill = 0;
 
   // queues
-  champsim::delay_queue<PACKET> RQ{RQ_SIZE, HIT_LATENCY}, // read queue
+  champsim::delay_queue<PACKET> RQ{RQ_SIZE, RD_LATENCY}, // read queue
       PQ{PQ_SIZE, HIT_LATENCY},                           // prefetch queue
       VAPQ{PQ_SIZE, VA_PREFETCH_TRANSLATION_LATENCY},     // virtual address prefetch queue
-      WQ{WQ_SIZE, HIT_LATENCY};                           // write queue
+      WQ{WQ_SIZE, WR_LATENCY};                           // write queue
 
   std::list<PACKET> MSHR; // MSHR
 
@@ -59,7 +59,7 @@ public:
 
 
   // ***Pravesh
-  uint32_t read_hit_lat=0,  write_hit_lat=0;
+  uint32_t read_count=0,  write_count=0;
   uint32_t sim_total_access=0, roi_total_access=0;
   uint32_t sim_total_miss=0, roi_total_miss=0;
 
@@ -121,6 +121,10 @@ public:
 
   IntPtr get_cycle_number(int cpu){
     ooo_cpu[cpu]->current_cycle;
+  }
+
+  double get_assymetric_read_write_latency(){
+    return read_count*RD_LATENCY + write_count*WR_LATENCY;
   }
 
   void post_read_success(int set, int way, bool cacheHit);
@@ -193,7 +197,7 @@ public:
     total_set_expect = total_set_expect/(double)(NUM_SET-1);
     total_set_expect = sqrt(total_set_expect);
     double inter = total_set_expect/avg_write_per_block;
-    cacheStat->store_nvm_profile(intra, inter, avg_write_per_block, avg_write_per_set);
+    cacheStat->store_nvm_profile(intra, inter, avg_write_per_block, avg_write_per_set, WQ.get_latency(), RQ.get_latency());
 
     cout<< "*****************************************************\n";
     cout << "By CacheStat, By block\n";
@@ -205,7 +209,7 @@ public:
   void compute_total_access(){
     sim_total_access = sim_total_miss = 0;
     roi_total_access = roi_total_miss = 0;
-    
+
     for(int i=0; i< NUM_TYPES; i++){
       sim_total_access += sim_access[cpu][i];
       roi_total_access += roi_access[cpu][i];
@@ -221,21 +225,21 @@ public:
   const pref_t pref_type;
 
   // constructor
-  CACHE(std::string v1, double freq_scale, unsigned fill_level, uint32_t v2, int v3, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8, 
-      uint32_t hit_lat, uint32_t fill_lat, uint32_t max_read, uint32_t max_write, 
+  CACHE(std::string v1, double freq_scale, unsigned fill_level, 
+      uint32_t v2, int v3, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8, 
+      uint32_t hit_lat, uint32_t rd_latency, uint32_t wr_latency, uint32_t fill_lat, 
+      uint32_t max_read, uint32_t max_write, 
       std::size_t offset_bits, bool pref_load, bool wq_full_addr, bool va_pref,
       unsigned pref_act_mask, MemoryRequestConsumer* ll, pref_t pref, repl_t repl)
       : champsim::operable(freq_scale), MemoryRequestConsumer(fill_level), MemoryRequestProducer(ll), NAME(v1), NUM_SET(v2), NUM_WAY(v3), WQ_SIZE(v5),
         RQ_SIZE(v6), PQ_SIZE(v7), MSHR_SIZE(v8), 
-        HIT_LATENCY(hit_lat), FILL_LATENCY(fill_lat), OFFSET_BITS(offset_bits), MAX_READ(max_read),
+        HIT_LATENCY(hit_lat), RD_LATENCY(rd_latency), WR_LATENCY(wr_latency),
+        FILL_LATENCY(fill_lat), OFFSET_BITS(offset_bits), MAX_READ(max_read),
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
     cacheStat = nullptr;
     ipredictor = nullptr;
-    if(v1 == "LLC"){
-
-    }
   }
 };
 

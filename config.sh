@@ -20,7 +20,7 @@ def norm_fname(fname):
 # Begin format strings
 ###
 
-cache_fmtstr = 'CACHE {name}("{name}", {frequency}, {fill_level}, {sets}, {ways}, {wq_size}, {rq_size}, {pq_size}, {mshr_size}, {hit_latency}, {fill_latency}, {max_read}, {max_write}, {offset_bits}, {prefetch_as_load:b}, {wq_check_full_addr:b}, {virtual_prefetch:b}, {prefetch_activate_mask}, {lower_level}, CACHE::pref_t::{prefetcher_name}, CACHE::repl_t::{replacement_name});\n'
+cache_fmtstr = 'CACHE {name}("{name}", {frequency}, {fill_level}, {sets}, {ways}, {wq_size}, {rq_size}, {pq_size}, {mshr_size}, {latency}, {rd_hit_latency}, {wr_hit_latency}, {fill_latency}, {max_read}, {max_write}, {offset_bits}, {prefetch_as_load:b}, {wq_check_full_addr:b}, {virtual_prefetch:b}, {prefetch_activate_mask}, {lower_level}, CACHE::pref_t::{prefetcher_name}, CACHE::repl_t::{replacement_name});\n'
 ptw_fmtstr = 'PageTableWalker {name}("{name}", {cpu}, {fill_level}, {pscl5_set}, {pscl5_way}, {pscl4_set}, {pscl4_way}, {pscl3_set}, {pscl3_way}, {pscl2_set}, {pscl2_way}, {ptw_rq_size}, {ptw_mshr_size}, {ptw_max_read}, {ptw_max_write}, 0, {lower_level});\n'
 
 cpu_fmtstr = 'O3_CPU {name}({index}, {frequency}, {DIB[sets]}, {DIB[ways]}, {DIB[window_size]}, {ifetch_buffer_size}, {dispatch_buffer_size}, {decode_buffer_size}, {rob_size}, {lq_size}, {sq_size}, {fetch_width}, {decode_width}, {dispatch_width}, {scheduler_size}, {execute_width}, {lq_width}, {sq_width}, {retire_width}, {mispredict_penalty}, {decode_latency}, {dispatch_latency}, {schedule_latency}, {execute_latency}, &{ITLB}, &{DTLB}, &{L1I}, &{L1D}, O3_CPU::bpred_t::{bpred_name}, O3_CPU::btb_t::{btb_name}, O3_CPU::ipref_t::{iprefetcher_name});\n'
@@ -167,9 +167,13 @@ caches = dict(itertools.compress(caches.items(), accessible))
 # Establish latencies in caches
 for cache in caches.values():
     cache['hit_latency'] = cache.get('hit_latency') or (cache['latency'] - cache['fill_latency'])
+    cache['rd_hit_latency'] = cache.get('rd_hit_latency') or cache['latency']
+    cache['wr_hit_latency'] = cache.get('wr_hit_latency') or cache['latency']
 
+# print(caches.values())
 # Create prefetch activation masks
 type_list = ('LOAD', 'RFO', 'PREFETCH', 'WRITEBACK', 'TRANSLATION')
+
 for cache in caches.values():
     cache['prefetch_activate_mask'] = functools.reduce(operator.or_, (1 << i for i,t in enumerate(type_list) if t in cache['prefetch_activate'].split(',')))
 
@@ -684,8 +688,8 @@ with open(constants_header_name, 'wt') as wfp:
 with open('Makefile', 'wt') as wfp:
     wfp.write('CC := ' + config_file.get('CC', 'gcc -g') + '\n')
     wfp.write('CXX := ' + config_file.get('CXX', 'g++ -g') + '\n')
-    wfp.write('CFLAGS := ' + config_file.get('CFLAGS', '-Wall -O1') + ' -std=gnu99\n')
-    wfp.write('CXXFLAGS := ' + config_file.get('CXXFLAGS', '-Wall -O1') + ' -std=c++17\n')
+    wfp.write('CFLAGS := ' + config_file.get('CFLAGS', '-Wall') + ' -std=gnu99\n')
+    wfp.write('CXXFLAGS := ' + config_file.get('CXXFLAGS', '-Wall') + ' -std=c++17\n')
     wfp.write('CPPFLAGS := ' + config_file.get('CPPFLAGS', '') + ' -Iinc -MMD -MP\n')
     wfp.write('LDFLAGS := ' + config_file.get('LDFLAGS', '') + '\n')
     wfp.write('LDLIBS := ' + config_file.get('LDLIBS', '') + '\n')

@@ -90,6 +90,7 @@ class CacheStat{
     // nvm profile
     double avg_write_per_block, avg_write_per_set;
     double inter_set_wv, intra_set_wv;
+    int write_latency, read_latency;
 
     public:
     int fill_bypass, writeback_bypass;
@@ -98,6 +99,7 @@ class CacheStat{
         counter = new Counter();
         invalid_writes=invalid_evicts=0;
         invalid_fill=invalid_writeback=0;
+        write_latency = read_latency = 0;
 
         avg_write_per_block=avg_write_per_set=inter_set_wv=intra_set_wv=0;
         fill_bypass=writeback_bypass = 0;
@@ -258,11 +260,13 @@ class CacheStat{
     /*
     1.store for printing: intra, inter, avg_wrt_block, avg_wrt_set
     */
-    void store_nvm_profile(double intra, double inter, double avg_block, double avg_set){
+    void store_nvm_profile(double intra, double inter, double avg_block, double avg_set, int wql, int rql){
         avg_write_per_block = avg_block;
         avg_write_per_set = avg_set;
         inter_set_wv = inter;
         intra_set_wv = intra;
+        write_latency = wql;
+        read_latency = rql;
     }
 
     double get_total_writes(){
@@ -321,6 +325,8 @@ class CacheStat{
             f <<inter_set_wv<<","<<intra_set_wv<<'\n';
             f << "fillbypass, writebackbypass\n";
             f << fill_bypass <<","<<writeback_bypass<<'\n';
+            f << "WQ Latency, RQ Latency\n";
+            f << write_latency << "," << read_latency << '\n';
 
             f.close();
         }

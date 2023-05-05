@@ -123,7 +123,7 @@ public:
    * Note, no checking is performed. Guard all accesses with calls to
    *has_ready()
    ***/
-  void pop_front()
+  void pop_front(int bypass=0)
   {
     _buf.pop_front();
     _delays.pop_front();
@@ -155,6 +155,8 @@ public:
     auto delay_it = std::partition_point(_delays.begin(), _delays.end(), [](long long int x) { return x <= 0; });
     _end_ready = std::next(_buf.begin(), std::distance(_delays.begin(), delay_it));
   }
+
+  long long int get_latency(){return _latency;}
 
 private:
   const size_type sz;

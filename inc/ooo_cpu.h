@@ -13,6 +13,7 @@
 #include "operable.h"
 
 #include "EpocManager.h"
+#include "CpuStat.h"
 
 using namespace std;
 
@@ -129,15 +130,22 @@ public:
 
   //***
   EpocManager* epoc_manager;
-  void init_epoc_manager(){
+  CPUStat* cpu_stat;
+
+  void init_space(){
     epoc_manager = new EpocManager(current_cycle);
+    cpu_stat = new CPUStat();
   }
+
   bool test_epoc(){
     return epoc_manager->tick(current_cycle);
   }
   IntPtr get_current_cycle(){
     return current_cycle;
   }
+  // void add_delta_cycle(int delta){
+  //   current_cycle += delta;
+  // }
 
 #include "ooo_cpu_modules.inc"
 

@@ -18,10 +18,10 @@
 #include "vmem.h"
 
 //***
+#include "IPredictor.h"
 #include "V1Predictor.h"
 #include "V2Predictor.h"
 #include "V3Predictor.h"
-#include "IPredictor.h"
 
 uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
@@ -392,18 +392,21 @@ int main(int argc, char** argv)
 
   //***
   CACHE* llc = caches.front();
-  IPredictor* ipred = new V2Predictor(); 
+  IPredictor* ipred = new V2Predictor();
   llc->initalize_extras(ipred);
   cout << "**************************************************\n";
   cout << "************ CHECKS **************\n";
-  cout << "Predictor: " << ipred->NAME <<'\n';
-  cout << "Bypassing Enabled: " << SUPER_USER_BYPASS << '\n'; 
+  cout << "Predictor: " << ipred->NAME << '\n';
+  cout << "Bypassing Configuration: " << SUPER_USER_BYPASS << '\n';
+  cout << "LLC Hit Latency: " << llc->HIT_LATENCY << '\n';
+  cout << "LLC Read Latency: " << llc->RD_LATENCY << '\n';
+  cout << "LLC Write Latency: " << llc->WR_LATENCY << '\n';
   cout << "**************************************************\n";
-  
+
   // SHARED CACHE
   for (O3_CPU* cpu : ooo_cpu) {
     cpu->initialize_core();
-    cpu->init_epoc_manager();
+    cpu->init_space();
   }
 
   for (auto it = caches.rbegin(); it != caches.rend(); ++it) {
@@ -457,6 +460,8 @@ int main(int argc, char** argv)
 
         ooo_cpu[i]->last_sim_instr = ooo_cpu[i]->num_retired;
         ooo_cpu[i]->last_sim_cycle = ooo_cpu[i]->current_cycle;
+
+        ooo_cpu[i]->cpu_stat->print_heartbeat(heartbeat_ipc, i);
       }
 
       // check for warmup
@@ -525,57 +530,75 @@ int main(int argc, char** argv)
   print_branch_stats();
 #endif
 
-/**
- * @brief  Pravesh's Territory
- * 
- */
+  /**
+   * @brief  Pravesh's Territory
+   *
+   */
 
-for(auto cache: caches){
-  cache->compute_total_access();
-}
-ipred->print();
-llc->write_profile();
-llc->cacheStat->print();
+  for (auto cache : caches) {
+    cache->compute_total_access();
+  }
+  ipred->print();
+  llc->write_profile();
+  llc->cacheStat->print();
 
-string s = "total.log";
-fstream tfs = Log::get_file_stream(s);
+  string s = "total.log";
+  fstream tfs = Log::get_file_stream(s);
 
-s = "roi.log";
-fstream rfs = Log::get_file_stream(s);
+  s = "roi.log";
+  fstream rfs = Log::get_file_stream(s);
 
-//tIPC, rIPC,	L2 misses,	LLC accesses,	LLC writeback access,	LLC misses, LLC LD access,	LLC RFO access,	Intra,	Inter,	Set,	Block,	Fillback,	Writeback
-for(int i=0; i< ooo_cpu.size(); i++){
-  // total ipc
-  double ipc = (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
-  tfs <<"totalIPC,cpu"<<ooo_cpu[i]->cpu<<",tIPC,"<<ipc<<'\n';
-  
-  // roi ipc
-  ipc = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
-  rfs <<"roiIPC,cpu"<<ooo_cpu[i]->cpu<<",rIPC,"<<ipc<<'\n';
-}
+  // tIPC, rIPC,	L2 misses,	LLC accesses,	LLC writeback access,	LLC misses, LLC LD access,	LLC RFO access,	Intra,	Inter,	Set,	Block,
+  // Fillback,	Writeback
+  for (int i = 0; i < ooo_cpu.size(); i++) {
+    // total ipc
+    double ipc1 = (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
+    tfs << "totalIPC,cpu" << ooo_cpu[i]->cpu << ",tIPC," << ipc1 << '\n';
 
-  vector<int> num_types = {0,1,3};
+    // roi ipc
+    double ipc2 = ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
+    rfs << "roiIPC,cpu" << ooo_cpu[i]->cpu << ",rIPC," << ipc2 << '\n';
+
+    // add LLC rd/wr assymetry effect
+    double rd_wr_lat = llc->get_assymetric_read_write_latency();
+    
+    double ipc3 = (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle + rd_wr_lat);
+    tfs << "AsymmetricTotalIPC,cpu" << ooo_cpu[i]->cpu << ",tIPC," << ipc3 << '\n';
+
+    double ipc4 = ((float)ooo_cpu[i]->finish_sim_instr / (ooo_cpu[i]->finish_sim_cycle + rd_wr_lat));
+    rfs << "AsymmetricRoiIPC,cpu" << ooo_cpu[i]->cpu << ",rIPC," << ipc4 << '\n';
+  }
+
+  vector<int> num_types = {0, 1, 3};
   vector<string> types_name = {"load access", "rfo access", "writeback access"};
-  for(auto cache: caches){
-    if(cache->NAME.find("L2")!=string::npos){
+  for (auto cache : caches) {
+    if (cache->NAME.find("L2") != string::npos) {
 
-      tfs << "L2,cpu"<<cache->cpu<<","<<"total access," << cache->sim_total_access<<'\n';
-      tfs << "L2,cpu"<<cache->cpu<<","<<"total misses," << cache->sim_total_miss<<'\n';
+      tfs << "L2,cpu" << cache->cpu << ","
+          << "total access," << cache->sim_total_access << '\n';
+      tfs << "L2,cpu" << cache->cpu << ","
+          << "total misses," << cache->sim_total_miss << '\n';
 
-      rfs << "L2,cpu"<<cache->cpu<<","<<"total access,"<<cache->roi_total_access<<'\n';
-      rfs << "L2,cpu"<<cache->cpu<<","<<"total misses," << cache->roi_total_miss<<'\n';
+      rfs << "L2,cpu" << cache->cpu << ","
+          << "total access," << cache->roi_total_access << '\n';
+      rfs << "L2,cpu" << cache->cpu << ","
+          << "total misses," << cache->roi_total_miss << '\n';
     }
-    if(cache->NAME.find("LLC")!=string::npos){
+    if (cache->NAME.find("LLC") != string::npos) {
 
-      tfs << "LLC,cpu"<<cache->cpu<<","<<"total access," << cache->sim_total_access<<'\n';
-      tfs << "LLC,cpu"<<cache->cpu<<","<<"total misses," << cache->sim_total_miss<<'\n';
+      tfs << "LLC,cpu" << cache->cpu << ","
+          << "total access," << cache->sim_total_access << '\n';
+      tfs << "LLC,cpu" << cache->cpu << ","
+          << "total misses," << cache->sim_total_miss << '\n';
 
-      rfs << "LLC,cpu"<<cache->cpu<<","<<"total access,"<<cache->roi_total_access<<'\n';
-      rfs << "LLC,cpu"<<cache->cpu<<","<<"total misses," << cache->roi_total_miss<<'\n';
+      rfs << "LLC,cpu" << cache->cpu << ","
+          << "total access," << cache->roi_total_access << '\n';
+      rfs << "LLC,cpu" << cache->cpu << ","
+          << "total misses," << cache->roi_total_miss << '\n';
 
-      for(int j=0; j< num_types.size(); j++){
-        tfs << "LLC,cpu"<<cache->cpu<<","<<types_name[j]<<","<<cache->sim_access[cache->cpu][num_types[j]]<<'\n';
-        rfs << "LLC,cpu"<<cache->cpu<<","<<types_name[j]<<","<<cache->roi_access[cache->cpu][num_types[j]]<<'\n';
+      for (int j = 0; j < num_types.size(); j++) {
+        tfs << "LLC,cpu" << cache->cpu << "," << types_name[j] << "," << cache->sim_access[cache->cpu][num_types[j]] << '\n';
+        rfs << "LLC,cpu" << cache->cpu << "," << types_name[j] << "," << cache->roi_access[cache->cpu][num_types[j]] << '\n';
       }
     }
   }

@@ -53,5 +53,15 @@ enum class PACKET_LIFE{
     ALIVE
 };
 
+/***********************************
+ * Configuration For 
+ * Bypassing
+ * EpocSize
+************************************/
+
 #define EPOC_SCALE 1000000
-#define SUPER_USER_BYPASS 0
+
+// 01 no bypass (default)  1
+// 10 bypass aggresive     2
+// 11 bypass selective     3
+#define SUPER_USER_BYPASS 1
