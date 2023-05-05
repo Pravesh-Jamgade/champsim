@@ -7,20 +7,28 @@
 
 class CPUStat{
     private:
-    fstream heart_fs;
+    vector<string> heartbeat_info;
     public:
     CPUStat(){
-        string heart_file = "heartbeat.log";
-        heart_fs = Log::get_file_stream(heart_file);
+        
     }
 
     ~CPUStat(){
-        heart_fs.close();
+        fstream heart_fs;
+        string heart_file = "heartbeat.log";
+        heart_fs = Log::get_file_stream(heart_file);
+        if(!heart_fs.is_open()){
+            heart_fs = Log::get_file_stream(heart_file);
+        }
+        
+        for(auto e: heartbeat_info){
+            heart_fs << e;
+        }
     }
 
     void print_heartbeat(float value, int cpuid){
-        heart_fs << cpuid << "," << value << '\n';
-        cout << cpuid << "," << value << '\n';
+        string s = to_string(value) + "," + to_string(cpuid) + "\n";
+        heartbeat_info.push_back(s);
     }
 };
 #endif

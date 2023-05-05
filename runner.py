@@ -7,6 +7,7 @@ from os.path import exists
 import sys
 
 traces = [
+    '471.omnetpp-188B.champsimtrace.xz',
     '429.mcf-51B.champsimtrace.xz',
     '437.leslie3d-134B.champsimtrace.xz',
     '433.milc-127B.champsimtrace.xz',
