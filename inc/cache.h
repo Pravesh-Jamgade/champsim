@@ -42,10 +42,10 @@ public:
   uint64_t pf_requested = 0, pf_issued = 0, pf_useful = 0, pf_useless = 0, pf_fill = 0;
 
   // queues
-  champsim::delay_queue<PACKET> RQ{RQ_SIZE, RD_LATENCY}, // read queue
+  champsim::delay_queue<PACKET> RQ{RQ_SIZE, HIT_LATENCY}, // read queue
       PQ{PQ_SIZE, HIT_LATENCY},                           // prefetch queue
       VAPQ{PQ_SIZE, VA_PREFETCH_TRANSLATION_LATENCY},     // virtual address prefetch queue
-      WQ{WQ_SIZE, WR_LATENCY};                           // write queue
+      WQ{WQ_SIZE, HIT_LATENCY};                           // write queue
 
   std::list<PACKET> MSHR; // MSHR
 

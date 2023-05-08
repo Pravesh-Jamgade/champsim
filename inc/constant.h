@@ -64,4 +64,4 @@ enum class PACKET_LIFE{
 // 01 no bypass (default)  1
 // 10 bypass aggresive     2
 // 11 bypass selective     3
-#define SUPER_USER_BYPASS 1
+#define SUPER_USER_BYPASS 3

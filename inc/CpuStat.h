@@ -6,14 +6,18 @@
 #include "log.h"
 
 class CPUStat{
-    private:
-    vector<string> heartbeat_info;
     public:
-    CPUStat(){
-        
+    vector<string> heartbeat_info;
+    
+    CPUStat(){}
+
+    void collect_heartbeat(float value, int cpuid){
+        string s = to_string(value) + "," + to_string(cpuid) + "\n";
+        cout << s;
+        heartbeat_info.push_back(s);
     }
 
-    ~CPUStat(){
+    void print_heartbeats(){
         fstream heart_fs;
         string heart_file = "heartbeat.log";
         heart_fs = Log::get_file_stream(heart_file);
@@ -22,13 +26,9 @@ class CPUStat{
         }
         
         for(auto e: heartbeat_info){
+            cout << e;
             heart_fs << e;
         }
-    }
-
-    void print_heartbeat(float value, int cpuid){
-        string s = to_string(value) + "," + to_string(cpuid) + "\n";
-        heartbeat_info.push_back(s);
     }
 };
 #endif

@@ -461,7 +461,7 @@ int main(int argc, char** argv)
         ooo_cpu[i]->last_sim_instr = ooo_cpu[i]->num_retired;
         ooo_cpu[i]->last_sim_cycle = ooo_cpu[i]->current_cycle;
 
-        ooo_cpu[i]->cpu_stat->print_heartbeat(heartbeat_ipc, i);
+        ooo_cpu[i]->cpu_stat->collect_heartbeat(heartbeat_ipc, i);
       }
 
       // check for warmup
@@ -603,5 +603,8 @@ int main(int argc, char** argv)
     }
   }
 
+  for (O3_CPU* cpu : ooo_cpu) {
+    cpu->cpu_stat->print_heartbeats();
+  }
   return 0;
 }

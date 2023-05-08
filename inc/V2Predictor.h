@@ -12,6 +12,7 @@
 #include "log.h"
 #include "PredictorHealth.h"
 #include "IPredictor.h"
+#define pii pair<IntPtr, int>
 
 using namespace std;
 
@@ -39,6 +40,11 @@ class V2Predictor: public IPredictor
     bool prediction_warmup_finish;
     Coverage *coverage;
     fstream epoc_data_fs;
+
+    //per page tracking all PC
+    map<IntPtr, set<pii>> track_per_page_pc;
+    map<IntPtr, IntPtr> pc_to_write;
+
     public:
     V2Predictor(){
         prediction_warmup_finish=false;
@@ -58,17 +64,64 @@ class V2Predictor: public IPredictor
        else{
         gate.insert({key,1});
        }
+
+       per_page_pc_tracking(key, pkt.pc);
+    }
+
+    void per_page_pc_tracking(IntPtr page, IntPtr pc){
+        auto findPage = track_per_page_pc.find(page);
+        if(findPage!=track_per_page_pc.end()){
+            bool foundPC = false;
+            for(auto e: findPage->second){
+                if(e.first == pc){
+                    foundPC = true;
+                    e.second++; break;
+                }
+            }
+            if(!foundPC){
+                track_per_page_pc[page].insert({pc,1});
+            }
+        }else{
+            track_per_page_pc[page].insert({pc,1});
+        }
+
+        if(pc_to_write.find(pc)!=pc_to_write.end()){
+            pc_to_write[pc]++;
+        }
+        else{
+            pc_to_write.insert({pc, 1});
+        }
     }
 
     /*
     
     */
     void print(IntPtr cycle = 0, string tag="end"){
+        string pc_count_file="pc_count.log";
+        fstream pc_count_fs = Log::get_file_stream(pc_count_file);
+
+        vector<int> top10;
+        int ten=10;
+        double avg_wr_per_pc=0;
+        for(auto e: pc_to_write){
+            avg_wr_per_pc += e.second;
+            pc_count_fs << e.first << "," << e.second << '\n';
+            if(ten--){
+                top10.push_back(e.first);
+            }
+        }
+        avg_wr_per_pc /= (double)pc_to_write.size();
+
+        double total_writes = 0;
+        double avg_writes = 0;
         
+        // if gate_to_life entry not found
+        // ***this tells block was inserted but never evicted***
+        int count_no_entry_found = 0;
         if(tag == "end"){
             string s = "pc_info_v2.log";
             fstream f = Log::get_file_stream(s);
-            f<<"pc,write,dead,alive\n";
+            f<<"pc,write,dead,alive,total_pc,top10,top_pc\n";
             // at the end of simulation
             for(auto entry: gate){
                 string dead_alive = ",-1,-1";//page not found
@@ -76,8 +129,29 @@ class V2Predictor: public IPredictor
                 if(findPC!=gate_to_life.end()){
                     dead_alive = "," + to_string(findPC->second.dead) + "," + to_string(findPC->second.alive);
                 }
-                string out = to_string(entry.first) +","+to_string(entry.second)+ dead_alive +"\n";
+                else count_no_entry_found++;
+                string out = to_string(entry.first) +","+to_string(entry.second)+ dead_alive +",";
+                
+                // page to all pc's seen
+                auto findPCPerPage = track_per_page_pc.find(entry.first);
+                if(findPCPerPage!=track_per_page_pc.end()){
+                    // find how many of tracked pc on each page are intense pc
+                    int count_top_pc_per_page = 0;
+                    int count_top10 = 0;
+                    for(auto trackedPC: findPCPerPage->second){
+                        // pc tracked on these page is write intensive if writes by it are above avg writes of pc 
+                        if(pc_to_write[trackedPC.first] > avg_wr_per_pc){
+                            count_top_pc_per_page++;
+                        }
+                        if(find(top10.begin(), top10.end(), trackedPC.first)!=top10.end()){
+                            count_top10++;
+                        }
+                    }
+                    out = out + to_string(findPCPerPage->second.size())+ ","+ to_string(count_top10) + "," + to_string(count_top_pc_per_page) + "\n";
+                }
+                                
                 f << out;
+                total_writes+=entry.second;
             }
             f.close();
         }
@@ -89,6 +163,12 @@ class V2Predictor: public IPredictor
             fstream fph=Log::get_file_stream(s);
             fph << "fn,fp,tn,tp\n";
             fph << coverage->health() << '\n';
+
+            avg_writes = total_writes/(double)gate.size();
+            fph << "**************************************\n";
+            fph << "\nTotal Writes of all Pages:" << total_writes;
+            fph << "\nTotal pages:" << gate.size();
+            fph << "\nAvg Writes Per Page:" << avg_writes;
         }
         
     }
@@ -122,11 +202,13 @@ class V2Predictor: public IPredictor
                 // is it possible
                 continue; 
             }
+            // compute prediction based on if alive_count > dead_count
             PACKET_LIFE pkt_life = entry.second.pc_status();
-            judgement[entry.first].set_dead_or_alive(pkt_life);
+            // write intensity based prediction
             PREDICTION prediction = static_cast<PREDICTION>(judgement[entry.first].get_prediction());
             add_prediction_health(prediction, pkt_life);
-
+            // update prediction previously calculated from write intensity by actual observance values of dead and alive count
+            judgement[entry.first].set_dead_or_alive(pkt_life);
         }
 
         if(!prediction_warmup_finish)
