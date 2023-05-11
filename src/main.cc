@@ -461,7 +461,16 @@ int main(int argc, char** argv)
         ooo_cpu[i]->last_sim_instr = ooo_cpu[i]->num_retired;
         ooo_cpu[i]->last_sim_cycle = ooo_cpu[i]->current_cycle;
 
-        ooo_cpu[i]->cpu_stat->collect_heartbeat(heartbeat_ipc, i);
+        // add LLC rd/wr assymetry effect
+        double rd_wr_lat = llc->get_assymetric_read_write_latency();
+        
+        // roi
+        double ipc3 = (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle + rd_wr_lat);
+
+        // total
+        double ipc4 = ((float)ooo_cpu[i]->finish_sim_instr / (ooo_cpu[i]->finish_sim_cycle + rd_wr_lat));
+        
+        ooo_cpu[i]->cpu_stat->collect_heartbeat(heartbeat_ipc, ipc3, ipc4 , i);
       }
 
       // check for warmup
