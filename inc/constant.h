@@ -64,4 +64,19 @@ enum class PACKET_LIFE{
 // 01 no bypass (default)  1
 // 10 bypass aggresive     2
 // 11 bypass selective     3
-#define SUPER_USER_BYPASS 3
+#define SUPER_USER_BYPASS 1
+
+/**********************************************
+* Configuration for Predictor type
+* 0 write intensity
+* 1 write with dead or alive heuristic   ::TODO
+* 2 only dead or alive intensity         ::TODO
+***********************************************/
+#pragma once
+enum class CONFIG_PREDICTION
+{
+    WRITE_INTENSITY=0,
+    WRITE_WITH_DEADALIVE_HEURISTIC,
+    DEADALIVE_INTENSITY
+};
+#define SUPER_USER_CONFIG_PREDICTION 0

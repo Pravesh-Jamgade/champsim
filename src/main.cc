@@ -392,12 +392,17 @@ int main(int argc, char** argv)
 
   //***
   CACHE* llc = caches.front();
-  IPredictor* ipred = new V2Predictor();
+  IPredictor* ipred = new V1Predictor();
   llc->initalize_extras(ipred);
+
+  std::string setting_bypass[5] = {"", "No Bypass", "Aggresive Bypass", "Selective Bypass"};
+  std::string setting_prediction[5] = {"write intensity", "write intensity + deadalive heursitic", "deadalive intensity"};
+
   cout << "**************************************************\n";
   cout << "************ CHECKS **************\n";
   cout << "Predictor: " << ipred->NAME << '\n';
-  cout << "Bypassing Configuration: " << SUPER_USER_BYPASS << '\n';
+  cout << "Predictor Type: " << setting_prediction[SUPER_USER_CONFIG_PREDICTION] << '\n';
+  cout << "Bypassing Configuration: " << setting_bypass[SUPER_USER_BYPASS] << '\n';
   cout << "LLC Hit Latency: " << llc->HIT_LATENCY << '\n';
   cout << "LLC Read Latency: " << llc->RD_LATENCY << '\n';
   cout << "LLC Write Latency: " << llc->WR_LATENCY << '\n';

@@ -27,23 +27,28 @@ class V1Predictor: public IPredictor
         PACKET_LIFE pc_status(){return dead>alive?PACKET_LIFE::DEAD: PACKET_LIFE::ALIVE;}
     };
 
+    /* tracking all the time*/
     // pc to dead block count
     map<IntPtr, DeadAndLive> gate_to_life;
-
-    // write intensity of PC
+    // pc to write intensity
     map<IntPtr, int> gate;
-    // prediction for PC
+
+    /* tracking at the end of epoc */
+    // pc to prediction
     map<IntPtr, Status> judgement;
-    set<IntPtr> seen_before;
+    
     bool prediction_warmup_finish;
     Coverage *coverage;
     fstream epoc_data_fs;
+
     public:
+
     V1Predictor(){
         prediction_warmup_finish=false;
         coverage = new Coverage();
         NAME = "V1";
     }
+
     /*
         Phase 1: 
         find out PC <--> Write pairs
@@ -59,34 +64,50 @@ class V1Predictor: public IPredictor
        }
     }
 
-    void print(IntPtr cycle = 0, string tag="end"){
-        
-        if(tag == "end"){
-            string s = "pc_info_v1.log";
-            fstream f = Log::get_file_stream(s);
-            f<<"pc,write,dead,alive\n";
-            // at the end of simulation
-            for(auto entry: gate){
-                string dead_alive = ",-1,-1";//pc not found
-                auto findPC = gate_to_life.find(entry.first);
-                if(findPC!=gate_to_life.end()){
-                    dead_alive = "," + to_string(findPC->second.dead) + "," + to_string(findPC->second.alive);
-                }
-                string out = to_string(entry.first) +","+to_string(entry.second)+ dead_alive +"\n";
-                f << out;
+    void add_prediction_health(PREDICTION prediction, PACKET_LIFE actual){
+        // Dead : it is when i am going to bypass
+        // if predicted dead (which we ar going to use to bypass) but actually alive is goig to harm our results. (bad case)
+        // this is our false-positive opposite is false-negative (it will not harm but although its a miss opportunity)
+        if(actual == PACKET_LIFE::ALIVE){//actual
+            switch(prediction){//result
+            case PREDICTION::ALIVE:
+                coverage->increase(STAT::TP);
+                break;
+            case PREDICTION::DEAD:
+                coverage->increase(STAT::FP);
+                break;
             }
-            f.close();
         }
-        else{
-           
+        else if(actual == PACKET_LIFE::DEAD){
+            switch(prediction){
+            case PREDICTION::ALIVE:
+                coverage->increase(STAT::FN);
+                break;
+            case PREDICTION::DEAD:
+                coverage->increase(STAT::TN);
+                break;
+            }
         }
+    }
+
+    /*
+    @param pkt: packet, contains life of block set/updated before eviction. we compare here and incr respective count.
+    @param wrtype: write type
+
+    */
+    void insert_actual_life_status(PACKET& pkt, WRITE_TYPE wrtype=WRITE_TYPE::INVALID){
+        IntPtr key = pkt.pc;
+        PACKET_LIFE life_status = pkt.packet_life;
+        if(gate_to_life.find(key)==gate_to_life.end()){
+            gate_to_life[key]=DeadAndLive();
+        }
+        if(life_status == PACKET_LIFE::ALIVE)
         {
-            string s = "predictor_health_v1.log";
-            fstream fph=Log::get_file_stream(s);
-            fph << "fn,fp,tn,tp\n";
-            fph << coverage->health() << '\n';
+            gate_to_life[key].alive++;
         }
-        
+        else if(life_status == PACKET_LIFE::DEAD){
+            gate_to_life[key].dead++;
+        }
     }
 
     /*
@@ -106,9 +127,9 @@ class V1Predictor: public IPredictor
                 judgement[entry.first]=Status();
             }
             if(entry.second > avg){
-                judgement[entry.first].set_prediction(PREDICTION::ALIVE);// predicted to be write intensive
+                judgement[entry.first].set_var_prediction(PREDICTION::ALIVE);// predicted to be write intensive
             }else{
-                judgement[entry.first].set_prediction(PREDICTION::DEAD);
+                judgement[entry.first].set_var_prediction(PREDICTION::DEAD);
             }
         }
 
@@ -119,10 +140,7 @@ class V1Predictor: public IPredictor
                 continue; 
             }
             PACKET_LIFE pkt_life = entry.second.pc_status();
-            judgement[entry.first].set_dead_or_alive(pkt_life);
-            PREDICTION prediction = static_cast<PREDICTION>(judgement[entry.first].get_prediction());
-            add_prediction_health(prediction, pkt_life);
-
+            judgement[entry.first].set_var_dead_or_alive(pkt_life);
         }
 
         if(!prediction_warmup_finish)
@@ -149,46 +167,38 @@ class V1Predictor: public IPredictor
         return pred;
     }
 
-    void add_prediction_health(PREDICTION prediction, PACKET_LIFE actual){
-       // Dead : it is when i am going to bypass
-       // if predicted dead (which we ar going to use to bypass) but actually alive is goig to harm our results. (bad case)
-       // this is our false-positive opposite is false-negative (it will not harm but although its a miss opportunity)
-        if(actual == PACKET_LIFE::ALIVE){//actual
-          switch(prediction){//result
-            case PREDICTION::ALIVE:
-              coverage->increase(STAT::TP);
-              break;
-            case PREDICTION::DEAD:
-              coverage->increase(STAT::FP);
-              break;
-          }
+    /*log*/
+    void print(IntPtr cycle = 0, string tag="end"){
+        
+        if(tag == "end"){
+            string s = "pc_info_v1.log";
+            fstream f = Log::get_file_stream(s);
+            f<<"pc,write,dead-when-evicted,alive-when-evicted\n";
+            // at the end of simulation
+            for(auto entry: gate){
+                string dead_alive = ",-1,-1";//pc not found
+                auto findPC = gate_to_life.find(entry.first);
+                if(findPC!=gate_to_life.end()){
+                    dead_alive = "," + to_string(findPC->second.dead) + "," + to_string(findPC->second.alive);// pc found
+                }
+                string out = to_string(entry.first) +","+to_string(entry.second)+ dead_alive +"\n";
+                f << out;
+            }
+            f.close();
         }
-        else if(actual == PACKET_LIFE::DEAD){
-          switch(prediction){
-            case PREDICTION::ALIVE:
-              coverage->increase(STAT::FN);
-              break;
-            case PREDICTION::DEAD:
-              coverage->increase(STAT::TN);
-              break;
-          }
+        else{
+           
         }
+        {
+            // string s = "predictor_health_v1.log";
+            // fstream fph=Log::get_file_stream(s);
+            // fph << "fn,fp,tn,tp\n";
+            // fph << coverage->health() << '\n';
+        }
+        
     }
 
-    void insert_actual_life_status(PACKET& pkt, WRITE_TYPE wrtype=WRITE_TYPE::INVALID){
-        IntPtr key = pkt.pc;
-        PACKET_LIFE life_status = pkt.packet_life;
-        if(gate_to_life.find(key)==gate_to_life.end()){
-            gate_to_life[key]=DeadAndLive();
-        }
-        if(life_status == PACKET_LIFE::ALIVE)
-        {
-            gate_to_life[key].alive++;
-        }
-        else if(life_status == PACKET_LIFE::DEAD){
-            gate_to_life[key].dead++;
-        }
-    }
+
 
 };
 
