@@ -63,6 +63,8 @@ public:
   uint32_t sim_total_access=0, roi_total_access=0;
   uint32_t sim_total_miss=0, roi_total_miss=0;
 
+  bool is_llc=false;
+
   // functions
   int add_rq(PACKET* packet) override;
   int add_wq(PACKET* packet) override;
@@ -240,6 +242,11 @@ public:
   {
     cacheStat = nullptr;
     ipredictor = nullptr;
+    if(NAME.find("LLC")!=string::npos)
+    {
+      is_llc = true;
+      std::cout << fill_lat << "," << rd_latency << "," << wr_latency << '\n';
+    }
   }
 };
 

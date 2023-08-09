@@ -55,45 +55,18 @@ class V1Predictor: public IPredictor
     */
     void insert(PACKET& pkt){
         IntPtr key = pkt.pc;
-       auto foundKey = gate.find(key);
-       if(foundKey!=gate.end()){
-        gate[key]++;
-       }
-       else{
-        gate.insert({key,1});
-       }
-    }
-
-    void add_prediction_health(PREDICTION prediction, PACKET_LIFE actual){
-        // Dead : it is when i am going to bypass
-        // if predicted dead (which we ar going to use to bypass) but actually alive is goig to harm our results. (bad case)
-        // this is our false-positive opposite is false-negative (it will not harm but although its a miss opportunity)
-        if(actual == PACKET_LIFE::ALIVE){//actual
-            switch(prediction){//result
-            case PREDICTION::ALIVE:
-                coverage->increase(STAT::TP);
-                break;
-            case PREDICTION::DEAD:
-                coverage->increase(STAT::FP);
-                break;
-            }
+        auto foundKey = gate.find(key);
+        if(foundKey!=gate.end()){
+            gate[key]++;
         }
-        else if(actual == PACKET_LIFE::DEAD){
-            switch(prediction){
-            case PREDICTION::ALIVE:
-                coverage->increase(STAT::FN);
-                break;
-            case PREDICTION::DEAD:
-                coverage->increase(STAT::TN);
-                break;
-            }
+        else{
+            gate.insert({key,1});
         }
     }
 
     /*
     @param pkt: packet, contains life of block set/updated before eviction. we compare here and incr respective count.
     @param wrtype: write type
-
     */
     void insert_actual_life_status(PACKET& pkt, WRITE_TYPE wrtype=WRITE_TYPE::INVALID){
         IntPtr key = pkt.pc;

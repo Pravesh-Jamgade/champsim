@@ -54,18 +54,18 @@ void CACHE::apply_bypass_on_fillback(int set, int way, PACKET& fill_mshr){
 }
 
 void CACHE::post_read_success(int set, int way, bool cacheHit){
-  if(NAME.find("LLC")==string::npos) return;
+  if(!is_llc) return;
   cacheStat->update_setstatus_on_read(set);
   update_blocks_life(&block[set*NUM_WAY + way], cacheHit);
   read_count++;
 }
 
 PREDICTION CACHE::pre_write_action(PACKET& pkt, int set, RESULT result){
-  if(NAME.find("LLC")==string::npos) return PREDICTION::NO_PREDICTION;
+  if(!is_llc) return PREDICTION::NO_PREDICTION;
   
   PREDICTION pred = ipredictor->get_judgement(pkt);
-  if(pred == PREDICTION::NO_PREDICTION)
-    return pred;
+  // if(pred == PREDICTION::NO_PREDICTION)
+  //   return pred;
   
   // // this is just to see how our predictor is doing, by looking at prediction and actual write intensity at block
   // bool write_intense = cacheStat->is_set_write_intensive(set);
@@ -76,13 +76,17 @@ PREDICTION CACHE::pre_write_action(PACKET& pkt, int set, RESULT result){
 }
 
 void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way, bool cacheHit){
-  if(NAME.find("LLC")==string::npos) return;
+  if(!is_llc) return;
   bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
-  if(epoc_end){
-    ipredictor->epoc_end_judgement_day(ooo_cpu[pkt.cpu]->get_current_cycle());
-  }
-  else {
-    ipredictor->insert(pkt);
+
+  if(SUPER_USER_BYPASS>1)
+  {
+    if(epoc_end){
+      ipredictor->epoc_end_judgement_day(ooo_cpu[pkt.cpu]->get_current_cycle());
+    }
+    else {
+      ipredictor->insert(pkt);
+    }
   }
 
   update_blocks_life(&block[set*NUM_WAY + way], cacheHit);
@@ -115,22 +119,24 @@ void CACHE::handle_fill()
     uint32_t way = std::distance(set_begin, first_inv);
 
     //***
-    PREDICTION prediction = pre_write_action(*fill_mshr, set, static_cast<RESULT>(set<NUM_WAY));
-
-    if(prediction == PREDICTION::DEAD && SUPER_USER_BYPASS > 1){
-      if(SUPER_USER_BYPASS == 2)
+    if(SUPER_USER_BYPASS > 1){
+      PREDICTION prediction = pre_write_action(*fill_mshr, set, static_cast<RESULT>(set<NUM_WAY));
+      if(prediction == PREDICTION::DEAD)
       {
-        apply_bypass_on_fillback(set, way, *fill_mshr);
-        return;
-      }
-      else if(cacheStat->is_set_write_intensive(set) && SUPER_USER_BYPASS == 3)
-      {
-        apply_bypass_on_fillback(set, way, *fill_mshr);
-        return;
-      }
-      else{
-        //TODO: we can do something here as well
-        //cache set may not be set intensive
+        if(SUPER_USER_BYPASS == 2)
+        {
+          apply_bypass_on_fillback(set, way, *fill_mshr);
+          return;
+        }
+        else if(cacheStat->is_set_write_intensive(set) && SUPER_USER_BYPASS == 3)
+        {
+          apply_bypass_on_fillback(set, way, *fill_mshr);
+          return;
+        }
+        else{
+          //TODO: we can do something here as well
+          //cache set may not be set intensive
+        }
       }
     }
 
@@ -172,24 +178,25 @@ void CACHE::handle_writeback()
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
 
-    //***
-    PREDICTION prediction = pre_write_action(handle_pkt, set, static_cast<RESULT>(way<NUM_WAY));
-
     //:TODO we can enable for prediction::alive to either bypass or put onto some SRAM buffer
-    if(prediction == PREDICTION::DEAD && SUPER_USER_BYPASS > 1){
-      if(SUPER_USER_BYPASS == 2)
+    if(SUPER_USER_BYPASS > 1){
+      PREDICTION prediction = pre_write_action(handle_pkt, set, static_cast<RESULT>(set<NUM_WAY));
+      if(prediction == PREDICTION::DEAD)
       {
-        apply_bypass_on_writeback(set, way, handle_pkt);
-        return;
-      }
-      else if(cacheStat->is_set_write_intensive(set) && SUPER_USER_BYPASS == 3)
-      {
-        apply_bypass_on_writeback(set, way, handle_pkt);
-        return;
-      }
-      else{
-        //TODO: we can do something here as well
-        //cache set may not be set intensive
+        if(SUPER_USER_BYPASS == 2)
+        {
+          apply_bypass_on_writeback(set, way, handle_pkt);
+          return;
+        }
+        else if(cacheStat->is_set_write_intensive(set) && SUPER_USER_BYPASS == 3)
+        {
+          apply_bypass_on_writeback(set, way, handle_pkt);
+          return;
+        }
+        else{
+          //TODO: we can do something here as well
+          //cache set may not be set intensive
+        }
       }
     }
 
