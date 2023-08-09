@@ -155,9 +155,7 @@
         "virtual_prefetch": false,
         "prefetch_activate": "LOAD,PREFETCH",
         "prefetcher": "no",
-        "replacement": "srrip",
-        "rd_hit_latency": 1,
-        "wr_hit_latency": 50
+        "replacement": "srrip"
     },
 
     "physical_memory": {

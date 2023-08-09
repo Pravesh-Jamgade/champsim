@@ -167,8 +167,8 @@ caches = dict(itertools.compress(caches.items(), accessible))
 # Establish latencies in caches
 for cache in caches.values():
     cache['hit_latency'] = cache.get('hit_latency') or (cache['latency'] - cache['fill_latency'])
-    cache['rd_hit_latency'] = cache.get('rd_hit_latency') or cache['latency']
-    cache['wr_hit_latency'] = cache.get('wr_hit_latency') or cache['latency']
+    cache['rd_hit_latency'] = cache.get('rd_hit_latency') or 0
+    cache['wr_hit_latency'] = cache.get('wr_hit_latency') or 0
 
 # print(caches.values())
 # Create prefetch activation masks
