@@ -158,16 +158,10 @@ class CacheStat{
 
         switch(pkt.packet_life){
             case PACKET_LIFE::DEAD:
-                    if(index!=set_status.end())
-                    {
-                        index->second.increase_dead_count();
-                    }
+                set_status[set].increase_dead_count();
                 break;
             case PACKET_LIFE::ALIVE:
-                    if(index!=set_status.end())
-                    {
-                        index->second.increase_alive_count();
-                    }
+                    set_status[set].increase_alive_count();
                 break;
         }
     }
@@ -223,7 +217,6 @@ class CacheStat{
         auto index = set_status.find(set);
         if(index == set_status.end()){
             set_status.insert({set, SetStatus()});
-            return;
         }
         index->second.increase_write_count();
     }
@@ -232,7 +225,6 @@ class CacheStat{
         auto index = set_status.find(set);
         if(index==set_status.end()){
             set_status.insert({set, SetStatus()});
-            return;
         }
         index->second.increase_read_count();
     }

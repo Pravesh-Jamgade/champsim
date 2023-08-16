@@ -620,5 +620,6 @@ int main(int argc, char** argv)
   for (O3_CPU* cpu : ooo_cpu) {
     cpu->cpu_stat->print_heartbeats();
   }
+
   return 0;
 }

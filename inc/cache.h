@@ -142,6 +142,18 @@ public:
   void write_profile(){
     IntPtr total_block = NUM_WAY*NUM_SET;
 
+    string s = "llc_matrix.log";
+    fstream mtx = Log::get_file_stream(s);
+
+    for(int i=0; i< NUM_SET; i++)
+    {
+      for(int j=0; j< NUM_WAY; j++)
+      {
+        mtx << block[i*NUM_WAY + j].writes << ',';
+      }
+      mtx << '\n';
+    }
+
     double total_writes_by_cacheStat = cacheStat->get_total_writes();
     double avg_by_cacheStat = (double)total_writes_by_cacheStat/total_block;
     
