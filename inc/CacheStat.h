@@ -85,7 +85,7 @@ class CacheStat{
     set<IntPtr> seen_before;
 
     // map<int, SetStatus> set_status; 
-    vector<pair<int, SetStatus>> set_status;
+    map<int, SetStatus> set_status;
 
     // nvm profile
     double avg_write_per_block, avg_write_per_set;
@@ -105,14 +105,6 @@ class CacheStat{
         fill_bypass=writeback_bypass = 0;
     }
 
-    int search(int set){
-        for(int i=0; i< set_status.size(); i++){
-            if(set_status[i].first == set){
-                return i;
-            }
-        }
-        return -1;
-    }
     /*
         exmample, if your catching all writes at LLC then writebacks here implies writes from L2 not the writeback because eviction from LLC those will be evicts.
         1.[ PACKET_TYPE (ipkt=0/dpkt=2) x WRITE_TYPE (fill=0/wb=1) ] => [ ipkt+fill=0 / ipkt+wb=1 / dpkt+fill=2 / dpkt+wb=3 ]
@@ -158,24 +150,23 @@ class CacheStat{
     }
 
     void process_evicted_blocks_life(PACKET& pkt, int set){
-        int index = search(set);
+        auto index = set_status.find(set);
+        if(index==set_status.end())
+        {
+            set_status.insert({set, SetStatus()});
+        }
+
         switch(pkt.packet_life){
             case PACKET_LIFE::DEAD:
-                    if(index!=-1)
+                    if(index!=set_status.end())
                     {
-                        set_status[index].second.increase_dead_count();
-                    }
-                    else{
-                        set_status.push_back({set, SetStatus()});
+                        index->second.increase_dead_count();
                     }
                 break;
             case PACKET_LIFE::ALIVE:
-                    if(index!=-1)
+                    if(index!=set_status.end())
                     {
-                        set_status[index].second.increase_alive_count();
-                    }
-                    else{
-                        set_status.push_back({set, SetStatus()});
+                        index->second.increase_alive_count();
                     }
                 break;
         }
@@ -229,29 +220,29 @@ class CacheStat{
     1.update write counter on set
     */
     void update_setstatus_on_write(int set){
-        int index = search(set);
-        if(index == -1){
-            set_status.push_back({set, SetStatus()});
+        auto index = set_status.find(set);
+        if(index == set_status.end()){
+            set_status.insert({set, SetStatus()});
             return;
         }
-        set_status[index].second.increase_write_count();
+        index->second.increase_write_count();
     }
 
     void update_setstatus_on_read(int set){
-        auto index = search(set);
-        if(index==-1){
-            set_status.push_back({set, SetStatus()});
+        auto index = set_status.find(set);
+        if(index==set_status.end()){
+            set_status.insert({set, SetStatus()});
             return;
         }
-        set_status[index].second.increase_read_count();
+        index->second.increase_read_count();
     }
 
     bool is_set_write_intensive(int set){
         double avg = (double)counter->get_total_writes()/(double)set_status.size();
         IntPtr set_writes=0;
-        int index = search(set);
-        if(index!=-1){
-            set_writes = set_status[index].second.get_writes();
+        auto index = set_status.find(set);
+        if(index!=set_status.end()){
+            set_writes = index->second.get_writes();
         }
         if(set_writes > avg) return true; // write intensize set
         return false; //else not

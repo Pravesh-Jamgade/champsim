@@ -114,10 +114,7 @@ public:
   /*if block is present (hit), and it is DEAD (upon readmiss) then set it to ALIVE. And if it is ALIVE, then keep as it is*/
   void update_blocks_life(BLOCK* block, bool is_block_hit){
     if(is_block_hit){
-      PACKET_LIFE pkt_life = block->packet_life;
-      if(pkt_life == PACKET_LIFE::DEAD){
-        block->packet_life = PACKET_LIFE::ALIVE;
-      }
+      block->packet_life = PACKET_LIFE::ALIVE;
     }
   }
 

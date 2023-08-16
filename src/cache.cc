@@ -77,10 +77,11 @@ PREDICTION CACHE::pre_write_action(PACKET& pkt, int set, RESULT result){
 
 void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way, bool cacheHit){
   if(!is_llc) return;
-  bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
-
+  
   if(SUPER_USER_BYPASS>1)
   {
+    bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
+
     if(epoc_end){
       ipredictor->epoc_end_judgement_day(ooo_cpu[pkt.cpu]->get_current_cycle());
     }
@@ -121,23 +122,24 @@ void CACHE::handle_fill()
     //***
     if(SUPER_USER_BYPASS > 1){
       PREDICTION prediction = pre_write_action(*fill_mshr, set, static_cast<RESULT>(set<NUM_WAY));
-      if(prediction == PREDICTION::DEAD)
-      {
-        if(SUPER_USER_BYPASS == 2)
-        {
-          apply_bypass_on_fillback(set, way, *fill_mshr);
-          return;
-        }
-        else if(cacheStat->is_set_write_intensive(set) && SUPER_USER_BYPASS == 3)
-        {
-          apply_bypass_on_fillback(set, way, *fill_mshr);
-          return;
-        }
-        else{
-          //TODO: we can do something here as well
-          //cache set may not be set intensive
-        }
-      }
+      // // disabled fillback prediction: NOT sure what cache type it is (inclusive/non-inclusive ???)
+      // if(prediction == PREDICTION::DEAD)
+      // {
+      //   if(SUPER_USER_BYPASS == 2)
+      //   {
+      //     apply_bypass_on_fillback(set, way, *fill_mshr);
+      //     return;
+      //   }
+      //   else if(cacheStat->is_set_write_intensive(set) && SUPER_USER_BYPASS == 3)
+      //   {
+      //     apply_bypass_on_fillback(set, way, *fill_mshr);
+      //     return;
+      //   }
+      //   else{
+      //     //TODO: we can do something here as well
+      //     //cache set may not be set intensive
+      //   }
+      // }
     }
 
     if (way == NUM_WAY)

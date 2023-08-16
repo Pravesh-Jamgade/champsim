@@ -51,31 +51,31 @@ class V4Predictor: public IPredictor
        
     }
 
-    void add_prediction_health(PREDICTION prediction, PACKET_LIFE actual){
-        // Dead : it is when i am going to bypass
-        // if predicted dead (which we ar going to use to bypass) but actually alive is goig to harm our results. (bad case)
-        // this is our false-positive opposite is false-negative (it will not harm but although its a miss opportunity)
-        if(actual == PACKET_LIFE::ALIVE){//actual
-            switch(prediction){//result
-            case PREDICTION::ALIVE:
-                coverage->increase(STAT::TP);
-                break;
-            case PREDICTION::DEAD:
-                coverage->increase(STAT::FP);
-                break;
-            }
-        }
-        else if(actual == PACKET_LIFE::DEAD){
-            switch(prediction){
-            case PREDICTION::ALIVE:
-                coverage->increase(STAT::FN);
-                break;
-            case PREDICTION::DEAD:
-                coverage->increase(STAT::TN);
-                break;
-            }
-        }
-    }
+    // void add_prediction_health(PREDICTION prediction, PACKET_LIFE actual){
+    //     // Dead : it is when i am going to bypass
+    //     // if predicted dead (which we ar going to use to bypass) but actually alive is goig to harm our results. (bad case)
+    //     // this is our false-positive opposite is false-negative (it will not harm but although its a miss opportunity)
+    //     if(actual == PACKET_LIFE::ALIVE){//actual
+    //         switch(prediction){//result
+    //         case PREDICTION::ALIVE:
+    //             coverage->increase(STAT::TP);
+    //             break;
+    //         case PREDICTION::DEAD:
+    //             coverage->increase(STAT::FP);
+    //             break;
+    //         }
+    //     }
+    //     else if(actual == PACKET_LIFE::DEAD){
+    //         switch(prediction){
+    //         case PREDICTION::ALIVE:
+    //             coverage->increase(STAT::FN);
+    //             break;
+    //         case PREDICTION::DEAD:
+    //             coverage->increase(STAT::TN);
+    //             break;
+    //         }
+    //     }
+    // }
 
     /*
     packet, writeback
