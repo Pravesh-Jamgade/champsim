@@ -127,6 +127,7 @@ class CacheStat{
                 counter->iwrite_back++;
                 counter->iwrites++;
                 break;
+            default: break;
         }
     }
 
@@ -206,6 +207,8 @@ class CacheStat{
                 break;
             case WRITE_TYPE::WRITE_BACK:
                 invalid_writeback++;
+                break;
+            default:
                 break;
         }
     }
@@ -296,7 +299,7 @@ class CacheStat{
             f << uniq_i.size() << "," << uniq_d.size() << "," << uniq_inv.size() << '\n';
 
             f << "Write Characteristics\n";
-            int mX = 0;
+            uint64_t mX = 0;
             for(auto e: set_status){
                 if(e.second.get_writes()>mX){
                     mX=e.second.get_writes();

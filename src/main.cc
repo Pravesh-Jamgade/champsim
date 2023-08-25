@@ -564,7 +564,7 @@ int main(int argc, char** argv)
 
   // tIPC, rIPC,	L2 misses,	LLC accesses,	LLC writeback access,	LLC misses, LLC LD access,	LLC RFO access,	Intra,	Inter,	Set,	Block,
   // Fillback,	Writeback
-  for (int i = 0; i < ooo_cpu.size(); i++) {
+  for (size_t i = 0; i < ooo_cpu.size(); i++) {
     // total ipc
     double ipc1 = (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
     tfs << "totalIPC,cpu" << ooo_cpu[i]->cpu << ",tIPC," << ipc1 << '\n';
@@ -610,7 +610,7 @@ int main(int argc, char** argv)
       rfs << "LLC,cpu" << cache->cpu << ","
           << "total misses," << cache->roi_total_miss << '\n';
 
-      for (int j = 0; j < num_types.size(); j++) {
+      for (size_t j = 0; j < num_types.size(); j++) {
         tfs << "LLC,cpu" << cache->cpu << "," << types_name[j] << "," << cache->sim_access[cache->cpu][num_types[j]] << '\n';
         rfs << "LLC,cpu" << cache->cpu << "," << types_name[j] << "," << cache->roi_access[cache->cpu][num_types[j]] << '\n';
       }

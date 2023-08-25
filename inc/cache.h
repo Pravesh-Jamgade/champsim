@@ -145,9 +145,9 @@ public:
     string s = "llc_matrix.log";
     fstream mtx = Log::get_file_stream(s);
 
-    for(int i=0; i< NUM_SET; i++)
+    for(uint32_t i=0; i< NUM_SET; i++)
     {
-      for(int j=0; j< NUM_WAY; j++)
+      for(uint32_t j=0; j< NUM_WAY; j++)
       {
         mtx << block[i*NUM_WAY + j].writes << ',';
       }
@@ -160,19 +160,19 @@ public:
     IntPtr total_write = 0;
     double total_set_expect = 0;
 
-    for(int set=0; set< NUM_SET; set++){
+    for(uint32_t set=0; set< NUM_SET; set++){
       
       // per set ==> total write, and avg write per block
       IntPtr per_set_write = 0;
       double per_set_per_block_avg_write = 0;
-      for(int way=0; way< NUM_WAY; way++){
+      for(uint32_t way=0; way< NUM_WAY; way++){
         per_set_write += block[set * NUM_WAY + way].writes;
       }
       per_set_per_block_avg_write = (double)per_set_write/(double)NUM_WAY;
 
       // sum of squared expectation value
       double per_set_expect = 0;
-      for(int way=0; way< NUM_WAY; way++){
+      for(uint32_t way=0; way< NUM_WAY; way++){
         // expectation
         double expect = block[set * NUM_WAY + way].writes - per_set_per_block_avg_write;
         // square
@@ -192,10 +192,10 @@ public:
     double intra = ((double)1/(double)(NUM_SET*avg_write_per_block)) * total_set_expect;
 
     total_set_expect = 0;
-    for(int set=0; set< NUM_SET; set++){
+    for(uint32_t set=0; set< NUM_SET; set++){
       IntPtr per_set_write = 0;
       double per_set_per_block_avg_write = 0;
-      for(int way=0; way< NUM_WAY; way++){
+      for(uint32_t way=0; way< NUM_WAY; way++){
         per_set_write += block[set * NUM_WAY + way].writes;
       }
       per_set_per_block_avg_write = (double)per_set_write/(double)NUM_WAY;

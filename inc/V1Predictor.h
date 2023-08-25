@@ -146,7 +146,7 @@ class V1Predictor: public IPredictor
         if(tag == "end"){
             string s = "pc_info_v1.log";
             fstream f = Log::get_file_stream(s);
-            f<<"pc,write,dead-when-evicted,alive-when-evicted\n";
+            f<<"pc,write,dead,alive\n";
             // at the end of simulation
             for(auto entry: gate){
                 string dead_alive = ",-1,-1";//pc not found
