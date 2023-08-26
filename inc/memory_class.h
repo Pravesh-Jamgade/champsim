@@ -28,6 +28,14 @@ public:
   void operator++(int){writes+=1;}
   // replacement state
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
+
+  uint64_t burst_count=0;
+  void func_increase_burst_count(){burst_count++;}
+  uint64_t func_get_burst_count(){
+    uint64_t temp = burst_count;
+    burst_count=0;
+    return temp;
+  }
 };
 
 class MemoryRequestConsumer

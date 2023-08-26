@@ -621,5 +621,6 @@ int main(int argc, char** argv)
     cpu->cpu_stat->print_heartbeats();
   }
 
+  llc->writeTest->func_print();
   return 0;
 }

@@ -214,6 +214,14 @@ void CACHE::handle_writeback()
       fill_block.dirty = 1;
       //***
       post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way, true);
+
+      if(writeTest!=nullptr)
+      {
+        bool found = writeTest->func_cache_block_hit(set, handle_pkt.address);
+        if(found)
+          fill_block.burst_count++;
+      }  
+
     } else // MISS
     {
       bool success;
@@ -458,6 +466,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.packet_type = fill_block.packet_type;
       writeback_packet.packet_life = fill_block.packet_life;
 
+      //
+      if(writeTest!=nullptr)
+        writeTest->func_cache_block_evicted(set, fill_block.func_get_burst_count());
+
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
         return false;
@@ -496,6 +508,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.pc = handle_pkt.pc;
     fill_block.packet_type = handle_pkt.packet_type;
     fill_block.packet_life = PACKET_LIFE::DEAD;
+
+    // first write
+    if(writeTest!=nullptr) 
+      fill_block.func_increase_burst_count();
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

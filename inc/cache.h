@@ -17,6 +17,8 @@
 #include "constant.h"
 #include <math.h>
 
+#include "../plugins/WriteTest.h"
+
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
@@ -147,11 +149,16 @@ public:
 
     for(uint32_t i=0; i< NUM_SET; i++)
     {
+      IntPtr total_per_set_write = 0;
       for(uint32_t j=0; j< NUM_WAY; j++)
       {
         mtx << block[i*NUM_WAY + j].writes << ',';
+        total_per_set_write = total_per_set_write + block[i*NUM_WAY + j].writes;
       }
       mtx << '\n';
+
+      //
+      writeTest->func_set_write(i, total_per_set_write);
     }
 
     double total_writes_by_cacheStat = cacheStat->get_total_writes();
@@ -230,6 +237,8 @@ public:
     }
   }
 
+  WriteTest* writeTest;
+
 #include "cache_modules.inc"
 
   const repl_t repl_type;
@@ -253,9 +262,11 @@ public:
     ipredictor = nullptr;
     if(NAME.find("LLC")!=string::npos)
     {
+      writeTest = new WriteTest(NUM_SET, NUM_WAY);
       is_llc = true;
       std::cout << fill_lat << "," << rd_latency << "," << wr_latency << '\n';
     }
+    
   }
 };
 
