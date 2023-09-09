@@ -36,6 +36,22 @@ public:
     burst_count=0;
     return temp;
   }
+  
+  // "X" invalid block
+  // "C" core write: writeback hit C1, rfo hit C2
+  // "M" memory write
+  // "R" core read: hit=R1
+  // "Y" no more invalid block, replacement candidate
+  std::string req_pattern = "X";
+
+  // "X" invalid block
+  // "C" core write: writeback hit C1, rfo hit C2, writeback packet C3
+  // "M" memory write
+  // "R" core read: hit=R1
+  // "Y" no more invalid block, replacement candidate
+  void func_add_pattern(std::string req){
+    req_pattern.append(req);
+  }
 };
 
 class MemoryRequestConsumer

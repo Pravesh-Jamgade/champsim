@@ -220,7 +220,19 @@ void CACHE::handle_writeback()
         bool found = writeTest->func_cache_block_hit(set, handle_pkt.address);
         if(found)
           fill_block.burst_count++;
-      }  
+      } 
+
+      if(is_llc)
+      {
+        std::string req = "";
+        switch(handle_pkt.type)
+        {
+          case WRITEBACK: req = "C1"; break;
+          case RFO: req = "C2"; break;
+          default: std::cout << "[REQUEST PATTERN] handle_writeback()\n"; break;
+        } 
+        block[set*NUM_WAY+way].func_add_pattern(req);
+      }
 
     } else // MISS
     {
@@ -275,6 +287,12 @@ void CACHE::handle_read()
     {
       readlike_hit(set, way, handle_pkt);
       post_read_success(set, way, true);
+
+      if(is_llc)
+      {
+        block[set*NUM_WAY+way].func_add_pattern("R1");
+      }
+
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
@@ -466,20 +484,32 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.packet_type = fill_block.packet_type;
       writeback_packet.packet_life = fill_block.packet_life;
 
-      //
-      if(writeTest!=nullptr)
-        writeTest->func_cache_block_evicted(set, fill_block.func_get_burst_count());
-
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
         return false;
       
+      //***
+      fill_block.dirty = false;
+
       //*** replacement candidate successfully sent to lower level
       if(cacheStat!=nullptr)//only initalized at LLC
       {
         cacheStat->process_evicts(writeback_packet);
         cacheStat->process_evicted_blocks_life(writeback_packet, set);
         ipredictor->insert_actual_life_status(writeback_packet, handle_pkt.type==WRITEBACK?WRITE_TYPE::WRITE_BACK:WRITE_TYPE::FILL);
+      }
+
+      //
+      if(writeTest!=nullptr)
+      {
+        writeTest->func_cache_block_evicted(set, fill_block.func_get_burst_count());
+        fill_block.burst_count = 0;
+      }  
+
+      if(is_llc)
+      {
+        reqPat->func_evict_event(way, set, fill_block.req_pattern);
+        fill_block.req_pattern = "Y";
       }
         
     }
@@ -495,6 +525,42 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     if (handle_pkt.type == PREFETCH)
       pf_fill++;
 
+    // possible that valid block is simply dropped because it is not dirty (read block)
+    if(is_llc)
+    {
+      //this is no dirty block, and it is being replaced by some other writeback/fill block and bookkeep first write
+      //otherwise if it is dirty block then it is already take care during eviction, it will just need to bookkeep first write 
+      if(!fill_block.dirty && fill_block.valid)
+      {
+        reqPat->func_evict_event(way, set, fill_block.req_pattern);
+        fill_block.req_pattern = "Y";
+      }
+
+      // first write
+      // determine type writeback/RFO/LOAD/FILL missed is returned back
+      std::string req = "Z";
+      switch(handle_pkt.type)
+      {
+        case WRITEBACK: req = "WRITEBACK"; break;
+        case RFO: req = "RFO"; break;
+        case LOAD: req = "LOAD"; break;
+        case FILL_LLC: req = "FILL"; break;
+        default:
+          std::cout << "FILLLIKEMISS," << set <<", "<< way << ", " << handle_pkt.type <<'\n';
+      }
+      fill_block.func_add_pattern(req);
+    }
+
+    // first write
+    if(writeTest!=nullptr) 
+    {
+      if(!fill_block.dirty && fill_block.valid)
+      {
+        fill_block.burst_count = 0;
+      }
+      fill_block.func_increase_burst_count();
+    }  
+
     fill_block.valid = true;
     fill_block.prefetch = (handle_pkt.type == PREFETCH && handle_pkt.pf_origin_level == fill_level);
     fill_block.dirty = (handle_pkt.type == WRITEBACK || (handle_pkt.type == RFO && handle_pkt.to_return.empty()));
@@ -508,10 +574,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.pc = handle_pkt.pc;
     fill_block.packet_type = handle_pkt.packet_type;
     fill_block.packet_life = PACKET_LIFE::DEAD;
-
-    // first write
-    if(writeTest!=nullptr) 
-      fill_block.func_increase_burst_count();
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

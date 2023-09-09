@@ -622,5 +622,6 @@ int main(int argc, char** argv)
   }
 
   llc->writeTest->func_print();
+  llc->reqPat->func_print();
   return 0;
 }

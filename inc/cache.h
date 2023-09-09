@@ -18,6 +18,7 @@
 #include <math.h>
 
 #include "../plugins/WriteTest.h"
+#include "../plugins/RequestPattern.h"
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -238,6 +239,7 @@ public:
   }
 
   WriteTest* writeTest;
+  RequestPattern* reqPat;
 
 #include "cache_modules.inc"
 
@@ -265,6 +267,8 @@ public:
       writeTest = new WriteTest(NUM_SET, NUM_WAY);
       is_llc = true;
       std::cout << fill_lat << "," << rd_latency << "," << wr_latency << '\n';
+
+      reqPat = new RequestPattern(NUM_WAY, NUM_SET);
     }
     
   }
