@@ -17,6 +17,8 @@
 #include "constant.h"
 #include <math.h>
 
+#include "../plugin/info.h"
+
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
@@ -132,6 +134,7 @@ public:
 
   IPredictor* ipredictor;
   CacheStat* cacheStat;
+  Info* info;
     
   void initalize_extras(IPredictor* predictor){
     ipredictor = predictor;
@@ -251,10 +254,12 @@ public:
   {
     cacheStat = nullptr;
     ipredictor = nullptr;
+    info = nullptr;
     if(NAME.find("LLC")!=string::npos)
     {
       is_llc = true;
       std::cout << fill_lat << "," << rd_latency << "," << wr_latency << '\n';
+      info = new Info();
     }
   }
 };

@@ -122,7 +122,7 @@ void CACHE::handle_fill()
     //***
     if(SUPER_USER_BYPASS > 1){
       PREDICTION prediction = pre_write_action(*fill_mshr, set, static_cast<RESULT>(set<NUM_WAY));
-      // // disabled fillback prediction: NOT sure what cache type it is (inclusive/non-inclusive ???)
+      // disabled fillback prediction: NOT sure what cache type it is (inclusive/non-inclusive ???)
       // if(prediction == PREDICTION::DEAD)
       // {
       //   if(SUPER_USER_BYPASS == 2)
@@ -183,23 +183,23 @@ void CACHE::handle_writeback()
     //:TODO we can enable for prediction::alive to either bypass or put onto some SRAM buffer
     if(SUPER_USER_BYPASS > 1){
       PREDICTION prediction = pre_write_action(handle_pkt, set, static_cast<RESULT>(set<NUM_WAY));
-      if(prediction == PREDICTION::DEAD)
-      {
-        if(SUPER_USER_BYPASS == 2)
-        {
-          apply_bypass_on_writeback(set, way, handle_pkt);
-          return;
-        }
-        else if(cacheStat->is_set_write_intensive(set) && SUPER_USER_BYPASS == 3)
-        {
-          apply_bypass_on_writeback(set, way, handle_pkt);
-          return;
-        }
-        else{
-          //TODO: we can do something here as well
-          //cache set may not be set intensive
-        }
-      }
+      // if(prediction == PREDICTION::DEAD)
+      // {
+      //   if(SUPER_USER_BYPASS == 2)
+      //   {
+      //     apply_bypass_on_writeback(set, way, handle_pkt);
+      //     return;
+      //   }
+      //   else if(cacheStat->is_set_write_intensive(set) && SUPER_USER_BYPASS == 3)
+      //   {
+      //     apply_bypass_on_writeback(set, way, handle_pkt);
+      //     return;
+      //   }
+      //   else{
+      //     //TODO: we can do something here as well
+      //     //cache set may not be set intensive
+      //   }
+      // }
     }
 
     if (way < NUM_WAY) // HIT
@@ -214,6 +214,10 @@ void CACHE::handle_writeback()
       fill_block.dirty = 1;
       //***
       post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way, true);
+
+      // track pc
+      fill_block.tracking_pc.push_back(handle_pkt.pc);
+
     } else // MISS
     {
       bool success;
@@ -267,6 +271,10 @@ void CACHE::handle_read()
     {
       readlike_hit(set, way, handle_pkt);
       post_read_success(set, way, true);
+
+      // track pc
+      block[set * NUM_WAY + way].tracking_pc.push_back(handle_pkt.pc);
+
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
@@ -483,6 +491,19 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     if (handle_pkt.type == PREFETCH)
       pf_fill++;
 
+
+    if(is_llc && warmup_complete[handle_pkt.cpu])
+    {
+      // reset for new placed block
+      fill_block.temp_writes = 1;
+      info->func_add_write(handle_pkt.pc, 0, handle_pkt.type);
+      info->func_add_write(handle_pkt.address >> LOG2_PAGE_SIZE, 0, handle_pkt.type);
+
+      // TODO: we can also track whether block evicted are dirty (writeback) or not (drop)
+      info->func_track_bag_of_pc(fill_block.tracking_pc);
+      fill_block.tracking_pc = vector<IntPtr>();
+    }
+
     fill_block.valid = true;
     fill_block.prefetch = (handle_pkt.type == PREFETCH && handle_pkt.pf_origin_level == fill_level);
     fill_block.dirty = (handle_pkt.type == WRITEBACK || (handle_pkt.type == RFO && handle_pkt.to_return.empty()));
@@ -496,6 +517,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.pc = handle_pkt.pc;
     fill_block.packet_type = handle_pkt.packet_type;
     fill_block.packet_life = PACKET_LIFE::DEAD;
+
+    fill_block.tracking_pc.push_back(handle_pkt.pc);
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

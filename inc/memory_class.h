@@ -25,9 +25,13 @@ public:
   PACKET_TYPE packet_type = PACKET_TYPE::INVALID;
   PACKET_LIFE packet_life = PACKET_LIFE::INVALID;
   IntPtr writes = 0;
+  IntPtr temp_writes = 0;
   void operator++(int){writes+=1;}
   // replacement state
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
+
+  // tracking all pc
+  vector<IntPtr> tracking_pc;
 };
 
 class MemoryRequestConsumer

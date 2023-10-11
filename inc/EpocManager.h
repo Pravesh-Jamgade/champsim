@@ -15,6 +15,7 @@ class EpocManager{
     IntPtr epoc_size = 10;
     IntPtr curr = 0;
     public:
+    EpocManager(){}
     EpocManager(IntPtr curr){
         epoc_size = epoc_size * EPOC_SCALE;
         this->curr = curr;
