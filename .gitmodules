@@ -1,0 +1,3 @@
+[submodule "tracer/pin/gapbs-exp"]
+	path = tracer/pin/gapbs-exp
+	url = https://github.com/Pravesh-Jamgade/gapbs-exp
