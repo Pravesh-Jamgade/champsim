@@ -47,8 +47,7 @@ trace_instr_format_t curr_instr;
 unsigned long long start[4]={0}, end[4]={0};
 bool found[4]={0};
 char  A='1', B='2', C='3';
-int printA, printB, printC;
-printA = printB = printC = 50;
+int printA=50, printB=50, printC=50;
 
 /* ===================================================================== */
 // Command line switches
@@ -332,7 +331,7 @@ void addMagic(unsigned long long r)
     {
       exit(-1);
     }
-    
+
     if(printA--)
         std::cout << std::hex << "[MAGIC "<< A <<"]" << start[1] << "," << r << "," << end[1] << "," << curr_instr.context << "," << '\n';
   }
