@@ -28,7 +28,7 @@ typedef struct trace_instr_format {
     unsigned long long int destination_memory[NUM_INSTR_DESTINATIONS]; // output memory
     unsigned long long int source_memory[NUM_INSTR_SOURCES];           // input memory
 
-    char context;
+    char context = '0';
 } trace_instr_format_t;
 
 /* ================================================================== */
@@ -47,6 +47,8 @@ trace_instr_format_t curr_instr;
 unsigned long long start[4]={0}, end[4]={0};
 bool found[4]={0};
 char  A='1', B='2', C='3';
+int printA, printB, printC;
+printA = printB = printC = 50;
 
 /* ===================================================================== */
 // Command line switches
@@ -330,7 +332,9 @@ void addMagic(unsigned long long r)
     {
       exit(-1);
     }
-    // std::cout << std::hex << "[MAGIC "<< A <<"]" << start[1] << "," << r << "," << end[1] << "," << curr_instr.context << "," << '\n';
+    
+    if(printA--)
+        std::cout << std::hex << "[MAGIC "<< A <<"]" << start[1] << "," << r << "," << end[1] << "," << curr_instr.context << "," << '\n';
   }
 
   else if(start[2]<=r && r<= end[2])
@@ -341,7 +345,9 @@ void addMagic(unsigned long long r)
     {
       exit(-1);
     }
-    // std::cout << std::hex << "[MAGIC "<< B <<"]" << start[2] << "," << r << "," << end[2] << "," << curr_instr.context << "," << '\n';
+
+    if(printB--)
+        std::cout << std::hex << "[MAGIC "<< B <<"]" << start[2] << "," << r << "," << end[2] << "," << curr_instr.context << "," << '\n';
   }
 
   else if(start[3]<=r && r<= end[3])
@@ -352,7 +358,9 @@ void addMagic(unsigned long long r)
     {
       exit(-1);
     }
-    // std::cout << std::hex << "[MAGIC "<< C <<"]" << start[3] << "," << r << "," << end[3] << "," << curr_instr.context << "," << '\n';
+
+    if(printC--)
+        std::cout << std::hex << "[MAGIC "<< C <<"]" << start[3] << "," << r << "," << end[3] << "," << curr_instr.context << "," << '\n';
   }
 }
 
