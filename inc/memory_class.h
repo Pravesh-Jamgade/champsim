@@ -5,6 +5,7 @@
 
 #include "block.h"
 #include "constant.h"
+#include <vector>
 
 // CACHE ACCESS TYPE
 #define LOAD 0
@@ -31,7 +32,7 @@ public:
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
 
   // tracking all pc
-  vector<IntPtr> tracking_pc;
+  std::vector<IntPtr> tracking_pc;
 };
 
 class MemoryRequestConsumer
