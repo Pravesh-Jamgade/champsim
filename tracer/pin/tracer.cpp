@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <unistd.h>
 
 #define NUM_INSTR_DESTINATIONS 2
 #define NUM_INSTR_SOURCES 4
@@ -48,6 +49,7 @@ unsigned long long start[4]={0}, end[4]={0};
 bool found[4]={0};
 char  A='1', B='2', C='3';
 int printA=50, printB=50, printC=50;
+int countA=0, countB=0, countC=0;
 
 /* ===================================================================== */
 // Command line switches
@@ -334,6 +336,8 @@ void addMagic(unsigned long long r)
 
     if(printA--)
         std::cout << std::hex << "[MAGIC "<< A <<"]" << start[1] << "," << r << "," << end[1] << "," << curr_instr.context << "," << '\n';
+    sleep(1);
+    countA++;
   }
 
   else if(start[2]<=r && r<= end[2])
@@ -347,6 +351,8 @@ void addMagic(unsigned long long r)
 
     if(printB--)
         std::cout << std::hex << "[MAGIC "<< B <<"]" << start[2] << "," << r << "," << end[2] << "," << curr_instr.context << "," << '\n';
+    sleep(1);
+    countB++;
   }
 
   else if(start[3]<=r && r<= end[3])
@@ -357,10 +363,14 @@ void addMagic(unsigned long long r)
     {
       exit(-1);
     }
-
+    
     if(printC--)
         std::cout << std::hex << "[MAGIC "<< C <<"]" << start[3] << "," << r << "," << end[3] << "," << curr_instr.context << "," << '\n';
+    
+    sleep(1);
+    countC++;
   }
+  
 }
 
 
@@ -453,6 +463,8 @@ VOID Fini(INT32 code, VOID *v)
         fclose(out);
         output_file_closed = true;
     }
+
+    std::cout << countA << "," << countB << "," << countC << '\n';
 }
 
 /*!
