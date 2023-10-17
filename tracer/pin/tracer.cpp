@@ -336,7 +336,7 @@ void addMagic(unsigned long long r)
 
     if(printA--)
         std::cout << std::hex << "[MAGIC "<< A <<"]" << start[1] << "," << r << "," << end[1] << "," << curr_instr.context << "," << '\n';
-    sleep(1);
+    // sleep(1);
     countA++;
   }
 
@@ -351,7 +351,7 @@ void addMagic(unsigned long long r)
 
     if(printB--)
         std::cout << std::hex << "[MAGIC "<< B <<"]" << start[2] << "," << r << "," << end[2] << "," << curr_instr.context << "," << '\n';
-    sleep(1);
+    // sleep(1);
     countB++;
   }
 
@@ -367,7 +367,7 @@ void addMagic(unsigned long long r)
     if(printC--)
         std::cout << std::hex << "[MAGIC "<< C <<"]" << start[3] << "," << r << "," << end[3] << "," << curr_instr.context << "," << '\n';
     
-    sleep(1);
+    // sleep(1);
     countC++;
   }
   
