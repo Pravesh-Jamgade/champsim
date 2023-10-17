@@ -26,6 +26,10 @@
 #define BRANCH_OTHER 7
 
 struct ooo_model_instr {
+
+  //***
+  char context = '0';
+
   uint64_t instr_id = 0, ip = 0, event_cycle = 0;
 
   bool is_branch = 0, is_memory = 0, branch_taken = 0, branch_mispredicted = 0, source_added[NUM_INSTR_SOURCES] = {},
@@ -69,6 +73,9 @@ struct ooo_model_instr {
 
     asid[0] = cpu;
     asid[1] = cpu;
+
+    //***
+    context = instr.context;
   }
 
   ooo_model_instr(uint8_t cpu, cloudsuite_instr instr)
@@ -83,6 +90,9 @@ struct ooo_model_instr {
     this->branch_taken = instr.branch_taken;
 
     std::copy(std::begin(instr.asid), std::begin(instr.asid), std::begin(this->asid));
+
+    //***
+    context = instr.context;
   }
 };
 

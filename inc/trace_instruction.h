@@ -24,7 +24,7 @@ struct input_instr {
   unsigned long long destination_memory[NUM_INSTR_DESTINATIONS] = {}; // output memory
   unsigned long long source_memory[NUM_INSTR_SOURCES] = {};           // input 
   
-  int context;
+  int context = '0';
 };
 
 struct cloudsuite_instr {
@@ -43,7 +43,7 @@ struct cloudsuite_instr {
 
   unsigned char asid[2] = {std::numeric_limits<unsigned char>::max(), std::numeric_limits<unsigned char>::max()};
 
-  int context;
+  char context = '0';
 };
 
 #endif

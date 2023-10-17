@@ -37,6 +37,9 @@ public:
   IntPtr pc = 0;
   PACKET_TYPE packet_type =  PACKET_TYPE::INVALID;
   PACKET_LIFE packet_life = PACKET_LIFE::INVALID;
+
+  //***
+  char context = '0';
 };
 
 template <>
@@ -57,6 +60,9 @@ void packet_dep_merge(LIST& dest, LIST& src)
 
 // load/store queue
 struct LSQ_ENTRY {
+  //***
+  char context = '0';  
+  
   uint64_t instr_id = 0, producer_id = std::numeric_limits<uint64_t>::max(), virtual_address = 0, physical_address = 0, ip = 0, event_cycle = 0;
 
   champsim::circular_buffer<ooo_model_instr>::iterator rob_index;

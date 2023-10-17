@@ -111,6 +111,10 @@ void CACHE::handle_fill()
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
       return;
 
+    //***
+    if(fill_mshr->context != '0')
+    {std::cout << "[FILL] " << fill_mshr->context << '\n';}
+
     // find victim
     uint32_t set = get_set(fill_mshr->address);
 
@@ -174,6 +178,12 @@ void CACHE::handle_writeback()
     // handle the oldest entry
     PACKET& handle_pkt = WQ.front();
 
+    //***
+    if(handle_pkt.context != '0')
+    {
+      std::cout << "[WB] " << handle_pkt.context << '\n';
+    }
+    
     // access cache
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
@@ -215,8 +225,8 @@ void CACHE::handle_writeback()
       //***
       post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way, true);
 
-      // track pc
-      fill_block.tracking_pc.push_back(handle_pkt.pc);
+      // // track pc
+      // fill_block.tracking_pc.push_back(handle_pkt.pc);
 
     } else // MISS
     {
@@ -260,6 +270,12 @@ void CACHE::handle_read()
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
 
+    //***
+    if (handle_pkt.context != '0' )
+    {
+      std::cout << "[RD] " << handle_pkt.context << '\n';
+    }
+    
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
@@ -496,11 +512,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     {
       // reset for new placed block
       fill_block.temp_writes = 1;
-      info->func_add_write(handle_pkt.pc, 0, handle_pkt.type);
-      info->func_add_write(handle_pkt.address >> LOG2_PAGE_SIZE, 0, handle_pkt.type);
+      // info->func_add_write(handle_pkt.pc, 0, handle_pkt.type);
+      // info->func_add_write(handle_pkt.address >> LOG2_PAGE_SIZE, 0, handle_pkt.type);
 
-      // TODO: we can also track whether block evicted are dirty (writeback) or not (drop)
-      info->func_track_bag_of_pc(fill_block.tracking_pc);
+      // // TODO: we can also track whether block evicted are dirty (writeback) or not (drop)
+      // info->func_track_bag_of_pc(fill_block.tracking_pc);
       fill_block.tracking_pc = vector<IntPtr>();
     }
 

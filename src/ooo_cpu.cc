@@ -44,6 +44,10 @@ void O3_CPU::initialize_core()
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 {
+  //***
+  if (arch_instr.context != '0' )
+  {std::cout << "[INIT] " << arch_instr.context << '\n'; }
+
   instrs_to_read_this_cycle--;
 
   arch_instr.instr_id = instr_unique_id;
@@ -708,6 +712,9 @@ void O3_CPU::add_load_queue(champsim::circular_buffer<ooo_model_instr>::iterator
   lq_it->asid[1] = rob_it->asid[1];
   lq_it->event_cycle = current_cycle + SCHEDULING_LATENCY;
 
+  //***
+  lq_it->context = rob_it->context;
+
   // Mark RAW in the ROB since the producer might not be added in the store
   // queue yet
   champsim::circular_buffer<ooo_model_instr>::reverse_iterator prior_it{rob_it};
@@ -742,6 +749,9 @@ void O3_CPU::add_store_queue(champsim::circular_buffer<ooo_model_instr>::iterato
   sq_it->asid[0] = rob_it->asid[0];
   sq_it->asid[1] = rob_it->asid[1];
   sq_it->event_cycle = current_cycle + SCHEDULING_LATENCY;
+
+  //***
+  sq_it->context = rob_it->context;
 
   // succesfully added to the store queue
   STA.pop();
@@ -822,6 +832,9 @@ int O3_CPU::do_translate_store(std::vector<LSQ_ENTRY>::iterator sq_it)
   data_packet.pc = sq_it->ip;
   data_packet.packet_type = PACKET_TYPE::DPACKET;
 
+  //***
+  data_packet.context = sq_it->context;
+
   DP(if (warmup_complete[cpu]) {
     std::cout << "[RTS0] " << __func__ << " instr_id: " << sq_it->instr_id << " rob_index: " << sq_it->rob_index << " is popped from to RTS0" << std::endl;
   })
@@ -888,6 +901,9 @@ int O3_CPU::do_translate_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.pc = lq_it->ip;
   data_packet.packet_type = PACKET_TYPE::DPACKET;
 
+  //***
+  data_packet.context = lq_it->context;
+
   DP(if (warmup_complete[cpu]) {
     std::cout << "[RTL0] " << __func__ << " instr_id: " << lq_it->instr_id << " rob_index: " << lq_it->rob_index << " is popped to RTL0" << std::endl;
   })
@@ -918,6 +934,9 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
 
   data_packet.pc = lq_it->ip;
   data_packet.packet_type = PACKET_TYPE::DPACKET;
+
+  //***
+  data_packet.context = lq_it->context;
 
   int rq_index = L1D_bus.lower_level->add_rq(&data_packet);
 
@@ -1120,6 +1139,9 @@ void O3_CPU::retire_rob()
         data_packet.asid[1] = sq_it->asid[1];
         data_packet.packet_type = PACKET_TYPE::DPACKET;
         data_packet.pc = sq_it->ip;
+
+        //***
+        data_packet.context = sq_it->context;
 
         auto result = L1D_bus.lower_level->add_wq(&data_packet);
         if (result != -2) {
