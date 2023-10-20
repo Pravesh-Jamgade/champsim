@@ -83,7 +83,7 @@ void CACHE::post_write_success(PACKET& pkt, WRITE_TYPE write, int set, int way, 
     bool epoc_end = ooo_cpu[pkt.cpu]->test_epoc();
 
     if(epoc_end){
-      ipredictor->epoc_end_judgement_day(ooo_cpu[pkt.cpu]->get_current_cycle());
+      ipredictor->epoc_end_judgement_day(current_cycle);
     }
     else {
       ipredictor->insert(pkt);
@@ -111,9 +111,9 @@ void CACHE::handle_fill()
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
       return;
 
-    //***
-    if(fill_mshr->context != '0')
-    {std::cout << "[FILL] " << fill_mshr->context << '\n';}
+    // //***
+    // if(fill_mshr->context != '0')
+    // {std::cout << "[FILL] " << fill_mshr->context << '\n';}
 
     // find victim
     uint32_t set = get_set(fill_mshr->address);
@@ -178,11 +178,11 @@ void CACHE::handle_writeback()
     // handle the oldest entry
     PACKET& handle_pkt = WQ.front();
 
-    //***
-    if(handle_pkt.context != '0')
-    {
-      std::cout << "[WB] " << handle_pkt.context << '\n';
-    }
+    // //***
+    // if(handle_pkt.context != '0')
+    // {
+    //   std::cout << "[WB] " << handle_pkt.context << '\n';
+    // }
     
     // access cache
     uint32_t set = get_set(handle_pkt.address);
@@ -225,8 +225,8 @@ void CACHE::handle_writeback()
       //***
       post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way, true);
 
-      // // track pc
-      // fill_block.tracking_pc.push_back(handle_pkt.pc);
+      // track pc
+      fill_block.tracking_pc.push_back(handle_pkt.ip);
 
     } else // MISS
     {
@@ -270,11 +270,11 @@ void CACHE::handle_read()
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
 
-    //***
-    if (handle_pkt.context != '0' )
-    {
-      std::cout << "[RD] " << handle_pkt.context << '\n';
-    }
+    // //***
+    // if (handle_pkt.context != '0' )
+    // {
+    //   std::cout << "[RD] " << handle_pkt.context << '\n';
+    // }
     
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
@@ -289,7 +289,7 @@ void CACHE::handle_read()
       post_read_success(set, way, true);
 
       // track pc
-      block[set * NUM_WAY + way].tracking_pc.push_back(handle_pkt.pc);
+      block[set * NUM_WAY + way].tracking_pc.push_back(handle_pkt.ip);
 
     } else {
       bool success = readlike_miss(handle_pkt);
@@ -508,15 +508,15 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       pf_fill++;
 
 
-    if(is_llc && warmup_complete[handle_pkt.cpu])
+    if(is_llc)
     {
       // reset for new placed block
       fill_block.temp_writes = 1;
-      // info->func_add_write(handle_pkt.pc, 0, handle_pkt.type);
-      // info->func_add_write(handle_pkt.address >> LOG2_PAGE_SIZE, 0, handle_pkt.type);
+      info->func_add_write(handle_pkt.pc, 0, handle_pkt.type);
+      info->func_add_write(handle_pkt.address >> LOG2_PAGE_SIZE, 1, handle_pkt.type);
 
       // // TODO: we can also track whether block evicted are dirty (writeback) or not (drop)
-      // info->func_track_bag_of_pc(fill_block.tracking_pc);
+      info->func_track_bag_of_pc(fill_block.tracking_pc);
       fill_block.tracking_pc = vector<IntPtr>();
     }
 
@@ -534,7 +534,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.packet_type = handle_pkt.packet_type;
     fill_block.packet_life = PACKET_LIFE::DEAD;
 
-    fill_block.tracking_pc.push_back(handle_pkt.pc);
+    fill_block.tracking_pc.push_back(handle_pkt.ip);
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
@@ -558,6 +558,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 void CACHE::operate()
 {
+  if(is_llc && cacheEpocManager->tick(current_cycle))
+  {
+    info->func_track_write(current_cycle);
+  }
+
   operate_writes();
   operate_reads();
 

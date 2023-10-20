@@ -445,12 +445,6 @@ int main(int argc, char** argv)
 
     for (std::size_t i = 0; i < ooo_cpu.size(); ++i) {
 
-      // **
-      if(ooo_cpu[i]->test_epoc())
-      {
-        llc->info->func_track_write(ooo_cpu[i]->current_cycle);
-      }
-
       // read from trace
       while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
         ooo_cpu[i]->init_instruction(traces[i]->get());
@@ -628,5 +622,7 @@ int main(int argc, char** argv)
     cpu->cpu_stat->print_heartbeats();
   }
 
+  llc->info->func_print();
+  
   return 0;
 }

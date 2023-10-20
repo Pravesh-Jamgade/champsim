@@ -17,6 +17,10 @@ class Meta
 
     // collection of bag of follow-up PC
     vector<vector<IntPtr>> corpus_of_pc;
+
+    // duplicates in corpus
+    int duplicate = 0;
+
     // curr bag
     int ptr = 0;
 
@@ -26,7 +30,14 @@ class Meta
 
     void add_followup_pc(vector<IntPtr> all_pc)
     {
-        corpus_of_pc.push_back(all_pc);
+        for(auto vec: corpus_of_pc)
+        {
+            if( ! std::equal(vec.begin(), vec.end(), all_pc.begin(), all_pc.end()))
+            {
+                corpus_of_pc.push_back(all_pc);
+            }
+            else duplicate++;
+        }
     }
 
     void add_type_write(int type)
@@ -68,6 +79,7 @@ class Info
         }
     }
 
+    /*track cummulative writes at the end of epoc*/
     void func_track_write(IntPtr cycle)
     {
         for(auto e: pc_write)
@@ -81,11 +93,18 @@ class Info
         }
     }
 
+    /*chain of PC occured on cache block before eviction*/
     void func_track_bag_of_pc(vector<IntPtr> bag_pc)
     {
+        if(bag_pc.size()<=1) 
+        {
+            std::cout << "[LESS]: " << bag_pc.size();
+            return;
+        }
         pc_write[bag_pc[0]].add_followup_pc(bag_pc);
     }
 
+    /*print all karma*/
     void func_print()
     {
         string s = "pc_write.log";
@@ -108,7 +127,7 @@ class Info
                 c << e.first << "," << f.first << "," << f.second << '\n';
             }
 
-            d << e.first << ":";
+            d << e.first << ",";
             for(auto g: e.second.ccw)
             {
                 d << g << ",";
@@ -142,7 +161,7 @@ class Info
                 c << e.first << "," << f.first << "," << f.second << '\n';
             }
 
-            d << e.first << ":";
+            d << e.first << ",";
             for(auto g: e.second.ccw)
             {
                 d << g << ",";
@@ -151,6 +170,25 @@ class Info
         }
 
         b << "unique page," << page_write.size() << '\n';
+
+
+        // pc chain
+        s = "pc_chain.log";
+        fstream q = Log::get_file_stream(s);
+        
+        for(auto pc: pc_write)
+        {
+            for(auto chain: pc.second.corpus_of_pc)
+            {
+                q << "for:" << pc.first << ',';
+                for(auto ele: chain)
+                {
+                    q << ele << ',';
+                }
+                q << '\n';
+            }
+        }
+        q.close();
     }
 
 

@@ -74,8 +74,8 @@ struct ooo_model_instr {
     asid[0] = cpu;
     asid[1] = cpu;
 
-    //***
-    context = instr.context;
+    // //***
+    // context = instr.context;
   }
 
   ooo_model_instr(uint8_t cpu, cloudsuite_instr instr)
@@ -91,8 +91,8 @@ struct ooo_model_instr {
 
     std::copy(std::begin(instr.asid), std::begin(instr.asid), std::begin(this->asid));
 
-    //***
-    context = instr.context;
+    // //***
+    // context = instr.context;
   }
 };
 

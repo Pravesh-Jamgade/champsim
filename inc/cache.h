@@ -135,6 +135,7 @@ public:
   IPredictor* ipredictor;
   CacheStat* cacheStat;
   Info* info;
+  EpocManager* cacheEpocManager;
     
   void initalize_extras(IPredictor* predictor){
     ipredictor = predictor;
@@ -254,12 +255,12 @@ public:
   {
     cacheStat = nullptr;
     ipredictor = nullptr;
-    info = nullptr;
     if(NAME.find("LLC")!=string::npos)
     {
       is_llc = true;
       std::cout << fill_lat << "," << rd_latency << "," << wr_latency << '\n';
       info = new Info();
+      cacheEpocManager = new EpocManager(current_cycle);
     }
   }
 };
