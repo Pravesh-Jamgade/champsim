@@ -464,7 +464,7 @@ VOID Fini(INT32 code, VOID *v)
         output_file_closed = true;
     }
 
-    std::cout << countA << "," << countB << "," << countC << '\n';
+    std::cout <<std::dec<< "Total: "<< countA << "," << countB << "," << countC << '\n';
 }
 
 /*!
