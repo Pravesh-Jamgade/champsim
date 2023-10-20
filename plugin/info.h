@@ -100,7 +100,10 @@ class Info
         {
             return;
         }
-        pc_write[bag_pc[0]].add_followup_pc(bag_pc);
+        else
+        {
+            pc_write[bag_pc[0]].add_followup_pc(bag_pc);
+        }
     }
 
     /*print all karma*/
