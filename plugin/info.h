@@ -98,7 +98,6 @@ class Info
     {
         if(bag_pc.size()<=1) 
         {
-            std::cout << "[LESS]: " << bag_pc.size();
             return;
         }
         pc_write[bag_pc[0]].add_followup_pc(bag_pc);
