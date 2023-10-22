@@ -33,6 +33,15 @@ public:
 
   // tracking all pc
   std::vector<IntPtr> tracking_pc;
+
+  void test()
+  {
+    // for(auto e: tracking_pc)
+    // {
+    //   std::cout << e << ",";
+    // }
+    // std::cout << '\n';
+  }
 };
 
 class MemoryRequestConsumer

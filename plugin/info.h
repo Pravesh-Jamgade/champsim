@@ -32,12 +32,13 @@ class Meta
     {
         for(auto vec: corpus_of_pc)
         {
-            if( ! std::equal(vec.begin(), vec.end(), all_pc.begin(), all_pc.end()))
-            {
-                corpus_of_pc.push_back(all_pc);
+            if(std::equal(vec.begin(), vec.end(), all_pc.begin(), all_pc.end()))
+            {   
+                duplicate++;
+                return;
             }
-            else duplicate++;
         }
+        corpus_of_pc.push_back(all_pc);
     }
 
     void add_type_write(int type)
@@ -102,7 +103,16 @@ class Info
         }
         else
         {
-            pc_write[bag_pc[0]].add_followup_pc(bag_pc);
+            auto foundPC = pc_write.find(bag_pc[0]);
+            if(foundPC != pc_write.end())
+            {
+                foundPC->second.add_followup_pc(bag_pc);
+            }
+            else
+            {
+                printf("PC not seen before!!!!!!");
+                exit(-1);
+            }
         }
     }
 
@@ -182,12 +192,10 @@ class Info
         {
             for(auto chain: pc.second.corpus_of_pc)
             {
-                q << "for:" << pc.first << ',';
                 for(auto ele: chain)
                 {
-                    q << ele << ',';
+                    q << std::hex << pc.first << ',' << ele << '\n';
                 }
-                q << '\n';
             }
         }
         q.close();

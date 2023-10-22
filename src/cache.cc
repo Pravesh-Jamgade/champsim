@@ -226,7 +226,7 @@ void CACHE::handle_writeback()
       post_write_success(handle_pkt, WRITE_TYPE::WRITE_BACK, set, way, true);
 
       // track pc
-      fill_block.tracking_pc.push_back(handle_pkt.ip);
+      fill_block.tracking_pc.push_back(handle_pkt.pc);
 
     } else // MISS
     {
@@ -289,7 +289,7 @@ void CACHE::handle_read()
       post_read_success(set, way, true);
 
       // track pc
-      block[set * NUM_WAY + way].tracking_pc.push_back(handle_pkt.ip);
+      block[set * NUM_WAY + way].tracking_pc.push_back(handle_pkt.pc);
 
     } else {
       bool success = readlike_miss(handle_pkt);
@@ -534,7 +534,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.packet_type = handle_pkt.packet_type;
     fill_block.packet_life = PACKET_LIFE::DEAD;
 
-    fill_block.tracking_pc.push_back(handle_pkt.ip);
+    fill_block.tracking_pc.push_back(handle_pkt.pc);
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
