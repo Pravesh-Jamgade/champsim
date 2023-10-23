@@ -48,8 +48,8 @@ trace_instr_format_t curr_instr;
 unsigned long long start[4]={0}, end[4]={0};
 bool found[4]={0};
 char  A='1', B='2', C='3';
-int printA=50, printB=50, printC=50;
-int countA=0, countB=0, countC=0;
+int printA, printB, printC;
+int countA, countB, countC;
 
 /* ===================================================================== */
 // Command line switches
@@ -334,10 +334,12 @@ void addMagic(unsigned long long r)
       exit(-1);
     }
 
-    if(printA--)
+    if(printA>0){
         std::cout << std::hex << "[MAGIC "<< A <<"]" << start[1] << "," << r << "," << end[1] << "," << curr_instr.context << "," << '\n';
+        printA = printA -1;
+    }
     // sleep(1);
-    countA++;
+    countA+=1;
   }
 
   else if(start[2]<=r && r<= end[2])
@@ -349,10 +351,13 @@ void addMagic(unsigned long long r)
       exit(-1);
     }
 
-    if(printB--)
+    if(printB>0)
+    {
         std::cout << std::hex << "[MAGIC "<< B <<"]" << start[2] << "," << r << "," << end[2] << "," << curr_instr.context << "," << '\n';
+        printB = printB - 1;
+    }
     // sleep(1);
-    countB++;
+    countB+=1;
   }
 
   else if(start[3]<=r && r<= end[3])
@@ -364,11 +369,13 @@ void addMagic(unsigned long long r)
       exit(-1);
     }
     
-    if(printC--)
+    if(printC>0)
+    {
         std::cout << std::hex << "[MAGIC "<< C <<"]" << start[3] << "," << r << "," << end[3] << "," << curr_instr.context << "," << '\n';
-    
+        printC = printC - 1;
+    }
     // sleep(1);
-    countC++;
+    countC+=1;
   }
   
 }
@@ -476,6 +483,10 @@ VOID Fini(INT32 code, VOID *v)
  */
 int main(int argc, char *argv[])
 {
+
+    printA=printB=printC=10;
+    countA=countB=countC=0;
+
     // Initialize PIN library. Print help message if -h(elp) is specified
     // in the command line or the command line is invalid 
     if( PIN_Init(argc,argv) )
