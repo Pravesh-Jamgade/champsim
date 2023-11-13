@@ -141,8 +141,8 @@ void EndInstruction()
         }
         else
         {
-            std::cout << "A: "<< countA << ", B:" << countB << ", C:" << countC << '\n';
-            std::cout << "COUNT: " << instrCount << ", LOADS: " << total_loads << ", STORES: " << total_stores << '\n';  
+            std::cout << std::dec << "A: "<< countA << ", B:" << countB << ", C:" << countC << '\n';
+            std::cout << std::dec << "COUNT: " << instrCount << ", LOADS: " << total_loads << ", STORES: " << total_stores << '\n';  
             tracing_on = false;
             // close down the file, we're done tracing
             if(!output_file_closed)
@@ -480,8 +480,8 @@ VOID Fini(INT32 code, VOID *v)
         output_file_closed = true;
     }
 
-    std::cout << "A: "<< countA << ", B:" << countB << ", C:" << countC << '\n';
-    std::cout << "COUNT: " << instrCount << ", LOADS: " << total_loads << ", STORES: " << total_stores << '\n';  
+    std::cout << std::dec << "A: "<< countA << ", B:" << countB << ", C:" << countC << '\n';
+    std::cout << std::dec << "COUNT: " << instrCount << ", LOADS: " << total_loads << ", STORES: " << total_stores << '\n';  
 }
 
 /*!
