@@ -34,6 +34,8 @@ public:
   // tracking all pc
   std::vector<IntPtr> tracking_pc;
 
+  IntPtr current_cycle = 0;
+
   void test()
   {
     // for(auto e: tracking_pc)

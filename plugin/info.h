@@ -10,7 +10,7 @@ using namespace std;
 class Meta
 {
     public:
-    IntPtr write_count;
+    IntPtr write_count=0;
     map<IntPtr, IntPtr> write_type;
     // cummulative count of writes of pc, at an cycle number
     vector<IntPtr> ccw;
@@ -45,7 +45,7 @@ class Meta
     {
         if(write_type.find(type)==write_type.end())
         {    
-            write_type[type] = 1;
+            write_type[type] = 0;
         }
         write_type[type]++;
     }
@@ -61,9 +61,11 @@ class Info
     map<IntPtr, Meta> pc_write;
     map<IntPtr, Meta> page_write;
 
-    /*key -> pc/page and what -> 0/1 */
-    void func_add_write(IntPtr key, bool what, int packet_type)
+    /*key -> pc/page and what -> 0/1, track->sample set or not */
+    void func_add_write(IntPtr key, bool what, int packet_type, bool track)
     {
+        if(track==0) return;
+
         if(what == 0)
         {
             if(pc_write.find(key)==pc_write.end()){ pc_write[key].write_count = 1;}
@@ -95,8 +97,10 @@ class Info
     }
 
     /*chain of PC occured on cache block before eviction*/
-    void func_track_bag_of_pc(vector<IntPtr> bag_pc)
+    void func_track_bag_of_pc(vector<IntPtr> bag_pc, bool track)
     {
+        if(track==0) return;
+
         if(bag_pc.size()<=1) 
         {
             return;
@@ -190,13 +194,15 @@ class Info
         
         for(auto pc: pc_write)
         {
+            q << std::hex << pc.first << ',';
             for(auto chain: pc.second.corpus_of_pc)
             {
                 for(auto ele: chain)
                 {
-                    q << std::hex << pc.first << ',' << ele << '\n';
+                    q << std::hex << ele << ',';
                 }
             }
+            q << '\n';
         }
         q.close();
     }

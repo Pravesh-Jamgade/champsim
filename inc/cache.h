@@ -18,6 +18,7 @@
 #include <math.h>
 
 #include "../plugin/info.h"
+#include "../plugin/OfflineEdgeLifetime.h"
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -136,7 +137,11 @@ public:
   CacheStat* cacheStat;
   Info* info;
   EpocManager* cacheEpocManager;
-    
+  OfflineEdgeLifetime* offline;
+
+  int random_set[10000] = {0};
+  int rnd_sets = 0;
+
   void initalize_extras(IPredictor* predictor){
     ipredictor = predictor;
     cacheStat = new CacheStat();
@@ -261,6 +266,15 @@ public:
       std::cout << fill_lat << "," << rd_latency << "," << wr_latency << '\n';
       info = new Info();
       cacheEpocManager = new EpocManager(current_cycle);
+      rnd_sets = NUM_SET/4;
+
+      for(int i=0; i< rnd_sets; i++)
+      {
+        int set_no = rand()%rnd_sets;
+        random_set[set_no] = 1;
+      }
+
+      offline = new Offline();
     }
   }
 };

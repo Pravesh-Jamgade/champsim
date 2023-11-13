@@ -623,6 +623,7 @@ int main(int argc, char** argv)
   }
 
   llc->info->func_print();
+  llc->offline->fun_output();
   
   return 0;
 }

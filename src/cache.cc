@@ -228,6 +228,9 @@ void CACHE::handle_writeback()
       // track pc
       fill_block.tracking_pc.push_back(handle_pkt.pc);
 
+      if(is_llc)
+        offline->func_check(fill_block.tracking_pc, current_cycle);
+
     } else // MISS
     {
       bool success;
@@ -290,6 +293,9 @@ void CACHE::handle_read()
 
       // track pc
       block[set * NUM_WAY + way].tracking_pc.push_back(handle_pkt.pc);
+
+      if(is_llc)
+        offline->func_check(block[set * NUM_WAY + way].tracking_pc, current_cycle);
 
     } else {
       bool success = readlike_miss(handle_pkt);
@@ -512,11 +518,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     {
       // reset for new placed block
       fill_block.temp_writes = 1;
-      info->func_add_write(handle_pkt.pc, 0, handle_pkt.type);
-      info->func_add_write(handle_pkt.address >> LOG2_PAGE_SIZE, 1, handle_pkt.type);
+      info->func_add_write(handle_pkt.pc, 0, handle_pkt.type, random_set[set]);
+      info->func_add_write(handle_pkt.address >> LOG2_PAGE_SIZE, 1, handle_pkt.type, random_set[set]);
 
       // // TODO: we can also track whether block evicted are dirty (writeback) or not (drop)
-      info->func_track_bag_of_pc(fill_block.tracking_pc);
+      info->func_track_bag_of_pc(fill_block.tracking_pc, random_set[set]);
       fill_block.tracking_pc = vector<IntPtr>();
     }
 
