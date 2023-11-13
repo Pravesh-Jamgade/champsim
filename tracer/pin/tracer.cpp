@@ -51,6 +51,9 @@ char  A='1', B='2', C='3';
 int printA, printB, printC;
 int countA, countB, countC;
 
+UINT64 total_loads = 0;
+UINT64 total_stores = 0;
+
 /* ===================================================================== */
 // Command line switches
 /* ===================================================================== */
@@ -138,6 +141,8 @@ void EndInstruction()
         }
         else
         {
+
+            std::cout << "COUNT: " << instrCount << ", LOADS: " << total_loads << ", STORES: " << total_stores << '\n';  
             tracing_on = false;
             // close down the file, we're done tracing
             if(!output_file_closed)
@@ -255,6 +260,8 @@ void MemoryRead(VOID* addr, UINT32 index, UINT32 read_size)
 {
     if(!tracing_on) return;
 
+    total_loads++;
+
     //printf("0x%llx,%u ", (unsigned long long int)addr, read_size);
 
     // check to see if this memory read location is already in the list
@@ -283,6 +290,8 @@ void MemoryRead(VOID* addr, UINT32 index, UINT32 read_size)
 void MemoryWrite(VOID* addr, UINT32 index)
 {
     if(!tracing_on) return;
+
+    total_stores++;
 
     //printf("(0x%llx) ", (unsigned long long int) addr);
 
