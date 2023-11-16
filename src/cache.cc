@@ -214,6 +214,11 @@ void CACHE::handle_writeback()
 
     if (way < NUM_WAY) // HIT
     {
+      //***
+      if(handle_pkt.packet_type == PACKET_TYPE::DPACKET){
+        insStat->func_increase_by_type(handle_pkt.context, 1);
+      }
+
       impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
 
       // COLLECT STATS
@@ -285,6 +290,10 @@ void CACHE::handle_read()
 
     if (way < NUM_WAY) // HIT
     {
+      //***
+      if(handle_pkt.packet_type == PACKET_TYPE::DPACKET){
+        insStat->func_increase_by_type(handle_pkt.context, 0);
+      }
       readlike_hit(set, way, handle_pkt);
       post_read_success(set, way, true);
 
@@ -536,23 +545,28 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     fill_block.tracking_pc.push_back(handle_pkt.pc);
 
-    switch (handle_pkt.type)
-    {
-      case WRITEBACK:
-        cout << "wb\n"; break;
-      case RFO:
-        cout << "rfo\n"; break;
-      case LOAD:
-        cout << "ld\n"; break;
-      case FILL_L2:
-        cout << "fl2\n"; break;
-      case FILL_LLC:
-        cout<< "fl3\n"; break;
+    //***
+  if(handle_pkt.packet_type == PACKET_TYPE::DPACKET){
+    insStat->func_increase_by_type(handle_pkt.context, 2);
+  }
+
+    // switch (handle_pkt.type)
+    // {
+    //   case WRITEBACK:
+    //     cout << "wb\n"; break;
+    //   case RFO:
+    //     cout << "rfo\n"; break;
+    //   case LOAD:
+    //     cout << "ld\n"; break;
+    //   case FILL_L2:
+    //     cout << "fl2\n"; break;
+    //   case FILL_LLC:
+    //     cout<< "fl3\n"; break;
       
-      default:
-        cout << handle_pkt.type << '\n';
-        break;
-    }
+    //   default:
+    //     cout << handle_pkt.type << '\n';
+    //     break;
+    // }
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
@@ -570,13 +584,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // COLLECT STATS
   sim_miss[handle_pkt.cpu][handle_pkt.type]++;
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
-
-  //***
-  if(handle_pkt.packet_type == PACKET_TYPE::DPACKET && handle_pkt.context <= 3){
-    if(handle_pkt.type == WRITEBACK)
-      insStat->func_increase_by_type(handle_pkt.context, 1);
-  }
-    
 
   return true;
 }

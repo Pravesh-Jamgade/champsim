@@ -12,7 +12,7 @@ class InsStat
     public:
 
     int CONTEXT = 4;
-    int ACCESS_TYPE = 4;
+    int ACCESS_TYPE = 3;
 
     string name;
 
@@ -27,6 +27,11 @@ class InsStat
         for(int i=0; i< CONTEXT; i++)
         {
             context_based_accesses[i] = (IntPtr*)malloc(sizeof(IntPtr)*ACCESS_TYPE);
+
+            for(int j=0; j< ACCESS_TYPE; j++)
+            {
+                context_based_accesses[i][j] = 0;
+            }
         }
         this->name = name;
     }
@@ -35,13 +40,10 @@ class InsStat
     }
 
     
-    //
-    /**
-     * @brief increase load/store count by type. total as well
-     * 
-     * @param context index (1), edge (2), property (3)
-     * @param what load 0/rfo(store) 1/ prefetch(curr disabled) 2/ writeback 3/ fill = 0/1 
-     */
+    //  * @brief increase load/store count by type. total as well
+    //  * 
+    //  * @param context index (1), edge (2), property (3)
+    //  * @param what  ld hit 0, st hit 1, fillback (ld miss/ st miss) 2
     void func_increase_by_type(int context, int what)
     {
         ldst[what]+=1;
