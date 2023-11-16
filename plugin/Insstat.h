@@ -41,21 +41,11 @@ class InsStat
     //  * 
     //  * @param context index (1), edge (2), property (3)
     //  * @param what  ld hit 0, st hit 1, fillback (ld miss/ st miss) 2
-    void func_increase_by_type(int context, int what)
+    void func_increase_by_type(char context, int what)
     {
-        if(what >= ACCESS_TYPE || context >= CONTEXT)
-        {
-            printf("Not allowd ctx=%d , act=%d\n", context, what);
-            exit(0);
-        }
-
-        if(context >= CONTEXT)
-        {
-            return;
-        }
-
-        ldst[what]+=1;
-        context_based_accesses[context][what] += 1;
+        int index = context - '0';
+        ldst[index]+=1;
+        context_based_accesses[context][index] += 1;
     }
 
 
