@@ -43,11 +43,17 @@ class InsStat
     //  * @param what  ld hit 0, st hit 1, fillback (ld miss/ st miss) 2
     void func_increase_by_type(int context, int what)
     {
-        if(context >= CONTEXT || what >= ACCESS_TYPE)
+        if(what >= ACCESS_TYPE || context >= CONTEXT)
         {
-            printf("Not allowd\n");
+            printf("Not allowd ctx=%d , act=%d\n", context, what);
             exit(0);
         }
+
+        if(context >= CONTEXT)
+        {
+            return;
+        }
+
         ldst[what]+=1;
         context_based_accesses[context][what] += 1;
     }
