@@ -1,11 +1,12 @@
 CC := gcc -O3
 CXX := g++ -O3
 CFLAGS := -Wall -std=gnu99
-CXXFLAGS := -Wall -std=c++17
+CXXFLAGS := -Wall $(EXTRA_FLAG) -std=c++17
 CPPFLAGS :=  -Iinc -MMD -MP
 LDFLAGS := 
 LDLIBS := 
 TAG := 
+EXTRA_FLAG := 
 
 .phony: all clean
 
@@ -22,18 +23,20 @@ clean:
 
 	 find replacement/srrip -name \*.o -delete
 	 find replacement/srrip -name \*.d -delete
-	 find prefetcher/no -name \*.o -delete
-	 find prefetcher/no -name \*.d -delete
+	 find prefetcher/next_line -name \*.o -delete
+	 find prefetcher/next_line -name \*.d -delete
 	 find replacement/lru -name \*.o -delete
 	 find replacement/lru -name \*.d -delete
 	 find prefetcher/no_instr -name \*.o -delete
 	 find prefetcher/no_instr -name \*.d -delete
+	 find prefetcher/no -name \*.o -delete
+	 find prefetcher/no -name \*.d -delete
 	 find branch/bimodal -name \*.o -delete
 	 find branch/bimodal -name \*.d -delete
 	 find btb/basic_btb -name \*.o -delete
 	 find btb/basic_btb -name \*.d -delete
 
-bin/champsim$(TAG): $(patsubst %.cc,%.o,$(wildcard src/*.cc)) obj/repl_rreplacementDsrrip.a obj/pref_pprefetcherDno.a obj/repl_rreplacementDlru.a obj/pref_pprefetcherDno_instr.a obj/bpred_bbranchDbimodal.a obj/btb_bbtbDbasic_btb.a
+bin/champsim$(TAG): $(patsubst %.cc,%.o,$(wildcard src/*.cc)) obj/repl_rreplacementDsrrip.a obj/pref_pprefetcherDnext_line.a obj/repl_rreplacementDlru.a obj/pref_pprefetcherDno_instr.a obj/pref_pprefetcherDno.a obj/bpred_bbranchDbimodal.a obj/btb_bbtbDbasic_btb.a
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 replacement/srrip/%.o: CFLAGS += -Ireplacement/srrip
@@ -43,10 +46,10 @@ obj/repl_rreplacementDsrrip.a: $(patsubst %.cc,%.o,$(wildcard replacement/srrip/
 	@mkdir -p $(dir $@)
 	ar -rcs $@ $^
 
-prefetcher/no/%.o: CFLAGS += -Iprefetcher/no
-prefetcher/no/%.o: CXXFLAGS += -Iprefetcher/no
-prefetcher/no/%.o: CXXFLAGS +=  -Dprefetcher_initialize=pref_pprefetcherDno_initialize -Dprefetcher_cache_operate=pref_pprefetcherDno_cache_operate -Dprefetcher_cache_fill=pref_pprefetcherDno_cache_fill -Dprefetcher_cycle_operate=pref_pprefetcherDno_cycle_operate -Dprefetcher_final_stats=pref_pprefetcherDno_final_stats -Dl1d_prefetcher_initialize=pref_pprefetcherDno_initialize -Dl2c_prefetcher_initialize=pref_pprefetcherDno_initialize -Dllc_prefetcher_initialize=pref_pprefetcherDno_initialize -Dl1d_prefetcher_operate=pref_pprefetcherDno_cache_operate -Dl2c_prefetcher_operate=pref_pprefetcherDno_cache_operate -Dllc_prefetcher_operate=pref_pprefetcherDno_cache_operate -Dl1d_prefetcher_cache_fill=pref_pprefetcherDno_cache_fill -Dl2c_prefetcher_cache_fill=pref_pprefetcherDno_cache_fill -Dllc_prefetcher_cache_fill=pref_pprefetcherDno_cache_fill -Dl1d_prefetcher_final_stats=pref_pprefetcherDno_final_stats -Dl2c_prefetcher_final_stats=pref_pprefetcherDno_final_stats -Dllc_prefetcher_final_stats=pref_pprefetcherDno_final_stats
-obj/pref_pprefetcherDno.a: $(patsubst %.cc,%.o,$(wildcard prefetcher/no/*.cc)) $(patsubst %.c,%.o,$(wildcard prefetcher/no/*.c))
+prefetcher/next_line/%.o: CFLAGS += -Iprefetcher/next_line
+prefetcher/next_line/%.o: CXXFLAGS += -Iprefetcher/next_line
+prefetcher/next_line/%.o: CXXFLAGS +=  -Dprefetcher_initialize=pref_pprefetcherDnext_line_initialize -Dprefetcher_cache_operate=pref_pprefetcherDnext_line_cache_operate -Dprefetcher_cache_fill=pref_pprefetcherDnext_line_cache_fill -Dprefetcher_cycle_operate=pref_pprefetcherDnext_line_cycle_operate -Dprefetcher_final_stats=pref_pprefetcherDnext_line_final_stats -Dl1d_prefetcher_initialize=pref_pprefetcherDnext_line_initialize -Dl2c_prefetcher_initialize=pref_pprefetcherDnext_line_initialize -Dllc_prefetcher_initialize=pref_pprefetcherDnext_line_initialize -Dl1d_prefetcher_operate=pref_pprefetcherDnext_line_cache_operate -Dl2c_prefetcher_operate=pref_pprefetcherDnext_line_cache_operate -Dllc_prefetcher_operate=pref_pprefetcherDnext_line_cache_operate -Dl1d_prefetcher_cache_fill=pref_pprefetcherDnext_line_cache_fill -Dl2c_prefetcher_cache_fill=pref_pprefetcherDnext_line_cache_fill -Dllc_prefetcher_cache_fill=pref_pprefetcherDnext_line_cache_fill -Dl1d_prefetcher_final_stats=pref_pprefetcherDnext_line_final_stats -Dl2c_prefetcher_final_stats=pref_pprefetcherDnext_line_final_stats -Dllc_prefetcher_final_stats=pref_pprefetcherDnext_line_final_stats
+obj/pref_pprefetcherDnext_line.a: $(patsubst %.cc,%.o,$(wildcard prefetcher/next_line/*.cc)) $(patsubst %.c,%.o,$(wildcard prefetcher/next_line/*.c))
 	@mkdir -p $(dir $@)
 	ar -rcs $@ $^
 
@@ -61,6 +64,13 @@ prefetcher/no_instr/%.o: CFLAGS += -Iprefetcher/no_instr
 prefetcher/no_instr/%.o: CXXFLAGS += -Iprefetcher/no_instr
 prefetcher/no_instr/%.o: CXXFLAGS +=  -Dprefetcher_initialize=pref_pprefetcherDno_instr_initialize -Dprefetcher_branch_operate=pref_pprefetcherDno_instr_branch_operate -Dprefetcher_cache_operate=pref_pprefetcherDno_instr_cache_operate -Dprefetcher_cycle_operate=pref_pprefetcherDno_instr_cycle_operate -Dprefetcher_cache_fill=pref_pprefetcherDno_instr_cache_fill -Dprefetcher_final_stats=pref_pprefetcherDno_instr_final_stats -Dl1i_prefetcher_initialize=pref_pprefetcherDno_instr_initialize -Dl1i_prefetcher_branch_operate=pref_pprefetcherDno_instr_branch_operate -Dl1i_prefetcher_cache_operate=pref_pprefetcherDno_instr_cache_operate -Dl1i_prefetcher_cycle_operate=pref_pprefetcherDno_instr_cycle_operate -Dl1i_prefetcher_cache_fill=pref_pprefetcherDno_instr_cache_fill -Dl1i_prefetcher_final_stats=pref_pprefetcherDno_instr_final_stats
 obj/pref_pprefetcherDno_instr.a: $(patsubst %.cc,%.o,$(wildcard prefetcher/no_instr/*.cc)) $(patsubst %.c,%.o,$(wildcard prefetcher/no_instr/*.c))
+	@mkdir -p $(dir $@)
+	ar -rcs $@ $^
+
+prefetcher/no/%.o: CFLAGS += -Iprefetcher/no
+prefetcher/no/%.o: CXXFLAGS += -Iprefetcher/no
+prefetcher/no/%.o: CXXFLAGS +=  -Dprefetcher_initialize=pref_pprefetcherDno_initialize -Dprefetcher_cache_operate=pref_pprefetcherDno_cache_operate -Dprefetcher_cache_fill=pref_pprefetcherDno_cache_fill -Dprefetcher_cycle_operate=pref_pprefetcherDno_cycle_operate -Dprefetcher_final_stats=pref_pprefetcherDno_final_stats -Dl1d_prefetcher_initialize=pref_pprefetcherDno_initialize -Dl2c_prefetcher_initialize=pref_pprefetcherDno_initialize -Dllc_prefetcher_initialize=pref_pprefetcherDno_initialize -Dl1d_prefetcher_operate=pref_pprefetcherDno_cache_operate -Dl2c_prefetcher_operate=pref_pprefetcherDno_cache_operate -Dllc_prefetcher_operate=pref_pprefetcherDno_cache_operate -Dl1d_prefetcher_cache_fill=pref_pprefetcherDno_cache_fill -Dl2c_prefetcher_cache_fill=pref_pprefetcherDno_cache_fill -Dllc_prefetcher_cache_fill=pref_pprefetcherDno_cache_fill -Dl1d_prefetcher_final_stats=pref_pprefetcherDno_final_stats -Dl2c_prefetcher_final_stats=pref_pprefetcherDno_final_stats -Dllc_prefetcher_final_stats=pref_pprefetcherDno_final_stats
+obj/pref_pprefetcherDno.a: $(patsubst %.cc,%.o,$(wildcard prefetcher/no/*.cc)) $(patsubst %.c,%.o,$(wildcard prefetcher/no/*.c))
 	@mkdir -p $(dir $@)
 	ar -rcs $@ $^
 
@@ -80,9 +90,10 @@ obj/btb_bbtbDbasic_btb.a: $(patsubst %.cc,%.o,$(wildcard btb/basic_btb/*.cc)) $(
 
 -include $(wildcard src/*.d)
 -include $(wildcard replacement/srrip/*.d)
--include $(wildcard prefetcher/no/*.d)
+-include $(wildcard prefetcher/next_line/*.d)
 -include $(wildcard replacement/lru/*.d)
 -include $(wildcard prefetcher/no_instr/*.d)
+-include $(wildcard prefetcher/no/*.d)
 -include $(wildcard branch/bimodal/*.d)
 -include $(wildcard btb/basic_btb/*.d)
 
