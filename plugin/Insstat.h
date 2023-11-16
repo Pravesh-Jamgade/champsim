@@ -6,13 +6,13 @@
 using namespace std;
 
 typedef uint64_t IntPtr;
-
+#define CONTEXT 4
+#define ACCESS_TYPE 3
 class InsStat
 {
     public:
 
-    int CONTEXT = 4;
-    int ACCESS_TYPE = 3;
+    
 
     string name;
 
@@ -20,14 +20,11 @@ class InsStat
     IntPtr ldst[2]={0};
 
     /*count context (1,2,3) based load/store accesses*/
-    IntPtr** context_based_accesses;
+    IntPtr context_based_accesses[CONTEXT][ACCESS_TYPE];
 
     InsStat(string name){
-        context_based_accesses = (IntPtr**)malloc(sizeof(IntPtr)*CONTEXT);
         for(int i=0; i< CONTEXT; i++)
         {
-            context_based_accesses[i] = (IntPtr*)malloc(sizeof(IntPtr)*ACCESS_TYPE);
-
             for(int j=0; j< ACCESS_TYPE; j++)
             {
                 context_based_accesses[i][j] = 0;
