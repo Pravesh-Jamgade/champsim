@@ -214,10 +214,10 @@ void CACHE::handle_writeback()
 
     if (way < NUM_WAY) // HIT
     {
-      //***
-      if(handle_pkt.packet_type == PACKET_TYPE::DPACKET){
-        insStat->func_increase_by_type(handle_pkt.context, 1);
-      }
+      // //***
+      // if(handle_pkt.packet_type == PACKET_TYPE::DPACKET){
+      //   insStat->func_increase_by_type(handle_pkt.context, 1);
+      // }
 
       impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
 
@@ -290,10 +290,10 @@ void CACHE::handle_read()
 
     if (way < NUM_WAY) // HIT
     {
-      //***
-      if(handle_pkt.packet_type == PACKET_TYPE::DPACKET){
-        insStat->func_increase_by_type(handle_pkt.context, 0);
-      }
+      // //***
+      // if(handle_pkt.packet_type == PACKET_TYPE::DPACKET){
+      //   insStat->func_increase_by_type(handle_pkt.context, 0);
+      // }
       readlike_hit(set, way, handle_pkt);
       post_read_success(set, way, true);
 
@@ -546,9 +546,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.tracking_pc.push_back(handle_pkt.pc);
 
     //***
-  if(handle_pkt.packet_type == PACKET_TYPE::DPACKET){
-    insStat->func_increase_by_type(handle_pkt.context, 2);
-  }
+  // if(handle_pkt.packet_type == PACKET_TYPE::DPACKET){
+  //   insStat->func_increase_by_type(handle_pkt.context, 2);
+  // }
 
     // switch (handle_pkt.type)
     // {
