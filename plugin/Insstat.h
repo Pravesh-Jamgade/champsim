@@ -17,7 +17,7 @@ class InsStat
     string name;
 
     /* count loads/stores inctructions*/
-    IntPtr ldst[2]={0};
+    IntPtr ldst[ACCESS_TYPE]={0};
 
     /*count context (1,2,3) based load/store accesses*/
     IntPtr context_based_accesses[CONTEXT][ACCESS_TYPE];
