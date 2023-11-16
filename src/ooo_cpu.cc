@@ -40,6 +40,7 @@ void O3_CPU::initialize_core()
   // BRANCH PREDICTOR & BTB
   impl_branch_predictor_initialize();
   impl_btb_initialize();
+  insStat = new InsStat(to_string(cpu));
 }
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr)
@@ -849,7 +850,7 @@ int O3_CPU::do_translate_store(std::vector<LSQ_ENTRY>::iterator sq_it)
 
 void O3_CPU::execute_store(std::vector<LSQ_ENTRY>::iterator sq_it)
 {
-  // insStat->func_increase_by_type(sq_it->context, 1);
+  insStat->func_increase_by_type(sq_it->context, 1);
 
   sq_it->fetched = COMPLETED;
   sq_it->event_cycle = current_cycle;
@@ -939,7 +940,7 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
 
   //***
   data_packet.context = lq_it->context;
-  // insStat->func_increase_by_type(data_packet.context, 0);
+  insStat->func_increase_by_type(data_packet.context, 0);
 
   int rq_index = L1D_bus.lower_level->add_rq(&data_packet);
 

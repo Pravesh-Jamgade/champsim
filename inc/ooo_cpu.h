@@ -171,7 +171,6 @@ public:
         EXEC_LATENCY(execute_latency), ITLB_bus(rob_size, itlb), DTLB_bus(rob_size, dtlb), L1I_bus(rob_size, l1i), L1D_bus(rob_size, l1d),
         bpred_type(bpred_type), btb_type(btb_type), ipref_type(ipref_type)
   {
-    insStat = new InsStat("cpu"+to_string(cpu));
   }
 };
 
