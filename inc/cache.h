@@ -18,6 +18,7 @@
 #include <math.h>
 
 #include "../plugin/info.h"
+#include "../plugin/Insstat.h"  
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -135,6 +136,7 @@ public:
   IPredictor* ipredictor;
   CacheStat* cacheStat;
   Info* info;
+  InsStat* insStat;
     
   void initalize_extras(IPredictor* predictor){
     ipredictor = predictor;
@@ -252,6 +254,7 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+    insStat = new InsStat(NAME);
     cacheStat = nullptr;
     ipredictor = nullptr;
     info = nullptr;

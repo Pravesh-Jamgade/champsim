@@ -112,8 +112,8 @@ void CACHE::handle_fill()
       return;
 
     //***
-    if(fill_mshr->context != '0')
-    {std::cout << "[FILL] " << fill_mshr->context << '\n';}
+    // if(fill_mshr->context != '0')
+    // {std::cout << "[FILL] " << fill_mshr->context << '\n';}
 
     // find victim
     uint32_t set = get_set(fill_mshr->address);
@@ -535,6 +535,24 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.packet_life = PACKET_LIFE::DEAD;
 
     fill_block.tracking_pc.push_back(handle_pkt.pc);
+
+    switch (handle_pkt.type)
+    {
+      case WRITEBACK:
+        cout << "wb\n"; break;
+      case RFO:
+        cout << "rfo\n"; break;
+      case LOAD:
+        cout << "ld\n"; break;
+      case FILL_L2:
+        cout << "fl2\n"; break;
+      case FILL_LLC:
+        cout<< "fl3\n"; break;
+      
+      default:
+        cout << handle_pkt.type << '\n';
+        break;
+    }
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
@@ -552,6 +570,13 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // COLLECT STATS
   sim_miss[handle_pkt.cpu][handle_pkt.type]++;
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
+
+  //***
+  if(handle_pkt.packet_type == PACKET_TYPE::DPACKET && handle_pkt.context <= 3){
+    if(handle_pkt.type == WRITEBACK)
+      insStat->func_increase_by_type(handle_pkt.context, 1);
+  }
+    
 
   return true;
 }
