@@ -274,7 +274,7 @@ public:
         random_set[set_no] = 1;
       }
 
-      offline = new Offline();
+      offline = new OfflineEdgeLifetime();
     }
   }
 };

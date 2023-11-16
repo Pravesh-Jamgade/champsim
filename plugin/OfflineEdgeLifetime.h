@@ -8,6 +8,13 @@
 
 using namespace std;
 
+
+class EdgeSrc
+{
+    public:
+    set<IntPtr> sources;
+};
+
 class OfflineEdgeLifetime
 {
     public:
@@ -16,15 +23,18 @@ class OfflineEdgeLifetime
 
     bool found_test_csv;
 
+
+    map<string, EdgeSrc> *edge_break;
+
     OfflineEdgeLifetime()
     {
         string filePath = "./chain/test.csv";
         FILE* in = freopen(filePath.c_str(), "r", stdin);
 
-        if(allow())
+        if(!allow())
         {
             found_test_csv = false;
-            printf("[Warning] test.csv stage 2!\n");
+            printf("[Warning] \"./chain/test.csv\" stage 2!\n");
         }
         else
         {
@@ -60,7 +70,6 @@ class OfflineEdgeLifetime
                     {
                         string key = to_string(e.first)+"_"+to_string(e.second);
                         edge_lifetime[key].push_back(cycle);
-                        return; 
                     }
                 }
             }
