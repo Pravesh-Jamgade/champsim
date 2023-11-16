@@ -30,7 +30,9 @@ class InsStat
         }
         this->name = name;
     }
-    ~InsStat(){}
+    ~InsStat(){
+        func_print();
+    }
 
     
     //
