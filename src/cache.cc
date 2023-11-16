@@ -178,11 +178,11 @@ void CACHE::handle_writeback()
     // handle the oldest entry
     PACKET& handle_pkt = WQ.front();
 
-    //***
-    if(handle_pkt.context != '0')
-    {
-      std::cout << "[WB] " << handle_pkt.context << '\n';
-    }
+    // //***
+    // if(handle_pkt.context != '0')
+    // {
+    //   std::cout << "[WB] " << handle_pkt.context << '\n';
+    // }
     
     // access cache
     uint32_t set = get_set(handle_pkt.address);
@@ -270,11 +270,11 @@ void CACHE::handle_read()
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
 
-    //***
-    if (handle_pkt.context != '0' )
-    {
-      std::cout << "[RD] " << handle_pkt.context << '\n';
-    }
+    // //***
+    // if (handle_pkt.context != '0' )
+    // {
+    //   std::cout << "[RD] " << handle_pkt.context << '\n';
+    // }
     
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher

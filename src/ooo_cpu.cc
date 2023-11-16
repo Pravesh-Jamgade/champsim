@@ -45,8 +45,8 @@ void O3_CPU::initialize_core()
 void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 {
   //***
-  if (arch_instr.context != '0' )
-  {std::cout << "[INIT] " << arch_instr.context << '\n'; }
+  // if (arch_instr.context != '0' )
+  // {std::cout << "[INIT] " << arch_instr.context << '\n'; }
 
   instrs_to_read_this_cycle--;
 
@@ -850,7 +850,7 @@ int O3_CPU::do_translate_store(std::vector<LSQ_ENTRY>::iterator sq_it)
 void O3_CPU::execute_store(std::vector<LSQ_ENTRY>::iterator sq_it)
 {
   insStat->func_increase_by_type(sq_it->context, 1);
-  
+
   sq_it->fetched = COMPLETED;
   sq_it->event_cycle = current_cycle;
 
