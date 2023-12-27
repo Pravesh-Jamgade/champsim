@@ -12,6 +12,16 @@
 #include <string>
 #include <unistd.h>
 
+// #include "pinplay.H"
+// PINPLAY_ENGINE pinplay_engine;
+// KNOB<BOOL> KnobPinPlayLogger(KNOB_MODE_WRITEONCE, 
+//                       "pintool", "log", "0",
+//                       "Activate the pinplay logger");
+// KNOB<BOOL> KnobPinPlayReplayer(KNOB_MODE_WRITEONCE, 
+//                       "pintool", "replay", "0",
+//                       "Activate the pinplay replayer");
+
+
 #define NUM_INSTR_DESTINATIONS 2
 #define NUM_INSTR_SOURCES 4
 
@@ -493,6 +503,20 @@ VOID Fini(INT32 code, VOID *v)
  */
 int main(int argc, char *argv[])
 {
+
+    // pinplay_engine.Activate(argc, argv, 
+    //     KnobPinPlayLogger, KnobPinPlayReplayer);
+    
+    // if(KnobPinPlayLogger)
+    // {
+    //     cout << "Logger basename " << pinplay_engine.LoggerGetBaseName()
+    //         << endl;
+    // }
+    // if(KnobPinPlayReplayer)
+    // {
+    //     cout << "Replayer basename " << pinplay_engine.ReplayerGetBaseName()
+    //         << endl;
+    // }
 
     printA=printB=printC=10;
     countA=countB=countC=0;
