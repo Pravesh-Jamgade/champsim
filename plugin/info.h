@@ -192,19 +192,25 @@ class Info
         s = "pc_chain.log";
         fstream q = Log::get_file_stream(s);
         
+        s = "pc_followup_dup_chain.log";
+        fstream r = Log::get_file_stream(s);
+
+        r << "pc, dup%\n";
         for(auto pc: pc_write)
         {
-            q << std::hex << pc.first << ',';
+            q << std::dec << pc.first << ',';
             for(auto chain: pc.second.corpus_of_pc)
             {
                 for(auto ele: chain)
                 {
-                    q << std::hex << ele << ',';
+                    q << ele << ',';
                 }
             }
+            r<< pc.first << "," << (double)pc.second.duplicate / ((double)pc.second.corpus_of_pc.size() + pc.second.duplicate) << '\n';
             q << '\n';
         }
         q.close();
+        r.close();
     }
 
 

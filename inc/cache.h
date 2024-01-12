@@ -19,6 +19,7 @@
 
 #include "../plugin/info.h"
 #include "../plugin/OfflineEdgeLifetime.h"
+#include "../plugin/OfflineEdgeBreak.h"
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -82,6 +83,7 @@ public:
   uint32_t get_size(uint8_t queue_type, uint64_t address) override;
 
   uint32_t get_set(uint64_t address);
+  uint32_t get_tag(uint64_t address);
   uint32_t get_way(uint64_t address, uint32_t set);
 
   int invalidate_entry(uint64_t inval_addr);
@@ -138,6 +140,7 @@ public:
   Info* info;
   EpocManager* cacheEpocManager;
   OfflineEdgeLifetime* offline;
+  OfflineEdgeBreak* offline_edge_break;
 
   int random_set[10000] = {0};
   int rnd_sets = 0;
@@ -275,6 +278,7 @@ public:
       }
 
       offline = new OfflineEdgeLifetime();
+      offline_edge_break = new OfflineEdgeBreak();
     }
   }
 };

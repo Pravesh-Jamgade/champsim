@@ -228,8 +228,10 @@ void CACHE::handle_writeback()
       // track pc
       fill_block.tracking_pc.push_back(handle_pkt.pc);
 
-      if(is_llc)
-        offline->func_check(fill_block.tracking_pc, current_cycle);
+      if(is_llc){
+        offline->func_track_cycle(fill_block.tracking_pc[0], handle_pkt.pc, current_cycle);
+        // offline_edge_break->func_check_edge(handle_pkt.pc, fill_block.address >> LOG2_BLOCK_SIZE);
+      }
 
     } else // MISS
     {
@@ -294,8 +296,10 @@ void CACHE::handle_read()
       // track pc
       block[set * NUM_WAY + way].tracking_pc.push_back(handle_pkt.pc);
 
-      if(is_llc)
-        offline->func_check(block[set * NUM_WAY + way].tracking_pc, current_cycle);
+      if(is_llc){
+        offline->func_track_cycle(block[set * NUM_WAY + way].tracking_pc[0], handle_pkt.pc, current_cycle);
+        // offline_edge_break->func_check_edge(handle_pkt.pc, block[set * NUM_WAY + way].address >> 6);
+      }
 
     } else {
       bool success = readlike_miss(handle_pkt);
@@ -524,6 +528,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       // // TODO: we can also track whether block evicted are dirty (writeback) or not (drop)
       info->func_track_bag_of_pc(fill_block.tracking_pc, random_set[set]);
       fill_block.tracking_pc = vector<IntPtr>();
+
+      offline_edge_break->func_check_edge(handle_pkt.pc, handle_pkt.address >> OFFSET_BITS);
     }
 
     fill_block.valid = true;
@@ -599,6 +605,12 @@ void CACHE::operate_reads()
 }
 
 uint32_t CACHE::get_set(uint64_t address) { return ((address >> OFFSET_BITS) & bitmask(lg2(NUM_SET))); }
+
+uint32_t CACHE::get_tag(uint64_t address) {
+  uint32_t tag = address >> OFFSET_BITS;
+  tag = tag >> lg2(NUM_SET);
+  return tag;
+}
 
 uint32_t CACHE::get_way(uint64_t address, uint32_t set)
 {
