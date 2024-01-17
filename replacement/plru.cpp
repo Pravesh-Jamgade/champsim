@@ -1,0 +1,100 @@
+#include "cache.h"
+
+//=============================DK=========================================//
+uint32_t Prefetch_evict_count=0;
+// initialize replacement state
+void CACHE::llc_initialize_replacement()
+{
+  
+
+   
+}
+
+// find replacement victim
+uint32_t CACHE::llc_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
+{
+   uint32_t way = 0;
+
+    // fill invalid line first
+    for (way=0; way<NUM_WAY; way++) {
+        if (block[set][way].valid == false) {
+            return way;
+        }
+    }
+
+    //if there is no invalid block then find
+    //prefetch block with highest lru value.
+    //Note: if a prefetch block is at MRU position then it will not be evict.
+
+    uint32_t max_lru_pfBlock=0;
+    uint32_t max_lru=0;
+    for(way=0 ;way<LLC_WAY;way++)
+    {
+        if(block[set][way].prefetch==true && block[set][way].lru>max_lru)
+        {
+            max_lru=block[set][way].lru;
+            max_lru_pfBlock=way;
+        }
+    }
+    
+    if(max_lru!=0)
+    {
+        Prefetch_evict_count++;
+        return max_lru_pfBlock;
+    }
+
+    // if there is no prefetch block then find LRU position block
+
+    for(way=0;way<LLC_WAY;way++)
+    {
+        if(block[set][way].lru==LLC_WAY-1)
+        {
+            return way;
+        }
+    }
+    // WE SHOULD NOT REACH HERE
+    assert(0);
+    return 0;
+}
+
+// called on every cache hit and cache fill
+void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type, uint8_t hit)
+{
+    string TYPE_NAME;
+    if (type == LOAD)
+        TYPE_NAME = "LOAD";
+    else if (type == RFO)
+        TYPE_NAME = "RFO";
+    else if (type == PREFETCH)
+        TYPE_NAME = "PF";
+    else if (type == WRITEBACK)
+        TYPE_NAME = "WB";
+    else
+        assert(0);
+
+    if (hit)
+        TYPE_NAME += "_HIT";
+    else
+        TYPE_NAME += "_MISS";
+
+    if ((type == WRITEBACK) && ip)
+        assert(0);
+
+    // uncomment this line to see the LLC accesses
+    // cout << "CPU: " << cpu << "  LLC " << setw(9) << TYPE_NAME << " set: " << setw(5) << set << " way: " << setw(2) << way;
+    // cout << hex << " paddr: " << setw(12) << paddr << " ip: " << setw(8) << ip << " victim_addr: " << victim_addr << dec << endl;
+    
+    for (uint32_t i=0; i<NUM_WAY; i++) {
+        if (block[set][i].lru < block[set][way].lru) {
+            block[set][i].lru++;
+        }
+    }
+    block[set][way].lru = 0;
+        
+}
+
+// use this function to print out your own stats at the end of simulation
+void CACHE::llc_replacement_final_stats()
+{
+    cout<<"number of times prefetch block evicted: "<<Prefetch_evict_count;
+}

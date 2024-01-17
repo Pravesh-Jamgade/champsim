@@ -1,0 +1,296 @@
+#include<bits/stdc++.h>
+#include "cache.h"
+using namespace std;
+//-------------------------------------DK--------------------------------------//
+#define NUM_POLICY 2
+#define SDM_SIZE 32
+#define TOTAL_SDM_SETS NUM_CPUS*NUM_POLICY*SDM_SIZE
+#define PSEL_WIDTH 10
+#define PSEL_MAX ((1<<PSEL_WIDTH)-1)
+#define PSEL_THRS PSEL_MAX/2
+#define Window_Size 10000
+
+uint32_t RPIPV[NUM_POLICY][LLC_WAY+1]={{0,0,1,0,3,0,1,2,1,0,5,1,0,0,1,11,13},
+                                       {0,0,0,0,1,2,3,2,4,0,2,4,8,0,1,15,14}};
+
+
+uint32_t rrpv[LLC_SET][LLC_WAY],
+         PSEL[NUM_CPUS];
+
+unsigned rand_sets[TOTAL_SDM_SETS];
+
+uint32_t setsCount[LLC_SET]={0};
+uint32_t countAccesses=0;  //we are considering wondow size on LLC accesses 
+
+
+void CACHE::llc_initialize_replacement()
+{
+    // randomly selected sampler sets
+    srand(time(NULL));
+    unsigned long rand_seed = 1;
+    unsigned long max_rand = 1048576; //2^20
+    uint32_t my_set = LLC_SET;
+    int do_again = 0;                                    //Sets are not going to selected randomly [DK] means whenever we will run 
+                                                        //the algorithm sampler sets are going to be same.
+    for (int i=0; i<TOTAL_SDM_SETS; i++) {
+        do {
+            do_again = 0;            
+            //rand_seed=rand()%my_set;
+            //rand_sets[i] =rand_seed;
+            rand_seed = rand_seed * 1103515245 + 12345;
+            rand_sets[i] = ((unsigned) ((rand_seed/65536) % max_rand)) % my_set;
+            printf("Assign rand_sets[%d]: %u  LLC: %u\n", i, rand_sets[i], my_set);
+            for (int j=0; j<i; j++) {
+                if (rand_sets[i] == rand_sets[j]) {
+                    do_again = 1;
+                    break;
+                }
+            }
+        } while (do_again);
+        printf("rand_sets[%d]: %d\n", i, rand_sets[i]);
+    }
+
+    for (int i=0; i<NUM_CPUS; i++)
+        PSEL[i] = 0;
+}
+
+int maxSetcount()
+{
+    int max=0;
+    for(int i=1;i<LLC_SET;i++)
+    {
+        if(setsCount[i]>setsCount[max])
+        {
+            max=i;
+        }
+    }
+    return max;
+}
+
+int is_it_leader(uint32_t cpu, uint32_t set)
+{
+   uint32_t start = cpu * NUM_POLICY * SDM_SIZE,
+             end = start + NUM_POLICY * SDM_SIZE;
+
+    for (uint32_t i=start; i<end; i++)
+        if (rand_sets[i] == set)
+            return ((i - start) / SDM_SIZE);
+
+    return -1;
+}
+
+void updateSet()
+{
+    sort(setsCount,setsCount + LLC_SET);
+    for(int i=0;i<TOTAL_SDM_SETS;i++)
+    {
+        rand_sets[i]=setsCount[i];
+    }
+    setsCount[LLC_SET]={0};
+}
+
+
+void CACHE::llc_IPVpromotion(uint32_t IPV[], uint32_t set, uint32_t way)
+{
+    uint32_t new_LRUpost=IPV[block[set][way].lru];
+    uint32_t present_LRUpost=block[set][way].lru;
+            
+            
+            if(new_LRUpost<present_LRUpost)
+            {
+                for(int i=0;i<LLC_WAY;i++)
+                {
+                    if(new_LRUpost<=block[set][i].lru && block[set][i].lru<present_LRUpost
+                     && block[set][i].valid)
+                    {
+                       block[set][i].lru++;
+                    }
+                }
+
+            }
+            else if(new_LRUpost>present_LRUpost)
+            {
+                for(int i=0;i<LLC_WAY;i++)
+                {
+                    if(present_LRUpost<block[set][i].lru && block[set][i].lru<=new_LRUpost && block[set][i].valid)
+                    {
+                        block[set][i].lru--;
+                    }
+                }
+
+            }
+            block[set][way].lru=new_LRUpost;
+
+}
+
+void CACHE::llc_IPVinsertion(uint32_t IPV[],uint32_t set, uint32_t way)
+{
+    uint32_t insert_LRUpost=IPV[LLC_WAY];
+        for(int i=0;i<LLC_WAY;i++)
+        {
+            if(block[set][i].lru>=insert_LRUpost && block[set][i].lru < LLC_WAY-1)
+            {
+                block[set][i].lru++;      
+            }
+        }
+        block[set][way].lru=insert_LRUpost;
+    
+}
+
+// called on every cache hit and cache fill
+void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type, uint8_t hit)
+{
+    // do not update replacement state for writebacks
+    string TYPE_NAME;
+    if (type == LOAD)
+        TYPE_NAME = "LOAD";
+    else if (type == RFO)
+        TYPE_NAME = "RFO";
+    else if (type == PREFETCH)
+        TYPE_NAME = "PF";
+    else if (type == WRITEBACK)
+        TYPE_NAME = "WB";
+    else
+        assert(0);
+
+    if (hit)
+        TYPE_NAME += "_HIT";
+    else
+        TYPE_NAME += "_MISS";
+
+    if ((type == WRITEBACK) && ip)
+        assert(0);
+
+    countAccesses++; //it will count only the read accesses 
+    setsCount[set]++;
+
+    //Finding the given set is leader set or not.
+    int leader = is_it_leader(cpu, set); 
+   
+
+	// cache hit
+	if (hit) //promotion  
+    { 
+        if(leader==-1) //follower sets
+        {
+            if(PSEL[cpu]>PSEL_THRS)
+            {
+                //follow IPV1
+                //call promotion function
+                llc_IPVpromotion(RPIPV[0],set,way);
+            }
+            else
+            {
+                //follow IPV2
+                //call promotion function
+                llc_IPVpromotion(RPIPV[1],set,way);
+            }
+        }
+
+        else if(0<=leader&&leader<NUM_POLICY)
+        {
+            llc_IPVpromotion(RPIPV[leader],set,way);
+        }
+
+        else
+        {
+            //should not reach here
+            assert(0);
+        }
+
+	}
+
+	// cache miss
+    else //insertion
+    {
+        // write the code here for finding set is leader or follower.
+        if(leader==-1)//follower sets
+        {
+            if(PSEL[cpu]>PSEL_THRS)
+            {
+                //follow IPV1
+                //call insert function
+                llc_IPVinsertion(RPIPV[0], set, way); 
+            }
+            else
+            {
+                //follow IPV2
+                //call insert function
+                llc_IPVinsertion(RPIPV[1], set, way); 
+            }
+        }
+
+        else if(leader==0)
+        {
+            if(PSEL[cpu]>0)
+                PSEL[cpu]--;
+            //follow IPV1
+            //call insert function
+            llc_IPVinsertion(RPIPV[0], set, way); 
+        }
+
+        else if(leader==1)
+        {
+            if(PSEL[cpu]<PSEL_MAX)
+                PSEL[cpu]++;
+            //follow IPV1
+            //call insert function
+            llc_IPVinsertion(RPIPV[1], set, way); 
+        }
+
+        else
+        {
+            //should not reach here
+            assert(0);
+        }
+    }
+//Updating the sets for set dueling 
+    if(countAccesses==Window_Size)
+    {
+        countAccesses=0;
+        //call the function which will update the values
+        updateSet();
+    }
+    
+}
+
+
+
+// find replacement victim
+uint32_t CACHE::llc_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
+{
+    // LRU block will be evicted
+    uint32_t way = 0;
+
+    // fill invalid line first
+    for (way=0; way<LLC_WAY; way++) {
+        if (block[set][way].valid == false) {
+            break;
+        }
+    }
+
+    // LRU victim
+    if (way == LLC_WAY) {
+        for (way=0; way<LLC_WAY; way++) {
+            if (block[set][way].lru == LLC_WAY-1) {
+                break;
+            }
+            //cout<<block[set][way].lru<<" ";
+        }
+    }
+
+    if (way == LLC_WAY) {
+        cerr << "[" << NAME << "] " << __func__ << " no victim! set: " << set << endl;
+        assert(0);
+    }
+    return way;
+}
+
+// use this function to print out your own stats at the end of simulation
+void CACHE::llc_replacement_final_stats()
+{
+    cout<<"Maximum Used Sets Frequency: "<<maxSetcount();
+
+}
+
+//-------------------------------------DK--------------------------------------//

@@ -1,0 +1,157 @@
+#include "cache.h"
+
+//---------------------------------------------DK----------------------------------------//
+uint32_t DPIPV[2][LLC_WAY+1]={{0,0,0,0,1,3,4,3,0,2,3,0,7,3,1,15,0},
+                              {0,0,1,1,1,4,3,0,4,0,3,5,4,10,12,15,15}
+                                }; //DPIPV "Demand and Prefetch IPV.
+                                   //DPIPV[0] indicates Demand vector
+                                   //DPIPV[1] indicates Prefetch vector
+
+uint32_t PVCP=0; //prefetch vector called
+uint32_t DVCP=0; //Demand vector called
+uint32_t PVCI=0; //prefetch vector called
+uint32_t DVCI=0;
+// initialize replacement state
+void CACHE::llc_initialize_replacement()
+{  }
+
+// find replacement victim
+uint32_t CACHE::llc_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
+{
+   
+   // LRU block will be evicted
+    uint32_t way = 0;
+
+    // fill invalid line first
+    for (way=0; way<LLC_WAY; way++) {
+        if (block[set][way].valid == false) {
+            break;
+        }
+    }
+    // LRU victim
+    if (way == LLC_WAY) {
+        for (way=0; way<LLC_WAY; way++) {
+            if (block[set][way].lru == LLC_WAY-1) {
+                break;
+            }
+        }
+    }
+
+    if (way == LLC_WAY) {
+        cerr << "[" << NAME << "] " << __func__ << " no victim! set: " << set << endl;
+        assert(0);
+    }
+
+    return way;
+}
+
+void CACHE::llc_IPVpromotion(uint32_t IPV[], uint32_t set, uint32_t way)
+{
+    uint32_t new_LRUpost=IPV[block[set][way].lru];
+    uint32_t present_LRUpost=block[set][way].lru;
+            
+            
+            if(new_LRUpost<present_LRUpost)
+            {
+                for(int i=0;i<LLC_WAY;i++)
+                {
+                    if(new_LRUpost<=block[set][i].lru && block[set][i].lru<present_LRUpost
+                     && block[set][i].valid)
+                    {
+                       block[set][i].lru++;
+                    }
+                }
+
+            }
+            else if(new_LRUpost>present_LRUpost)
+            {
+                for(int i=0;i<LLC_WAY;i++)
+                {
+                    if(present_LRUpost<block[set][i].lru && block[set][i].lru<=new_LRUpost && block[set][i].valid)
+                    {
+                        block[set][i].lru--;
+                    }
+                }
+            }
+            block[set][way].lru=new_LRUpost;
+}
+
+void CACHE::llc_IPVinsertion(uint32_t IPV[],uint32_t set, uint32_t way)
+{
+    uint32_t insert_LRUpost=IPV[LLC_WAY];
+        for(int i=0;i<LLC_WAY;i++)
+        {
+            if(block[set][i].lru>=insert_LRUpost && block[set][i].lru < LLC_WAY-1)
+            {
+                block[set][i].lru++;      
+            }
+        }
+        block[set][way].lru=insert_LRUpost;
+}
+
+// called on every cache hit and cache fill
+void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type, uint8_t hit)
+{
+    string TYPE_NAME;
+    if (type == LOAD)
+        TYPE_NAME = "LOAD";
+    else if (type == RFO)
+        TYPE_NAME = "RFO";
+    else if (type == PREFETCH)
+        TYPE_NAME = "PF";
+    else if (type == WRITEBACK)
+        TYPE_NAME = "WB";
+    else
+        assert(0);
+
+    if (hit)
+        TYPE_NAME += "_HIT";
+    else
+        TYPE_NAME += "_MISS";
+
+    if ((type == WRITEBACK) && ip)
+        assert(0);
+
+    if(hit) //on cache hit "promotion"
+    {
+        if(block[set][way].prefetch==1)
+        {
+            //call promotion function with prefetch vector
+            llc_IPVpromotion(DPIPV[1],set,way);
+            PVCP++;
+        }
+        else if(block[set][way].prefetch==0)
+        {
+            //call promotion function with demand vector
+            llc_IPVpromotion(DPIPV[0],set,way);
+            DVCP++;
+        }
+    }
+    else//on cache miss "Insertion"
+    {
+        if(type==PREFETCH)
+        {
+            //call insert function with prefetch vector
+            llc_IPVinsertion(DPIPV[1], set, way); 
+            PVCI++;
+        }
+        else if(type!=PREFETCH) //Demand
+        {
+            //call insert function with demand vector
+            llc_IPVinsertion(DPIPV[0], set, way); 
+            DVCI++;
+        }
+    }
+       
+}
+
+// use this function to print out your own stats at the end of simulation
+void CACHE::llc_replacement_final_stats()
+{
+    cout<<"Number of Promotion done by Prefetch vector: "<<PVCP<<endl;
+    cout<<"Number of Insertion done by Prefetch vector: "<<PVCI<<endl;
+    cout<<"Number of Promotion done by Demand vector: "<<DVCP<<endl;
+    cout<<"Number of Insertion done by Demand vector: "<<DVCI<<endl;
+}
+
+//-------------------------------------------DK----------------------------------------//

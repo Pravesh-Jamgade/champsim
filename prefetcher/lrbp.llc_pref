@@ -1,0 +1,87 @@
+//#define PREFETCH_INCLUDED //DK
+#include "cache.h"
+#define window_size 128
+
+uint32_t pdegree = 4;
+
+//------------------DK-----------------------//
+uint64_t ADD[window_size]={0};
+uint32_t track=0;
+unsigned counter=1;
+double slope,intercept;
+//------------------DK-----------------------//
+void CACHE::llc_prefetcher_initialize() 
+{
+    cout << "LLC Next Line Prefetcher" << endl;
+    //pdegree=2;
+}
+
+void reset()
+{
+
+}
+
+void linearRegression(const std::vector<uint64_t>& x, const std::vector<uint64_t>& y) {
+    // Calculate the number of data points
+    size_t n = x.size();
+
+    // Calculate the sums needed for slope and intercept
+    double sumX = 0.0, sumY = 0.0, sumXY = 0.0, sumX2 = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        sumX += x[i];
+        sumY += y[i];
+        sumXY += x[i] * y[i];
+        sumX2 += x[i] * x[i];
+    }
+
+    // Calculate the slope and intercept
+    slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    intercept = (sumY - slope * sumX) / n;
+    long long Py=slope*11+intercept;
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout<<"Predicted Value: "<<Py<<" ";
+}
+
+uint32_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)  //addr representing (tag+set)
+{
+  if(track<window_size)
+  {
+    ADD[track]=addr;
+    track++; counter++;
+  }
+  if(counter==window_size)
+  {
+    //call reset function
+    //linearRegression();
+  }
+  
+
+  if(cache_hit==0)  //if there is a miss either prefetch or demand.
+  {
+      
+      for(uint32_t i=1;i<=pdegree;i++)
+    {
+      uint64_t pf_addr = ((addr>>LOG2_BLOCK_SIZE)+i) << LOG2_BLOCK_SIZE; //#define LOG2_BLOCK_SIZE 6 (in champsim.h header file). 6 means log(2^6) 64 bytes.?? modified Dikshit.
+      prefetch_line(ip, addr, pf_addr, FILL_LLC, 0);
+    }
+  }
+  return metadata_in;
+}
+
+uint32_t CACHE::llc_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
+{
+  return metadata_in;
+}
+
+void CACHE::llc_prefetcher_final_stats()
+{
+  float accuracy= (float)pf_useful/(pf_useful+pf_useless) *100; //DK
+  cout<<"Prefetch Accuracy: "<<accuracy<<"%"<<endl; //DK
+  cout << "Prefetch Degree: "<<pdegree << endl; //DK
+  cout<<"Colleted addresses: ";
+  for(int i=0;i<64;i++)
+  {
+    cout<<ADD[i]<<" ";
+  }
+  cout<<endl;
+}

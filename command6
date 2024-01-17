@@ -1,0 +1,21 @@
+./build_champsim.sh bimodal no no no next_line lru+IEA 1
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 600.perlbench_s-210B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 605.mcf_s-665B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 607.cactuBSSN_s-2421B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 621.wrf_s-575B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 603.bwaves_s-3699B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 602.gcc_s-734B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 625.x264_s-18B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 619.lbm_s-4268B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 623.xalancbmk_s-700B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 620.omnetpp_s-874B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 657.xz_s-3167B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 654.roms_s-842B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 649.fotonik3d_s-1176B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 648.exchange2_s-1699B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 644.nab_s-5853B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 641.leela_s-800B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 638.imagick_s-10316B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 631.deepsjeng_s-928B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 628.pop2_s-17B.champsimtrace.xz
+./run_champsim.sh bimodal-no-no-no-next_line-lru+IEA-1core 100 300 627.cam4_s-573B.champsimtrace.xz

@@ -1,0 +1,260 @@
+
+*** ChampSim Multicore Out-of-Order Simulator ***
+
+Warmup Instructions: 100000000
+Simulation Instructions: 300000000
+Number of CPUs: 1
+LLC sets: 2048
+LLC ways: 16
+Off-chip DRAM Size: 4096 MB Channels: 1 Width: 64-bit Data Rate: 3200 MT/s
+
+CPU 0 runs /home/dikshit/Desktop/MTPWork/ChampSim/dpc3_traces/600.perlbench_s-210B.champsimtrace.xz
+CPU 0 Bimodal branch predictor
+LLC Next Line Prefetcher
+Heartbeat CPU 0 instructions: 10000000 cycles: 3913559 heartbeat IPC: 2.55522 cumulative IPC: 2.55522 (Simulation time: 0 hr 0 min 13 sec) 
+Heartbeat CPU 0 instructions: 20000000 cycles: 7798411 heartbeat IPC: 2.5741 cumulative IPC: 2.56463 (Simulation time: 0 hr 0 min 26 sec) 
+Heartbeat CPU 0 instructions: 30000002 cycles: 11686598 heartbeat IPC: 2.57189 cumulative IPC: 2.56704 (Simulation time: 0 hr 0 min 40 sec) 
+Heartbeat CPU 0 instructions: 40000000 cycles: 15533451 heartbeat IPC: 2.59953 cumulative IPC: 2.57509 (Simulation time: 0 hr 0 min 53 sec) 
+Heartbeat CPU 0 instructions: 50000003 cycles: 19428922 heartbeat IPC: 2.56708 cumulative IPC: 2.57348 (Simulation time: 0 hr 1 min 6 sec) 
+Heartbeat CPU 0 instructions: 60000003 cycles: 23342438 heartbeat IPC: 2.55525 cumulative IPC: 2.57043 (Simulation time: 0 hr 1 min 19 sec) 
+Heartbeat CPU 0 instructions: 70000003 cycles: 26922870 heartbeat IPC: 2.79296 cumulative IPC: 2.60002 (Simulation time: 0 hr 1 min 33 sec) 
+Heartbeat CPU 0 instructions: 80000001 cycles: 30548912 heartbeat IPC: 2.75783 cumulative IPC: 2.61875 (Simulation time: 0 hr 1 min 46 sec) 
+Heartbeat CPU 0 instructions: 90000000 cycles: 34401258 heartbeat IPC: 2.59582 cumulative IPC: 2.61618 (Simulation time: 0 hr 1 min 59 sec) 
+Heartbeat CPU 0 instructions: 100000000 cycles: 38345308 heartbeat IPC: 2.53546 cumulative IPC: 2.60788 (Simulation time: 0 hr 2 min 12 sec) 
+
+Warmup complete CPU 0 instructions: 100000004 cycles: 38345309 (Simulation time: 0 hr 2 min 12 sec) 
+
+Heartbeat CPU 0 instructions: 110000000 cycles: 45159176 heartbeat IPC: 1.4676 cumulative IPC: 1.46759 (Simulation time: 0 hr 2 min 23 sec) 
+Heartbeat CPU 0 instructions: 120000002 cycles: 52003728 heartbeat IPC: 1.46102 cumulative IPC: 1.4643 (Simulation time: 0 hr 2 min 35 sec) 
+Heartbeat CPU 0 instructions: 130000000 cycles: 59844460 heartbeat IPC: 1.27539 cumulative IPC: 1.3954 (Simulation time: 0 hr 2 min 47 sec) 
+Heartbeat CPU 0 instructions: 140000003 cycles: 67604801 heartbeat IPC: 1.2886 cumulative IPC: 1.36708 (Simulation time: 0 hr 2 min 58 sec) 
+Heartbeat CPU 0 instructions: 150000000 cycles: 74569346 heartbeat IPC: 1.43584 cumulative IPC: 1.3803 (Simulation time: 0 hr 3 min 10 sec) 
+Heartbeat CPU 0 instructions: 160000000 cycles: 81181273 heartbeat IPC: 1.51242 cumulative IPC: 1.40069 (Simulation time: 0 hr 3 min 21 sec) 
+Heartbeat CPU 0 instructions: 170000002 cycles: 88637180 heartbeat IPC: 1.34122 cumulative IPC: 1.39188 (Simulation time: 0 hr 3 min 32 sec) 
+Heartbeat CPU 0 instructions: 180000000 cycles: 95411055 heartbeat IPC: 1.47626 cumulative IPC: 1.40189 (Simulation time: 0 hr 3 min 44 sec) 
+Heartbeat CPU 0 instructions: 190000001 cycles: 102197810 heartbeat IPC: 1.47346 cumulative IPC: 1.4095 (Simulation time: 0 hr 3 min 57 sec) 
+Heartbeat CPU 0 instructions: 200000000 cycles: 110365429 heartbeat IPC: 1.22435 cumulative IPC: 1.3885 (Simulation time: 0 hr 4 min 11 sec) 
+Heartbeat CPU 0 instructions: 210000001 cycles: 118256771 heartbeat IPC: 1.26721 cumulative IPC: 1.37652 (Simulation time: 0 hr 4 min 23 sec) 
+Heartbeat CPU 0 instructions: 220000000 cycles: 126122048 heartbeat IPC: 1.27141 cumulative IPC: 1.3671 (Simulation time: 0 hr 4 min 35 sec) 
+Heartbeat CPU 0 instructions: 230000000 cycles: 133966505 heartbeat IPC: 1.27479 cumulative IPC: 1.35953 (Simulation time: 0 hr 4 min 46 sec) 
+Heartbeat CPU 0 instructions: 240000000 cycles: 141705938 heartbeat IPC: 1.29208 cumulative IPC: 1.35448 (Simulation time: 0 hr 4 min 58 sec) 
+Heartbeat CPU 0 instructions: 250000002 cycles: 148072446 heartbeat IPC: 1.57072 cumulative IPC: 1.36703 (Simulation time: 0 hr 5 min 9 sec) 
+Heartbeat CPU 0 instructions: 260000002 cycles: 155740114 heartbeat IPC: 1.30418 cumulative IPC: 1.36292 (Simulation time: 0 hr 5 min 22 sec) 
+Heartbeat CPU 0 instructions: 270000001 cycles: 163046774 heartbeat IPC: 1.36861 cumulative IPC: 1.36326 (Simulation time: 0 hr 5 min 35 sec) 
+Heartbeat CPU 0 instructions: 280000002 cycles: 169964800 heartbeat IPC: 1.4455 cumulative IPC: 1.36758 (Simulation time: 0 hr 5 min 47 sec) 
+Heartbeat CPU 0 instructions: 290000001 cycles: 177681669 heartbeat IPC: 1.29586 cumulative IPC: 1.36361 (Simulation time: 0 hr 5 min 59 sec) 
+Heartbeat CPU 0 instructions: 300000000 cycles: 185741344 heartbeat IPC: 1.24074 cumulative IPC: 1.35689 (Simulation time: 0 hr 6 min 11 sec) 
+Heartbeat CPU 0 instructions: 310000003 cycles: 193599829 heartbeat IPC: 1.27251 cumulative IPC: 1.35262 (Simulation time: 0 hr 6 min 23 sec) 
+Heartbeat CPU 0 instructions: 320000000 cycles: 201039914 heartbeat IPC: 1.34407 cumulative IPC: 1.35223 (Simulation time: 0 hr 6 min 35 sec) 
+Heartbeat CPU 0 instructions: 330000000 cycles: 207664387 heartbeat IPC: 1.50955 cumulative IPC: 1.35838 (Simulation time: 0 hr 6 min 47 sec) 
+Heartbeat CPU 0 instructions: 340000002 cycles: 214613231 heartbeat IPC: 1.43909 cumulative IPC: 1.36156 (Simulation time: 0 hr 7 min 1 sec) 
+Heartbeat CPU 0 instructions: 350000000 cycles: 221628902 heartbeat IPC: 1.42538 cumulative IPC: 1.36401 (Simulation time: 0 hr 7 min 13 sec) 
+Heartbeat CPU 0 instructions: 360000002 cycles: 229400614 heartbeat IPC: 1.28672 cumulative IPC: 1.36086 (Simulation time: 0 hr 7 min 25 sec) 
+Heartbeat CPU 0 instructions: 370000003 cycles: 236494911 heartbeat IPC: 1.40958 cumulative IPC: 1.36261 (Simulation time: 0 hr 7 min 37 sec) 
+Heartbeat CPU 0 instructions: 380000003 cycles: 243917309 heartbeat IPC: 1.34727 cumulative IPC: 1.36205 (Simulation time: 0 hr 7 min 49 sec) 
+Heartbeat CPU 0 instructions: 390000001 cycles: 251792935 heartbeat IPC: 1.26974 cumulative IPC: 1.35865 (Simulation time: 0 hr 8 min 2 sec) 
+Heartbeat CPU 0 instructions: 400000001 cycles: 259605792 heartbeat IPC: 1.27994 cumulative IPC: 1.35587 (Simulation time: 0 hr 8 min 16 sec) 
+Finished CPU 0 instructions: 300000000 cycles: 221260487 cumulative IPC: 1.35587 (Simulation time: 0 hr 8 min 16 sec) 
+
+ChampSim completed all CPUs
+
+Region of Interest Statistics
+
+CPU 0 cumulative IPC: 1.35587 instructions: 300000000 cycles: 221260487
+L1D TOTAL     ACCESS:  110635786  HIT:  110613701  MISS:      22085
+L1D LOAD      ACCESS:   46958630  HIT:   46938458  MISS:      20172
+L1D RFO       ACCESS:   63677156  HIT:   63675243  MISS:       1913
+L1D PREFETCH  ACCESS:          0  HIT:          0  MISS:          0
+L1D WRITEBACK ACCESS:          0  HIT:          0  MISS:          0
+L1D PREFETCH  REQUESTED:          0  ISSUED:          0  USEFUL:          0  USELESS:          0
+L1D AVERAGE MISS LATENCY: 86.9405 cycles
+L1I TOTAL     ACCESS:   46602457  HIT:   46593473  MISS:       8984
+L1I LOAD      ACCESS:   46602457  HIT:   46593473  MISS:       8984
+L1I RFO       ACCESS:          0  HIT:          0  MISS:          0
+L1I PREFETCH  ACCESS:          0  HIT:          0  MISS:          0
+L1I WRITEBACK ACCESS:          0  HIT:          0  MISS:          0
+L1I PREFETCH  REQUESTED:          0  ISSUED:          0  USEFUL:          0  USELESS:          0
+L1I AVERAGE MISS LATENCY: 21.8418 cycles
+L2C TOTAL     ACCESS:      34695  HIT:      18134  MISS:      16561
+L2C LOAD      ACCESS:      29156  HIT:      14243  MISS:      14913
+L2C RFO       ACCESS:       1913  HIT:        321  MISS:       1592
+L2C PREFETCH  ACCESS:          0  HIT:          0  MISS:          0
+L2C WRITEBACK ACCESS:       3626  HIT:       3570  MISS:         56
+L2C PREFETCH  REQUESTED:          0  ISSUED:          0  USEFUL:          0  USELESS:          0
+L2C AVERAGE MISS LATENCY: 99.495 cycles
+LLC TOTAL     ACCESS:      35015  HIT:      10046  MISS:      24969
+LLC LOAD      ACCESS:      14913  HIT:       7621  MISS:       7292
+LLC RFO       ACCESS:       1592  HIT:         55  MISS:       1537
+LLC PREFETCH  ACCESS:      16140  HIT:          0  MISS:      16140
+LLC WRITEBACK ACCESS:       2370  HIT:       2370  MISS:          0
+LLC PREFETCH  REQUESTED:      29168  ISSUED:      28062  USEFUL:       6786  USELESS:       3815
+LLC AVERAGE MISS LATENCY: 134.451 cycles
+Major fault: 0 Minor fault: 1722
+Prefetch Accuracy: 64.0128%
+Prefetch Degree: 4
+number of times prefetch block evicted: 3815
+DRAM Statistics
+ CHANNEL 0
+ RQ ROW_BUFFER_HIT:      11120  ROW_BUFFER_MISS:      13849
+ DBUS_CONGESTED:      11064
+ WQ ROW_BUFFER_HIT:          0  ROW_BUFFER_MISS:          0  FULL:          0
+
+ AVG_CONGESTED_CYCLE: 6
+
+CPU 0 Branch Prediction Accuracy: 97.6324% MPKI: 3.34993 Average ROB Occupancy at Mispredict: 103.599
+
+Branch types
+NOT_BRANCH: 257552433 85.8508%
+BRANCH_DIRECT_JUMP: 6069479 2.02316%
+BRANCH_INDIRECT: 2173799 0.7246%
+BRANCH_CONDITIONAL: 29812871 9.93762%
+BRANCH_DIRECT_CALL: 2089621 0.69654%
+BRANCH_INDIRECT_CALL: 105916 0.0353053%
+BRANCH_RETURN: 2195537 0.731846%
+BRANCH_OTHER: 0 0%
+
+MSHR_Occupancy(LLC):- 
+
+Bucket Number       Occupancy           (%)Occupancy        
+------------------------------------------------------------
+0                   220172958           99.51               
+1                   398839              0.18                
+2                   121582              0.05                
+3                   101035              0.05                
+4                   112470              0.05                
+5                   261541              0.12                
+6                   45699               0.02                
+7                   19089               0.01                
+8                   10314               0.00                
+9                   5342                0.00                
+10                  9220                0.00                
+11                  1728                0.00                
+12                  117                 0.00                
+13                  193                 0.00                
+14                  171                 0.00                
+15                  189                 0.00                
+16                  0                   0.00                
+17                  0                   0.00                
+18                  0                   0.00                
+19                  0                   0.00                
+20                  0                   0.00                
+21                  0                   0.00                
+22                  0                   0.00                
+23                  0                   0.00                
+24                  0                   0.00                
+25                  0                   0.00                
+26                  0                   0.00                
+27                  0                   0.00                
+28                  0                   0.00                
+29                  0                   0.00                
+30                  0                   0.00                
+31                  0                   0.00                
+32                  0                   0.00                
+33                  0                   0.00                
+34                  0                   0.00                
+35                  0                   0.00                
+36                  0                   0.00                
+37                  0                   0.00                
+38                  0                   0.00                
+39                  0                   0.00                
+40                  0                   0.00                
+41                  0                   0.00                
+42                  0                   0.00                
+43                  0                   0.00                
+44                  0                   0.00                
+45                  0                   0.00                
+46                  0                   0.00                
+47                  0                   0.00                
+48                  0                   0.00                
+49                  0                   0.00                
+50                  0                   0.00                
+51                  0                   0.00                
+52                  0                   0.00                
+53                  0                   0.00                
+54                  0                   0.00                
+55                  0                   0.00                
+56                  0                   0.00                
+57                  0                   0.00                
+58                  0                   0.00                
+59                  0                   0.00                
+60                  0                   0.00                
+61                  0                   0.00                
+62                  0                   0.00                
+63                  0                   0.00                
+Total Occupancy value: 221260480.00
+out of MSHR Size: 0
+
+MSHR_Occupancy(L2C): 
+
+Bucket Number       Occupancy           (%)Occupancy        
+------------------------------------------------------------
+0                   219980175           99.42               
+1                   1080614             0.49                
+2                   140233              0.06                
+3                   26575               0.01                
+4                   4921                0.00                
+5                   5209                0.00                
+6                   5156                0.00                
+7                   10652               0.00                
+8                   6866                0.00                
+9                   86                  0.00                
+10                  0                   0.00                
+11                  0                   0.00                
+12                  0                   0.00                
+13                  0                   0.00                
+14                  0                   0.00                
+15                  0                   0.00                
+16                  0                   0.00                
+17                  0                   0.00                
+18                  0                   0.00                
+19                  0                   0.00                
+20                  0                   0.00                
+21                  0                   0.00                
+22                  0                   0.00                
+23                  0                   0.00                
+24                  0                   0.00                
+25                  0                   0.00                
+26                  0                   0.00                
+27                  0                   0.00                
+28                  0                   0.00                
+29                  0                   0.00                
+30                  0                   0.00                
+31                  0                   0.00                
+out of MSHR Size: 0
+
+MSHR_Occupancy(L1D):- 
+
+Bucket Number       Occupancy           (%)Occupancy        
+------------------------------------------------------------
+0                   219755655           99.32               
+1                   1278893             0.58                
+2                   158448              0.07                
+3                   31446               0.01                
+4                   4940                0.00                
+5                   5465                0.00                
+6                   5196                0.00                
+7                   12067               0.01                
+8                   8228                0.00                
+9                   126                 0.00                
+10                  9                   0.00                
+11                  5                   0.00                
+12                  2                   0.00                
+13                  2                   0.00                
+14                  5                   0.00                
+15                  0                   0.00                
+out of MSHR Size: 0
+
+MSHR_Occupancy(L1I):- 
+
+Bucket Number       Occupancy           (%)Occupancy        
+------------------------------------------------------------
+0                   221104219           99.93               
+1                   121448              0.05                
+2                   30077               0.01                
+3                   4347                0.00                
+4                   396                 0.00                
+5                   0                   0.00                
+6                   0                   0.00                
+7                   0                   0.00                
+out of MSHR Size: 0
+

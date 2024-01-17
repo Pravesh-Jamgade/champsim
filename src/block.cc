@@ -3,9 +3,9 @@
 int PACKET_QUEUE::check_queue(PACKET *packet)
 {
     if ((head == tail) && occupancy == 0)
-        return -1;
+        return -1; //Packet queue is empty.....
 
-    if (head < tail) {
+    if (head < tail) { //packet queue is not empyt......
         for (uint32_t i=head; i<tail; i++) {
             if (NAME == "L1D_WQ") {
                 if (entry[i].full_addr == packet->full_addr) {
@@ -73,6 +73,8 @@ int PACKET_QUEUE::check_queue(PACKET *packet)
     return -1;
 }
 
+//adding a packet into packte queue.....
+
 void PACKET_QUEUE::add_queue(PACKET *packet)
 {
 #ifdef SANITY_CHECK
@@ -93,6 +95,8 @@ void PACKET_QUEUE::add_queue(PACKET *packet)
     if (tail >= SIZE)
         tail = 0;
 }
+
+//deleting an entry from packet queue.....
 
 void PACKET_QUEUE::remove_queue(PACKET *packet)
 {

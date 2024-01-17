@@ -45,9 +45,10 @@ uint32_t CACHE::lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const 
 
                 break;
             }
+            
         }
     }
-
+    
     if (way == NUM_WAY) {
         cerr << "[" << NAME << "] " << __func__ << " no victim! set: " << set << endl;
         assert(0);

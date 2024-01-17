@@ -26,9 +26,10 @@ void CACHE::llc_initialize_replacement()
     // randomly selected sampler sets
     srand(time(NULL));
     unsigned long rand_seed = 1;
-    unsigned long max_rand = 1048576;
+    unsigned long max_rand = 1048576; //2^20
     uint32_t my_set = LLC_SET;
-    int do_again = 0;
+    int do_again = 0;                                    //Sets are not going to selected randomly [DK] means whenever we will run 
+                                                        //the algorithm sampler sets are going to be same.
     for (int i=0; i<TOTAL_SDM_SETS; i++) {
         do {
             do_again = 0;

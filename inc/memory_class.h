@@ -26,7 +26,7 @@ class MEMORY {
     PACKET_QUEUE WQ{"EMPTY", 1}, RQ{"EMPTY", 1}, PQ{"EMPTY", 1}, MSHR{"EMPTY", 1};
 
     // functions
-    virtual int  add_rq(PACKET *packet) = 0;
+    virtual int  add_rq(PACKET *packet) = 0;  //The = 0 after a virtual function means that "this is pure virtual function, it must be implemented in the derived function".
     virtual int  add_wq(PACKET *packet) = 0;
     virtual int  add_pq(PACKET *packet) = 0;
     virtual void return_data(PACKET *packet) = 0;

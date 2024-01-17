@@ -9,22 +9,23 @@
 class BLOCK {
   public:
     uint8_t valid,
-            prefetch,
-            dirty,
+            prefetch,    //if you want to use or want to add some information in Block (for getting some information or your algo. need to some information)
+            dirty,       //then we can add that extra variable in this classs named BLOCK.  Dikshit
             used;
 
     int delta,
         depth,
-        signature,
+        signature,     //information that are used by replacement policy "SHip"(signature) and other prefetcher "VLDP" (delta or confidence). Dikshit 
         confidence;
 
     uint64_t address,
              full_addr,
              tag,
-             data,
+             data,   //data is representing to 64 bit word. ip- instruction pointer (program counter), cpu- which cpu is acessing (doubt). full_addr- virtual add, address-physical address,
              ip,
              cpu,
              instr_id;
+            
 
     // replacement state
     uint32_t lru;
@@ -61,7 +62,7 @@ class DRAM_ARRAY {
     };
 };
 
-// message packet
+// message packet  (packet format) packet comprises of the following information.
 class PACKET {
   public:
     uint8_t instruction, 
@@ -80,10 +81,10 @@ class PACKET {
         rob_signal, 
         rob_index, 
         producer,
-        delta,
-        depth,
-        signature,
-        confidence;
+        delta,     //---
+        depth,     //   |  all are also the part of BLOCK class.
+        signature, //   |
+        confidence;//---
 
     uint32_t pf_metadata;
 
@@ -105,15 +106,16 @@ class PACKET {
 
     uint32_t cpu, data_index, lq_index, sq_index;
 
-    uint64_t address, 
-             full_addr, 
-             instruction_pa,
-             data_pa,
+    uint64_t address, //physical address
+             full_addr, //virtual adress (page number + page offset).
+             instruction_pa,//instruction physical address.
+             data_pa,  //data physical address.
              data,
              instr_id,
-             ip, 
+             ip, //instruction pointer
              event_cycle,
-             cycle_enqueued;
+             cycle_enqueued,
+             tag_busy_counter; //Dikshit...putting here because packet is an entity of the any Queue (ex:- write queue or read_queue) but we will use it only for read_queue and prefetch_queue.
 
     PACKET() {
         instruction = 0;
@@ -169,11 +171,11 @@ class PACKET {
     };
 };
 
-// packet queue
+// packet queue    every level of caches have packet queue.
 class PACKET_QUEUE {
   public:
-    string NAME;
-    uint32_t SIZE;
+    string NAME;   //name of queue like write_queue(W_Q),read_queue, prfetch_queue,MSHR.
+    uint32_t SIZE;    //Queue size indicating how many packet it can hold.
 
     uint8_t  is_RQ, 
              is_WQ,
@@ -186,26 +188,26 @@ class PACKET_QUEUE {
              num_returned, 
              next_fill_index, 
              next_schedule_index, 
-             next_process_index;
-
-    uint64_t next_fill_cycle, 
-             next_schedule_cycle, 
-             next_process_cycle,
-             ACCESS,
-             FORWARD,
-             MERGED,
-             TO_CACHE,
-             ROW_BUFFER_HIT,
+             next_process_index;                                         
+                                                                     //---------------------------------------
+    uint64_t next_fill_cycle,                                        //  PACKET_QUEUE WQ=new PACKET_QUEUE("WQ",WQ_SIZE);   |                                    |
+             next_schedule_cycle,                                    //     |                                    |
+             next_process_cycle,                                     //     |                                    |
+             ACCESS,                                                 //     |                                    | 
+             FORWARD,                                                //     |                                    |
+             MERGED,                                                 //     |                                    |
+             TO_CACHE,                                               //     |                                    |
+             ROW_BUFFER_HIT,                                         //---------------------------------------                             
              ROW_BUFFER_MISS,
              FULL;
 
-    PACKET *entry, processed_packet[2*MAX_READ_PER_CYCLE];
+    PACKET *entry, processed_packet[2*MAX_READ_PER_CYCLE];   //2*MAX_READ_PER_CYCLE = 16.   // PACKET *entry--Declare pointer to a class PACKET.
 
     // constructor
     PACKET_QUEUE(string v1, uint32_t v2) : NAME(v1), SIZE(v2) {
         is_RQ = 0;
         is_WQ = 0;
-        write_mode = 0;
+        write_mode = 0;                                                                
 
         cpu = 0; 
         head = 0;
@@ -222,7 +224,7 @@ class PACKET_QUEUE {
 
         ACCESS = 0;
         FORWARD = 0;
-        MERGED = 0;
+        MERGED = 0;                                           // both constructor have same variable except "write_mode=0".
         TO_CACHE = 0;
         ROW_BUFFER_HIT = 0;
         ROW_BUFFER_MISS = 0;
@@ -233,7 +235,7 @@ class PACKET_QUEUE {
 
     PACKET_QUEUE() {
         is_RQ = 0;
-        is_WQ = 0;
+        is_WQ = 0;                                               
 
         cpu = 0; 
         head = 0;
@@ -371,12 +373,13 @@ class LSQ_ENTRY {
 class LOAD_STORE_QUEUE {
   public:
     const string NAME;
-    const uint32_t SIZE;
-    uint32_t occupancy, head, tail;
-
-    LSQ_ENTRY *entry;
-
-    // constructor
+    const uint32_t SIZE;                   //The load-store queue is similar to the ROB. 
+     uint32_t occupancy, head, tail;      //This queue contains load and store instructions in the sequence in which they will be committed. The fields are as follows:
+                                       // l/s - bit that identifies whether the current entry is a load or store instruction.
+                                                                           // addr - the address the instruction is accessing.
+    LSQ_ENTRY *entry;                                                      //val - field for the value that the instruction should be loading or storing.
+                                                                           // c - marks if the entry has been committed
+    // constructor                                                         //https://one2bla.me/cs6290/lesson8/rob-in-depth.html.
     LOAD_STORE_QUEUE(string v1, uint32_t v2) : NAME(v1), SIZE(v2) {
         occupancy = 0;
         head = 0;

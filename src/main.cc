@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include "ooo_cpu.h"
 #include "uncore.h"
+//#include "cache.h"
 #include <fstream>
 
 uint8_t warmup_complete[NUM_CPUS], 
@@ -78,8 +79,10 @@ void print_sim_stats(uint32_t cpu, CACHE *cache)
         TOTAL_MISS += cache->sim_miss[cpu][i];
     }
 
+    //cout<<"MSHR_Occupancy test"; //DK
+  
     cout << cache->NAME;
-    cout << " TOTAL     ACCESS: " << setw(10) << TOTAL_ACCESS << "  HIT: " << setw(10) << TOTAL_HIT << "  MISS: " << setw(10) << TOTAL_MISS << endl;
+    cout << " TOTAL     ACCESS: " << setw(10) << TOTAL_ACCESS << "  HIT: " << setw(10) << TOTAL_HIT << "  MISS: " << setw(10) << TOTAL_MISS<< setw(10) <<"MSHR Occupancy" <<endl;
 
     cout << cache->NAME;
     cout << " LOAD      ACCESS: " << setw(10) << cache->sim_access[cpu][0] << "  HIT: " << setw(10) << cache->sim_hit[cpu][0] << "  MISS: " << setw(10) << cache->sim_miss[cpu][0] << endl;
@@ -92,7 +95,25 @@ void print_sim_stats(uint32_t cpu, CACHE *cache)
 
     cout << cache->NAME;
     cout << " WRITEBACK ACCESS: " << setw(10) << cache->sim_access[cpu][3] << "  HIT: " << setw(10) << cache->sim_hit[cpu][3] << "  MISS: " << setw(10) << cache->sim_miss[cpu][3] << endl;
+
+    //DK
+    //for(int i=0;i<64;i++)
+    //{
+      //  cout<<"MSHR Ocuupancy"<<cache->MSHR_OCC[i]<<" ";
+    //}
+    //Note: if we are trying to print anything here, we are failing to print. //DK
 }
+//DK
+/*void mshr_occ()
+{
+        //DK
+    CACHE *cache;
+    for(int i=0;i<64;i++)
+    {
+        cout<<i<<" "<<cache->MSHR_OCC[i]<<" ";
+    }
+    cout<<"Mshr Occupancy test";
+}*/
 
 void print_branch_stats()
 {
@@ -272,7 +293,7 @@ void signal_handler(int signal)
 	cout << "Caught signal: " << signal << endl;
 	exit(1);
 }
-
+    
 // log base 2 function from efectiu
 int lg2(int n)
 {
@@ -772,7 +793,7 @@ int main(int argc, char** argv)
         warmup_complete[i] = 0;
         //all_warmup_complete = NUM_CPUS;
         simulation_complete[i] = 0;
-        current_core_cycle[i] = 0;
+        current_core_cycle[i] = 0;  //initializing current core cycle for every core with 0.
         stall_cycle[i] = 0;
         
         previous_ppage = 0;
@@ -802,6 +823,12 @@ int main(int argc, char** argv)
             // proceed one cycle
             current_core_cycle[i]++;
 
+            //-------------DK--------------//
+            uncore.LLC.mshrOcc_track();
+            ooo_cpu[i].L2C.mshrOcc_track();
+            ooo_cpu[i].L1D.mshrOcc_track();  //MSHR Occupancy
+            ooo_cpu[i].L1I.mshrOcc_track();
+            //-------------DK---------------//
             //cout << "Trying to process instr_id: " << ooo_cpu[i].instr_unique_id << " fetch_stall: " << +ooo_cpu[i].fetch_stall;
             //cout << " stall_cycle: " << stall_cycle[i] << " current: " << current_core_cycle[i] << endl;
 
@@ -941,6 +968,8 @@ int main(int argc, char** argv)
     }
 
     cout << endl << "Region of Interest Statistics" << endl;
+    //mshr_occ();
+    //cout<<"MSHR Occupancy"<<endl; //DK
     for (uint32_t i=0; i<NUM_CPUS; i++) {
         cout << endl << "CPU " << i << " cumulative IPC: " << ((float) ooo_cpu[i].finish_sim_instr / ooo_cpu[i].finish_sim_cycle); 
         cout << " instructions: " << ooo_cpu[i].finish_sim_instr << " cycles: " << ooo_cpu[i].finish_sim_cycle << endl;

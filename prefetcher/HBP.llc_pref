@@ -1,0 +1,52 @@
+ #include "cache.h"
+ #include<vector>
+ #include <cstdlib>
+ vector<int>offset_collection(32);
+ uint64_t prev_addr=0;
+ int offset=0;
+
+void CACHE::llc_prefetcher_initialize() 
+{
+    cout << "LLC Next Line Prefetcher" << endl;
+}
+
+uint32_t CACHE::llc_prefetcher_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)  //addr representing (tag+set)
+{
+  int NUM_DEGREE=1;
+
+  if(!prev_addr){
+    offset=addr-prev_addr;
+    cout<<offset<<" "; 
+    offset_collection.push_back(offset);
+   }
+
+  if(offset_collection.size()<32){
+    for(int i=1;i<=NUM_DEGREE;i++)
+    {
+        uint64_t pf_addr = ((addr>>LOG2_BLOCK_SIZE)+1) << LOG2_BLOCK_SIZE; //#define LOG2_BLOCK_SIZE 6 (in champsim.h header file). 6 means log(2^6) 64 bytes.?? modified Dikshit.
+        prefetch_line(ip, addr, pf_addr, FILL_LLC, 0);
+    }
+  }
+  else{
+    srand(time(0));
+    for(int i=1;i<=NUM_DEGREE;i++)
+{
+   int V_Index=rand()%offset_collection.size();
+   uint64_t pf_addr = ((addr>>LOG2_BLOCK_SIZE)+offset_collection[V_Index]) << LOG2_BLOCK_SIZE; //#define LOG2_BLOCK_SIZE 6 (in champsim.h header file). 6 means log(2^6) 64 bytes.?? modified Dikshit.
+   prefetch_line(ip, addr, pf_addr, FILL_LLC, 0);
+}
+
+  }
+  prev_addr=addr;
+  return metadata_in;
+}
+
+uint32_t CACHE::llc_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
+{
+  return metadata_in;
+}
+
+void CACHE::llc_prefetcher_final_stats()
+{
+  cout << "LLC Next Line Prefetcher Final Stats: none" << endl;
+}
