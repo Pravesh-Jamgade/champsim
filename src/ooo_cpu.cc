@@ -45,6 +45,11 @@ void O3_CPU::initialize_core()
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 {
+
+  if(arch_instr.context != '0')
+  {
+    cout << "A=" << arch_instr.context << '\n';
+  }
   //***
   // if (arch_instr.context != '0' )
   // {std::cout << "[INIT] " << arch_instr.context << '\n'; }
