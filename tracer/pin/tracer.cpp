@@ -270,7 +270,7 @@ void MemoryRead(VOID* addr, UINT32 index, UINT32 read_size)
 {
     if(!tracing_on) return;
 
-    total_loads++;
+    
 
     //printf("0x%llx,%u ", (unsigned long long int)addr, read_size);
 
@@ -301,7 +301,7 @@ void MemoryWrite(VOID* addr, UINT32 index)
 {
     if(!tracing_on) return;
 
-    total_stores++;
+    
 
     //printf("(0x%llx) ", (unsigned long long int) addr);
 
@@ -411,31 +411,31 @@ VOID Instruction(INS ins, VOID *v)
     UINT32 opcode = INS_Opcode(ins);
     INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)BeginInstruction, IARG_INST_PTR, IARG_UINT32, opcode, IARG_END);
 
-    // instrument branch instructions
-    if(INS_IsBranch(ins))
-        INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)BranchOrNot, IARG_BRANCH_TAKEN, IARG_END);
+    // // instrument branch instructions
+    // if(INS_IsBranch(ins))
+    //     INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)BranchOrNot, IARG_BRANCH_TAKEN, IARG_END);
 
-    // instrument register reads
-    UINT32 readRegCount = INS_MaxNumRRegs(ins);
-    for(UINT32 i=0; i<readRegCount; i++) 
-    {
-        UINT32 regNum = INS_RegR(ins, i);
+    // // instrument register reads
+    // UINT32 readRegCount = INS_MaxNumRRegs(ins);
+    // for(UINT32 i=0; i<readRegCount; i++) 
+    // {
+    //     UINT32 regNum = INS_RegR(ins, i);
 
-        INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)RegRead,
-                IARG_UINT32, regNum, IARG_UINT32, i,
-                IARG_END);
-    }
+    //     INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)RegRead,
+    //             IARG_UINT32, regNum, IARG_UINT32, i,
+    //             IARG_END);
+    // }
 
-    // instrument register writes
-    UINT32 writeRegCount = INS_MaxNumWRegs(ins);
-    for(UINT32 i=0; i<writeRegCount; i++) 
-    {
-        UINT32 regNum = INS_RegW(ins, i);
+    // // instrument register writes
+    // UINT32 writeRegCount = INS_MaxNumWRegs(ins);
+    // for(UINT32 i=0; i<writeRegCount; i++) 
+    // {
+    //     UINT32 regNum = INS_RegW(ins, i);
 
-        INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)RegWrite,
-                IARG_UINT32, regNum, IARG_UINT32, i,
-                IARG_END);
-    }
+    //     INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)RegWrite,
+    //             IARG_UINT32, regNum, IARG_UINT32, i,
+    //             IARG_END);
+    // }
 
     // instrument memory reads and writes
     UINT32 memOperands = INS_MemoryOperandCount(ins);
@@ -445,6 +445,7 @@ VOID Instruction(INS ins, VOID *v)
     {
         if (INS_MemoryOperandIsRead(ins, memOp)) 
         {
+            total_loads++;
             UINT32 read_size = 0;//INS_MemoryReadSize(ins);
 
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)MemoryRead,
@@ -454,6 +455,7 @@ VOID Instruction(INS ins, VOID *v)
         
         if (INS_MemoryOperandIsWritten(ins, memOp)) 
         {
+            total_stores++;
             INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)MemoryWrite,
                     IARG_MEMORYOP_EA, memOp, IARG_UINT32, memOp,
                     IARG_END);
