@@ -51,7 +51,7 @@ UINT64 instrCount = 0;
 FILE* out;
 
 bool output_file_closed = false;
-bool tracing_on = false;
+bool tracing_on = true;
 
 trace_instr_format_t curr_instr;
 
@@ -70,11 +70,11 @@ UINT64 total_stores = 0;
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE,  "pintool", "o", "champsim.trace", 
         "specify file name for Champsim tracer output");
 
-KNOB<UINT64> KnobSkipInstructions(KNOB_MODE_WRITEONCE, "pintool", "s", "0", 
-        "How many instructions to skip before tracing begins");
+// KNOB<UINT64> KnobSkipInstructions(KNOB_MODE_WRITEONCE, "pintool", "s", "0", 
+//         "How many instructions to skip before tracing begins");
 
-KNOB<UINT64> KnobTraceInstructions(KNOB_MODE_WRITEONCE, "pintool", "t", "1000000", 
-        "How many instructions to trace");
+// KNOB<UINT64> KnobTraceInstructions(KNOB_MODE_WRITEONCE, "pintool", "t", "1000000", 
+//         "How many instructions to trace");
 
 /* ===================================================================== */
 // Utilities
@@ -104,16 +104,16 @@ void BeginInstruction(VOID *ip, UINT32 op_code, VOID *opstring)
     instrCount++;
     //printf("[%p %u %s ", ip, opcode, (char*)opstring);
 
-    if(instrCount > KnobSkipInstructions.Value()) 
-    {
-        tracing_on = true;
+    // if(instrCount > KnobSkipInstructions.Value()) 
+    // {
+    //     tracing_on = true;
 
-        if(instrCount > (KnobTraceInstructions.Value()+KnobSkipInstructions.Value()))
-            tracing_on = false;
-    }
+    //     if(instrCount > (KnobTraceInstructions.Value()+KnobSkipInstructions.Value()))
+    //         tracing_on = false;
+    // }
 
-    if(!tracing_on) 
-        return;
+    // if(!tracing_on) 
+    //     return;
 
     // reset the current instruction
     curr_instr.ip = (unsigned long long int)ip;
@@ -140,30 +140,30 @@ void EndInstruction()
 
     //printf("\n");
 
-    if(instrCount > KnobSkipInstructions.Value())
-    {
-        tracing_on = true;
+    // if(instrCount > KnobSkipInstructions.Value())
+    // {
+    //     tracing_on = true;
 
-        if(instrCount <= (KnobTraceInstructions.Value()+KnobSkipInstructions.Value()))
-        {
-            // keep tracing
-            fwrite(&curr_instr, sizeof(trace_instr_format_t), 1, out);
-        }
-        else
-        {
-            std::cout << std::dec << "A: "<< countA << ", B:" << countB << ", C:" << countC << '\n';
-            std::cout << std::dec << "COUNT: " << instrCount << ", LOADS: " << total_loads << ", STORES: " << total_stores << '\n';  
-            tracing_on = false;
-            // close down the file, we're done tracing
-            if(!output_file_closed)
-            {
-                fclose(out);
-                output_file_closed = true;
-            }
+    //     if(instrCount <= (KnobTraceInstructions.Value()+KnobSkipInstructions.Value()))
+    //     {
+    //         // keep tracing
+    //         fwrite(&curr_instr, sizeof(trace_instr_format_t), 1, out);
+    //     }
+    //     else
+    //     {
+    //         std::cout << std::dec << "A: "<< countA << ", B:" << countB << ", C:" << countC << '\n';
+    //         std::cout << std::dec << "COUNT: " << instrCount << ", LOADS: " << total_loads << ", STORES: " << total_stores << '\n';  
+    //         tracing_on = false;
+    //         // close down the file, we're done tracing
+    //         if(!output_file_closed)
+    //         {
+    //             fclose(out);
+    //             output_file_closed = true;
+    //         }
 
-            exit(0);
-        }
-    }
+    //         exit(0);
+    //     }
+    // }
 }
 
 void BranchOrNot(UINT32 taken)
