@@ -273,7 +273,7 @@ public:
 
       for(int i=0; i< rnd_sets; i++)
       {
-        int set_no = rand()%rnd_sets;
+        int set_no = rand()%NUM_SET;
         random_set[set_no] = 1;
       }
 
