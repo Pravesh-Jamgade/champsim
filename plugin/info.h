@@ -35,7 +35,7 @@ class Meta
             if(std::equal(vec.begin(), vec.end(), all_pc.begin(), all_pc.end()))
             {   
                 duplicate++;
-                return;
+                // return;
             }
         }
         corpus_of_pc.push_back(all_pc);
@@ -206,7 +206,8 @@ class Info
                     q << ele << ',';
                 }
             }
-            r<< pc.first << "," << (double)pc.second.duplicate / ((double)pc.second.corpus_of_pc.size() + pc.second.duplicate) << '\n';
+            if(pc.second.corpus_of_pc.size()>0)
+                r<< pc.first << "," << (pc.second.duplicate * 100) / (pc.second.corpus_of_pc.size()) << '\n';
             q << '\n';
         }
         q.close();

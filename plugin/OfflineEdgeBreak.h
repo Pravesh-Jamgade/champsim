@@ -25,7 +25,6 @@ class OfflineEdgeBreak
         if(!allow())
         {
             found_test_csv = false;
-            printf("[Warning] test.csv stage 2!\n");
         }
         else
         {
@@ -62,7 +61,7 @@ class OfflineEdgeBreak
                 i++;
             }
 
-            count_broken_edges.resize(300);
+            count_broken_edges.resize(10000, -1);
 
             cout << "size = " << src_index.size() << "," << dst_index.size() << '\n';
         }
