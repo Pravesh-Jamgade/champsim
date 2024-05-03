@@ -998,10 +998,10 @@ int main(int argc, char** argv)
         ooo_cpu[i].L2C.l2c_prefetcher_final_stats();
     }
 
-    uncore.llc->llc_prefetcher_final_stats();
+    // uncore.llc->llc_prefetcher_final_stats();
 
 #ifndef CRC2_COMPILE
-    uncore.llc->llc_replacement_final_stats();
+    // uncore.llc->llc_replacement_final_stats();
     print_dram_stats();
     print_branch_stats();
 #endif

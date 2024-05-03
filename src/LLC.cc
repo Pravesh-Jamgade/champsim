@@ -1,5 +1,5 @@
 #include "LLC.h"
-#include "cache.h"
+// #include "cache.h"
 
 LLC::LLC()
 {
@@ -12,3 +12,45 @@ LLC::LLC()
     }
 }
 }
+
+int LLC::add_rq(PACKET *packet)
+{
+
+}
+
+int LLC::add_wq(PACKET *packet)
+{
+
+}
+
+int LLC::add_pq(PACKET* packet)
+{
+
+}
+
+void LLC::return_data(PACKET* packet)
+{
+
+}
+
+void LLC::operate()
+{
+
+}
+
+void LLC::increment_WQ_FULL(uint64_t addr)
+{
+
+}
+
+uint32_t LLC::get_occupancy(uint8_t queue_type, uint64_t addr)
+{
+
+}
+
+uint32_t LLC::get_size(uint8_t queue_type, uint64_t addr)
+{
+
+}
+
+
