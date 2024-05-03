@@ -1,6 +1,8 @@
 #include "cache.h"
 #include "set.h"
 
+#include "uncore.h"
+
 uint64_t l2pf_access = 0;
 
 void CACHE::handle_fill()

@@ -1,0 +1,170 @@
+#include "cache.h"
+
+//---------------------------------------------DK----------------------------------------//
+uint32_t IPV[LLC_WAY+1]={0,0,1,0,3,0,1,2,1,0,5,1,0,0,1,11,13};
+uint32_t Prefetch_evict_count=0;
+// initialize replacement state
+void CACHE::llc_initialize_replacement()
+{
+
+  
+}
+
+// find replacement victim
+uint32_t CACHE::llc_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
+{
+   
+    uint32_t way = 0;
+    uint32_t max_lru_pfBlock=0;
+    uint32_t max_lru=0;
+    uint32_t flag=0;
+    // fill invalid line first
+    for (way=0; way<NUM_WAY; way++) {
+        if (block[set][way].valid == false) {
+            return way;
+        }
+    }
+   //no invalid block then search prefetch block with highest lru value.
+    for(way=0 ;way<LLC_WAY;way++)
+    {
+        if(block[set][way].prefetch==true && block[set][way].lru>max_lru)
+        {
+            max_lru=block[set][way].lru;
+            max_lru_pfBlock=way;
+            flag=1;
+        }
+    }
+    if(flag==1)
+    {
+        Prefetch_evict_count++;
+        return max_lru_pfBlock;
+    }
+    // if there is no prefetch block then find LRU position block
+    for(way=0;way<LLC_WAY;way++)
+    {
+        if(block[set][way].lru==LLC_WAY-1)
+        {
+            return way;
+        }
+    }
+    // WE SHOULD NOT REACH HERE
+    cerr << "[" << NAME << "] " << __func__ << " no victim! set: " << set << endl;
+    assert(0);
+    return 0;
+}
+
+
+vector<pair<uint32_t,uint32_t>> CACHE::CollectPfBlock(uint32_t set)
+{
+    vector<pair<uint32_t,uint32_t>>pfblock;
+    for(uint32_t way=0;way<LLC_WAY;way++)
+    {
+        if(block[set][way].prefetch==1)
+        {
+            pfblock.push_back({block[set][way].lru,way});
+        }
+    }
+    return pfblock;
+}
+
+// called on every cache hit and cache fill
+void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type, uint8_t hit)
+{
+
+    if ((type == WRITEBACK) && ip)
+        assert(0);
+    // uncomment this line to see the LLC accesses
+    // cout << "CPU: " << cpu << "  LLC " << setw(9) << TYPE_NAME << " set: " << setw(5) << set << " way: " << setw(2) << way;
+    // cout << hex << " paddr: " << setw(12) << paddr << " ip: " << setw(8) << ip << " victim_addr: " << victim_addr << dec << endl;
+    
+    if (hit)
+       {
+            // when hit we have to update the position of referenced block using IPV.
+
+            //Promotion of the block
+
+            uint32_t new_LRUpost=IPV[block[set][way].lru];
+            uint32_t present_LRUpost=block[set][way].lru;
+            
+            if(new_LRUpost<present_LRUpost)
+            {
+                for(int i=0;i<LLC_WAY;i++)
+                {
+                    if(new_LRUpost<=block[set][i].lru && block[set][i].lru<present_LRUpost
+                     && block[set][i].valid)
+                    {
+                       block[set][i].lru++;
+                    }
+                }
+
+            }
+            else if(new_LRUpost>present_LRUpost)
+            {
+                for(int i=0;i<LLC_WAY;i++)
+                {
+                    if(present_LRUpost<block[set][i].lru && block[set][i].lru<=new_LRUpost && block[set][i].valid)
+                    {
+                        block[set][i].lru--;
+                    }
+                }
+
+            }
+            block[set][way].lru=new_LRUpost;
+       }
+    else
+    {
+        //here, we have to get the insertion position.
+        //insertion position in IPV is gotten from the i=k.
+        if(type==PREFETCH && block[set][way].prefetch==1)
+        {
+            vector<pair<uint32_t,uint32_t>>pfBlock; //<first,second><lru,way>
+            pfBlock=CollectPfBlock(set);
+            //cout<<"evicted way: "<<way<<" ";
+            sort(pfBlock.begin(),pfBlock.end());
+            // if(pfBlock.size()>=1)
+            // {
+            //     for(auto &it:pfBlock)
+            //     {
+            //         cout<<it.second<<" "<<it.first<<" ";
+            //     }
+            //     cout<<endl;
+            // }  
+            if(pfBlock.size()==1)
+            {
+                uint32_t LeastPflru=block[set][way].lru;
+                block[set][way].lru=LeastPflru;
+            }   
+            else if(pfBlock.size()>1)
+            {
+                uint32_t Tlru=pfBlock[0].first;
+                for(uint32_t i=0;i<pfBlock.size()-1;i++)
+                {
+                    uint32_t Tway=pfBlock[i].second;
+                    block[set][Tway].lru=pfBlock[i+1].first;
+                }
+                block[set][way].lru=Tlru;
+            }       
+        }
+        else if((type==PREFETCH && block[set][way].prefetch==0)||type!=PREFETCH)
+        {
+            uint32_t insert_LRUpost=IPV[LLC_WAY];
+            for(int i=0;i<LLC_WAY;i++)
+            {
+                if(block[set][i].lru>=insert_LRUpost && block[set][i].lru < LLC_WAY-1)
+                {
+                    block[set][i].lru++;      
+                }
+            }
+            block[set][way].lru=IPV[LLC_WAY];
+        }
+    }
+       
+}
+
+// use this function to print out your own stats at the end of simulation
+void CACHE::llc_replacement_final_stats()
+{
+
+}
+
+//-------------------------------------------DK----------------------------------------//

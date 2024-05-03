@@ -228,7 +228,10 @@ void finish_warmup()
         reset_cache_stats(i, &ooo_cpu[i].L1I);
         reset_cache_stats(i, &ooo_cpu[i].L1D);
         reset_cache_stats(i, &ooo_cpu[i].L2C);
-        reset_cache_stats(i, &uncore.LLC);
+        
+        // TODO LLC BANK RESET
+        // for(int j=0; j<)
+        // reset_cache_stats(i, &uncore.LLC);
     }
     cout << endl;
 
@@ -249,7 +252,9 @@ void finish_warmup()
         ooo_cpu[i].L1D.LATENCY  = L1D_LATENCY;
         ooo_cpu[i].L2C.LATENCY  = L2C_LATENCY;
     }
-    uncore.LLC.LATENCY = LLC_LATENCY;
+
+    for(int j=0; j< NUM_BANKS; j++)
+        uncore.llc->banks[j].LATENCY = LLC_LATENCY/NUM_BANKS;
 }
 
 void print_deadlock(uint32_t i)
@@ -412,7 +417,9 @@ uint64_t va_to_pa(uint32_t cpu, uint64_t instr_id, uint64_t va, uint64_t unique_
                 ooo_cpu[cpu].L1I.invalidate_entry(cl_addr);
                 ooo_cpu[cpu].L1D.invalidate_entry(cl_addr);
                 ooo_cpu[cpu].L2C.invalidate_entry(cl_addr);
-                uncore.LLC.invalidate_entry(cl_addr);
+
+                for(int j=0; j< NUM_BANKS; j++)
+                    uncore.llc->banks[j].invalidate_entry(cl_addr);
             }
 
             // swap complete
@@ -770,21 +777,27 @@ int main(int argc, char** argv)
         ooo_cpu[i].L2C.fill_level = FILL_L2;
         ooo_cpu[i].L2C.upper_level_icache[i] = &ooo_cpu[i].L1I;
         ooo_cpu[i].L2C.upper_level_dcache[i] = &ooo_cpu[i].L1D;
-        ooo_cpu[i].L2C.lower_level = &uncore.LLC;
+        ooo_cpu[i].L2C.lower_level = uncore.llc;
         ooo_cpu[i].L2C.l2c_prefetcher_initialize();
 
         // SHARED CACHE
-        uncore.LLC.cache_type = IS_LLC;
-        uncore.LLC.fill_level = FILL_LLC;
-        uncore.LLC.MAX_READ = NUM_CPUS;
-        uncore.LLC.upper_level_icache[i] = &ooo_cpu[i].L2C;
-        uncore.LLC.upper_level_dcache[i] = &ooo_cpu[i].L2C;
-        uncore.LLC.lower_level = &uncore.DRAM;
+        for(int j=0; j< NUM_BANKS; j++)
+        {
+            uncore.llc->banks[j].cache_type = IS_LLC;
+            uncore.llc->banks[j].fill_level = FILL_LLC;
+            uncore.llc->banks[j].MAX_READ = NUM_CPUS;
+            uncore.llc->banks[j].upper_level_icache[i] = &ooo_cpu[i].L2C;
+            uncore.llc->banks[j].upper_level_dcache[i] = &ooo_cpu[i].L2C;
+            uncore.llc->banks[j].lower_level = &uncore.DRAM;
+
+            uncore.llc->banks[j].llc_initialize_replacement();
+            uncore.llc->banks[j].llc_prefetcher_initialize();
+        }
 
         // OFF-CHIP DRAM
         uncore.DRAM.fill_level = FILL_DRAM;
-        uncore.DRAM.upper_level_icache[i] = &uncore.LLC;
-        uncore.DRAM.upper_level_dcache[i] = &uncore.LLC;
+        uncore.DRAM.upper_level_icache[i] = uncore.llc;
+        uncore.DRAM.upper_level_dcache[i] = uncore.llc;
         for (uint32_t i=0; i<DRAM_CHANNELS; i++) {
             uncore.DRAM.RQ[i].is_RQ = 1;
             uncore.DRAM.WQ[i].is_WQ = 1;
@@ -805,9 +818,6 @@ int main(int argc, char** argv)
         major_fault[i] = 0;
     }
 
-    uncore.LLC.llc_initialize_replacement();
-    uncore.LLC.llc_prefetcher_initialize();
-
     // simulation entry point
     start_time = time(NULL);
     uint8_t run_simulation = 1;
@@ -824,7 +834,7 @@ int main(int argc, char** argv)
             current_core_cycle[i]++;
 
             //-------------DK--------------//
-            uncore.LLC.mshrOcc_track();
+            // uncore.llc->mshrOcc_track();
             ooo_cpu[i].L2C.mshrOcc_track();
             ooo_cpu[i].L1D.mshrOcc_track();  //MSHR Occupancy
             ooo_cpu[i].L1I.mshrOcc_track();
@@ -928,7 +938,7 @@ int main(int argc, char** argv)
                 record_roi_stats(i, &ooo_cpu[i].L1D);
                 record_roi_stats(i, &ooo_cpu[i].L1I);
                 record_roi_stats(i, &ooo_cpu[i].L2C);
-                record_roi_stats(i, &uncore.LLC);
+                // record_roi_stats(i, uncore.llc);
 
                 all_simulation_complete++;
             }
@@ -939,7 +949,7 @@ int main(int argc, char** argv)
 
         // TODO: should it be backward?
         uncore.DRAM.operate();
-        uncore.LLC.operate();
+        uncore.llc->operate();
     }
 
     uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time),
@@ -962,9 +972,9 @@ int main(int argc, char** argv)
             ooo_cpu[i].L1D.l1d_prefetcher_final_stats();
 	    ooo_cpu[i].L2C.l2c_prefetcher_final_stats();
 #endif
-            print_sim_stats(i, &uncore.LLC);
+            // print_sim_stats(i, uncore.llc);
         }
-        uncore.LLC.llc_prefetcher_final_stats();
+        // uncore.llc->llc_prefetcher_final_stats();
     }
 
     cout << endl << "Region of Interest Statistics" << endl;
@@ -978,7 +988,7 @@ int main(int argc, char** argv)
         print_roi_stats(i, &ooo_cpu[i].L1I);
         print_roi_stats(i, &ooo_cpu[i].L2C);
 #endif
-        print_roi_stats(i, &uncore.LLC);
+        // print_roi_stats(i, uncore.llc);
         cout << "Major fault: " << major_fault[i] << " Minor fault: " << minor_fault[i] << endl;
     }
 
@@ -988,10 +998,10 @@ int main(int argc, char** argv)
         ooo_cpu[i].L2C.l2c_prefetcher_final_stats();
     }
 
-    uncore.LLC.llc_prefetcher_final_stats();
+    uncore.llc->llc_prefetcher_final_stats();
 
 #ifndef CRC2_COMPILE
-    uncore.LLC.llc_replacement_final_stats();
+    uncore.llc->llc_replacement_final_stats();
     print_dram_stats();
     print_branch_stats();
 #endif

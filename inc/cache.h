@@ -3,6 +3,9 @@
 
 #include "memory_class.h"
 #include<bits/stdc++.h>
+
+#define NUM_BANKS 4
+
 extern uint32_t pdegree;
 // PAGE
 extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
@@ -95,6 +98,8 @@ extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
 #define persetpfuseless 1 //DK
 #define persetpfaccuracy 2 //DK
 
+class LLC;
+
 //extern uint32_t pdegree; //DK
 class CACHE : public MEMORY {
   public:
@@ -138,8 +143,10 @@ class CACHE : public MEMORY {
 
     uint64_t total_miss_latency;
     
+    CACHE();
+    
     // constructor
-    CACHE(string v1, uint32_t v2, int v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8) 
+    CACHE(string v1, uint32_t v2, int v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8, LLC* master_llc=nullptr) 
         : NAME(v1), NUM_SET(v2), NUM_WAY(v3), NUM_LINE(v4), WQ_SIZE(v5), RQ_SIZE(v6), PQ_SIZE(v7), MSHR_SIZE(v8) {
 
         LATENCY = 0;

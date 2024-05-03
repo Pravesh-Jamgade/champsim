@@ -1,0 +1,437 @@
+#include "cache.h"
+#include <bits/stdc++.h>
+using namespace std;
+#define POS_THETA 71
+#define NEG_THETA -71
+#define INCREMENT_WEIGHT 5
+#define DECREMENT_WEIGHT -5
+#define PREDICTION_THRESHOLD 10
+
+#define maxRRPV 15
+#define SAMPLER_SET (256 * NUM_CPUS)
+#define SAMPLER_WAY LLC_WAY
+#define TABLE_SIZE 256
+
+uint32_t rrpv[LLC_SET][LLC_WAY],
+    bip_counter = 0,
+    PSEL[NUM_CPUS];
+unsigned rand_sets[SAMPLER_SET];
+
+/*
+0 - update_sampler hit
+1 - training return
+2 - training with features
+3 - update_sampler miss/invalid block
+4 - making_prediction return
+5 - making_prediction using feature
+*/
+uint64_t check_event[10] = {0};
+
+class Sampler
+{
+public:
+    // vector<size_t> last_3_pc;
+    deque<size_t> last_3_PC;
+    uint8_t valid,
+        type,
+        used;
+
+    uint64_t tag, cl_addr, ip;
+    uint32_t lru;
+    int yout;
+
+    Sampler()
+    {
+        valid = 0;
+        type = 0;
+        used = 0;
+
+        tag = 0;
+        cl_addr = 0;
+        ip = 0;
+
+        lru = 0;
+    };
+};
+// Sampler sampler_set[SAMPLER_SET][SAMPLER_WAY];
+Sampler **sampler_set;
+
+// prediction table structure
+class PredictorTable
+{
+public:
+    uint8_t weight;
+
+    PredictorTable()
+    {
+        weight = 0;
+    };
+};
+PredictorTable **PD1;
+PredictorTable **PD2;
+PredictorTable **PD3;
+PredictorTable **PD4;
+PredictorTable **PD5;
+PredictorTable **PD6;
+
+void CACHE::llc_initialize_replacement()
+{
+
+    PD1 = new PredictorTable *[NUM_CPUS];
+    PD2 = new PredictorTable *[NUM_CPUS];
+    PD3 = new PredictorTable *[NUM_CPUS];
+    PD4 = new PredictorTable *[NUM_CPUS];
+    PD5 = new PredictorTable *[NUM_CPUS];
+    PD6 = new PredictorTable *[NUM_CPUS];
+    for (int i = 0; i < NUM_CPUS; i++)
+    {
+        PD1[i] = new PredictorTable[TABLE_SIZE];
+        PD2[i] = new PredictorTable[TABLE_SIZE];
+        PD3[i] = new PredictorTable[TABLE_SIZE];
+        PD4[i] = new PredictorTable[TABLE_SIZE];
+        PD5[i] = new PredictorTable[TABLE_SIZE];
+        PD6[i] = new PredictorTable[TABLE_SIZE];
+    }
+
+    // initialize sampler
+    sampler_set = new Sampler *[SAMPLER_SET];
+    for (uint32_t i = 0; i < SAMPLER_SET; i++)
+    {
+        sampler_set[i] = new Sampler[SAMPLER_WAY]; // DK
+        for (uint32_t j = 0; j < SAMPLER_WAY; j++)
+        {
+            sampler_set[i][j].lru = j;
+        }
+    }
+    // randomly selected sampler sets
+    srand(time(NULL));
+    unsigned long rand_seed = 1;
+    unsigned long max_rand = 1048576; // 2^20
+    uint32_t my_set = LLC_SET;
+    int do_again = 0; // Sets are not going to selected randomly [DK] means whenever we will run                                                  //the algorithm sampler sets are going to be same.
+
+    for (int i = 0; i < SAMPLER_SET; i++)
+    {
+        do
+        {
+            do_again = 0;
+            rand_seed = rand_seed * 1103515245 + 12345;
+            rand_sets[i] = ((unsigned)((rand_seed / 65536) % max_rand)) % my_set;
+            printf("Assign rand_sets[%d]: %u  LLC: %u\n", i, rand_sets[i], my_set);
+            for (int j = 0; j < i; j++)
+            {
+                if (rand_sets[i] == rand_sets[j])
+                {
+                    do_again = 1;
+                    break;
+                }
+            }
+        } while (do_again);
+        printf("rand_sets[%d]: %d\n", i, rand_sets[i]);
+    }
+}
+
+uint32_t is_it_sampled(uint32_t set)
+{
+    for (int i = 0; i < SAMPLER_SET; i++)
+        if (rand_sets[i] == set)
+            return i;
+
+    return SAMPLER_SET;
+}
+
+size_t func_hash(uint64_t s)
+{
+    size_t h1 = s / 16;
+    size_t h2 = s / 32;
+    return h1 ^ (h2 << 1); // or use boost::hash_combine
+}
+
+void training(int cpu, Sampler *s_set, int set, int match, uint64_t address, int thresh, uint64_t currentPC)
+{
+
+    // compute features
+    uint64_t index = 0;
+    uint64_t total_weight = 0;
+    if (s_set[match].last_3_PC.size() < 3)
+    {
+        check_event[1]++;
+        return;
+    }
+
+    check_event[2]++;
+
+    uint64_t curr_pc_shift_2 = currentPC << 2;
+    curr_pc_shift_2 = curr_pc_shift_2 ^ currentPC;
+    index = curr_pc_shift_2 % TABLE_SIZE;
+    PD1[cpu][index].weight += thresh;
+    total_weight += PD1[cpu][index].weight;
+
+    uint64_t last_pc_shift_1 = s_set[match].last_3_PC[2] << 1;
+    last_pc_shift_1 = last_pc_shift_1 ^ currentPC;
+    index = last_pc_shift_1 % TABLE_SIZE;
+    PD2[cpu][index].weight += thresh;
+    total_weight += PD2[cpu][index].weight;
+
+    uint64_t last_pc_shift_2 = s_set[match].last_3_PC[1] << 2;
+    last_pc_shift_2 = last_pc_shift_2 ^ currentPC;
+    index = last_pc_shift_2 % TABLE_SIZE;
+    PD3[cpu][index].weight += thresh;
+    total_weight += PD3[cpu][index].weight;
+
+    uint64_t last_pc_shift_3 = s_set[match].last_3_PC[0] << 3;
+    last_pc_shift_3 = last_pc_shift_3 ^ currentPC;
+    index = last_pc_shift_3 % TABLE_SIZE;
+    PD4[cpu][index].weight += thresh;
+    total_weight += PD4[cpu][index].weight;
+
+    uint64_t tag_shift_4 = address << 4;
+    tag_shift_4 = tag_shift_4 ^ currentPC;
+    index = tag_shift_4 % TABLE_SIZE;
+    PD5[cpu][index].weight += thresh;
+    total_weight += PD5[cpu][index].weight;
+
+    uint64_t tag_shift_7 = address << 7;
+    tag_shift_7 = tag_shift_7 ^ currentPC;
+    index = tag_shift_7 % TABLE_SIZE;
+    PD6[cpu][index].weight += thresh;
+    total_weight += PD6[cpu][index].weight;
+
+    s_set[match].yout = total_weight;
+}
+
+void update_sampler(uint32_t cpu, uint32_t s_idx, uint64_t address, uint64_t ip, uint8_t type)
+{
+    Sampler *s_set = sampler_set[s_idx];
+    uint64_t tag = address / (64 * LLC_SET); // right shifting by 17
+    int match = -1;
+
+    // if(s_set->last_3_PC_pc.size() >= 3) //mistake
+    //     s_set->last_3_PC_pc.pop_back();
+    // s_set->last_3_PC_pc.push_back(func_hash(ip));
+
+    // check hit
+    for (match = 0; match < SAMPLER_WAY; match++)
+    {
+        if (s_set[match].valid && (s_set[match].tag == tag))
+        {
+            int hit_theta = s_set[match].yout;
+            if (hit_theta < NEG_THETA)
+            {
+                check_event[0]++;
+                training(cpu, s_set, s_idx, match, address, DECREMENT_WEIGHT, ip);
+            }
+            s_set[match].type = type;
+            s_set[match].used = 1;
+            // Changed By DK
+            if (s_set[match].last_3_PC.size() >= 3)
+                s_set[match].last_3_PC.pop_front();
+            s_set[match].last_3_PC.push_back(ip);
+            s_set[match].ip = ip;
+            // D(printf("sampler hit  cpu: %d  set: %d  way: %d  tag: %x  ip: %lx  type: %d  lru: %d\n",
+            //             cpu, rand_sets[s_idx], match, tag, ip, type, s_set[match].lru));
+            break;
+        }
+    }
+
+    // check invalid
+    if (match == SAMPLER_WAY)
+    {
+        for (match = 0; match < SAMPLER_WAY; match++)
+        {
+            if (s_set[match].valid == 0)
+            {
+                s_set[match].valid = 1;
+                s_set[match].tag = tag;
+                s_set[match].ip = ip;
+                s_set[match].type = type;
+                s_set[match].used = 0;
+                // if(s_set[match].last_3_PC.size()>=3)
+                //     s_set[match].last_3_PC.pop();
+                // s_set[match].last_3_PC.push(ip);
+                s_set[match].last_3_PC.clear();
+                s_set[match].last_3_PC.push_back(ip);
+                // D(printf("sampler invalid  cpu: %d  set: %d  way: %d  tag: %x  ip: %lx  type: %d  lru: %d\n",
+                //             cpu, rand_sets[s_idx], match, tag, ip, type, s_set[match].lru));
+                break;
+            }
+        }
+    }
+
+    // miss
+    if (match == SAMPLER_WAY)
+    {
+        for (match = 0; match < SAMPLER_WAY; match++)
+        {
+            if (s_set[match].lru == (SAMPLER_WAY - 1)) // Sampler uses LRU replacement
+            {
+                s_set[match].tag = tag;
+                s_set[match].ip = ip;
+                s_set[match].type = type;
+                s_set[match].used = 0;
+                s_set[match].last_3_PC.clear();
+                s_set[match].last_3_PC.push_back(ip);
+                // TODO: if prediction was incorrect
+
+                // D(printf("sampler miss  cpu: %d  set: %d  way: %d  tag: %x  ip: %lx  type: %d  lru: %d\n",
+                //             cpu, rand_sets[s_idx], match, tag, ip, type, s_set[match].lru));
+                break;
+            }
+        }
+    }
+
+    if (s_set[match].yout < POS_THETA)
+    {
+        check_event[3]++;
+        training(cpu, s_set, s_idx, match, address, INCREMENT_WEIGHT, ip);
+    }
+
+    // update LRU state
+    uint32_t curr_position = s_set[match].lru;
+    for (int i = 0; i < SAMPLER_WAY; i++)
+    {
+        if (s_set[i].lru < curr_position)
+            s_set[i].lru++;
+    }
+    s_set[match].lru = 0;
+}
+// called on every cache hit and cache fill
+bool making_prediction(uint32_t cpu, uint32_t set, uint32_t match,
+                       uint64_t full_addr, uint64_t currentPC)
+{
+    // predictor will be accessed by indexing the predicton table entries corresponding to the hash
+    //  of each feature XORed with PC of the instruction making access.
+    // signed weight will be accessed and are summed to find a value yout.
+
+    uint64_t index = 0;
+    uint64_t total_weight = 0;
+    Sampler *s_set = sampler_set[set];
+    if (s_set->last_3_PC.size() <= 3)
+    {
+        check_event[4]++;
+        return true;
+    }
+
+    check_event[5]++;
+
+    uint64_t curr_pc_shift_2 = currentPC << 2;
+    curr_pc_shift_2 = curr_pc_shift_2 ^ currentPC;
+    index = curr_pc_shift_2 % TABLE_SIZE;
+    total_weight += PD1[cpu][index].weight;
+
+    uint64_t last_pc_shift_1 = s_set[match].last_3_PC[2] << 1;
+    last_pc_shift_1 = last_pc_shift_1 ^ currentPC;
+    index = last_pc_shift_1 % TABLE_SIZE;
+    total_weight += PD2[cpu][index].weight;
+
+    uint64_t last_pc_shift_2 = s_set[match].last_3_PC[1] << 2;
+    last_pc_shift_2 = last_pc_shift_2 ^ currentPC;
+    index = last_pc_shift_2 % TABLE_SIZE;
+    total_weight += PD3[cpu][index].weight;
+
+    uint64_t last_pc_shift_3 = s_set[match].last_3_PC[0] << 3;
+    last_pc_shift_3 = last_pc_shift_3 ^ currentPC;
+    index = last_pc_shift_3 % TABLE_SIZE;
+    total_weight += PD4[cpu][index].weight;
+
+    uint64_t tag_shift_4 = full_addr << 4;
+    tag_shift_4 = tag_shift_4 ^ currentPC;
+    index = tag_shift_4 % TABLE_SIZE;
+    total_weight += PD5[cpu][index].weight;
+
+    uint64_t tag_shift_7 = full_addr << 7;
+    tag_shift_7 = tag_shift_7 ^ currentPC;
+    index = tag_shift_7 % TABLE_SIZE;
+    total_weight += PD6[cpu][index].weight;
+
+    if (total_weight < PREDICTION_THRESHOLD) // reuse block
+    {
+        return true;
+    }
+    else // not-reuse block
+    {
+        return false;
+    }
+}
+
+// called on every cache hit and cache fill
+void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type, uint8_t hit)
+{
+    if ((type == WRITEBACK) && ip)
+        return; // assert(0);
+
+    uint32_t s_idx = is_it_sampled(set);
+    bool result = true;
+    if (s_idx < SAMPLER_SET)
+    {
+        update_sampler(cpu, s_idx, full_addr, ip, type);
+    }
+    else
+    {
+        s_idx = set % SAMPLER_SET;
+        result = making_prediction(cpu, s_idx, way, full_addr, ip); // this prediction will be made for all sets.
+    }
+
+    if (result)
+    {
+        for (uint32_t i = 0; i < NUM_WAY; i++)
+        {
+            if (block[set][i].lru < block[set][way].lru)
+            {
+                block[set][i].lru++;
+            }
+        }
+        block[set][way].lru = 0;
+        block[set][way].dead = 0;
+    }
+    else
+    {
+        if (hit)
+            block[set][way].dead = 1; // if hit and block is predicted to be dead then set dead bit and do not promote that block.
+        if (!hit)
+            perceptron_is_dead = true; // TODO: Bypassing the cache if incoming block is predicted to be dead.
+    }
+}
+
+// find replacement victim
+uint32_t CACHE::llc_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
+{
+    uint32_t way = 0;
+    // fill invalid line first
+    for (way = 0; way < NUM_WAY; way++)
+    {
+        if (block[set][way].valid == false)
+        {
+            return way;
+        }
+    }
+
+    for (way = 0; way < LLC_WAY; way++)
+    {
+        if (block[set][way].lru == LLC_WAY - 1)
+        {
+            return way;
+        }
+    }
+    // WE SHOULD NOT REACH HERE
+    assert(0);
+    return 0;
+}
+// use this function to print out your own stats at the end of simulation
+void CACHE::llc_replacement_final_stats()
+{
+    cout << "ACCCCCCCCC\n";
+    for (int i = 0; i < TABLE_SIZE; i++)
+    {
+        cout << PD1[0][i].weight << " ";
+    }
+    for (int i = 0; i < SAMPLER_WAY; i++)
+    {
+        cout << sampler_set[1][i].last_3_PC[0] << " " << sampler_set[1][i].last_3_PC[1] << " " << sampler_set[1][i].last_3_PC[2] << endl;
+    }
+
+    for (int i = 0; i < 10; i++)
+    {
+        cout << i << "=" << check_event[i] << '\n';
+    }
+}

@@ -1,0 +1,278 @@
+#include "cache.h"
+#include <cstdlib>
+#include <ctime>
+
+#define maxRRPV 3
+#define SHCT_SIZE  16384
+#define SHCT_PRIME 16381
+#define SAMPLER_SET (256*NUM_CPUS)
+#define SAMPLER_WAY LLC_WAY
+#define SHCT_MAX 7
+
+uint32_t rrpv[LLC_SET][LLC_WAY];
+uint32_t key=0;
+enum OPERATION {
+    insert,
+    Hit,
+    evict
+};
+
+map<uint64_t,uint32_t>Demand;
+
+class DemandAccess{
+    public:
+            uint64_t DemandPC;
+            uint32_t LRU_Distance;
+            int count;
+        DemandAccess()
+        {
+            DemandPC=0;
+            LRU_Distance=0;
+            count=0;
+        }
+};
+
+class PrefetchAccess{
+    public:
+            uint64_t PrefetchPC;
+            uint32_t LRU_Distance;
+        PrefetchAccess()
+        {
+            PrefetchPC=0;
+            LRU_Distance=0;
+        }
+};
+
+map<int, DemandAccess> DemandIPV;
+map<int,PrefetchAccess> PrefetchIPV;
+
+int FindEntry(uint64_t searchFieldValue)//This Function returns the key for the matching IP.
+{
+  auto it = std::find_if(DemandIPV.begin(), DemandIPV.end(),
+                               [searchFieldValue](const std::pair<const int,  DemandAccess>& pair) {
+                                   return pair.second.DemandPC == searchFieldValue;
+                               });
+
+        return (it != DemandIPV.end()) ? it->first : -1;
+}
+
+void InsertUpdateEntry(int key, uint64_t pc,  OPERATION operation, uint32_t new_lru_distance)
+{
+
+  if(operation==insert)
+  {
+    DemandIPV[key].DemandPC=pc;
+    DemandIPV[key].LRU_Distance=new_lru_distance;
+  }   
+  else if(operation==Hit) 
+  {
+    DemandIPV[key].LRU_Distance=new_lru_distance;
+  }
+  else if(operation==evict)
+  {
+    DemandIPV[key].LRU_Distance=new_lru_distance;
+  }  
+}
+
+void CACHE :: promotion(uint32_t set, uint32_t way, uint32_t new_LRUpost, uint32_t present_LRUpost)
+{
+            
+    if(new_LRUpost<present_LRUpost)
+    {
+        for(int i=0;i<LLC_WAY;i++)
+        {
+            if(new_LRUpost<=block[set][i].lru && block[set][i].lru<present_LRUpost
+                && block[set][i].valid)
+            {
+                block[set][i].lru++;
+            }
+        }
+
+    }
+    else if(new_LRUpost>present_LRUpost)
+    {
+        for(int i=0;i<LLC_WAY;i++)
+        {
+            if(present_LRUpost<block[set][i].lru && block[set][i].lru<=new_LRUpost && block[set][i].valid)
+            {
+                block[set][i].lru--;
+            }
+        }
+    }
+    block[set][way].lru=new_LRUpost;
+}
+
+void CACHE::insertion(uint32_t set, uint32_t way, uint32_t insert_LRUposition)
+{
+        for(int i=0;i<LLC_WAY;i++)
+        {
+            if(block[set][i].lru>=insert_LRUposition && block[set][i].lru < LLC_WAY-1)
+            {
+                block[set][i].lru++;      
+            }
+        }
+        block[set][way].lru=insert_LRUposition;
+}
+void CACHE::llc_initialize_replacement()
+{  }
+
+// find replacement victim
+uint32_t CACHE::llc_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
+{
+    // LRU block will be evicted
+    uint32_t way = 0;
+    int max_lru=-1;
+    uint32_t find_way=0;
+    bool flag=false;
+
+    // fill invalid line first
+    for (way=0; way<LLC_WAY; way++) {
+        if (block[set][way].valid == false) {
+            break;
+        }
+    }
+
+    // LRU victim
+    if (way == LLC_WAY) {
+        for (way=0; way<LLC_WAY; way++) {
+            if((int)block[set][way].lru>max_lru)
+            {
+                max_lru=block[set][way].lru;
+                find_way=way;
+                flag=true;
+            }
+        }
+    }
+
+    if(flag==true)
+    {
+        int foundKey = FindEntry(block[set][way].ip);
+        if(foundKey!=-1)
+        {
+            uint32_t new_lru_distance=(DemandIPV[foundKey].LRU_Distance+block[set][way].lru)/2;
+            InsertUpdateEntry(foundKey, block[set][key].ip, evict, new_lru_distance);
+        }
+        return find_way;
+    }
+
+    if (way == LLC_WAY) {
+        cerr << "[" << NAME << "] " << __func__ << " no victim! set: " << set << endl;
+        assert(0);
+    }
+    //On getting evicted we need to update the table "block[set][way].ip" 
+    //new LRU distance=(old LRU distance + evicted LRU position)/2
+    return way;
+}
+
+// called on every cache hit and cache fill
+void CACHE::llc_update_replacement_state(uint32_t cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type, uint8_t hit)
+{
+    string TYPE_NAME;
+    if (type == LOAD)
+        TYPE_NAME = "LOAD";
+    else if (type == RFO)
+        TYPE_NAME = "RFO";
+    else if (type == PREFETCH)
+        TYPE_NAME = "PF";
+    else if (type == WRITEBACK)
+        TYPE_NAME = "WB";
+    else
+        assert(0);
+
+    if (hit)
+        TYPE_NAME += "_HIT";
+    else
+        TYPE_NAME += "_MISS";
+
+    if ((type == WRITEBACK) && ip)
+        assert(0);
+
+    //cout << "CPU: " << cpu << "  LLC " << setw(9) << TYPE_NAME << " set: " << setw(5) << set << " way: " << setw(2) << way;
+    //cout << hex << " paddr: " << setw(12) << full_addr << " ip: " << setw(8) << ip << " victim_addr: " << victim_addr << dec << endl;
+    
+
+    if (hit)
+    {
+        //On being hit we need to update the entry of the table associated with the requested PC "block[set][way].ip"
+        //before updating, get the LRU distance and promote the block to the suggested position then perform the updation.
+        //new LRU distance=old LRU distance + present LRU position.
+        //promoted positon=present LRU Position-old LRU distance.
+        //if difference negative then promoted position will be 0.
+        int foundKey = FindEntry(block[set][way].ip);
+        DemandIPV[foundKey].count++;
+        if(foundKey!=-1)
+        {
+            uint32_t old_lru_distance=DemandIPV[foundKey].LRU_Distance;
+            uint32_t present_lru_position=block[set][way].lru;
+            uint32_t promoted_position= present_lru_position - old_lru_distance;
+            //uint32_t new_lru_distance=(old_lru_distance + block[set][way].lru)/2;
+            uint32_t new_lru_distance=(old_lru_distance - present_lru_position);
+            InsertUpdateEntry(key, ip, Hit, new_lru_distance);
+            if(promoted_position<0)
+            {
+                for (uint32_t i=0; i<NUM_WAY; i++) {
+                    if (block[set][i].lru < block[set][way].lru) {
+                        block[set][i].lru++;
+                    }
+                }
+                block[set][way].lru=0;
+            }
+            else
+            {
+               promotion(set,way,promoted_position,present_lru_position);
+            }
+        }
+    }  
+    else 
+    {
+        //Create a new entry into the table for ip "block[set][way].ip" if that ip is not present 
+        //if present then insert that block at the LRU position which will be suggested by table.
+        //DK----------------------------------DK//
+        //PC entry does not exist ..just insert it otherwise it is present then don't do anything.
+        int foundKey = FindEntry(ip);
+        if (foundKey == -1) 
+        {
+            key++;
+            InsertUpdateEntry(key,ip, insert,0);
+            // update lru replacement state
+            for (uint32_t i=0; i<NUM_WAY; i++) {
+                if (block[set][i].lru < block[set][way].lru) {
+                    block[set][i].lru++;
+                }
+            }
+            block[set][way].lru=0;
+            DemandIPV[foundKey].count++;
+        } 
+        else{
+            DemandIPV[foundKey].count++;
+            insertion(set,way,DemandIPV[foundKey].LRU_Distance);
+        }
+        //DK-----------------------------------DK//   
+    }
+
+}
+
+// use this function to print out your own stats at the end of simulation
+void CACHE::llc_replacement_final_stats()
+{
+   
+  string fileName1 = "LRU Distance.txt";
+  // Open the file for writing
+  std::ofstream outFile1(fileName1, ios::trunc);
+  // Check if the file is open
+  if (!outFile1.is_open()) 
+  {
+    std::cerr << "Error opening file: " << fileName1 << std::endl;
+  }
+
+  outFile1 <<left <<setw(20)<<"Key"<<setw(20) << "PC " <<setw(20) << "LRU Distance"<<setw(20)<<"PC Count"<<endl;
+  outFile1 <<setw(100) <<setfill('-') << "" <<setfill(' ') <<endl;
+  
+  for (const auto& pair : DemandIPV) 
+  {
+    outFile1 << left <<setw(20) <<pair.first << setw(20) << pair.second.DemandPC <<setw(20)<<pair.second.LRU_Distance<<setw(20)<<pair.second.count<<endl;
+  }
+    // Close the file
+    outFile1.close();
+    
+}
