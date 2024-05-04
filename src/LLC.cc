@@ -1,5 +1,5 @@
 #include "LLC.h"
-// #include "cache.h"
+#include "cache.h"
 
 LLC::LLC()
 {
@@ -15,12 +15,12 @@ LLC::LLC()
 
 int LLC::add_rq(PACKET *packet)
 {
-
+  
 }
 
 int LLC::add_wq(PACKET *packet)
 {
-
+  
 }
 
 int LLC::add_pq(PACKET* packet)

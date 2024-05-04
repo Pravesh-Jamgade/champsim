@@ -9,6 +9,15 @@
 class LLC:public MEMORY
 {
   public:
+  string NAME = "Master_LLC";
+  uint32_t QUEUE_SIZE = 100;
+   // queues
+    PACKET_QUEUE WQ{NAME + "_WQ", QUEUE_SIZE}, // write queue
+                 RQ{NAME + "_RQ", QUEUE_SIZE}, // read queue
+                 PQ{NAME + "_PQ", QUEUE_SIZE}, // prefetch queue   /*object of class PACKET_QUEUE which is in the block.h file*/
+                 MSHR{NAME + "_MSHR", QUEUE_SIZE}, // MSHR
+                 PROCESSED{NAME + "_PROCESSED", ROB_SIZE}; // processed queue
+
   vector<CACHE> banks;
   int  add_rq(PACKET *packet);  //The = 0 after a virtual function means that "this is pure virtual function, it must be implemented in the derived function".
   int  add_wq(PACKET *packet);
