@@ -415,6 +415,8 @@ void MEMORY_CONTROLLER::process(PACKET_QUEUE *queue)
 
 int MEMORY_CONTROLLER::add_rq(PACKET *packet)
 {
+//   cout << "cycle, " << current_core_cycle << ", " << NAME << ", RQ, " << packet->address << "\n";
+    
     // simply return read requests with dummy response before the warmup
     if (all_warmup_complete < NUM_CPUS) {
         if (packet->instruction) 

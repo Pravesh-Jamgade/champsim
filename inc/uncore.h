@@ -3,27 +3,24 @@
 
 #include "champsim.h"
 #include "dram_controller.h"
+#include "cache.h"
 
-#include "LLC.h"
 //#include "drc_controller.h"
 
 //#define DRC_MSHR_SIZE 48
 
 // uncore
-class UNCORE {
+class UNCORE{
   public:
 
     // // LLC
     // CACHE LLC{"LLC", LLC_SET, LLC_WAY, LLC_SET*LLC_WAY, LLC_WQ_SIZE, LLC_RQ_SIZE, LLC_PQ_SIZE, LLC_MSHR_SIZE};
-
-    LLC* llc;
 
     // DRAM
     MEMORY_CONTROLLER DRAM{"DRAM"}; 
 
     UNCORE(); 
 };
-
 extern UNCORE uncore;
 
 #endif

@@ -1,6 +1,9 @@
 #include "ooo_cpu.h"
 #include "set.h"
 
+#include "LLC.h"
+extern bool one_packet;
+
 // out-of-order core
 O3_CPU ooo_cpu[NUM_CPUS]; 
 uint64_t current_core_cycle[NUM_CPUS], stall_cycle[NUM_CPUS];
@@ -13,6 +16,15 @@ void O3_CPU::initialize_core()
 
 void O3_CPU::read_from_trace()
 {
+    if(!one_packet)
+    {
+        one_packet= true;
+        tracing_on = true;
+    }
+    else
+    {
+        tracing_on = false;
+    }
     // actual processors do not work like this but for easier implementation,
     // we read instruction traces and virtually add them in the ROB
     // note that these traces are not yet translated and fetched 
@@ -23,7 +35,7 @@ void O3_CPU::read_from_trace()
 
     // first, read PIN trace
     while (continue_reading) {
-
+        
         size_t instr_size = knob_cloudsuite ? sizeof(cloudsuite_instr) : sizeof(input_instr);
 
         if (knob_cloudsuite) {

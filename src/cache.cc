@@ -1,8 +1,9 @@
 #include "cache.h"
 #include "set.h"
+#include "LLC.h"
 
-#include "uncore.h"
-
+extern LLC* llc;
+extern bool tracing_on;
 uint64_t l2pf_access = 0;
 
 void CACHE::handle_fill()
@@ -25,6 +26,11 @@ void CACHE::handle_fill()
 #endif
        
     uint32_t mshr_index = MSHR.next_fill_index;
+
+    // if(tracing_on)
+    // {
+    //   cout << "cycle, " << current_core_cycle[MSHR.entry[mshr_index].cpu] << ", " << NAME << ", FILL, " <<std::hex<< MSHR.entry[mshr_index].address<< "\n";
+    // }
 
     // find victim
     uint32_t set = get_set(MSHR.entry[mshr_index].address), way;
@@ -256,7 +262,10 @@ void CACHE::handle_writeback()
   if (writeback_cpu == NUM_CPUS)
     return;
 
-  
+  if(tracing_on)
+  {
+    // cout  << "cycle, " << current_core_cycle[writeback_cpu] << ", " << NAME << ", WQ, " << std::hex << WQ.entry[WQ.head].address<< "\n";
+  }
 
   // handle the oldest entry
   if ((WQ.entry[WQ.head].event_cycle <= current_core_cycle[writeback_cpu]) && (WQ.occupancy > 0))
@@ -576,7 +585,6 @@ void CACHE::handle_read()
   // handle read
   for (uint32_t i = 0; i < MAX_READ; i++)
   {
-
     //int inmshr=RQ.head; //DK
     //mshrOcc_track(&RQ.entry[inmshr]); //DK
 
@@ -587,6 +595,11 @@ void CACHE::handle_read()
     // handle the oldest entry
     if ((RQ.entry[RQ.head].event_cycle <= current_core_cycle[read_cpu]) && (RQ.occupancy > 0))
     {
+      if(tracing_on)
+      {
+        // cout << "cycle, " << current_core_cycle[read_cpu] << ", " << NAME << ", RQ, " << std::hex << RQ.entry[RQ.head].address<< "\n";
+      }
+
       int index = RQ.head;
 
       // access cache
@@ -708,196 +721,206 @@ void CACHE::handle_read()
                 cout << " full_addr: " << RQ.entry[index].full_addr << dec;
                 cout << " cycle: " << RQ.entry[index].event_cycle << endl; });
 
-        // check mshr
-        uint8_t miss_handled = 1;
-        int mshr_index = check_mshr(&RQ.entry[index]);
-
-        if (mshr_index == -2)
+        // ***
+        // Banked Cache 
+        // MSHR handled by master_llc but stat are given to bank
+        if(IS_LLC == cache_type)
         {
-          // this is a data/instruction collision in the MSHR, so we have to wait before we can allocate this miss
-          miss_handled = 0;
-        }
-        else if ((mshr_index == -1) && (MSHR.occupancy < MSHR_SIZE))
-        { // this is a new miss
-
-          if (cache_type == IS_LLC)
-          {
-            // check to make sure the DRAM RQ has room for this LLC read miss
-            if (lower_level->get_occupancy(1, RQ.entry[index].address) == lower_level->get_size(1, RQ.entry[index].address))
-            {
-              miss_handled = 0;
-            }
-            else
-            {
-              add_mshr(&RQ.entry[index]);
-              if (lower_level)
-              {
-                lower_level->add_rq(&RQ.entry[index]);
-              }
-            }
-          }
-          else
-          {
-            // add it to mshr (read miss)
-            add_mshr(&RQ.entry[index]);
-
-            // add it to the next level's read queue
-            if (lower_level)
-              lower_level->add_rq(&RQ.entry[index]);
-            else
-            { // this is the last level
-              if (cache_type == IS_STLB)
-              {
-                // TODO: need to differentiate page table walk and actual swap
-
-                // emulate page table walk
-                uint64_t pa = va_to_pa(read_cpu, RQ.entry[index].instr_id, RQ.entry[index].full_addr, RQ.entry[index].address, 0);
-
-                RQ.entry[index].data = pa >> LOG2_PAGE_SIZE;
-                RQ.entry[index].event_cycle = current_core_cycle[read_cpu];
-                return_data(&RQ.entry[index]);
-              }
-            }
-          }
+          handle_readmiss_bank();
         }
         else
         {
-          if ((mshr_index == -1) && (MSHR.occupancy == MSHR_SIZE))
-          { // not enough MSHR resource
+          
+            // check mshr
+            uint8_t miss_handled = 1;
+            int mshr_index = check_mshr(&RQ.entry[index]);
 
-            // cannot handle miss request until one of MSHRs is available
-            miss_handled = 0;
-            STALL[RQ.entry[index].type]++;
-          }
-          else if (mshr_index != -1)
-          { // already in-flight miss
-
-            // mark merged consumer
-            if (RQ.entry[index].type == RFO)
+            if (mshr_index == -2)
             {
-
-              if (RQ.entry[index].tlb_access)
-              {
-                uint32_t sq_index = RQ.entry[index].sq_index;
-                MSHR.entry[mshr_index].store_merged = 1;
-                MSHR.entry[mshr_index].sq_index_depend_on_me.insert(sq_index);
-                MSHR.entry[mshr_index].sq_index_depend_on_me.join(RQ.entry[index].sq_index_depend_on_me, SQ_SIZE);
-              }
-
-              if (RQ.entry[index].load_merged)
-              {
-                // uint32_t lq_index = RQ.entry[index].lq_index;
-                MSHR.entry[mshr_index].load_merged = 1;
-                // MSHR.entry[mshr_index].lq_index_depend_on_me[lq_index] = 1;
-                MSHR.entry[mshr_index].lq_index_depend_on_me.join(RQ.entry[index].lq_index_depend_on_me, LQ_SIZE);
-              }
+              // this is a data/instruction collision in the MSHR, so we have to wait before we can allocate this miss
+              miss_handled = 0;
             }
-            else
-            {
-              if (RQ.entry[index].instruction)
+            else if ((mshr_index == -1) && (MSHR.occupancy < MSHR_SIZE))
+            { // this is a new miss
+
+              if (cache_type == IS_LLC)
               {
-                uint32_t rob_index = RQ.entry[index].rob_index;
-                MSHR.entry[mshr_index].instruction = 1; // add as instruction type
-                MSHR.entry[mshr_index].instr_merged = 1;
-                MSHR.entry[mshr_index].rob_index_depend_on_me.insert(rob_index);
-
-                DP(if (warmup_complete[MSHR.entry[mshr_index].cpu]) {
-                                cout << "[INSTR_MERGED] " << __func__ << " cpu: " << MSHR.entry[mshr_index].cpu << " instr_id: " << MSHR.entry[mshr_index].instr_id;
-                                cout << " merged rob_index: " << rob_index << " instr_id: " << RQ.entry[index].instr_id << endl; });
-
-                if (RQ.entry[index].instr_merged)
+                // check to make sure the DRAM RQ has room for this LLC read miss
+                if (lower_level->get_occupancy(1, RQ.entry[index].address) == lower_level->get_size(1, RQ.entry[index].address))
                 {
-                  MSHR.entry[mshr_index].rob_index_depend_on_me.join(RQ.entry[index].rob_index_depend_on_me, ROB_SIZE);
-                  DP(if (warmup_complete[MSHR.entry[mshr_index].cpu]) {
-                                    cout << "[INSTR_MERGED] " << __func__ << " cpu: " << MSHR.entry[mshr_index].cpu << " instr_id: " << MSHR.entry[mshr_index].instr_id;
-                                    cout << " merged rob_index: " << i << " instr_id: N/A" << endl; });
+                  miss_handled = 0;
+                }
+                else
+                {
+                  add_mshr(&RQ.entry[index]);
+                  if (lower_level)
+                  {
+                    lower_level->add_rq(&RQ.entry[index]);
+                  }
                 }
               }
               else
               {
-                uint32_t lq_index = RQ.entry[index].lq_index;
-                MSHR.entry[mshr_index].is_data = 1; // add as data type
-                MSHR.entry[mshr_index].load_merged = 1;
-                MSHR.entry[mshr_index].lq_index_depend_on_me.insert(lq_index);
+                // add it to mshr (read miss)
+                add_mshr(&RQ.entry[index]);
 
-                DP(if (warmup_complete[read_cpu]) {
-                                cout << "[DATA_MERGED] " << __func__ << " cpu: " << read_cpu << " instr_id: " << RQ.entry[index].instr_id;
-                                cout << " merged rob_index: " << RQ.entry[index].rob_index << " instr_id: " << RQ.entry[index].instr_id << " lq_index: " << RQ.entry[index].lq_index << endl; });
-                MSHR.entry[mshr_index].lq_index_depend_on_me.join(RQ.entry[index].lq_index_depend_on_me, LQ_SIZE);
-                if (RQ.entry[index].store_merged)
-                {
-                  MSHR.entry[mshr_index].store_merged = 1;
-                  MSHR.entry[mshr_index].sq_index_depend_on_me.join(RQ.entry[index].sq_index_depend_on_me, SQ_SIZE);
+                // add it to the next level's read queue
+                if (lower_level)
+                  lower_level->add_rq(&RQ.entry[index]);
+                else
+                { // this is the last level
+                  if (cache_type == IS_STLB)
+                  {
+                    // TODO: need to differentiate page table walk and actual swap
+
+                    // emulate page table walk
+                    uint64_t pa = va_to_pa(read_cpu, RQ.entry[index].instr_id, RQ.entry[index].full_addr, RQ.entry[index].address, 0);
+
+                    RQ.entry[index].data = pa >> LOG2_PAGE_SIZE;
+                    RQ.entry[index].event_cycle = current_core_cycle[read_cpu];
+                    return_data(&RQ.entry[index]);
+                  }
                 }
               }
             }
-
-            // update fill_level
-            if (RQ.entry[index].fill_level < MSHR.entry[mshr_index].fill_level)
-              MSHR.entry[mshr_index].fill_level = RQ.entry[index].fill_level;
-
-            if ((RQ.entry[index].fill_l1i) && (MSHR.entry[mshr_index].fill_l1i != 1))
+            else
             {
-              MSHR.entry[mshr_index].fill_l1i = 1;
+              if ((mshr_index == -1) && (MSHR.occupancy == MSHR_SIZE))
+              { // not enough MSHR resource
+
+                // cannot handle miss request until one of MSHRs is available
+                miss_handled = 0;
+                STALL[RQ.entry[index].type]++;
+              }
+              else if (mshr_index != -1)
+              { // already in-flight miss
+
+                // mark merged consumer
+                if (RQ.entry[index].type == RFO)
+                {
+
+                  if (RQ.entry[index].tlb_access)
+                  {
+                    uint32_t sq_index = RQ.entry[index].sq_index;
+                    MSHR.entry[mshr_index].store_merged = 1;
+                    MSHR.entry[mshr_index].sq_index_depend_on_me.insert(sq_index);
+                    MSHR.entry[mshr_index].sq_index_depend_on_me.join(RQ.entry[index].sq_index_depend_on_me, SQ_SIZE);
+                  }
+
+                  if (RQ.entry[index].load_merged)
+                  {
+                    // uint32_t lq_index = RQ.entry[index].lq_index;
+                    MSHR.entry[mshr_index].load_merged = 1;
+                    // MSHR.entry[mshr_index].lq_index_depend_on_me[lq_index] = 1;
+                    MSHR.entry[mshr_index].lq_index_depend_on_me.join(RQ.entry[index].lq_index_depend_on_me, LQ_SIZE);
+                  }
+                }
+                else
+                {
+                  if (RQ.entry[index].instruction)
+                  {
+                    uint32_t rob_index = RQ.entry[index].rob_index;
+                    MSHR.entry[mshr_index].instruction = 1; // add as instruction type
+                    MSHR.entry[mshr_index].instr_merged = 1;
+                    MSHR.entry[mshr_index].rob_index_depend_on_me.insert(rob_index);
+
+                    DP(if (warmup_complete[MSHR.entry[mshr_index].cpu]) {
+                                    cout << "[INSTR_MERGED] " << __func__ << " cpu: " << MSHR.entry[mshr_index].cpu << " instr_id: " << MSHR.entry[mshr_index].instr_id;
+                                    cout << " merged rob_index: " << rob_index << " instr_id: " << RQ.entry[index].instr_id << endl; });
+
+                    if (RQ.entry[index].instr_merged)
+                    {
+                      MSHR.entry[mshr_index].rob_index_depend_on_me.join(RQ.entry[index].rob_index_depend_on_me, ROB_SIZE);
+                      DP(if (warmup_complete[MSHR.entry[mshr_index].cpu]) {
+                                        cout << "[INSTR_MERGED] " << __func__ << " cpu: " << MSHR.entry[mshr_index].cpu << " instr_id: " << MSHR.entry[mshr_index].instr_id;
+                                        cout << " merged rob_index: " << i << " instr_id: N/A" << endl; });
+                    }
+                  }
+                  else
+                  {
+                    uint32_t lq_index = RQ.entry[index].lq_index;
+                    MSHR.entry[mshr_index].is_data = 1; // add as data type
+                    MSHR.entry[mshr_index].load_merged = 1;
+                    MSHR.entry[mshr_index].lq_index_depend_on_me.insert(lq_index);
+
+                    DP(if (warmup_complete[read_cpu]) {
+                                    cout << "[DATA_MERGED] " << __func__ << " cpu: " << read_cpu << " instr_id: " << RQ.entry[index].instr_id;
+                                    cout << " merged rob_index: " << RQ.entry[index].rob_index << " instr_id: " << RQ.entry[index].instr_id << " lq_index: " << RQ.entry[index].lq_index << endl; });
+                    MSHR.entry[mshr_index].lq_index_depend_on_me.join(RQ.entry[index].lq_index_depend_on_me, LQ_SIZE);
+                    if (RQ.entry[index].store_merged)
+                    {
+                      MSHR.entry[mshr_index].store_merged = 1;
+                      MSHR.entry[mshr_index].sq_index_depend_on_me.join(RQ.entry[index].sq_index_depend_on_me, SQ_SIZE);
+                    }
+                  }
+                }
+
+                // update fill_level
+                if (RQ.entry[index].fill_level < MSHR.entry[mshr_index].fill_level)
+                  MSHR.entry[mshr_index].fill_level = RQ.entry[index].fill_level;
+
+                if ((RQ.entry[index].fill_l1i) && (MSHR.entry[mshr_index].fill_l1i != 1))
+                {
+                  MSHR.entry[mshr_index].fill_l1i = 1;
+                }
+                if ((RQ.entry[index].fill_l1d) && (MSHR.entry[mshr_index].fill_l1d != 1))
+                {
+                  MSHR.entry[mshr_index].fill_l1d = 1;
+                }
+
+                // update request
+                if (MSHR.entry[mshr_index].type == PREFETCH)
+                {
+                  uint8_t prior_returned = MSHR.entry[mshr_index].returned;
+                  uint64_t prior_event_cycle = MSHR.entry[mshr_index].event_cycle;
+                  MSHR.entry[mshr_index] = RQ.entry[index];
+
+                  // in case request is already returned, we should keep event_cycle and retunred variables
+                  MSHR.entry[mshr_index].returned = prior_returned;
+                  MSHR.entry[mshr_index].event_cycle = prior_event_cycle;
+                }
+
+                MSHR_MERGED[RQ.entry[index].type]++;
+
+                DP(if (warmup_complete[read_cpu]) {
+                            cout << "[" << NAME << "] " << __func__ << " mshr merged";
+                            cout << " instr_id: " << RQ.entry[index].instr_id << " prior_id: " << MSHR.entry[mshr_index].instr_id; 
+                            cout << " address: " << hex << RQ.entry[index].address;
+                            cout << " full_addr: " << RQ.entry[index].full_addr << dec;
+                            cout << " cycle: " << RQ.entry[index].event_cycle << endl; });
+              }
+              else
+              { // WE SHOULD NOT REACH HERE
+                cerr << "[" << NAME << "] MSHR errors" << endl;
+                assert(0);
+              }
             }
-            if ((RQ.entry[index].fill_l1d) && (MSHR.entry[mshr_index].fill_l1d != 1))
+            if (miss_handled)
             {
-              MSHR.entry[mshr_index].fill_l1d = 1;
+              // update prefetcher on load instruction
+              if (RQ.entry[index].type == LOAD)
+              {
+                if (cache_type == IS_L1I)
+                  l1i_prefetcher_cache_operate(read_cpu, RQ.entry[index].ip, 0, 0);
+                if (cache_type == IS_L1D)
+                  l1d_prefetcher_operate(RQ.entry[index].full_addr, RQ.entry[index].ip, 0, RQ.entry[index].type);
+                if (cache_type == IS_L2C)
+                  l2c_prefetcher_operate(RQ.entry[index].address << LOG2_BLOCK_SIZE, RQ.entry[index].ip, 0, RQ.entry[index].type, 0);
+                if (cache_type == IS_LLC)
+                {
+                  cpu = read_cpu;
+                  llc_prefetcher_operate(RQ.entry[index].address << LOG2_BLOCK_SIZE, RQ.entry[index].ip, 0, RQ.entry[index].type, 0);
+                  cpu = 0;
+                }
+              }
+
+              MISS[RQ.entry[index].type]++;
+              ACCESS[RQ.entry[index].type]++;
+
+              // remove this entry from RQ
+              RQ.remove_queue(&RQ.entry[index]);
+              reads_available_this_cycle--;
             }
-
-            // update request
-            if (MSHR.entry[mshr_index].type == PREFETCH)
-            {
-              uint8_t prior_returned = MSHR.entry[mshr_index].returned;
-              uint64_t prior_event_cycle = MSHR.entry[mshr_index].event_cycle;
-              MSHR.entry[mshr_index] = RQ.entry[index];
-
-              // in case request is already returned, we should keep event_cycle and retunred variables
-              MSHR.entry[mshr_index].returned = prior_returned;
-              MSHR.entry[mshr_index].event_cycle = prior_event_cycle;
-            }
-
-            MSHR_MERGED[RQ.entry[index].type]++;
-
-            DP(if (warmup_complete[read_cpu]) {
-                        cout << "[" << NAME << "] " << __func__ << " mshr merged";
-                        cout << " instr_id: " << RQ.entry[index].instr_id << " prior_id: " << MSHR.entry[mshr_index].instr_id; 
-                        cout << " address: " << hex << RQ.entry[index].address;
-                        cout << " full_addr: " << RQ.entry[index].full_addr << dec;
-                        cout << " cycle: " << RQ.entry[index].event_cycle << endl; });
-          }
-          else
-          { // WE SHOULD NOT REACH HERE
-            cerr << "[" << NAME << "] MSHR errors" << endl;
-            assert(0);
-          }
-        }
-
-        if (miss_handled)
-        {
-          // update prefetcher on load instruction
-          if (RQ.entry[index].type == LOAD)
-          {
-            if (cache_type == IS_L1I)
-              l1i_prefetcher_cache_operate(read_cpu, RQ.entry[index].ip, 0, 0);
-            if (cache_type == IS_L1D)
-              l1d_prefetcher_operate(RQ.entry[index].full_addr, RQ.entry[index].ip, 0, RQ.entry[index].type);
-            if (cache_type == IS_L2C)
-              l2c_prefetcher_operate(RQ.entry[index].address << LOG2_BLOCK_SIZE, RQ.entry[index].ip, 0, RQ.entry[index].type, 0);
-            if (cache_type == IS_LLC)
-            {
-              cpu = read_cpu;
-              llc_prefetcher_operate(RQ.entry[index].address << LOG2_BLOCK_SIZE, RQ.entry[index].ip, 0, RQ.entry[index].type, 0);
-              cpu = 0;
-            }
-          }
-
-          MISS[RQ.entry[index].type]++;
-          ACCESS[RQ.entry[index].type]++;
-
-          // remove this entry from RQ
-          RQ.remove_queue(&RQ.entry[index]);
-          reads_available_this_cycle--;
         }
       }
     }
@@ -1154,6 +1177,8 @@ void CACHE::handle_prefetch()
 
 void CACHE::operate()
 {
+  // if(tracing_on)
+  //   cout << "cycle, " << current_core_cycle << ", START, " << NAME << '\n'; 
   handle_fill();
   handle_writeback();
   reads_available_this_cycle = MAX_READ;
@@ -1627,7 +1652,16 @@ int CACHE::kpc_prefetch_line(uint64_t base_addr, uint64_t pf_addr, int pf_fill_l
 //-----------------------------------------------------------------()---------------------------------------------------------------//
 
 int CACHE::add_pq(PACKET *packet)
-{
+{ 
+  // **
+  // if its a bank, fwd packet to LLC_master
+  // LLC_master will decide to which the packet should be fwd
+  // Need to consider whether extra cycle should be used or not
+  if(IS_LLC)
+  {
+    llc->add_pq(packet);
+  }
+
   // check for the latest wirtebacks in the write queue
   int wq_index = WQ.check_queue(packet);
   if (wq_index != -1)
@@ -1753,6 +1787,7 @@ int CACHE::add_pq(PACKET *packet)
 
 void CACHE::return_data(PACKET *packet)
 {
+  cout << "cycle, " << current_core_cycle << ", " << NAME << '\n';
   // check MSHR information
   int mshr_index = check_mshr(packet);
 
@@ -2020,4 +2055,199 @@ void CACHE::printMshr_state()
 void CACHE::increment_WQ_FULL(uint64_t address)
 {
   WQ.FULL++;
+}
+
+
+uint32_t CACHE::get_bank_no(uint32_t set, uint32_t cpu)
+{
+  uint32_t set_bits=log2(NUM_SET);
+  uint32_t n=set_bits;
+  uint32_t CPU_BIT=log2(2);
+  uint32_t mask=~(0);
+  for(int i=0;i<CPU_BIT;i++)
+  {
+      n--;
+      mask=mask & ~(1 << n);
+      
+  }
+
+  unsigned int unset_set = set & mask;
+  // unsigned int given_bits = cpu; 
+  
+  // unsigned int set_num = unset_set | (given_bits << set_bits-CPU_BIT );
+  
+  return unset_set;//set_num;
+}
+
+void CACHE::handle_readmiss_bank()
+{
+  uint32_t read_cpu = RQ.entry[RQ.head].cpu; 
+  int index = RQ.head;
+  // check mshr
+  uint8_t miss_handled = 1;
+  int mshr_index = llc->check_mshr(&RQ.entry[index]);
+
+  if (mshr_index == -2)
+  {
+    // this is a data/instruction collision in the MSHR, so we have to wait before we can allocate this miss
+    miss_handled = 0;
+  }
+  else if ((mshr_index == -1) && (llc->MSHR.occupancy < llc->MSHR_SIZE))
+  { // this is a new miss
+    // check to make sure the DRAM RQ has room for this LLC read miss
+
+    if (lower_level->get_occupancy(1, RQ.entry[index].address) == lower_level->get_size(1, RQ.entry[index].address))
+    {
+      miss_handled = 0;
+    }
+    else
+    {
+      // cout << "ok1\n";
+      llc->add_mshr(&RQ.entry[index]);
+      if (lower_level)
+      {
+      // cout << "kk2\n";
+
+        lower_level->add_rq(&RQ.entry[index]);
+      }
+    }
+  }
+  else
+  {
+    if ((mshr_index == -1) && (llc->MSHR.occupancy == MSHR_SIZE))
+    {
+      // not enough MSHR resource
+      // cannot handle miss request until one of MSHRs is available
+      miss_handled = 0;
+      STALL[RQ.entry[index].type]++;
+    }
+    else if (mshr_index != -1)
+    { 
+      // already in-flight miss
+      // mark merged consumer
+      if (RQ.entry[index].type == RFO)
+      {
+        if (RQ.entry[index].tlb_access)
+        {
+          uint32_t sq_index = RQ.entry[index].sq_index;
+          llc->MSHR.entry[mshr_index].store_merged = 1;
+          llc->MSHR.entry[mshr_index].sq_index_depend_on_me.insert(sq_index);
+          llc->MSHR.entry[mshr_index].sq_index_depend_on_me.join(RQ.entry[index].sq_index_depend_on_me, SQ_SIZE);
+        }
+
+        if (RQ.entry[index].load_merged)
+        {
+          // uint32_t lq_index = RQ.entry[index].lq_index;
+          llc->MSHR.entry[mshr_index].load_merged = 1;
+          // MSHR.entry[mshr_index].lq_index_depend_on_me[lq_index] = 1;
+          llc->MSHR.entry[mshr_index].lq_index_depend_on_me.join(RQ.entry[index].lq_index_depend_on_me, LQ_SIZE);
+        }
+      }
+      else
+      {
+        if (RQ.entry[index].instruction)
+        {
+          uint32_t rob_index = RQ.entry[index].rob_index;
+          llc->MSHR.entry[mshr_index].instruction = 1; // add as instruction type
+          llc->MSHR.entry[mshr_index].instr_merged = 1;
+          llc->MSHR.entry[mshr_index].rob_index_depend_on_me.insert(rob_index);
+
+          DP(if (warmup_complete[llc->MSHR.entry[mshr_index].cpu]) {
+                          cout << "[INSTR_MERGED] " << __func__ << " cpu: " << MSHR.entry[mshr_index].cpu << " instr_id: " << MSHR.entry[mshr_index].instr_id;
+                          cout << " merged rob_index: " << rob_index << " instr_id: " << RQ.entry[index].instr_id << endl; });
+
+          if (RQ.entry[index].instr_merged)
+          {
+            llc->MSHR.entry[mshr_index].rob_index_depend_on_me.join(RQ.entry[index].rob_index_depend_on_me, ROB_SIZE);
+            DP(if (warmup_complete[llc->MSHR.entry[mshr_index].cpu]) {
+                              cout << "[INSTR_MERGED] " << __func__ << " cpu: " << llc->MSHR.entry[mshr_index].cpu << " instr_id: " << llc->MSHR.entry[mshr_index].instr_id;
+                              cout << " merged rob_index: " << i << " instr_id: N/A" << endl; });
+          }
+        }
+        else
+        {
+          uint32_t lq_index = RQ.entry[index].lq_index;
+          llc->MSHR.entry[mshr_index].is_data = 1; // add as data type
+          llc->MSHR.entry[mshr_index].load_merged = 1;
+          llc->MSHR.entry[mshr_index].lq_index_depend_on_me.insert(lq_index);
+
+          DP(if (warmup_complete[read_cpu]) {
+                          cout << "[DATA_MERGED] " << __func__ << " cpu: " << read_cpu << " instr_id: " << RQ.entry[index].instr_id;
+                          cout << " merged rob_index: " << RQ.entry[index].rob_index << " instr_id: " << RQ.entry[index].instr_id << " lq_index: " << RQ.entry[index].lq_index << endl; });
+          llc->MSHR.entry[mshr_index].lq_index_depend_on_me.join(RQ.entry[index].lq_index_depend_on_me, LQ_SIZE);
+          if (RQ.entry[index].store_merged)
+          {
+            llc->MSHR.entry[mshr_index].store_merged = 1;
+            llc->MSHR.entry[mshr_index].sq_index_depend_on_me.join(RQ.entry[index].sq_index_depend_on_me, SQ_SIZE);
+          }
+        }
+      }
+
+      // update fill_level
+      if (RQ.entry[index].fill_level < llc->MSHR.entry[mshr_index].fill_level)
+        llc->MSHR.entry[mshr_index].fill_level = RQ.entry[index].fill_level;
+
+      if ((RQ.entry[index].fill_l1i) && (llc->MSHR.entry[mshr_index].fill_l1i != 1))
+      {
+        llc->MSHR.entry[mshr_index].fill_l1i = 1;
+      }
+      if ((RQ.entry[index].fill_l1d) && (llc->MSHR.entry[mshr_index].fill_l1d != 1))
+      {
+        llc->MSHR.entry[mshr_index].fill_l1d = 1;
+      }
+
+      // update request
+      if (llc->MSHR.entry[mshr_index].type == PREFETCH)
+      {
+        uint8_t prior_returned = llc->MSHR.entry[mshr_index].returned;
+        uint64_t prior_event_cycle = llc->MSHR.entry[mshr_index].event_cycle;
+        llc->MSHR.entry[mshr_index] = RQ.entry[index];
+
+        // in case request is already returned, we should keep event_cycle and retunred variables
+        llc->MSHR.entry[mshr_index].returned = prior_returned;
+        llc->MSHR.entry[mshr_index].event_cycle = prior_event_cycle;
+      }
+
+      llc->MSHR_MERGED[RQ.entry[index].type]++;
+
+      DP(if (warmup_complete[read_cpu]) {
+                  cout << "[" << NAME << "] " << __func__ << " mshr merged";
+                  cout << " instr_id: " << RQ.entry[index].instr_id << " prior_id: " << llc->MSHR.entry[mshr_index].instr_id; 
+                  cout << " address: " << hex << RQ.entry[index].address;
+                  cout << " full_addr: " << RQ.entry[index].full_addr << dec;
+                  cout << " cycle: " << RQ.entry[index].event_cycle << endl; });
+    }
+    else
+    { // WE SHOULD NOT REACH HERE
+      cerr << "[" << NAME << "] MSHR errors" << endl;
+      assert(0);
+    }
+  }
+
+  if (miss_handled)
+  {
+    // update prefetcher on load instruction
+    if (RQ.entry[index].type == LOAD)
+    {
+      if (cache_type == IS_L1I)
+        l1i_prefetcher_cache_operate(read_cpu, RQ.entry[index].ip, 0, 0);
+      if (cache_type == IS_L1D)
+        l1d_prefetcher_operate(RQ.entry[index].full_addr, RQ.entry[index].ip, 0, RQ.entry[index].type);
+      if (cache_type == IS_L2C)
+        l2c_prefetcher_operate(RQ.entry[index].address << LOG2_BLOCK_SIZE, RQ.entry[index].ip, 0, RQ.entry[index].type, 0);
+      if (cache_type == IS_LLC)
+      {
+        cpu = read_cpu;
+        llc_prefetcher_operate(RQ.entry[index].address << LOG2_BLOCK_SIZE, RQ.entry[index].ip, 0, RQ.entry[index].type, 0);
+        cpu = 0;
+      }
+    }
+
+    MISS[RQ.entry[index].type]++;
+    ACCESS[RQ.entry[index].type]++;
+
+    // remove this entry from RQ
+    RQ.remove_queue(&RQ.entry[index]);
+    reads_available_this_cycle--;
+  }
 }

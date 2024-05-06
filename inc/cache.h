@@ -4,8 +4,6 @@
 #include "memory_class.h"
 #include<bits/stdc++.h>
 
-#define NUM_BANKS 4
-
 extern uint32_t pdegree;
 // PAGE
 extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
@@ -98,8 +96,6 @@ extern uint32_t PAGE_TABLE_LATENCY, SWAP_LATENCY;
 #define persetpfuseless 1 //DK
 #define persetpfaccuracy 2 //DK
 
-class LLC;
-
 //extern uint32_t pdegree; //DK
 class CACHE : public MEMORY {
   public:
@@ -146,8 +142,9 @@ class CACHE : public MEMORY {
     CACHE();
     
     // constructor
-    CACHE(string v1, uint32_t v2, int v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8, LLC* master_llc=nullptr) 
+    CACHE(string v1, uint32_t v2, int v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8) 
         : NAME(v1), NUM_SET(v2), NUM_WAY(v3), NUM_LINE(v4), WQ_SIZE(v5), RQ_SIZE(v6), PQ_SIZE(v7), MSHR_SIZE(v8) {
+        
 
         LATENCY = 0;
 
@@ -229,6 +226,8 @@ class CACHE : public MEMORY {
         return sum;
     }
     //K]===============================================
+    
+    uint32_t get_bank_no(uint32_t set, uint32_t cpu);
 
     // functions
     int  add_rq(PACKET *packet),  /*add_rq add_wq add_pq all three functions are defined in cache.cc file*/
@@ -298,6 +297,11 @@ class CACHE : public MEMORY {
              find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type),
              llc_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type),
              lru_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK *current_set, uint64_t ip, uint64_t full_addr, uint32_t type);
+
+
+    void handle_readmiss_bank();
 };
+
+extern vector<CACHE*> banks;
 
 #endif
