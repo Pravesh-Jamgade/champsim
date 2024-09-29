@@ -15,3 +15,7 @@ tracer/pin/obj-intel64/
 traces/
 *.log
 
+*.vscode
+*.bak
+*.config*
+
