@@ -38,6 +38,9 @@ public:
    *
    */
 
+  uint64_t numPPages = 0;
+  bool* procPageAccess;
+
   const unsigned fill_level;
   virtual int add_rq(PACKET* packet) = 0;
   virtual int add_wq(PACKET* packet) = 0;

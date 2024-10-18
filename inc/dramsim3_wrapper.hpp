@@ -26,19 +26,11 @@ public:
                                             std::bind(&DRAMSim3_DRAM::ReadCallBack, this, std::placeholders::_1),
                                             std::bind(&DRAMSim3_DRAM::WriteCallBack, this, std::placeholders::_1));
             std::cout << "DRAMSim3_DRAM init -- fixed meta-RQ size" << std::endl;   
-            memory_system_->RegisterACTCallback(std::bind(&DRAMSim3_DRAM::ACTCallBack, this, 
-                                                std::placeholders::_1, std::placeholders::_2, 
-                                                std::placeholders::_3, std::placeholders::_4));
-            if (HYDRA_ENABLE) {
-                std::cout << "[RH_DEFENSE] HydraVicRef ENABLED" << std::endl;
-                detector = new Hydra(HYDRA_ROW_GROUP_SIZE, RH_THRESHOLD/2, DRAM_ROWS, 
-                                    DRAM_BANKS, DRAM_RANKS, DRAM_CHANNELS);
-                ((Hydra *)detector)->RCC = new Functional_Cache(HYDRA_RCC_SETS, 16 /* ways */);
-                std::cout << "[RH_DEFENSE] RTH " << RH_THRESHOLD << " ROW_GROUP_SIZE " 
-                            << HYDRA_ROW_GROUP_SIZE << " RCC_SETS " << HYDRA_RCC_SETS << std::endl;
-            }
-            numPPages = DRAM_CHANNELS * DRAM_RANKS * DRAM_BANKS 
-                                * DRAM_ROWS * DRAM_COLUMNS * BLOCK_SIZE / PAGE_SIZE;
+            // memory_system_->RegisterACTCallback(std::bind(&DRAMSim3_DRAM::ACTCallBack, this, 
+            //                                     std::placeholders::_1, std::placeholders::_2, 
+            //                                     std::placeholders::_3, std::placeholders::_4));
+            numPPages = (DRAM_CHANNELS * DRAM_RANKS * DRAM_BANKS 
+                                * DRAM_ROWS * DRAM_COLUMNS * BLOCK_SIZE) / PAGE_SIZE;
             procPageAccess = new bool[numPPages]{false};
         }
 
@@ -51,8 +43,10 @@ public:
             return -1; // Fast-forward
         }
 
-        procPageAccess[packet->address/PAGE_SIZE] = true;
-
+        std::cout << "XXXXXXXXXXXXXX\n";
+        std::cout << (packet->address & 0xffffffff)/PAGE_SIZE << ", " << numPPages << '\n';
+        procPageAccess[0] = true;
+        std::cout << "YYYYYYYYYYYYYYY\n";
         // Check for duplicates
         auto rq_it = std::find_if(std::begin(RQ), std::end(RQ), 
                                     eq_addr<PACKET>(packet->address, LOG2_BLOCK_SIZE));
@@ -63,56 +57,31 @@ public:
                         << " pkt->type: " << int(packet->type) 
                         << " pkt->address: " << packet->address
                         << " pkt->cpu: " << packet->cpu << std::endl;
-            if (rq_it->type >= RH_MITIGATION) {
-                if (packet->type < RH_MITIGATION) { // rq_it: RH-access and pkt: proc access
-                    if (rq_it->type == RH_UPDATE) { // Ensure write is performed (later)
-                        rhActions.push_back(std::make_pair(rq_it->address, RH_WRITE));
-                    }
-                    rq_it->scheduled = packet->scheduled;
-                    rq_it->asid[0] = packet->asid[0], rq_it->asid[1] = packet->asid[1];
-                    rq_it->type = packet->type;
-                    rq_it->fill_level = packet->fill_level;
-                    rq_it->pf_origin_level = packet->pf_origin_level;
-                    rq_it->pf_metadata = packet->pf_metadata;
-                    rq_it->cpu = packet->cpu;
-                    rq_it->address = packet->address;
-                    rq_it->v_address = packet->v_address;
-                    rq_it->data = packet->data;
-                    rq_it->instr_id = packet->instr_id;
-                    rq_it->ip = packet->ip;
-                    rq_it->event_cycle = packet->event_cycle;
-                    rq_it->cycle_enqueued = packet->cycle_enqueued;
-                    rq_it->to_return.clear();
-                    rq_it->lq_index_depend_on_me.clear();
-                    rq_it->sq_index_depend_on_me.clear();
-                    rq_it->instr_depend_on_me.clear();
-                    rq_it->translation_level = packet->translation_level;
-                    rq_it->init_translation_level = packet->init_translation_level;
-                    packet_dep_merge(rq_it->lq_index_depend_on_me, packet->lq_index_depend_on_me);
-                    packet_dep_merge(rq_it->sq_index_depend_on_me, packet->sq_index_depend_on_me);
-                    packet_dep_merge(rq_it->instr_depend_on_me, packet->instr_depend_on_me);
-                    packet_dep_merge(rq_it->to_return, packet->to_return);
-                    return 0; // Merged
-                }
-                else { // rq_it: RH-access and pkt: RH-access
-                    if (packet->type == RH_UPDATE || rq_it->type == RH_UPDATE) {
-                        rq_it->type = RH_UPDATE;
-                    }
-                    return 0;
-                }
-            }
-            else if (packet->type >= RH_MITIGATION) { // rq_it: proc access and pkt: RH-access
-                if (packet->type == RH_UPDATE) { // incoming-pkt is RH-update
-                    rhActions.push_back(std::make_pair(rq_it->address, RH_WRITE));
-                }
-                return 0;
-            }
-            else { // rq_it: proc access and pkt: proc access
-                // We shouldn't get duplicates as LLC MSHR handles it
-                std::cout << "[PANIC] DRAM RQ already contains packet! pkt: " << int(packet->type) 
-                            << " rq_it: " << int(rq_it->type) << ". Exiting..." << std::endl;
-                assert(0);
-            }
+            rq_it->scheduled = packet->scheduled;
+            rq_it->asid[0] = packet->asid[0], rq_it->asid[1] = packet->asid[1];
+            rq_it->type = packet->type;
+            rq_it->fill_level = packet->fill_level;
+            rq_it->pf_origin_level = packet->pf_origin_level;
+            rq_it->pf_metadata = packet->pf_metadata;
+            rq_it->cpu = packet->cpu;
+            rq_it->address = packet->address;
+            rq_it->v_address = packet->v_address;
+            rq_it->data = packet->data;
+            rq_it->instr_id = packet->instr_id;
+            rq_it->ip = packet->ip;
+            rq_it->event_cycle = packet->event_cycle;
+            rq_it->cycle_enqueued = packet->cycle_enqueued;
+            rq_it->to_return.clear();
+            rq_it->lq_index_depend_on_me.clear();
+            rq_it->sq_index_depend_on_me.clear();
+            rq_it->instr_depend_on_me.clear();
+            rq_it->translation_level = packet->translation_level;
+            rq_it->init_translation_level = packet->init_translation_level;
+            packet_dep_merge(rq_it->lq_index_depend_on_me, packet->lq_index_depend_on_me);
+            packet_dep_merge(rq_it->sq_index_depend_on_me, packet->sq_index_depend_on_me);
+            packet_dep_merge(rq_it->instr_depend_on_me, packet->instr_depend_on_me);
+            packet_dep_merge(rq_it->to_return, packet->to_return);
+            return 0; // Merged
         }
         
         // Find empty slot
@@ -166,10 +135,7 @@ public:
         if (!memory_system_->WillAcceptTransaction(packet->address, true)) {
             return -2;
         }
-        // Avoid delaying WB before sending them to memory by just not doing WB at all
-        if (BLOCKHAMMER || BH_BASELINE) {
-            return 0;
-        }
+       
         // Call to DRAMSim
         memory_system_->AddTransaction(packet->address, true);
         return 0;
@@ -226,7 +192,6 @@ public:
     }
     void WriteCallBack(uint64_t addr) { return; }
     void ACTCallBack(uint64_t ch, uint64_t ra, uint64_t ba, uint64_t ro) {
-        ACTs.push_back(ACTInfo(ch, ra, ba, ro));
         //DEBUG std::cout << "[ACT] Ch-" << ch << " Ra-" << ra << " Ba-" << ba << " Ro-" << ro << std::endl;
     }
     void PrintStats() { memory_system_->PrintStats(); }

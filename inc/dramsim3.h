@@ -16,10 +16,10 @@ class MemorySystem {
     void ClockTick();
     void RegisterCallbacks(std::function<void(uint64_t)> read_callback,
                            std::function<void(uint64_t)> write_callback);
-    void RegisterACTCallback(std::function<void(uint64_t, 
-                                                uint64_t, 
-                                                uint64_t,
-                                                uint64_t)> act_callback);
+    // void RegisterACTCallback(std::function<void(uint64_t, 
+    //                                             uint64_t, 
+    //                                             uint64_t,
+    //                                             uint64_t)> act_callback);
     double GetTCK() const;
     int GetBusBits() const;
     int GetBurstLength() const;

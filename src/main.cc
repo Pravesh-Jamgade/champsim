@@ -17,6 +17,8 @@
 #include "tracereader.h"
 #include "vmem.h"
 
+#include "dramsim3_wrapper.hpp"
+
 uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
 
@@ -27,7 +29,7 @@ auto start_time = time(NULL);
 // For backwards compatibility with older module source.
 champsim::deprecated_clock_cycle current_core_cycle;
 
-extern MEMORY_CONTROLLER DRAM;
+extern DRAMSim3_DRAM DRAM;
 extern VirtualMemory vmem;
 extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 extern std::array<CACHE*, NUM_CACHES> caches;
@@ -180,49 +182,49 @@ void print_branch_stats()
   }
 }
 
-void print_dram_stats()
-{
-  uint64_t total_congested_cycle = 0;
-  uint64_t total_congested_count = 0;
+// void print_dram_stats()
+// {
+//   uint64_t total_congested_cycle = 0;
+//   uint64_t total_congested_count = 0;
 
-  std::cout << std::endl;
-  std::cout << "DRAM Statistics" << std::endl;
-  for (uint32_t i = 0; i < DRAM_CHANNELS; i++) {
-    std::cout << " CHANNEL " << i << std::endl;
+//   std::cout << std::endl;
+//   std::cout << "DRAM Statistics" << std::endl;
+//   for (uint32_t i = 0; i < DRAM_CHANNELS; i++) {
+//     std::cout << " CHANNEL " << i << std::endl;
 
-    auto& channel = DRAM.channels[i];
-    std::cout << " RQ ROW_BUFFER_HIT: " << std::setw(10) << channel.RQ_ROW_BUFFER_HIT << " ";
-    std::cout << " ROW_BUFFER_MISS: " << std::setw(10) << channel.RQ_ROW_BUFFER_MISS;
-    std::cout << std::endl;
+//     auto& channel = DRAM.channels[i];
+//     std::cout << " RQ ROW_BUFFER_HIT: " << std::setw(10) << channel.RQ_ROW_BUFFER_HIT << " ";
+//     std::cout << " ROW_BUFFER_MISS: " << std::setw(10) << channel.RQ_ROW_BUFFER_MISS;
+//     std::cout << std::endl;
 
-    std::cout << " DBUS AVG_CONGESTED_CYCLE: ";
-    if (channel.dbus_count_congested)
-      std::cout << std::setw(10) << ((double)channel.dbus_cycle_congested / channel.dbus_count_congested);
-    else
-      std::cout << "-";
-    std::cout << std::endl;
+//     std::cout << " DBUS AVG_CONGESTED_CYCLE: ";
+//     if (channel.dbus_count_congested)
+//       std::cout << std::setw(10) << ((double)channel.dbus_cycle_congested / channel.dbus_count_congested);
+//     else
+//       std::cout << "-";
+//     std::cout << std::endl;
 
-    std::cout << " WQ ROW_BUFFER_HIT: " << std::setw(10) << channel.WQ_ROW_BUFFER_HIT << " ";
-    std::cout << " ROW_BUFFER_MISS: " << std::setw(10) << channel.WQ_ROW_BUFFER_MISS << " ";
-    std::cout << " FULL: " << std::setw(10) << channel.WQ_FULL;
-    std::cout << std::endl;
+//     std::cout << " WQ ROW_BUFFER_HIT: " << std::setw(10) << channel.WQ_ROW_BUFFER_HIT << " ";
+//     std::cout << " ROW_BUFFER_MISS: " << std::setw(10) << channel.WQ_ROW_BUFFER_MISS << " ";
+//     std::cout << " FULL: " << std::setw(10) << channel.WQ_FULL;
+//     std::cout << std::endl;
 
-    std::cout << std::endl;
+//     std::cout << std::endl;
 
-    total_congested_cycle += channel.dbus_cycle_congested;
-    total_congested_count += channel.dbus_count_congested;
-  }
+//     total_congested_cycle += channel.dbus_cycle_congested;
+//     total_congested_count += channel.dbus_count_congested;
+//   }
 
-  if (DRAM_CHANNELS > 1) {
-    std::cout << " DBUS AVG_CONGESTED_CYCLE: ";
-    if (total_congested_count)
-      std::cout << std::setw(10) << ((double)total_congested_cycle / total_congested_count);
-    else
-      std::cout << "-";
+//   if (DRAM_CHANNELS > 1) {
+//     std::cout << " DBUS AVG_CONGESTED_CYCLE: ";
+//     if (total_congested_count)
+//       std::cout << std::setw(10) << ((double)total_congested_cycle / total_congested_count);
+//     else
+//       std::cout << "-";
 
-    std::cout << std::endl;
-  }
-}
+//     std::cout << std::endl;
+//   }
+// }
 
 void reset_cache_stats(uint32_t cpu, CACHE* cache)
 {
@@ -288,13 +290,13 @@ void finish_warmup()
   }
   cout << endl;
 
-  // reset DRAM stats
-  for (uint32_t i = 0; i < DRAM_CHANNELS; i++) {
-    DRAM.channels[i].WQ_ROW_BUFFER_HIT = 0;
-    DRAM.channels[i].WQ_ROW_BUFFER_MISS = 0;
-    DRAM.channels[i].RQ_ROW_BUFFER_HIT = 0;
-    DRAM.channels[i].RQ_ROW_BUFFER_MISS = 0;
-  }
+  // // reset DRAM stats
+  // for (uint32_t i = 0; i < DRAM_CHANNELS; i++) {
+  //   DRAM.channels[i].WQ_ROW_BUFFER_HIT = 0;
+  //   DRAM.channels[i].WQ_ROW_BUFFER_MISS = 0;
+  //   DRAM.channels[i].RQ_ROW_BUFFER_HIT = 0;
+  //   DRAM.channels[i].RQ_ROW_BUFFER_MISS = 0;
+  // }
 }
 
 void signal_handler(int signal)
@@ -504,9 +506,10 @@ int main(int argc, char** argv)
     (*it)->impl_replacement_final_stats();
 
 #ifndef CRC2_COMPILE
-  print_dram_stats();
+  // print_dram_stats();
   print_branch_stats();
 #endif
 
+DRAM.PrintStats();
   return 0;
 }
