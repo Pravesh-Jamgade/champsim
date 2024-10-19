@@ -20,3 +20,6 @@ traces/
 *.config*
 
 tracer/*
+*.json
+*txt
+Makefile
