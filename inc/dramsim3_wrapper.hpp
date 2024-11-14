@@ -43,10 +43,10 @@ public:
             return -1; // Fast-forward
         }
 
-        std::cout << "XXXXXXXXXXXXXX\n";
-        std::cout << (packet->address & 0xffffffff)/PAGE_SIZE << ", " << numPPages << '\n';
-        procPageAccess[0] = true;
-        std::cout << "YYYYYYYYYYYYYYY\n";
+        // std::cout << "XXXXXXXXXXXXXX\n";
+        // std::cout << (packet->address & 0xffffffff)/PAGE_SIZE << ", " << numPPages << '\n';
+        // procPageAccess[0] = true;
+        // std::cout << "YYYYYYYYYYYYYYY\n";
         // Check for duplicates
         auto rq_it = std::find_if(std::begin(RQ), std::end(RQ), 
                                     eq_addr<PACKET>(packet->address, LOG2_BLOCK_SIZE));
@@ -129,7 +129,7 @@ public:
         if (all_warmup_complete <= NUM_CPUS)
             return -1; // Fast-forward
 
-        procPageAccess[packet->address/PAGE_SIZE] = true;
+        // procPageAccess[packet->address/PAGE_SIZE] = true;
 
         // If DRAMSim cannot take new req, return
         if (!memory_system_->WillAcceptTransaction(packet->address, true)) {
