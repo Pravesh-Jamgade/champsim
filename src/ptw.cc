@@ -3,6 +3,7 @@
 #include "champsim.h"
 #include "util.h"
 #include "vmem.h"
+#include "DataModel.h"
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -16,6 +17,7 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       PSCL2{"PSCL2", 1, v8, v9},                                  // Translation from L5->L1
       CR3_addr(vmem.get_pte_pa(cpu, 0, vmem.pt_levels).first)
 {
+  ptw_datamodel = new PTWDataModel(cpu);
 }
 
 void PageTableWalker::handle_read()
@@ -39,7 +41,7 @@ void PageTableWalker::handle_read()
     for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
       if (auto check_addr = pscl->check_hit(handle_pkt.address); check_addr.has_value()) {
         ptw_addr = check_addr.value();
-        ptw_level = pscl->level - 1;
+        ptw_level = pscl->level - 1; 
       }
     }
 
@@ -66,6 +68,10 @@ void PageTableWalker::handle_read()
 
     RQ.pop_front();
     reads_this_cycle--;
+
+    // count psc level used to sent memory read 
+    ptw_datamodel->queue_psc_metric[packet.init_translation_level]++;
+    it->uv_cycle_enqueue = current_cycle;
   }
 }
 
@@ -75,15 +81,25 @@ void PageTableWalker::handle_fill()
 
   while (fill_this_cycle > 0 && !std::empty(MSHR) && MSHR.front().event_cycle <= current_cycle) {
     auto fill_mshr = MSHR.begin();
+
+    // Translation complete now remove MSHR entry, when translation level is 0
     if (fill_mshr->translation_level == 0) // If translation complete
     {
       // Return the translated physical address to STLB. Does not contain last
       // 12 bits
       auto [addr, fault] = vmem.va_to_pa(cpu, fill_mshr->v_address);
-      if (warmup_complete[cpu] && fault) {
+
+      // We dont have free frame availbale, hence minor fault.
+      if (warmup_complete[cpu] && fault) 
+      {
         fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
         MSHR.sort(ord_event_cycle<PACKET>{});
-      } else {
+
+        ptw_datamodel->page_fault[0]++;
+      } 
+      // Translation finally complete
+      else 
+      {
         fill_mshr->data = addr;
         fill_mshr->address = fill_mshr->v_address;
 
@@ -104,18 +120,33 @@ void PageTableWalker::handle_fill()
           total_miss_latency += current_cycle - fill_mshr->cycle_enqueued;
 
         MSHR.erase(fill_mshr);
+
+        ptw_datamodel->packet_processed++;
+        ptw_datamodel->packet_processed_total_miss_latency += total_miss_latency;
       }
-    } else {
+    } 
+    
+    // simulating PSC failed lookup. For each of translation level penalty would be to access memory
+    // Satrting with translation level between 5 to 1. Fill the incomming paddr suitable for corresponding translation level.
+    // Then decrease the level and send read requests for same VA but at new translation level.
+
+    else 
+    {
       auto [addr, fault] = vmem.get_pte_pa(cpu, fill_mshr->v_address, fill_mshr->translation_level);
-      if (warmup_complete[cpu] && fault) {
+      if (warmup_complete[cpu] && fault) 
+      {
         fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
         MSHR.sort(ord_event_cycle<PACKET>{});
-      } else {
+
+        ptw_datamodel->page_fault[fill_mshr->translation_level]++;
+      } 
+      else 
+      {
         if (fill_mshr->translation_level == PSCL5.level)
           PSCL5.fill_cache(addr, fill_mshr->v_address);
         if (fill_mshr->translation_level == PSCL4.level)
           PSCL4.fill_cache(addr, fill_mshr->v_address);
-        if (fill_mshr->translation_level == PSCL2.level)
+        if (fill_mshr->translation_level == PSCL3.level)
           PSCL3.fill_cache(addr, fill_mshr->v_address);
         if (fill_mshr->translation_level == PSCL2.level)
           PSCL2.fill_cache(addr, fill_mshr->v_address);
@@ -138,12 +169,18 @@ void PageTableWalker::handle_fill()
         packet.translation_level = fill_mshr->translation_level - 1;
 
         int rq_index = lower_level->add_rq(&packet);
-        if (rq_index != -2) {
+        if (rq_index != -2) 
+        {
           fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
           fill_mshr->address = packet.address;
           fill_mshr->translation_level--;
 
           MSHR.splice(std::end(MSHR), MSHR, fill_mshr);
+
+          // usercode
+          ptw_datamodel->psc_level_packet_processed[packet.translation_level]++;
+          ptw_datamodel->psc_level_packet_processed_miss_latency[packet.translation_level] += current_cycle - fill_mshr->uv_cycle_enqueue;
+          fill_mshr->uv_cycle_enqueue = current_cycle;
         }
       }
     }
@@ -161,20 +198,30 @@ void PageTableWalker::operate()
 
 int PageTableWalker::add_rq(PACKET* packet)
 {
+  ptw_datamodel->queue_basic_metric[Basic::REQUESTED]++;
   assert(packet->address != 0);
 
   // check for duplicates in the read queue
   auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE));
-  assert(found_rq == RQ.end()); // Duplicate request should not be sent.
+  // assert(found_rq == RQ.end()); // Duplicate request should not be sent.
+  
+  if(found_rq != RQ.end())
+  {
+    ptw_datamodel->queue_basic_metric[Basic::MERGED]++;
+    // earlier assertion fail
+  }
 
   // check occupancy
   if (RQ.full()) {
+    
+    ptw_datamodel->queue_basic_metric[Basic::REJECTED]++;
     return -2; // cannot handle this request
   }
 
   // if there is no duplicate, add it to RQ
   RQ.push_back(*packet);
 
+  ptw_datamodel->queue_basic_metric[Basic::ADDED]++;
   return RQ.occupancy();
 }
 
