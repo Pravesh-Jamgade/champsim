@@ -314,8 +314,7 @@ int main(int argc, char** argv)
   sigIntHandler.sa_flags = 0;
   sigaction(SIGINT, &sigIntHandler, NULL);
 
-  cout << endl << "*** ChampSim Multicore Out-of-Order Simulator ***" << endl << endl;
-
+  
   // initialize knobs
   uint8_t show_heartbeat = 1;
 
@@ -323,13 +322,15 @@ int main(int argc, char** argv)
   int traces_encountered = 0;
   static struct option long_options[] = {{"warmup_instructions", required_argument, 0, 'w'},
                                          {"simulation_instructions", required_argument, 0, 'i'},
+                                         {"output", required_argument, 0, 'o'},
                                          {"hide_heartbeat", no_argument, 0, 'h'},
                                          {"cloudsuite", no_argument, 0, 'c'},
                                          {"traces", no_argument, &traces_encountered, 1},
                                          {0, 0, 0, 0}};
 
+  string output_file = "default";
   int c;
-  while ((c = getopt_long_only(argc, argv, "w:i:hc", long_options, NULL)) != -1 && !traces_encountered) {
+  while ((c = getopt_long_only(argc, argv, "w:i:o:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
     case 'w':
       warmup_instructions = atol(optarg);
@@ -339,6 +340,9 @@ int main(int argc, char** argv)
       break;
     case 'h':
       show_heartbeat = 0;
+      break;
+    case 'o':
+      output_file = string(optarg);
       break;
     case 'c':
       knob_cloudsuite = 1;
@@ -350,6 +354,14 @@ int main(int argc, char** argv)
       abort();
     }
   }
+
+  output_file += ".log";
+  // std::ofstream out(output_file.c_str());
+  // std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
+  // std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+  freopen(output_file.c_str(),"w",stdout);
+
+  cout << endl << "*** ChampSim Multicore Out-of-Order Simulator ***" << endl << endl;
 
   cout << "Warmup Instructions: " << warmup_instructions << endl;
   cout << "Simulation Instructions: " << simulation_instructions << endl;
@@ -510,6 +522,7 @@ int main(int argc, char** argv)
   print_branch_stats();
 #endif
 
+DRAM.PrintStats();
 //usercode: Make sure to add new stats here whenever a new stat is added to Cache/Memory
 vector<string> colStats;
 colStats.push_back("Metric");
@@ -583,9 +596,6 @@ for(auto c: caches)
   allRowVal.push_back(rowVal);
 }
 
-fstream fout;
-fout.open("champsim.log", ios::out);
-
 for(int i=0; i< allRowVal.size(); i++)
 {
   string output ="";
@@ -593,9 +603,10 @@ for(int i=0; i< allRowVal.size(); i++)
   {
     output += v + ", ";
   }
-  fout << output << '\n';
+  cout << output << '\n';
 }
 
-cout << "Done!";
+cout << "\nDone!\n";
+
   return 0;
 }

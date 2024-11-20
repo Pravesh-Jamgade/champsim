@@ -142,6 +142,9 @@ void PageTableWalker::handle_fill()
       } 
       else 
       {
+        // usercode
+        ptw_datamodel->psc_level_packet_processed_miss_latency[fill_mshr->translation_level] += current_cycle - fill_mshr->uv_cycle_enqueue;
+
         if (fill_mshr->translation_level == PSCL5.level)
           PSCL5.fill_cache(addr, fill_mshr->v_address);
         if (fill_mshr->translation_level == PSCL4.level)
@@ -179,7 +182,6 @@ void PageTableWalker::handle_fill()
 
           // usercode
           ptw_datamodel->psc_level_packet_processed[packet.translation_level]++;
-          ptw_datamodel->psc_level_packet_processed_miss_latency[packet.translation_level] += current_cycle - fill_mshr->uv_cycle_enqueue;
           fill_mshr->uv_cycle_enqueue = current_cycle;
         }
       }

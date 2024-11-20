@@ -42,6 +42,8 @@ static string AdvStat_str[AdvStat::ADVSTAT_END] = {
     "CS_filllikemiss_stalled_Nextlevel_FULL"
 };
 
+enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_STLB, IS_DTLB, CACHE_ID_END};
+
 class CacheDataModel
 {
     public:
@@ -85,26 +87,39 @@ class CacheDataModel
         
         for(int i=0; i< Basic::BASIC_END; i++)
             cout << tag << Basic_str[i] << " Store Queue, " << wr_queue[i] << '\n';
-        
+
+        cout << '\n';
+
         for(int i=0; i< Basic::BASIC_END; i++)
             cout << tag << Basic_str[i] << " Prefetch Queue, " << pf_queue[i] << '\n';
         
+        cout << '\n';
+
         for(int i=0; i< Basic::BASIC_END; i++)
             cout << tag << Basic_str[i] << " MSHR Queue, " << mshr_queue[i] << '\n';
         
         /////////////////////////////////////////////////////////////////////////////////////
+        cout << '\n';
 
         for(int i=0; i< Stall::STALL_END; i++)
             cout << tag << Stall_str[i] << " Load Queue, " << rd_queue_stalls[i] << '\n';
         
+        cout << '\n';
+
         for(int i=0; i< Stall::STALL_END; i++)
             cout << tag << Stall_str[i] << " Store Queue, " << wr_queue_stalls[i] << '\n';
         
+        cout << '\n';
+
         for(int i=0; i< Stall::STALL_END; i++)
             cout << tag << Stall_str[i] << " Prefetch Queue, " << pf_queue_stalls[i] << '\n';
         
+        cout << '\n';
+
         for(int i=0; i< Stall::STALL_END; i++)
             cout << tag << Stall_str[i] << " MSHR Queue, " << mshr_queue_stalls[i] << '\n';
+
+        cout << '\n';
 
         cout << "readmiss --> mshr_full\n";
         cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << '\n';
@@ -115,6 +130,7 @@ class CacheDataModel
         cout << "mshr write --> eviction_writeback --> nextlevel_full\n";
         cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << '\n';
 
+        cout << '\n';
     }
 };
 
@@ -125,7 +141,7 @@ class PTWDataModel
     {
         for(int i=0; i< REJECTED; i++)
         {
-            queue_basic_metric[Basic::BASIC_END] = 0;
+            queue_basic_metric[i] = 0;
         }
     }
 
@@ -133,7 +149,7 @@ class PTWDataModel
     {
         for(int i=0; i< REJECTED; i++)
         {
-            queue_basic_metric[Basic::BASIC_END] = 0;
+            queue_basic_metric[i] = 0;
         }
     }
 

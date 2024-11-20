@@ -24,6 +24,7 @@ class CACHE : public champsim::operable, public MemoryRequestConsumer, public Me
 public:
   //usercode
   CacheDataModel* cacheDataModel;
+  bool cache_is[CACHE_ID_END] = {false};
 
   uint32_t cpu;
   const std::string NAME;
@@ -108,6 +109,11 @@ public:
         repl_type(repl), pref_type(pref)
   {
     cacheDataModel = new CacheDataModel(NAME, cpu);
+
+    if(NAME.find("LLC") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_LLC] = true;
+    }
   }
 
   ~CACHE()

@@ -752,6 +752,12 @@ void CACHE::return_data(PACKET* packet)
   // Order this entry after previously-returned entries, but before non-returned
   // entries
   std::iter_swap(mshr_entry, first_unreturned);
+
+  if(cache_is[CACHE_ID::IS_LLC] && packet->type == TRANSLATION && packet->init_translation_level == 0)
+  {
+    uint64_t phy_addr = splice_bits(packet->data, packet->address, LOG2_PAGE_SIZE); // translated address
+    prefetch_line(phy_addr, 1, 0);
+  }
 }
 
 uint32_t CACHE::get_occupancy(uint8_t queue_type, uint64_t address)
