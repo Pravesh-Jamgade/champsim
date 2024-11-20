@@ -510,6 +510,96 @@ int main(int argc, char** argv)
   print_branch_stats();
 #endif
 
+<<<<<<< HEAD
 DRAM.PrintStats();
+=======
+//usercode: Make sure to add new stats here whenever a new stat is added to Cache/Memory
+vector<string> colStats;
+colStats.push_back("Metric");
+
+// LOAD
+for(int i=0; i< Basic::BASIC_END; i++)
+  colStats.push_back("LOAD QUEUE "+Basic_str[i]);
+for(int i=0; i< Stall::STALL_END; i++)
+  colStats.push_back("LOAD QUEUE "+Stall_str[i]);
+
+// STORE
+for(int i=0; i< Basic::BASIC_END; i++)
+  colStats.push_back("STORE QUEUE "+Basic_str[i]);
+for(int i=0; i< Stall::STALL_END; i++)
+  colStats.push_back("STORE QUEUE "+Stall_str[i]);
+
+// PREFETCH
+for(int i=0; i< Basic::BASIC_END; i++)
+  colStats.push_back("PREFETCH QUEUE "+Basic_str[i]);
+for(int i=0; i< Stall::STALL_END; i++)
+  colStats.push_back("PREFETCH QUEUE "+Stall_str[i]);
+
+// MSHR
+for(int i=0; i< Basic::BASIC_END; i++)
+  colStats.push_back("MSHR QUEUE "+Basic_str[i]);
+for(int i=0; i< Stall::STALL_END; i++)
+  colStats.push_back("MSHR QUEUE "+Stall_str[i]);
+
+//ADV
+for(int i=0; i< AdvStat::ADVSTAT_END; i++)
+  colStats.push_back(AdvStat_str[i]);
+
+// collect values: BEAWARE of order
+vector<vector<string>> allRowVal;
+allRowVal.push_back(colStats);
+
+for(auto c: caches)
+{
+  vector<string> rowVal;
+
+  rowVal.push_back(c->NAME);
+
+  // LOAD
+  for(int i=0; i< Basic::BASIC_END; i++)
+    rowVal.push_back(to_string(c->cacheDataModel->rd_queue[i]));
+  for(int i=0; i< Stall::STALL_END; i++)
+    rowVal.push_back(to_string(c->cacheDataModel->rd_queue_stalls[i]));
+
+  // STORE
+  for(int i=0; i< Basic::BASIC_END; i++)
+    rowVal.push_back(to_string(c->cacheDataModel->wr_queue[i]));
+  for(int i=0; i< Stall::STALL_END; i++)
+    rowVal.push_back(to_string(c->cacheDataModel->wr_queue_stalls[i]));
+
+  // PREFETCH
+  for(int i=0; i< Basic::BASIC_END; i++)
+    rowVal.push_back(to_string(c->cacheDataModel->pf_queue[i]));
+  for(int i=0; i< Stall::STALL_END; i++)
+    rowVal.push_back(to_string(c->cacheDataModel->pf_queue_stalls[i]));
+
+  // MSHR
+  for(int i=0; i< Basic::BASIC_END; i++)
+    rowVal.push_back(to_string(c->cacheDataModel->mshr_queue[i]));
+  for(int i=0; i< Stall::STALL_END; i++)
+    rowVal.push_back(to_string(c->cacheDataModel->mshr_queue_stalls[i]));
+
+  //ADV
+  for(int i=0; i< AdvStat::ADVSTAT_END; i++)
+    rowVal.push_back(to_string(c->cacheDataModel->adv_stats[i]));
+
+  allRowVal.push_back(rowVal);
+}
+
+fstream fout;
+fout.open("champsim.log", ios::out);
+
+for(int i=0; i< allRowVal.size(); i++)
+{
+  string output ="";
+  for(auto v: allRowVal[i])
+  {
+    output += v + ", ";
+  }
+  fout << output << '\n';
+}
+
+cout << "Done!";
+>>>>>>> 36d723b (added cache datamodel)
   return 0;
 }

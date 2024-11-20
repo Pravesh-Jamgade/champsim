@@ -12,6 +12,8 @@
 #include "ooo_cpu.h"
 #include "operable.h"
 
+#include "DataModel.h"
+
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
@@ -20,6 +22,9 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+  //usercode
+  CacheDataModel* cacheDataModel;
+
   uint32_t cpu;
   const std::string NAME;
   const uint32_t NUM_SET, NUM_WAY, WQ_SIZE, RQ_SIZE, PQ_SIZE, MSHR_SIZE;
@@ -102,6 +107,12 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+    cacheDataModel = new CacheDataModel(NAME, cpu);
+  }
+
+  ~CACHE()
+  {
+    cacheDataModel->print_stats();
   }
 };
 

@@ -20,7 +20,10 @@ void CACHE::handle_fill()
   while (writes_available_this_cycle > 0) {
     auto fill_mshr = MSHR.begin();
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
+    {
+      cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
       return;
+    }
 
     // find victim
     uint32_t set = get_set(fill_mshr->address);
@@ -35,7 +38,10 @@ void CACHE::handle_fill()
 
     bool success = filllike_miss(set, way, *fill_mshr);
     if (!success)
+    {
+      cacheDataModel->mshr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
       return;
+    }
 
     if (way != NUM_WAY) {
       // update processed packets
@@ -54,7 +60,10 @@ void CACHE::handle_writeback()
 {
   while (writes_available_this_cycle > 0) {
     if (!WQ.has_ready())
+    {
+      cacheDataModel->wr_queue_stalls[Stall::OP_PENALTY]++;
       return;
+    }
 
     // handle the oldest entry
     PACKET& handle_pkt = WQ.front();
@@ -94,7 +103,10 @@ void CACHE::handle_writeback()
       }
 
       if (!success)
+      {
+        cacheDataModel->wr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         return;
+      }
     }
 
     // remove this entry from WQ
@@ -108,7 +120,10 @@ void CACHE::handle_read()
   while (reads_available_this_cycle > 0) {
 
     if (!RQ.has_ready())
+    {
+      cacheDataModel->rd_queue_stalls[Stall::OP_PENALTY]++;
       return;
+    }
 
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
@@ -126,7 +141,10 @@ void CACHE::handle_read()
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
+      {
+        cacheDataModel->rd_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         return;
+      }
     }
 
     // remove this entry from RQ
@@ -139,7 +157,10 @@ void CACHE::handle_prefetch()
 {
   while (reads_available_this_cycle > 0) {
     if (!PQ.has_ready())
+    {
+      cacheDataModel->pf_queue_stalls[Stall::OP_PENALTY]++;
       return;
+    }
 
     // handle the oldest entry
     PACKET& handle_pkt = PQ.front();
@@ -153,7 +174,10 @@ void CACHE::handle_prefetch()
     } else {
       bool success = readlike_miss(handle_pkt);
       if (!success)
+      {
+        cacheDataModel->pf_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         return;
+      }
     }
 
     // remove this entry from PQ
@@ -194,6 +218,14 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   for (auto ret : handle_pkt.to_return)
     ret->return_data(&handle_pkt);
 
+  if(handle_pkt.type == LOAD || handle_pkt.type == TRANSLATION)
+    cacheDataModel->rd_queue[Basic::HIT]++;
+  else if(handle_pkt.type == RFO)
+    cacheDataModel->wr_queue[Basic::HIT]++;
+  else if(handle_pkt.type == PREFETCH)
+    cacheDataModel->pf_queue[Basic::HIT]++;
+    
+
   // update prefetch stats and reset prefetch bit
   if (hit_block.prefetch) {
     pf_useful++;
@@ -203,6 +235,8 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
+  cacheDataModel->mshr_queue[Basic::REQUESTED]++;
+
   DP(if (warmup_complete[handle_pkt.cpu]) {
     std::cout << "[" << NAME << "] " << __func__ << " miss";
     std::cout << " instr_id: " << handle_pkt.instr_id << " address: " << std::hex << (handle_pkt.address >> OFFSET_BITS);
@@ -226,7 +260,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     packet_dep_merge(mshr_entry->instr_depend_on_me, handle_pkt.instr_depend_on_me);
     packet_dep_merge(mshr_entry->to_return, handle_pkt.to_return);
 
-    if (mshr_entry->type == PREFETCH && handle_pkt.type != PREFETCH) {
+    if (mshr_entry->type == PREFETCH && handle_pkt.type != PREFETCH) 
+    {
       // Mark the prefetch as useful
       if (mshr_entry->pf_origin_level == fill_level)
         pf_useful++;
@@ -237,23 +272,36 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // in case request is already returned, we should keep event_cycle
       mshr_entry->event_cycle = prior_event_cycle;
     }
-  } else {
+
+    cacheDataModel->mshr_queue[Basic::MERGED]++;
+  } 
+  else 
+  {
     if (mshr_full)  // not enough MSHR resource
+    {
+      cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL]++;
+      cacheDataModel->mshr_queue[Basic::REJECTED]++;
       return false; // TODO should we allow prefetches anyway if they will not
                     // be filled to this level?
-
+    }
     bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
 
     // check to make sure the lower level queue has room for this read miss
     int queue_type = (is_read) ? 1 : 3;
     if (lower_level->get_occupancy(queue_type, handle_pkt.address) == lower_level->get_size(queue_type, handle_pkt.address))
+    {
+      cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
       return false;
+    }
 
     // Allocate an MSHR
     if (handle_pkt.fill_level <= fill_level) {
       auto it = MSHR.insert(std::end(MSHR), handle_pkt);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
+
+      cacheDataModel->mshr_queue[Basic::ADDED]++;
+      cacheDataModel->mshr_queue[Basic::ACCESS]++;
     }
 
     if (handle_pkt.fill_level <= fill_level)
@@ -274,6 +322,13 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 0, handle_pkt.type, handle_pkt.pf_metadata);
   }
 
+  if(handle_pkt.type == LOAD || handle_pkt.type == TRANSLATION)
+    cacheDataModel->rd_queue[Basic::MISS]++;
+  else if(handle_pkt.type == RFO)
+    cacheDataModel->wr_queue[Basic::MISS]++;
+  else if(handle_pkt.type == PREFETCH)
+    cacheDataModel->pf_queue[Basic::MISS]++;
+    
   return true;
 }
 
@@ -312,7 +367,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
+      {
+        cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL]++;
         return false;
+      }
     }
 
     if (ever_seen_data)
@@ -409,6 +467,8 @@ int CACHE::invalidate_entry(uint64_t inval_addr)
 
 int CACHE::add_rq(PACKET* packet)
 {
+  cacheDataModel->rd_queue[Basic::REQUESTED]++;
+
   assert(packet->address != 0);
   RQ_ACCESS++;
 
@@ -430,6 +490,8 @@ int CACHE::add_rq(PACKET* packet)
       ret->return_data(packet);
 
     WQ_FORWARD++;
+
+    cacheDataModel->rd_queue[Basic::WQ_FWD]++;
     return -1;
   }
 
@@ -446,6 +508,7 @@ int CACHE::add_rq(PACKET* packet)
 
     RQ_MERGED++;
 
+    cacheDataModel->rd_queue[Basic::MERGED]++;
     return 0; // merged index
   }
 
@@ -455,6 +518,7 @@ int CACHE::add_rq(PACKET* packet)
 
     DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;)
 
+    cacheDataModel->rd_queue[Basic::REJECTED]++;
     return -2; // cannot handle this request
   }
 
@@ -467,11 +531,15 @@ int CACHE::add_rq(PACKET* packet)
   DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;)
 
   RQ_TO_CACHE++;
+
+  cacheDataModel->rd_queue[Basic::ADDED]++;
+  cacheDataModel->rd_queue[Basic::ACCESS]++;
   return RQ.occupancy();
 }
 
 int CACHE::add_wq(PACKET* packet)
 {
+  cacheDataModel->wr_queue[Basic::REQUESTED]++;
   WQ_ACCESS++;
 
   DP(if (warmup_complete[packet->cpu]) {
@@ -488,6 +556,8 @@ int CACHE::add_wq(PACKET* packet)
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED" << std::endl;)
 
     WQ_MERGED++;
+
+    cacheDataModel->wr_queue[Basic::MERGED]++;
     return 0; // merged index
   }
 
@@ -496,6 +566,8 @@ int CACHE::add_wq(PACKET* packet)
     DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;)
 
     ++WQ_FULL;
+
+    cacheDataModel->wr_queue[Basic::REJECTED]++;
     return -2;
   }
 
@@ -508,8 +580,9 @@ int CACHE::add_wq(PACKET* packet)
   DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;)
 
   WQ_TO_CACHE++;
-  WQ_ACCESS++;
 
+  cacheDataModel->wr_queue[Basic::ADDED]++;
+  cacheDataModel->wr_queue[Basic::ACCESS]++;
   return WQ.occupancy();
 }
 
@@ -579,6 +652,8 @@ void CACHE::va_translate_prefetches()
 
 int CACHE::add_pq(PACKET* packet)
 {
+  cacheDataModel->pf_queue[Basic::REQUESTED]++;
+
   assert(packet->address != 0);
   PQ_ACCESS++;
 
@@ -600,6 +675,8 @@ int CACHE::add_pq(PACKET* packet)
       ret->return_data(packet);
 
     WQ_FORWARD++;
+
+    cacheDataModel->pf_queue[Basic::WQ_FWD]++;
     return -1;
   }
 
@@ -612,6 +689,8 @@ int CACHE::add_pq(PACKET* packet)
     packet_dep_merge(found->to_return, packet->to_return);
 
     PQ_MERGED++;
+
+    cacheDataModel->pf_queue[Basic::MERGED]++;
     return 0;
   }
 
@@ -621,6 +700,8 @@ int CACHE::add_pq(PACKET* packet)
     DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;)
 
     PQ_FULL++;
+
+    cacheDataModel->pf_queue[Basic::REJECTED]++;
     return -2; // cannot handle this request
   }
 
@@ -633,6 +714,9 @@ int CACHE::add_pq(PACKET* packet)
   DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;)
 
   PQ_TO_CACHE++;
+
+  cacheDataModel->pf_queue[Basic::ADDED]++;
+  cacheDataModel->pf_queue[Basic::ACCESS]++;
   return PQ.occupancy();
 }
 
