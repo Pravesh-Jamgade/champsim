@@ -510,9 +510,6 @@ int main(int argc, char** argv)
   print_branch_stats();
 #endif
 
-<<<<<<< HEAD
-DRAM.PrintStats();
-=======
 //usercode: Make sure to add new stats here whenever a new stat is added to Cache/Memory
 vector<string> colStats;
 colStats.push_back("Metric");
@@ -600,6 +597,5 @@ for(int i=0; i< allRowVal.size(); i++)
 }
 
 cout << "Done!";
->>>>>>> 36d723b (added cache datamodel)
   return 0;
 }
