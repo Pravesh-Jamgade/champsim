@@ -25,6 +25,7 @@ public:
   //usercode
   CacheDataModel* cacheDataModel;
   bool cache_is[CACHE_ID_END] = {false};
+  champsim::delay_queue<PACKET> TQ{RQ_SIZE, HIT_LATENCY};
 
   uint32_t cpu;
   const std::string NAME;

@@ -48,6 +48,8 @@ public:
   virtual uint32_t get_occupancy(uint8_t queue_type, uint64_t address) = 0;
   virtual uint32_t get_size(uint8_t queue_type, uint64_t address) = 0;
 
+  void* getObject(){return this;}
+
   explicit MemoryRequestConsumer(unsigned fill_level) : fill_level(fill_level) {}
 };
 

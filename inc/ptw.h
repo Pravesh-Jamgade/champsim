@@ -11,6 +11,7 @@
 #include "operable.h"
 
 #include "DataModel.h"
+#include "cache.h"
 
 class PagingStructureCache
 {
@@ -36,6 +37,9 @@ public:
 class PageTableWalker : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+
+  CACHE* llcObject;
+
   const std::string NAME;
   const uint32_t cpu;
   const uint32_t MSHR_SIZE, MAX_READ, MAX_FILL;
@@ -55,7 +59,7 @@ public:
   PTWDataModel* ptw_datamodel;
 
   PageTableWalker(std::string v1, uint32_t cpu, unsigned fill_level, uint32_t v2, uint32_t v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8,
-                  uint32_t v9, uint32_t v10, uint32_t v11, uint32_t v12, uint32_t v13, unsigned latency, MemoryRequestConsumer* ll);
+                  uint32_t v9, uint32_t v10, uint32_t v11, uint32_t v12, uint32_t v13, unsigned latency, MemoryRequestConsumer* ll, CACHE* llc);
 
   ~PageTableWalker()
   {

@@ -5,17 +5,20 @@
 #include "vmem.h"
 #include "DataModel.h"
 
+#include "cache.h"
+
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
 PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, uint32_t v2, uint32_t v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7,
-                                 uint32_t v8, uint32_t v9, uint32_t v10, uint32_t v11, uint32_t v12, uint32_t v13, unsigned latency, MemoryRequestConsumer* ll)
+                                 uint32_t v8, uint32_t v9, uint32_t v10, uint32_t v11, uint32_t v12, uint32_t v13, unsigned latency, MemoryRequestConsumer* ll, CACHE* llc)
     : champsim::operable(1), MemoryRequestConsumer(fill_level), MemoryRequestProducer(ll), NAME(v1), cpu(cpu), MSHR_SIZE(v11), MAX_READ(v12),
       MAX_FILL(v13), RQ{v10, latency}, PSCL5{"PSCL5", 4, v2, v3}, // Translation from L5->L4
       PSCL4{"PSCL4", 3, v4, v5},                                  // Translation from L5->L3
       PSCL3{"PSCL3", 2, v6, v7},                                  // Translation from L5->L2
       PSCL2{"PSCL2", 1, v8, v9},                                  // Translation from L5->L1
-      CR3_addr(vmem.get_pte_pa(cpu, 0, vmem.pt_levels).first)
+      CR3_addr(vmem.get_pte_pa(cpu, 0, vmem.pt_levels).first),
+      llcObject(llc)
 {
   ptw_datamodel = new PTWDataModel(cpu);
 }
@@ -89,6 +92,8 @@ void PageTableWalker::handle_fill()
       // 12 bits
       auto [addr, fault] = vmem.va_to_pa(cpu, fill_mshr->v_address);
 
+      //llcObject->prefetch_line(addr, llcObject->fill_level, 1);
+
       // We dont have free frame availbale, hence minor fault.
       if (warmup_complete[cpu] && fault) 
       {
@@ -123,6 +128,7 @@ void PageTableWalker::handle_fill()
 
         ptw_datamodel->packet_processed++;
         ptw_datamodel->packet_processed_total_miss_latency += total_miss_latency;
+
       }
     } 
     
