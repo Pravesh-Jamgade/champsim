@@ -25,7 +25,6 @@ public:
   //usercode
   CacheDataModel* cacheDataModel;
   bool cache_is[CACHE_ID_END] = {false};
-  champsim::delay_queue<PACKET> TQ{RQ_SIZE, HIT_LATENCY};
 
   uint32_t cpu;
   const std::string NAME;
@@ -47,7 +46,8 @@ public:
   champsim::delay_queue<PACKET> RQ{RQ_SIZE, HIT_LATENCY}, // read queue
       PQ{PQ_SIZE, HIT_LATENCY},                           // prefetch queue
       VAPQ{PQ_SIZE, VA_PREFETCH_TRANSLATION_LATENCY},     // virtual address prefetch queue
-      WQ{WQ_SIZE, HIT_LATENCY};                           // write queue
+      WQ{WQ_SIZE, HIT_LATENCY},
+      TQ{RQ_SIZE, HIT_LATENCY};                           // write queue
 
   std::list<PACKET> MSHR; // MSHR
 

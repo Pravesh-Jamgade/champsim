@@ -119,11 +119,45 @@ void CACHE::handle_writeback()
 
 void CACHE::handle_read()
 {
+  while (reads_available_this_cycle > 0 && KNOB_TRANSLATION_QUEUE == 1) {
+    if (!TQ.has_ready())
+    {
+      cacheDataModel->rd_queue_stalls[Stall::OP_PENALTY]++;
+      break;
+    }
+
+    // handle the oldest entry
+    PACKET& handle_pkt = TQ.front();
+
+    // A (hopefully temporary) hack to know whether to send the evicted paddr or
+    // vaddr to the prefetcher
+    ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
+
+    uint32_t set = get_set(handle_pkt.address);
+    uint32_t way = get_way(handle_pkt.address, set);
+
+    if (way < NUM_WAY) // HIT
+    {
+      readlike_hit(set, way, handle_pkt);
+    } else {
+      bool success = readlike_miss(handle_pkt);
+      if (!success)
+      {
+        cacheDataModel->rd_queue_stalls[Stall::OP_FAIL_PENALTY]++;
+        break;
+      }
+    }
+
+    // remove this entry from RQ
+    TQ.pop_front();
+    reads_available_this_cycle--;
+  }
+
   while (reads_available_this_cycle > 0) {
     if (!RQ.has_ready())
     {
       cacheDataModel->rd_queue_stalls[Stall::OP_PENALTY]++;
-      continue;
+      return;
     }
 
     // handle the oldest entry
@@ -144,7 +178,7 @@ void CACHE::handle_read()
       if (!success)
       {
         cacheDataModel->rd_queue_stalls[Stall::OP_FAIL_PENALTY]++;
-        continue;
+        return;
       }
     }
 
@@ -441,6 +475,7 @@ void CACHE::operate_reads()
   va_translate_prefetches();
   handle_prefetch();
 
+  TQ.operate();
   RQ.operate();
   PQ.operate();
   VAPQ.operate();
@@ -468,51 +503,51 @@ int CACHE::invalidate_entry(uint64_t inval_addr)
 
 int CACHE::add_rq(PACKET* packet)
 {
-  // if(KNOB_TRANSLATION_QUEUE == 1 && packet->type == TRANSLATION)
-  // {
-  //   champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
-  //   if (found_wq != WQ.end()) {
-  //     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;)
-  //     packet->data = found_wq->data;
-  //     for (auto ret : packet->to_return)
-  //       ret->return_data(packet);
-  //     WQ_FORWARD++;
-  //     cacheDataModel->rd_queue[Basic::WQ_FWD]++;
-  //     return -1;
-  //   }
+  if(KNOB_TRANSLATION_QUEUE == 1 && packet->type == TRANSLATION)
+  {
+    champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
+    if (found_wq != WQ.end()) {
+      DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;)
+      packet->data = found_wq->data;
+      for (auto ret : packet->to_return)
+        ret->return_data(packet);
+      WQ_FORWARD++;
+      cacheDataModel->rd_queue[Basic::WQ_FWD]++;
+      return -1;
+    }
 
-  //   // check for duplicates in the read queue
-  //   auto found_rq = std::find_if(TQ.begin(), TQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS));
-  //   if (found_rq != TQ.end()) {
-  //     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
-  //     packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
-  //     packet_dep_merge(found_rq->sq_index_depend_on_me, packet->sq_index_depend_on_me);
-  //     packet_dep_merge(found_rq->instr_depend_on_me, packet->instr_depend_on_me);
-  //     packet_dep_merge(found_rq->to_return, packet->to_return);
-  //     RQ_MERGED++;
-  //     cacheDataModel->rd_queue[Basic::MERGED]++;
-  //     return 0; // merged index
-  //   }
+    // check for duplicates in the read queue
+    auto found_rq = std::find_if(TQ.begin(), TQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS));
+    if (found_rq != TQ.end()) {
+      DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
+      packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
+      packet_dep_merge(found_rq->sq_index_depend_on_me, packet->sq_index_depend_on_me);
+      packet_dep_merge(found_rq->instr_depend_on_me, packet->instr_depend_on_me);
+      packet_dep_merge(found_rq->to_return, packet->to_return);
+      RQ_MERGED++;
+      cacheDataModel->rd_queue[Basic::MERGED]++;
+      return 0; // merged index
+    }
 
-  //   // check occupancy
-  //   if (TQ.full()) {
-  //     RQ_FULL++;
-  //     DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;)
-  //     cacheDataModel->rd_queue[Basic::REJECTED]++;
-  //     return -2; // cannot handle this request
-  //   }
+    // check occupancy
+    if (TQ.full()) {
+      RQ_FULL++;
+      DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;)
+      cacheDataModel->rd_queue[Basic::REJECTED]++;
+      return -2; // cannot handle this request
+    }
 
-  //   // if there is no duplicate, add it to RQ
-  //   if (warmup_complete[cpu])
-  //     TQ.push_back(*packet);
-  //   else
-  //     TQ.push_back_ready(*packet);
+    // if there is no duplicate, add it to RQ
+    if (warmup_complete[cpu])
+      TQ.push_back(*packet);
+    else
+      TQ.push_back_ready(*packet);
 
-  //   DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;)
+    DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;)
 
-  //   RQ_TO_CACHE++;
-  //   return TQ.occupancy();
-  // }
+    RQ_TO_CACHE++;
+    return TQ.occupancy();
+  }
 
 
   cacheDataModel->rd_queue[Basic::REQUESTED]++;
