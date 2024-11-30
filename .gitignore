@@ -24,3 +24,5 @@ tracer/*
 *txt
 Makefile
 .*
+
+*.ini
