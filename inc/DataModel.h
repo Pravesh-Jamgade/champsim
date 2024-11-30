@@ -1,6 +1,7 @@
 #ifndef DATAMODEL_H
 #define DATAMODEL_H
 #include <iostream>
+
 using namespace std;
 
 enum Basic

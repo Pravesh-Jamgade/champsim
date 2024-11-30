@@ -7,6 +7,9 @@
 
 #include "cache.h"
 
+// Extra configguration
+extern int KNOB_TTP;
+
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
@@ -92,7 +95,10 @@ void PageTableWalker::handle_fill()
       // 12 bits
       auto [addr, fault] = vmem.va_to_pa(cpu, fill_mshr->v_address);
 
-      //llcObject->prefetch_line(addr, llcObject->fill_level, 1);
+      if(KNOB_TTP==1)
+      {
+        llcObject->prefetch_line(addr, llcObject->fill_level, 1);
+      }  
 
       // We dont have free frame availbale, hence minor fault.
       if (warmup_complete[cpu] && fault) 

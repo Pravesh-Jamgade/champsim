@@ -1,0 +1,7 @@
+#ifndef USER_H
+#include <iostream>
+using namespace std;
+
+int KNOB_TRANSLATION_QUEUE = 0;
+int KNOB_TTP = 0;
+#endif

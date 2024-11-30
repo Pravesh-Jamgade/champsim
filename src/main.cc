@@ -18,6 +18,7 @@
 #include "vmem.h"
 
 #include "dramsim3_wrapper.hpp"
+#include "INIReader.h"
 
 uint8_t warmup_complete[NUM_CPUS] = {}, simulation_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
@@ -34,6 +35,10 @@ extern VirtualMemory vmem;
 extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 extern std::array<CACHE*, NUM_CACHES> caches;
 extern std::array<champsim::operable*, NUM_OPERABLES> operables;
+
+// Extra configguration
+extern int KNOB_TRANSLATION_QUEUE;
+extern int KNOB_TTP;
 
 std::vector<tracereader*> traces;
 
@@ -396,6 +401,15 @@ int main(int argc, char** argv)
     printf("\n*** Not enough traces for the configured number of cores ***\n\n");
     assert(0);
   }
+  
+  INIReader* iniReader = new INIReader(string("./config.ini"));
+  KNOB_TRANSLATION_QUEUE = iniReader->GetInteger("KNOB", "TQ", 0);
+  KNOB_TTP = iniReader->GetInteger("KNOB", "TTP", 0);
+  std::cout << "Extra settings:\n";
+  std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
+  std::cout << "TTP="<<KNOB_TTP<<'\n';
+  std::cout << '\n';
+
   // end trace file setup
 
   // SHARED CACHE

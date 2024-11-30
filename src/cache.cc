@@ -8,11 +8,12 @@
 #include "util.h"
 #include "vmem.h"
 
-#include "user.h"
-
 #ifndef SANITY_CHECK
 #define NDEBUG
 #endif
+
+// Extra configguration
+extern int KNOB_TRANSLATION_QUEUE;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -119,7 +120,7 @@ void CACHE::handle_writeback()
 
 void CACHE::handle_read()
 {
-  while (reads_available_this_cycle > 0 && KNOB_TRANSLATION_QUEUE == 1) {
+  while (reads_available_this_cycle > 0 && KNOB_TRANSLATION_QUEUE) {
     if (!TQ.has_ready())
     {
       cacheDataModel->rd_queue_stalls[Stall::OP_PENALTY]++;
@@ -503,7 +504,7 @@ int CACHE::invalidate_entry(uint64_t inval_addr)
 
 int CACHE::add_rq(PACKET* packet)
 {
-  if(KNOB_TRANSLATION_QUEUE == 1 && packet->type == TRANSLATION)
+  if(KNOB_TRANSLATION_QUEUE && packet->type == TRANSLATION)
   {
     champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
     if (found_wq != WQ.end()) {
