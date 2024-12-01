@@ -14,6 +14,7 @@
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
+extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -286,7 +287,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS));
   bool mshr_full = (MSHR.size() == MSHR_SIZE);
 
-  if (mshr_entry != MSHR.end()) // miss already inflight
+  // usercode
+  if (mshr_entry != MSHR.end() && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) // miss already inflight
   {
     // update fill location
     mshr_entry->fill_level = std::min(mshr_entry->fill_level, handle_pkt.fill_level);
@@ -331,7 +333,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
 
     // Allocate an MSHR
-    if (handle_pkt.fill_level <= fill_level) {
+    if (handle_pkt.fill_level <= fill_level  && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) {
       auto it = MSHR.insert(std::end(MSHR), handle_pkt);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
@@ -340,15 +342,22 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       cacheDataModel->mshr_queue[Basic::ACCESS]++;
     }
 
-    if (handle_pkt.fill_level <= fill_level)
-      handle_pkt.to_return = {this};
-    else
-      handle_pkt.to_return.clear();
+    if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
+    {
+      if (handle_pkt.fill_level <= fill_level)
+        handle_pkt.to_return = {this};
+      else
+        handle_pkt.to_return.clear();
+    }
+    
 
     if (!is_read)
       lower_level->add_pq(&handle_pkt);
     else
+    {
       lower_level->add_rq(&handle_pkt);
+    }
+      
   }
 
   // update prefetcher on load instructions and prefetches from upper levels
@@ -387,6 +396,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   BLOCK& fill_block = block[set * NUM_WAY + way];
   bool evicting_dirty = !bypass && (lower_level != NULL) && fill_block.dirty;
+
+  // if(NAME.find("DTLB")!=string::npos || NAME.find("ITLB")!=string::npos && KNOB_STLB_DO_NOT_TRACK_MISS)
+  // {
+  //   evicting_dirty = 1;
+  // }
+
   uint64_t evicting_address = 0;
 
   if (!bypass) {

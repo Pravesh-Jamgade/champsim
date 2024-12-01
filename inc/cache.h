@@ -29,7 +29,7 @@ public:
   uint32_t cpu;
   const std::string NAME;
   const uint32_t NUM_SET, NUM_WAY, WQ_SIZE, RQ_SIZE, PQ_SIZE, MSHR_SIZE;
-  const uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS;
+   uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS;
   std::vector<BLOCK> block{NUM_SET * NUM_WAY};
   const uint32_t MAX_READ, MAX_WRITE;
   uint32_t reads_available_this_cycle, writes_available_this_cycle;
@@ -95,6 +95,8 @@ public:
 
   void print_deadlock() override;
 
+  void* getObject(){return this;}
+
 #include "cache_modules.inc"
 
   const repl_t repl_type;
@@ -114,6 +116,15 @@ public:
     if(NAME.find("LLC") != string::npos)
     {
       cache_is[CACHE_ID::IS_LLC] = true;
+    }
+    else if(NAME.find("STLB") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_STLB] = true;
+      FILL_LATENCY = 2* fill_lat;
+    }
+    else if(NAME.find("DTLB") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_DTLB] = true;
     }
   }
 

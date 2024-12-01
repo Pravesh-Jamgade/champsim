@@ -39,6 +39,7 @@ extern std::array<champsim::operable*, NUM_OPERABLES> operables;
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
+extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 
 std::vector<tracereader*> traces;
 
@@ -405,9 +406,12 @@ int main(int argc, char** argv)
   INIReader* iniReader = new INIReader(string("./config.ini"));
   KNOB_TRANSLATION_QUEUE = iniReader->GetInteger("KNOB", "TQ", 0);
   KNOB_TTP = iniReader->GetInteger("KNOB", "TTP", 0);
+  KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
+
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
   std::cout << "TTP="<<KNOB_TTP<<'\n';
+  std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
   std::cout << '\n';
 
   // end trace file setup

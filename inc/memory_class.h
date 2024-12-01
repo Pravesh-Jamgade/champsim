@@ -48,7 +48,7 @@ public:
   virtual uint32_t get_occupancy(uint8_t queue_type, uint64_t address) = 0;
   virtual uint32_t get_size(uint8_t queue_type, uint64_t address) = 0;
 
-  void* getObject(){return this;}
+  virtual void* getObject() = 0;
 
   explicit MemoryRequestConsumer(unsigned fill_level) : fill_level(fill_level) {}
 };
@@ -58,7 +58,7 @@ class MemoryRequestProducer
 public:
   MemoryRequestConsumer* lower_level;
   virtual void return_data(PACKET* packet) = 0;
-
+  virtual void* getObject() = 0;
 protected:
   MemoryRequestProducer() {}
   explicit MemoryRequestProducer(MemoryRequestConsumer* ll) : lower_level(ll) {}

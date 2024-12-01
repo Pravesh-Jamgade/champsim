@@ -82,6 +82,8 @@ public:
   uint64_t get_shamt(uint8_t pt_level);
 
   void print_deadlock() override;
+
+  void* getObject(){return this;}
 };
 
 #endif

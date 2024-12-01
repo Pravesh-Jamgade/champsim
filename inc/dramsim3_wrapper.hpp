@@ -34,7 +34,8 @@ public:
             procPageAccess = new bool[numPPages]{false};
         }
 
-
+    void* getObject(){return this;}
+    
     int add_rq(PACKET* packet) override {
         if (all_warmup_complete <= NUM_CPUS) {
             for (auto ret : packet->to_return)
