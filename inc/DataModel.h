@@ -6,20 +6,19 @@ using namespace std;
 
 enum Basic
 {
-    ACCESS =0,
-    HIT,
-    MISS,
-    REQUESTED,
+    REQUESTED=0,
     ADDED,
     MERGED,
     REJECTED,
     WQ_FWD,
+    ACCESS,
+    HIT,
+    MISS,
     BASIC_END
 };
 static string Basic_str[BASIC_END] = {
-    "ACCESS", "HIT", "MISS", "REQUESTED", "ADDED", "MERGED", "WQ_FWD", "REJECTED"
+    "REQUESTED", "ADDED", "MERGED", "WQ_FWD", "REJECTED", "ACCESS", "HIT", "MISS"
 };
-
 
 enum Stall
 {
@@ -42,6 +41,38 @@ static string AdvStat_str[AdvStat::ADVSTAT_END] = {
     "CS_readlikemiss_stalled_Nextlevel_FULL",
     "CS_filllikemiss_stalled_Nextlevel_FULL"
 };
+
+enum CacheStat
+{
+    Total_Write = 0,
+    Total_Drop,
+    Total_Writeback,
+
+    Load_Write,
+    Load_Drop,
+    Load_Writeback,
+
+    Prefetch_Write,
+    Prefetch_Drop,
+    Prefetch_Writeback,
+
+    RFO_Write,
+    RFO_Drop,
+    RFO_Writeback,
+
+    Translation_Write,
+    Translation_Drop,
+    Translation_Writeback,
+
+    CacheStat_End
+};
+static string CacheStat_str[CacheStat::CacheStat_End] = {
+                                                        "Total Write", "Total Drop", "Total Writeback", 
+                                                        "Load Write", "Load Drop", "Load Writeback", 
+                                                        "Prefetch Write", "Prefetch Drop", "Prefetch Writeback",
+                                                        "RFO Write", "RFO Drop", "RFO Writeback",
+                                                        "Translation Write", "Translation Drop", "Translation Writeback"
+                                                        };
 
 enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_STLB, IS_DTLB, CACHE_ID_END};
 
@@ -77,6 +108,8 @@ class CacheDataModel
     uint64_t mshr_queue_stalls[Stall::STALL_END] = {0};
     
     uint64_t adv_stats[AdvStat::ADVSTAT_END] = {0};
+
+    uint64_t cache_stat[CacheStat::CacheStat_End] = {0};
     
 
     void print_stats()
@@ -85,6 +118,8 @@ class CacheDataModel
 
         for(int i=0; i< Basic::BASIC_END; i++)
             cout << tag << Basic_str[i] << " Load Queue, " << rd_queue[i] << '\n';
+        
+        cout << '\n';
         
         for(int i=0; i< Basic::BASIC_END; i++)
             cout << tag << Basic_str[i] << " Store Queue, " << wr_queue[i] << '\n';
@@ -99,8 +134,8 @@ class CacheDataModel
         for(int i=0; i< Basic::BASIC_END; i++)
             cout << tag << Basic_str[i] << " MSHR Queue, " << mshr_queue[i] << '\n';
         
-        /////////////////////////////////////////////////////////////////////////////////////
         cout << '\n';
+        /////////////////////////////////////////////////////////////////////////////////////
 
         for(int i=0; i< Stall::STALL_END; i++)
             cout << tag << Stall_str[i] << " Load Queue, " << rd_queue_stalls[i] << '\n';
@@ -123,13 +158,20 @@ class CacheDataModel
         cout << '\n';
 
         cout << "readmiss --> mshr_full\n";
-        cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << '\n';
+        cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << '\n';
 
         cout << "readmiss --> mshr_avail --> nextlevel_full\n";
-        cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL] << adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL] << '\n';
+        cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL] << '\n';
 
         cout << "mshr write --> eviction_writeback --> nextlevel_full\n";
-        cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << '\n';
+        cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << '\n';
+        
+        cout << '\n';
+        
+        for(int i=0; i< CacheStat::CacheStat_End; i++)
+        {
+            cout << tag << CacheStat_str[i] << ", " << cache_stat[i] << '\n';
+        }
 
         cout << '\n';
     }

@@ -56,6 +56,7 @@ void CACHE::handle_fill()
     }
 
     MSHR.erase(fill_mshr);
+    cacheDataModel->mshr_queue[Basic::ACCESS]++;
     writes_available_this_cycle--;
   }
 }
@@ -88,6 +89,7 @@ void CACHE::handle_writeback()
 
       // mark dirty
       fill_block.dirty = 1;
+      cacheDataModel->wr_queue[Basic::HIT]++;
     } else // MISS
     {
       bool success;
@@ -111,11 +113,14 @@ void CACHE::handle_writeback()
         cacheDataModel->wr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         return;
       }
+
+      cacheDataModel->wr_queue[Basic::MISS]++;
     }
 
     // remove this entry from WQ
     writes_available_this_cycle--;
     WQ.pop_front();
+    cacheDataModel->wr_queue[Basic::ACCESS]++;
   }
 }
 
@@ -153,6 +158,7 @@ void CACHE::handle_read()
     // remove this entry from RQ
     TQ.pop_front();
     reads_available_this_cycle--;
+    cacheDataModel->rd_queue[Basic::ACCESS]++;
   }
 
   while (reads_available_this_cycle > 0) {
@@ -175,18 +181,22 @@ void CACHE::handle_read()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
+      cacheDataModel->rd_queue[Basic::HIT]++;
     } else {
       bool success = readlike_miss(handle_pkt);
+      
       if (!success)
       {
         cacheDataModel->rd_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         return;
       }
+      cacheDataModel->rd_queue[Basic::MISS]++;
     }
 
     // remove this entry from RQ
     RQ.pop_front();
     reads_available_this_cycle--;
+    cacheDataModel->rd_queue[Basic::ACCESS]++;
   }
 }
 
@@ -208,18 +218,22 @@ void CACHE::handle_prefetch()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
+      cacheDataModel->pf_queue[Basic::HIT]++;
     } else {
       bool success = readlike_miss(handle_pkt);
+      
       if (!success)
       {
         cacheDataModel->pf_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         return;
       }
+      cacheDataModel->pf_queue[Basic::MISS]++;
     }
 
     // remove this entry from PQ
     PQ.pop_front();
     reads_available_this_cycle--;
+    cacheDataModel->pf_queue[Basic::ACCESS]++;
   }
 }
 
@@ -255,12 +269,12 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   for (auto ret : handle_pkt.to_return)
     ret->return_data(&handle_pkt);
 
-  if(handle_pkt.type == LOAD || handle_pkt.type == TRANSLATION)
-    cacheDataModel->rd_queue[Basic::HIT]++;
-  else if(handle_pkt.type == RFO)
-    cacheDataModel->wr_queue[Basic::HIT]++;
-  else if(handle_pkt.type == PREFETCH)
-    cacheDataModel->pf_queue[Basic::HIT]++;
+  // if(handle_pkt.type == LOAD || handle_pkt.type == TRANSLATION)
+  //   cacheDataModel->rd_queue[Basic::HIT]++;
+  // else if(handle_pkt.type == RFO)
+  //   cacheDataModel->wr_queue[Basic::HIT]++;
+  // else if(handle_pkt.type == PREFETCH)
+  //   cacheDataModel->pf_queue[Basic::HIT]++;
     
 
   // update prefetch stats and reset prefetch bit
@@ -366,13 +380,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
     handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 0, handle_pkt.type, handle_pkt.pf_metadata);
   }
-
-  if(handle_pkt.type == LOAD || handle_pkt.type == TRANSLATION)
-    cacheDataModel->rd_queue[Basic::MISS]++;
-  else if(handle_pkt.type == RFO)
-    cacheDataModel->wr_queue[Basic::MISS]++;
-  else if(handle_pkt.type == PREFETCH)
-    cacheDataModel->pf_queue[Basic::MISS]++;
     
   return true;
 }
@@ -397,15 +404,16 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   BLOCK& fill_block = block[set * NUM_WAY + way];
   bool evicting_dirty = !bypass && (lower_level != NULL) && fill_block.dirty;
 
-  // if(NAME.find("DTLB")!=string::npos || NAME.find("ITLB")!=string::npos && KNOB_STLB_DO_NOT_TRACK_MISS)
-  // {
-  //   evicting_dirty = 1;
-  // }
+  if(!bypass && NAME.find("DTLB")!=string::npos || NAME.find("ITLB")!=string::npos && KNOB_STLB_DO_NOT_TRACK_MISS)
+  {
+    evicting_dirty = 1;
+  }
 
   uint64_t evicting_address = 0;
 
   if (!bypass) {
-    if (evicting_dirty) {
+    if (evicting_dirty) 
+    {
       PACKET writeback_packet;
 
       writeback_packet.fill_level = lower_level->fill_level;
@@ -422,6 +430,27 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL]++;
         return false;
       }
+
+      if(handle_pkt.type == LOAD)
+        cacheDataModel->cache_stat[CacheStat::Load_Writeback]++;
+      else if(handle_pkt.type == TRANSLATION)
+        cacheDataModel->cache_stat[CacheStat::Translation_Writeback]++;
+      else if(handle_pkt.type == RFO)
+        cacheDataModel->cache_stat[CacheStat::RFO_Writeback]++;
+      else if(handle_pkt.type == PREFETCH)
+        cacheDataModel->cache_stat[CacheStat::Prefetch_Writeback]++;
+
+    }
+    else // clean 
+    {
+      if(handle_pkt.type == LOAD)
+        cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
+      else if(handle_pkt.type == TRANSLATION)
+        cacheDataModel->cache_stat[CacheStat::Translation_Drop]++;
+      else if(handle_pkt.type == RFO)
+        cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
+      else if(handle_pkt.type == PREFETCH)
+        cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
     }
 
     if (ever_seen_data)
@@ -461,6 +490,15 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // COLLECT STATS
   sim_miss[handle_pkt.cpu][handle_pkt.type]++;
   sim_access[handle_pkt.cpu][handle_pkt.type]++;
+
+  if(handle_pkt.type == LOAD)
+    cacheDataModel->cache_stat[CacheStat::Load_Write]++;
+  else if(handle_pkt.type == TRANSLATION)
+    cacheDataModel->cache_stat[CacheStat::Translation_Write]++;
+  else if(handle_pkt.type == RFO)
+    cacheDataModel->cache_stat[CacheStat::RFO_Write]++;
+  else if(handle_pkt.type == PREFETCH)
+    cacheDataModel->cache_stat[CacheStat::Prefetch_Write]++;
 
   return true;
 }
@@ -632,7 +670,7 @@ int CACHE::add_rq(PACKET* packet)
   RQ_TO_CACHE++;
 
   cacheDataModel->rd_queue[Basic::ADDED]++;
-  cacheDataModel->rd_queue[Basic::ACCESS]++;
+  // cacheDataModel->rd_queue[Basic::ACCESS]++;
   return RQ.occupancy();
 }
 
@@ -681,7 +719,7 @@ int CACHE::add_wq(PACKET* packet)
   WQ_TO_CACHE++;
 
   cacheDataModel->wr_queue[Basic::ADDED]++;
-  cacheDataModel->wr_queue[Basic::ACCESS]++;
+  // cacheDataModel->wr_queue[Basic::ACCESS]++;
   return WQ.occupancy();
 }
 
@@ -817,7 +855,7 @@ int CACHE::add_pq(PACKET* packet)
   PQ_TO_CACHE++;
 
   cacheDataModel->pf_queue[Basic::ADDED]++;
-  cacheDataModel->pf_queue[Basic::ACCESS]++;
+  // cacheDataModel->pf_queue[Basic::ACCESS]++;
   return PQ.occupancy();
 }
 
