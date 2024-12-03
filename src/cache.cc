@@ -29,6 +29,8 @@ void CACHE::handle_fill()
       return;
     }
 
+    cacheDataModel->mshr_queue[Basic::ACCESS]++;
+    
     // find victim
     uint32_t set = get_set(fill_mshr->address);
 
@@ -43,6 +45,7 @@ void CACHE::handle_fill()
     bool success = filllike_miss(set, way, *fill_mshr);
     if (!success)
     {
+      cacheDataModel->mshr_queue[Basic::MISS]++;
       cacheDataModel->mshr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
       return;
     }
@@ -56,8 +59,9 @@ void CACHE::handle_fill()
     }
 
     MSHR.erase(fill_mshr);
-    cacheDataModel->mshr_queue[Basic::ACCESS]++;
     writes_available_this_cycle--;
+    
+    cacheDataModel->mshr_queue[Basic::HIT]++;
   }
 }
 
@@ -69,6 +73,8 @@ void CACHE::handle_writeback()
       cacheDataModel->wr_queue_stalls[Stall::OP_PENALTY]++;
       return;
     }
+
+    cacheDataModel->wr_queue[Basic::ACCESS]++;
 
     // handle the oldest entry
     PACKET& handle_pkt = WQ.front();
@@ -93,9 +99,12 @@ void CACHE::handle_writeback()
     } else // MISS
     {
       bool success;
-      if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) {
+      if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) 
+      {
         success = readlike_miss(handle_pkt);
-      } else {
+      } 
+      else 
+      {
         // find victim
         auto set_begin = std::next(std::begin(block), set * NUM_WAY);
         auto set_end = std::next(set_begin, NUM_WAY);
@@ -107,14 +116,13 @@ void CACHE::handle_writeback()
 
         success = filllike_miss(set, way, handle_pkt);
       }
-
+      
+      cacheDataModel->wr_queue[Basic::MISS]++;
       if (!success)
       {
         cacheDataModel->wr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         return;
       }
-
-      cacheDataModel->wr_queue[Basic::MISS]++;
     }
 
     // remove this entry from WQ
@@ -133,6 +141,8 @@ void CACHE::handle_read()
       break;
     }
 
+    cacheDataModel->rd_queue[Basic::ACCESS]++;
+
     // handle the oldest entry
     PACKET& handle_pkt = TQ.front();
 
@@ -146,8 +156,13 @@ void CACHE::handle_read()
     if (way < NUM_WAY) // HIT
     {
       readlike_hit(set, way, handle_pkt);
-    } else {
+      cacheDataModel->rd_queue[Basic::HIT]++;
+    } 
+    else 
+    {
       bool success = readlike_miss(handle_pkt);
+
+      cacheDataModel->rd_queue[Basic::MISS]++;
       if (!success)
       {
         cacheDataModel->rd_queue_stalls[Stall::OP_FAIL_PENALTY]++;
@@ -209,6 +224,8 @@ void CACHE::handle_prefetch()
       return;
     }
 
+    cacheDataModel->pf_queue[Basic::ACCESS]++;
+
     // handle the oldest entry
     PACKET& handle_pkt = PQ.front();
 
@@ -222,18 +239,18 @@ void CACHE::handle_prefetch()
     } else {
       bool success = readlike_miss(handle_pkt);
       
+      cacheDataModel->pf_queue[Basic::MISS]++;
+
       if (!success)
       {
         cacheDataModel->pf_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         return;
       }
-      cacheDataModel->pf_queue[Basic::MISS]++;
     }
 
     // remove this entry from PQ
     PQ.pop_front();
     reads_available_this_cycle--;
-    cacheDataModel->pf_queue[Basic::ACCESS]++;
   }
 }
 
