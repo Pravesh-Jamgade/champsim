@@ -120,7 +120,7 @@ public:
     else if(NAME.find("STLB") != string::npos)
     {
       cache_is[CACHE_ID::IS_STLB] = true;
-      FILL_LATENCY = 2* fill_lat;
+      FILL_LATENCY = 3* hit_lat;
     }
     else if(NAME.find("DTLB") != string::npos)
     {

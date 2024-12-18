@@ -414,6 +414,14 @@ int main(int argc, char** argv)
   std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
   std::cout << '\n';
 
+  // For now just fill latency
+  std::cout << "Cache configuration\n";
+  for(auto ca: caches)
+  {
+    cout << "FILL Latency " << ca->NAME << ", " << ca->FILL_LATENCY << '\n';
+  }
+  cout << '\n';
+
   // end trace file setup
 
   // SHARED CACHE
