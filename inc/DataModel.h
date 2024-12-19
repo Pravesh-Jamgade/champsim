@@ -74,7 +74,7 @@ static string CacheStat_str[CacheStat::CacheStat_End] = {
                                                         "Translation Write", "Translation Drop", "Translation Writeback"
                                                         };
 
-enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_STLB, IS_DTLB, CACHE_ID_END};
+enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_STLB, IS_DTLB, IS_ITLB, CACHE_ID_END};
 
 class CacheDataModel
 {
@@ -157,6 +157,13 @@ class CacheDataModel
 
         cout << '\n';
 
+        for(int i=0; i< CacheStat::CacheStat_End; i++)
+        {
+            cout << tag << CacheStat_str[i] << ", " << cache_stat[i] << '\n';
+        }
+
+        cout << '\n';
+
         cout << "readmiss --> mshr_full\n";
         cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << '\n';
 
@@ -166,13 +173,6 @@ class CacheDataModel
         cout << "mshr write --> eviction_writeback --> nextlevel_full\n";
         cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << '\n';
         
-        cout << '\n';
-        
-        for(int i=0; i< CacheStat::CacheStat_End; i++)
-        {
-            cout << tag << CacheStat_str[i] << ", " << cache_stat[i] << '\n';
-        }
-
         cout << '\n';
     }
 };

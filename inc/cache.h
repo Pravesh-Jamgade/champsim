@@ -126,6 +126,10 @@ public:
     {
       cache_is[CACHE_ID::IS_DTLB] = true;
     }
+    else if(NAME.find("ITLB") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_ITLB] = true;
+    }
   }
 
   ~CACHE()

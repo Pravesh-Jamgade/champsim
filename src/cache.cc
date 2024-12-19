@@ -91,6 +91,7 @@ void CACHE::handle_writeback()
       // mark dirty
       fill_block.dirty = 1;
       cacheDataModel->wr_queue[Basic::HIT]++;
+      cacheDataModel->cache_stat[CacheStat::Total_Write]++;
     } else // MISS
     {
       bool success;
@@ -413,9 +414,14 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   BLOCK& fill_block = block[set * NUM_WAY + way];
   bool evicting_dirty = !bypass && (lower_level != NULL) && fill_block.dirty;
 
-  if(!bypass && NAME.find("DTLB")!=string::npos || NAME.find("ITLB")!=string::npos && KNOB_STLB_DO_NOT_TRACK_MISS)
+  // since writebacks from i/dtlb are making cache-blocks at STLB dirty, 
+  // it is by default getting writeback to PTW (which is wrong hence making it explitcitly evicting=false)
+  if(KNOB_STLB_DO_NOT_TRACK_MISS)
   {
-    evicting_dirty = 1;
+    if(cache_is[CACHE_ID::IS_DTLB] || cache_is[CACHE_ID::IS_ITLB])
+      evicting_dirty = 1;
+    else if(cache_is[CACHE_ID::IS_STLB])
+      evicting_dirty = 0;
   }
 
   uint64_t evicting_address = 0;
@@ -448,6 +454,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         cacheDataModel->cache_stat[CacheStat::RFO_Writeback]++;
       else if(handle_pkt.type == PREFETCH)
         cacheDataModel->cache_stat[CacheStat::Prefetch_Writeback]++;
+      
+      cacheDataModel->cache_stat[CacheStat::Total_Writeback]++;
 
     }
     else // clean 
@@ -460,6 +468,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
       else if(handle_pkt.type == PREFETCH)
         cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
+      
+      cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
     }
 
     if (ever_seen_data)
@@ -508,6 +518,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     cacheDataModel->cache_stat[CacheStat::RFO_Write]++;
   else if(handle_pkt.type == PREFETCH)
     cacheDataModel->cache_stat[CacheStat::Prefetch_Write]++;
+  
+  cacheDataModel->cache_stat[CacheStat::Total_Write]++;
 
   return true;
 }
