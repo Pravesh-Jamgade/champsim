@@ -29,7 +29,7 @@ public:
   uint32_t cpu;
   const std::string NAME;
   const uint32_t NUM_SET, NUM_WAY, WQ_SIZE, RQ_SIZE, PQ_SIZE, MSHR_SIZE;
-   uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS;
+   uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS, WRITE_LANTENCY;
   std::vector<BLOCK> block{NUM_SET * NUM_WAY};
   const uint32_t MAX_READ, MAX_WRITE;
   uint32_t reads_available_this_cycle, writes_available_this_cycle;
@@ -46,7 +46,7 @@ public:
   champsim::delay_queue<PACKET> RQ{RQ_SIZE, HIT_LATENCY}, // read queue
       PQ{PQ_SIZE, HIT_LATENCY},                           // prefetch queue
       VAPQ{PQ_SIZE, VA_PREFETCH_TRANSLATION_LATENCY},     // virtual address prefetch queue
-      WQ{WQ_SIZE, HIT_LATENCY},
+      WQ{WQ_SIZE, WRITE_LANTENCY},
       TQ{RQ_SIZE, HIT_LATENCY};                           // write queue
 
   std::list<PACKET> MSHR; // MSHR
@@ -58,6 +58,8 @@ public:
            WQ_FULL = 0, WQ_FORWARD = 0, WQ_TO_CACHE = 0;
 
   uint64_t total_miss_latency = 0;
+
+  int **prefetch_hit_histo;
 
   // functions
   int add_rq(PACKET* packet) override;
@@ -97,6 +99,49 @@ public:
 
   void* getObject(){return this;}
 
+  void reset_datamodel()
+  {
+    delete cacheDataModel;
+    cacheDataModel = new CacheDataModel(NAME, cpu);
+  }
+
+  void print_logs()
+  {
+    string prefix = NAME + " ";
+    if(cache_is[CACHE_ID::IS_LLC])
+    {
+      int rd_avg = 0;
+      int wr_avg = 0;
+      for(int i=0; i< NUM_WAY*NUM_SET; i++)
+      {
+        rd_avg += prefetch_hit_histo[i][READ_HIT];
+        wr_avg += prefetch_hit_histo[i][WRITEBACK_HIT];
+      }
+      cout << prefix << "total prefetch block read access, " << rd_avg << '\n';
+      rd_avg = (double)rd_avg/(double)(NUM_WAY*NUM_SET);
+      cout << prefix << "prefetch block read access average, " << (double)rd_avg/(double)(NUM_WAY*NUM_SET) << '\n';
+
+      cout << prefix << "total prefetch block write access, " << wr_avg << '\n';
+      wr_avg = (double)wr_avg/(double)(NUM_WAY*NUM_SET);
+      cout << prefix << "prefetch block write access average, " << wr_avg  << '\n';
+
+      int rd_var = 0, wr_var = 0;
+      for(int i=0; i< NUM_WAY*NUM_SET; i++)
+      {
+        int delta = rd_avg - prefetch_hit_histo[i][READ_HIT];
+        rd_var += delta * delta;
+
+        delta = wr_avg - prefetch_hit_histo[i][WRITEBACK_HIT];
+        wr_var += delta * delta;
+      }
+      rd_var = (double)rd_var/(double)(NUM_WAY*NUM_SET - 1);
+      wr_var = (double)wr_var/(double)(NUM_WAY*NUM_SET - 1);
+
+      cout << "prefetch block read access variance, " << rd_var << '\n';
+      cout << "prefetch block wr access variance, " << wr_var << '\n';
+    }
+  }
+
 #include "cache_modules.inc"
 
   const repl_t repl_type;
@@ -111,7 +156,20 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+
+    prefetch_hit_histo = (int**)malloc(sizeof(int*) * NUM_WAY * NUM_SET);
+    for(int i=0; i< NUM_WAY*NUM_SET; i++)
+    {
+      prefetch_hit_histo[i] = (int*)malloc(sizeof(int) * 2);
+      for(int j=0; j< 2; j++)
+      {
+        prefetch_hit_histo[i][j] = 0;
+      }
+    }  
+
     cacheDataModel = new CacheDataModel(NAME, cpu);
+    
+    WRITE_LANTENCY = hit_lat;
 
     if(NAME.find("LLC") != string::npos)
     {
@@ -120,7 +178,6 @@ public:
     else if(NAME.find("STLB") != string::npos)
     {
       cache_is[CACHE_ID::IS_STLB] = true;
-      FILL_LATENCY = 3* hit_lat;
     }
     else if(NAME.find("DTLB") != string::npos)
     {

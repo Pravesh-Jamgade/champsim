@@ -17,7 +17,7 @@ enum Basic
     BASIC_END
 };
 static string Basic_str[BASIC_END] = {
-    "REQUESTED", "ADDED", "MERGED", "WQ_FWD", "REJECTED", "ACCESS", "HIT", "MISS"
+    "REQUESTED", "ADDED", "MERGED", "REJECTED", "WQ_FWD", "ACCESS", "HIT", "MISS"
 };
 
 enum Stall
@@ -108,13 +108,11 @@ class CacheDataModel
     uint64_t mshr_queue_stalls[Stall::STALL_END] = {0};
     
     uint64_t adv_stats[AdvStat::ADVSTAT_END] = {0};
-
-    uint64_t cache_stat[CacheStat::CacheStat_End] = {0};
-    
+    uint64_t cache_stat[CacheStat::CacheStat_End] = {0};    
 
     void print_stats()
     {
-        string tag = name + " cpu" + to_string(cpu) + " ";
+        string tag = name + " ";
 
         for(int i=0; i< Basic::BASIC_END; i++)
             cout << tag << Basic_str[i] << " Load Queue, " << rd_queue[i] << '\n';
@@ -133,6 +131,8 @@ class CacheDataModel
 
         for(int i=0; i< Basic::BASIC_END; i++)
             cout << tag << Basic_str[i] << " MSHR Queue, " << mshr_queue[i] << '\n';
+        
+        cout << tag << "Miss Rate, " << ((double)(rd_queue[Basic::MISS] + wr_queue[Basic::MISS] + pf_queue[Basic::MISS]) * 100 /(double) (rd_queue[Basic::ACCESS] + wr_queue[Basic::ACCESS] + pf_queue[Basic::ACCESS])) << '\n';
         
         cout << '\n';
         /////////////////////////////////////////////////////////////////////////////////////
@@ -233,7 +233,7 @@ class PTWDataModel
 
     void print_stats()
     {
-        string tag = "PTW cpu" + to_string(cpu) + " ";
+        string tag = "cpu" + to_string(cpu) + "_PTW" + " ";
         for(int i=0; i< Basic::BASIC_END; i++)
         {
             cout << tag << Basic_str[i] << ", " << queue_basic_metric[i] << '\n';
@@ -249,7 +249,7 @@ class PTWDataModel
             cout << tag << pscl_packet_processed_str[i] << ", " << ((double)psc_level_packet_processed_miss_latency[i]/psc_level_packet_processed[i]) << '\n';
         }
 
-        cout << tag << "PTW avg miss latency, " << ((double)packet_processed_total_miss_latency/packet_processed) << '\n';
+        cout << tag << "avg miss latency, " << ((double)packet_processed_total_miss_latency/packet_processed) << '\n';
     }
 
 };

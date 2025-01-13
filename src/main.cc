@@ -40,6 +40,7 @@ extern std::array<champsim::operable*, NUM_OPERABLES> operables;
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
+extern int KNOB_STTMRAM_STLB;
 
 std::vector<tracereader*> traces;
 
@@ -257,6 +258,8 @@ void reset_cache_stats(uint32_t cpu, CACHE* cache)
   cache->WQ_TO_CACHE = 0;
   cache->WQ_FORWARD = 0;
   cache->WQ_FULL = 0;
+
+  cache->reset_datamodel();
 }
 
 void finish_warmup()
@@ -303,6 +306,27 @@ void finish_warmup()
   //   DRAM.channels[i].RQ_ROW_BUFFER_HIT = 0;
   //   DRAM.channels[i].RQ_ROW_BUFFER_MISS = 0;
   // }
+}
+
+CACHE* get_cache_by_name(string cacheName)
+{
+  for(auto cache: caches)
+  {
+    if(cache->NAME.find(cacheName)!=string::npos)
+      return cache;
+  }
+  return nullptr;
+}
+
+void overwrite_cache()
+{
+  // setting stlb as STT-mram
+  if(KNOB_STTMRAM_STLB)
+  {
+    CACHE* stlb = get_cache_by_name("STLB");
+    stlb->WRITE_LANTENCY = 3 * stlb->HIT_LATENCY;
+    stlb->FILL_LATENCY = 3 * stlb->HIT_LATENCY;
+  }
 }
 
 void signal_handler(int signal)
@@ -404,22 +428,28 @@ int main(int argc, char** argv)
   }
   
   INIReader* iniReader = new INIReader(string("./config.ini"));
+
   KNOB_TRANSLATION_QUEUE = iniReader->GetInteger("KNOB", "TQ", 0);
   KNOB_TTP = iniReader->GetInteger("KNOB", "TTP", 0);
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
+  KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
 
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
   std::cout << "TTP="<<KNOB_TTP<<'\n';
   std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
+  std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << '\n';
 
-  // For now just fill latency
+  // overwrite relevant to extra settings
+  overwrite_cache();
+
   std::cout << "Cache configuration\n";
   for(auto ca: caches)
   {
-    cout << "FILL Latency " << ca->NAME << ", " << ca->FILL_LATENCY << '\n';
+    cout << ca->NAME << ", FILL Latency=" << ca->FILL_LATENCY << ", WRITE Latency=" << ca->WRITE_LANTENCY << ", HIT Latency=" << ca->HIT_LATENCY << '\n';
   }
+  cout << "STLB set, " << get_cache_by_name("STLB")->NUM_SET << '\n';
   cout << '\n';
 
   // end trace file setup
@@ -505,6 +535,7 @@ int main(int argc, char** argv)
         cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
         cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
 
+        cout << "cpu" << i << " IPC, " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);
       }
@@ -631,6 +662,12 @@ for(int i=0; i< allRowVal.size(); i++)
   }
   cout << output << '\n';
 }
+
+for(auto cache: caches)
+{
+  cache->print_logs();
+}
+
 
 cout << "\nDone!\n";
 

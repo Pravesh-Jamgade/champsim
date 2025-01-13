@@ -6,4 +6,9 @@ int KNOB_TRANSLATION_QUEUE = 0;
 int KNOB_TTP = 0;
 int KNOB_STLB_DO_NOT_TRACK_MISS = 0;
 
+
+
+// STT_MRAM
+int KNOB_STTMRAM_STLB = 0;
+
 #endif

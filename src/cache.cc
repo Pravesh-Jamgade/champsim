@@ -92,6 +92,9 @@ void CACHE::handle_writeback()
       fill_block.dirty = 1;
       cacheDataModel->wr_queue[Basic::HIT]++;
       cacheDataModel->cache_stat[CacheStat::Total_Write]++;
+
+      if(fill_block.came_from_request == PREFETCH)
+        prefetch_hit_histo[set*NUM_WAY+way][WRITEBACK_HIT]++;
     } else // MISS
     {
       bool success;
@@ -292,6 +295,9 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     pf_useful++;
     hit_block.prefetch = 0;
   }
+
+  if(hit_block.came_from_request == PREFETCH)
+    prefetch_hit_histo[set*NUM_WAY+way][READ_HIT]++;
 }
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
@@ -363,7 +369,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       it->event_cycle = std::numeric_limits<uint64_t>::max();
 
       cacheDataModel->mshr_queue[Basic::ADDED]++;
-      cacheDataModel->mshr_queue[Basic::ACCESS]++;
     }
 
     if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
@@ -492,6 +497,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.ip = handle_pkt.ip;
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
+    fill_block.came_from_request = handle_pkt.type;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

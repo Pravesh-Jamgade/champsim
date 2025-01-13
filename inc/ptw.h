@@ -34,9 +34,18 @@ public:
   void fill_cache(uint64_t next_level_paddr, uint64_t vaddr);
 };
 
+typedef struct Track
+{
+  bool stop = false;
+  uint64_t readmiss_address;
+  uint64_t readmiss_v_address;
+};
+
 class PageTableWalker : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+
+  Track track;
 
   CACHE* llcObject;
 

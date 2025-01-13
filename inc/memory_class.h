@@ -13,6 +13,9 @@
 #define TRANSLATION 4
 #define NUM_TYPES 5
 
+#define READ_HIT 0
+#define WRITEBACK_HIT 1
+
 // CACHE BLOCK
 class BLOCK
 {
@@ -23,6 +26,8 @@ public:
 
   // replacement state
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
+
+  int came_from_request = NUM_TYPES; // default: invalid block
 };
 
 class MemoryRequestConsumer

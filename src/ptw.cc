@@ -65,6 +65,15 @@ void PageTableWalker::handle_read()
     if (rq_index == -2)
       return;
 
+    // Track PTW
+    if(track.stop == 0)
+    {
+      track.stop = 1;
+      track.readmiss_address = handle_pkt.address;
+      track.readmiss_v_address = handle_pkt.v_address;
+      // cout << std::hex << track.readmiss_address << ", " << track.readmiss_v_address << ", req, " << packet.address << std::dec << '\n';
+    }
+
     packet.to_return = handle_pkt.to_return; // Set the return for MSHR packet same as read packet.
     packet.type = handle_pkt.type;
 
@@ -94,6 +103,12 @@ void PageTableWalker::handle_fill()
       // Return the translated physical address to STLB. Does not contain last
       // 12 bits
       auto [addr, fault] = vmem.va_to_pa(cpu, fill_mshr->v_address);
+
+      // // Track PTW starts from handle_read --> first enable there
+      // if(track.stop && track.readmiss_v_address == fill_mshr->v_address)
+      // {
+      //   cout << (int)fill_mshr->translation_level<< ", " << std::hex << fill_mshr->address << ", " << addr << std::dec << '\n';
+      // }
 
       if(KNOB_TTP==1)
       {
@@ -145,6 +160,13 @@ void PageTableWalker::handle_fill()
     else 
     {
       auto [addr, fault] = vmem.get_pte_pa(cpu, fill_mshr->v_address, fill_mshr->translation_level);
+
+      // // Track PTW handle_read --> first enable there
+      // if(track.stop && track.readmiss_v_address == fill_mshr->v_address)
+      // {
+      //   cout << (int)fill_mshr->translation_level<< ", " << std::hex << fill_mshr->address << ", " << addr << std::dec << '\n';
+      // }
+
       if (warmup_complete[cpu] && fault) 
       {
         fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
@@ -198,7 +220,6 @@ void PageTableWalker::handle_fill()
         }
       }
     }
-
     fill_this_cycle--;
   }
 }
