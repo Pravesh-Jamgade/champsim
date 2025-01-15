@@ -112,16 +112,15 @@ public:
     {
       int rd_avg = 0;
       int wr_avg = 0;
+      int total_prefetch_cached_block = 0;
       for(int i=0; i< NUM_WAY*NUM_SET; i++)
       {
         rd_avg += prefetch_hit_histo[i][READ_HIT];
         wr_avg += prefetch_hit_histo[i][WRITEBACK_HIT];
       }
-      cout << prefix << "total prefetch block read access, " << rd_avg << '\n';
       rd_avg = (double)rd_avg/(double)(NUM_WAY*NUM_SET);
       cout << prefix << "prefetch block read access average, " << (double)rd_avg/(double)(NUM_WAY*NUM_SET) << '\n';
 
-      cout << prefix << "total prefetch block write access, " << wr_avg << '\n';
       wr_avg = (double)wr_avg/(double)(NUM_WAY*NUM_SET);
       cout << prefix << "prefetch block write access average, " << wr_avg  << '\n';
 
