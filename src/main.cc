@@ -536,6 +536,7 @@ int main(int argc, char** argv)
         cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
 
         cout << "cpu" << i << " IPC, " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
+        cout << "cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
         for (auto it = caches.rbegin(); it != caches.rend(); ++it)
           record_roi_stats(i, *it);
       }
@@ -665,11 +666,12 @@ for(int i=0; i< allRowVal.size(); i++)
 
 for(auto cache: caches)
 {
+  cache->cacheDataModel->print_stats();
   cache->print_logs();
 }
 
 
-cout << "\nDone!\n";
+cout << "\nDone!\n\n";
 
   return 0;
 }

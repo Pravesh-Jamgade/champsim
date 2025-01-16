@@ -102,7 +102,16 @@ public:
   void reset_datamodel()
   {
     delete cacheDataModel;
-    cacheDataModel = new CacheDataModel(NAME, cpu);
+    cacheDataModel = new CacheDataModel(NAME, cpu, NUM_SET, NUM_WAY);
+  }
+
+  bool func_set_full(size_t set)
+  {
+    auto set_begin = std::next(std::begin(block), set * NUM_WAY);
+    auto set_end = std::next(set_begin, NUM_WAY);
+    auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
+    uint32_t way = std::distance(set_begin, first_inv);
+    return way == NUM_WAY;
   }
 
   void print_logs()
@@ -166,7 +175,7 @@ public:
       }
     }  
 
-    cacheDataModel = new CacheDataModel(NAME, cpu);
+    cacheDataModel = new CacheDataModel(NAME, cpu, NUM_SET, NUM_WAY);
     
     WRITE_LANTENCY = hit_lat;
 
@@ -190,7 +199,8 @@ public:
 
   ~CACHE()
   {
-    cacheDataModel->print_stats();
+    if(cache_is[CACHE_ID::IS_STLB])
+      cacheDataModel->print_end_stats();
   }
 };
 

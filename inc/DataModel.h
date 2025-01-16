@@ -1,6 +1,8 @@
 #ifndef DATAMODEL_H
 #define DATAMODEL_H
 #include <iostream>
+#include <map>
+#include <iomanip>  
 
 using namespace std;
 
@@ -87,8 +89,13 @@ class CacheDataModel
         }
     }
 
-    CacheDataModel(string name, uint32_t cpu):name(name), cpu(cpu)
+    CacheDataModel(string name, uint32_t cpu, size_t sets, size_t ways):name(name), cpu(cpu)
     {
+        for(int i=0; i< sets; i++)
+        {
+            hist_set_conflict_events[i]=0;
+        }
+
         for(int i=0; i< REJECTED; i++)
         {
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
@@ -108,7 +115,9 @@ class CacheDataModel
     uint64_t mshr_queue_stalls[Stall::STALL_END] = {0};
     
     uint64_t adv_stats[AdvStat::ADVSTAT_END] = {0};
-    uint64_t cache_stat[CacheStat::CacheStat_End] = {0};    
+    uint64_t cache_stat[CacheStat::CacheStat_End] = {0};  
+
+    map<uint64_t,uint64_t> hist_set_conflict_events;  
 
     void print_stats()
     {
@@ -172,6 +181,30 @@ class CacheDataModel
 
         cout << "mshr write --> eviction_writeback --> nextlevel_full\n";
         cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << '\n';
+        
+        cout << '\n';
+    }
+
+    void print_end_stats()
+    {
+        string tag = name + " ";
+        cout << tag << "set conflict stats (evictions and number of such sets)\n";
+        
+        // tracking frequency from corresponding sets
+        map<uint64_t, uint64_t> hist_data;
+        uint64_t no_of_nonconflict_sets = 0;
+
+        for(auto entry: hist_set_conflict_events)
+        {
+            hist_data[entry.second]++;
+            if(entry.second == 0)
+                no_of_nonconflict_sets++;
+        }
+
+        for(auto entry: hist_data)
+            cout << entry.first << ", " << std::setw(5) << entry.second << '\n';
+        
+        cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
         
         cout << '\n';
     }

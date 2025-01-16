@@ -462,19 +462,29 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       
       cacheDataModel->cache_stat[CacheStat::Total_Writeback]++;
 
+      // counting the number of times set has seen conflict and as a result a dirty block is sent-back
+      cacheDataModel->hist_set_conflict_events[set]++;
+
     }
     else // clean 
     {
-      if(handle_pkt.type == LOAD)
-        cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
-      else if(handle_pkt.type == TRANSLATION)
-        cacheDataModel->cache_stat[CacheStat::Translation_Drop]++;
-      else if(handle_pkt.type == RFO)
-        cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
-      else if(handle_pkt.type == PREFETCH)
-        cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
-      
-      cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
+      // set is full then increment count of dropped blocks as a block will be overwritten
+      if(func_set_full(set))
+      {
+        if(handle_pkt.type == LOAD)
+          cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
+        else if(handle_pkt.type == TRANSLATION)
+          cacheDataModel->cache_stat[CacheStat::Translation_Drop]++;
+        else if(handle_pkt.type == RFO)
+          cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
+        else if(handle_pkt.type == PREFETCH)
+          cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
+        
+        cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
+
+        // counting the number of times set has seen conflict and as a result a clean block is overwritten
+        cacheDataModel->hist_set_conflict_events[set]++;
+      }
     }
 
     if (ever_seen_data)
