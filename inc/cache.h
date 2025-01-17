@@ -24,6 +24,8 @@ class CACHE : public champsim::operable, public MemoryRequestConsumer, public Me
 public:
   //usercode
   CacheDataModel* cacheDataModel;
+  list<BLOCK>* reuse_history;
+
   bool cache_is[CACHE_ID_END] = {false};
   list<BLOCK> fa_array;
   int FA_SIZE =0;
@@ -110,6 +112,11 @@ public:
   void print_logs()
   {
     string prefix = NAME + " ";
+
+    cout << "Number of times the misses are w.r.t entries available in CACHE\n";
+    cout << prefix << "misses per entry, " << (cacheDataModel->mshr_queue[Basic::ACCESS]/(NUM_SET * NUM_WAY)) << '\n';
+    cout << prefix << "misses per set, " << (cacheDataModel->mshr_queue[Basic::ACCESS]/(NUM_SET)) << '\n';
+
     if(cache_is[CACHE_ID::IS_LLC])
     {
       int rd_avg = 0;
@@ -158,6 +165,10 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+
+    reuse_history = new list<BLOCK>[NUM_SET];
+    for(int i=0; i< NUM_SET; i++)
+      reuse_history[i] = list<BLOCK>();
 
     prefetch_hit_histo = (int**)malloc(sizeof(int*) * NUM_WAY * NUM_SET);
     for(int i=0; i< NUM_WAY*NUM_SET; i++)

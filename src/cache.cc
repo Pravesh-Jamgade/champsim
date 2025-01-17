@@ -416,7 +416,18 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
     handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 0, handle_pkt.type, handle_pkt.pf_metadata);
   }
-    
+  
+  //check if reuse_history has tracked this miss
+  uint32_t set = get_set(handle_pkt.address);
+  uint32_t way = get_way(handle_pkt.address, set);
+  uint64_t target_addr = handle_pkt.address;
+  auto it = std::find_if(reuse_history[set].begin(), reuse_history[set].end(), eq_addr<BLOCK>(target_addr, OFFSET_BITS));
+  if(it!=reuse_history[set].end())
+  {
+    int dist = std::distance(reuse_history[set].begin(), it);
+    cacheDataModel->hist_reuse_distance[dist]++;
+  }
+ 
   return true;
 }
 
@@ -452,6 +463,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   uint64_t evicting_address = 0;
 
+  bool track_reuse = false;
+
   if (!bypass) {
     if (evicting_dirty) 
     {
@@ -483,6 +496,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       
       cacheDataModel->cache_stat[CacheStat::Total_Writeback]++;
 
+      // counting the number of times set has seen conflict and as a result a dirty block is sent-back
+      cacheDataModel->hist_set_conflict_events[set]++;
+      track_reuse = true;
+
     }
     else // clean 
     {
@@ -511,12 +528,34 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       // checking for capacity miss
       {
-        auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, OFFSET_BITS));
+        auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, match_offset_bits ? 0 : OFFSET_BITS));
         if(it!=fa_array.end())
         {
           cacheDataModel->category_of_misses[MISS::CAP]++;
         }
+
+        // counting the number of times set has seen conflict and as a result a clean block is overwritten
+        cacheDataModel->hist_set_conflict_events[set]++;
+        track_reuse = true;
       }
+
+      // track evicted/overwritten block
+      if(fa_array.size() >= FA_SIZE)
+        fa_array.pop_back();
+      
+      auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address,  match_offset_bits ? 0 : OFFSET_BITS));
+      if(found_out==fa_array.end())
+      {
+        fa_array.push_back(block[set*NUM_WAY + way]);
+      }
+    }
+
+    if(track_reuse)
+    {
+      if(reuse_history[set].size() >= 4*NUM_WAY)
+        reuse_history[set].pop_front();
+      else 
+        reuse_history[set].push_back(block[set*NUM_WAY + way]);
     }
 
     if (ever_seen_data)

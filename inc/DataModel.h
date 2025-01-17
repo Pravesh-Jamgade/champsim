@@ -1,6 +1,8 @@
 #ifndef DATAMODEL_H
 #define DATAMODEL_H
 #include <iostream>
+#include <map>
+#include <iomanip>
 
 using namespace std;
 
@@ -123,6 +125,8 @@ class CacheDataModel
     uint64_t cache_stat[CacheStat::CacheStat_End] = {0};    
 
     int* category_of_misses;
+    map<uint64_t,uint64_t> hist_set_conflict_events;  
+    map<int,int> hist_reuse_distance;
 
     void print_stats()
     {
@@ -150,33 +154,6 @@ class CacheDataModel
         
         cout << '\n';
         /////////////////////////////////////////////////////////////////////////////////////
-
-        for(int i=0; i< Stall::STALL_END; i++)
-            cout << tag << Stall_str[i] << " Load Queue, " << rd_queue_stalls[i] << '\n';
-        
-        cout << '\n';
-
-        for(int i=0; i< Stall::STALL_END; i++)
-            cout << tag << Stall_str[i] << " Store Queue, " << wr_queue_stalls[i] << '\n';
-        
-        cout << '\n';
-
-        for(int i=0; i< Stall::STALL_END; i++)
-            cout << tag << Stall_str[i] << " Prefetch Queue, " << pf_queue_stalls[i] << '\n';
-        
-        cout << '\n';
-
-        for(int i=0; i< Stall::STALL_END; i++)
-            cout << tag << Stall_str[i] << " MSHR Queue, " << mshr_queue_stalls[i] << '\n';
-
-        cout << '\n';
-
-        for(int i=0; i< CacheStat::CacheStat_End; i++)
-        {
-            cout << tag << CacheStat_str[i] << ", " << cache_stat[i] << '\n';
-        }
-
-        cout << '\n';
         
         cout << tag << "Miss Rate, " << ((double)(rd_queue[Basic::MISS] + wr_queue[Basic::MISS] + pf_queue[Basic::MISS]) * 100 /(double) (rd_queue[Basic::ACCESS] + wr_queue[Basic::ACCESS] + pf_queue[Basic::ACCESS])) << '\n';
     
@@ -195,6 +172,31 @@ class CacheDataModel
         cout << tag << "Capacity miss, " << category_of_misses[MISS::CAP] << '\n';
         cout << tag << "Compulsory miss, " << category_of_misses[MISS::COM] << '\n';
         cout << tag << "Conflict miss, " << category_of_misses[MISS::CONF] << '\n';
+   
+        cout << tag << "set conflict stats (evictions and number of such sets)\n";
+        
+        // tracking frequency from corresponding sets
+        map<uint64_t, uint64_t> hist_data;
+        uint64_t no_of_nonconflict_sets = 0;
+
+        for(auto entry: hist_set_conflict_events)
+        {
+            hist_data[entry.second]++;
+            if(entry.second == 0)
+                no_of_nonconflict_sets++;
+        }
+
+        for(auto entry: hist_data)
+            cout << entry.first << ", " << setw(5) << entry.second << '\n';
+        
+        cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
+
+        cout << tag << "reuse distance (reuse and frequency)\n";
+        for(auto entry: hist_reuse_distance)
+        {
+            cout << entry.first << ", " << setw(5) << entry.second << '\n';
+        }
+        
         cout << '\n';
 
     }
