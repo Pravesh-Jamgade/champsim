@@ -118,6 +118,7 @@ class CacheDataModel
     uint64_t cache_stat[CacheStat::CacheStat_End] = {0};  
 
     map<uint64_t,uint64_t> hist_set_conflict_events;  
+    map<int,int> hist_reuse_distance;
 
     void print_stats()
     {
@@ -205,6 +206,12 @@ class CacheDataModel
             cout << entry.first << ", " << std::setw(5) << entry.second << '\n';
         
         cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
+
+        cout << tag << "reuse distance (reuse and frequency)\n";
+        for(auto entry: hist_reuse_distance)
+        {
+            cout << entry.first << ", " << std::setw(5) << entry.second << '\n';
+        }
         
         cout << '\n';
     }
