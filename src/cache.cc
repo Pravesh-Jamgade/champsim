@@ -504,10 +504,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     if(track_reuse)
     {
-      if(reuse_history[set].size() >= 4*NUM_WAY)
+      if(reuse_history[set].size() >= 4*NUM_WAY-1)
         reuse_history[set].pop_front();
-      else 
-        reuse_history[set].push_back(block[set*NUM_SET + way]);
+      reuse_history[set].push_back(block[set*NUM_WAY + way]);
     }
 
     if (ever_seen_data)
