@@ -449,7 +449,7 @@ int main(int argc, char** argv)
   {
     cout << ca->NAME << ", FILL Latency=" << ca->FILL_LATENCY << ", WRITE Latency=" << ca->WRITE_LANTENCY << ", HIT Latency=" << ca->HIT_LATENCY << '\n';
   }
-  cout << "STLB set, " << get_cache_by_name("STLB")->NUM_SET << '\n';
+  cout << "STLB set=" << get_cache_by_name("STLB")->NUM_SET << ", way=" << get_cache_by_name("STLB")->NUM_WAY << '\n';
   cout << '\n';
 
   // end trace file setup
