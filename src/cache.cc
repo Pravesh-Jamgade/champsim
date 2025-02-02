@@ -57,8 +57,12 @@ void CACHE::handle_fill()
 
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
-    
+
+    cacheDataModel->unique_page_count.insert(fill_mshr->address >>LOG2_PAGE_SIZE);   
     cacheDataModel->mshr_queue[Basic::ACCESS]++;
+
+    // cout << "here, " << (int)fill_mshr->type << '\n';
+    // cacheDataModel->type_mshr_queue[fill_mshr->type][Basic::ACCESS]++;
   }
 }
 
@@ -303,6 +307,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
   cacheDataModel->mshr_queue[Basic::REQUESTED]++;
+  cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::REQUESTED]++;
 
   DP(if (warmup_complete[handle_pkt.cpu]) {
     std::cout << "[" << NAME << "] " << __func__ << " miss";
@@ -342,6 +347,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
 
     cacheDataModel->mshr_queue[Basic::MERGED]++;
+    cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::MERGED]++;
   } 
   else 
   {
@@ -349,6 +355,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     {
       cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL]++;
       cacheDataModel->mshr_queue[Basic::REJECTED]++;
+      cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::REJECTED]++;
       return false; // TODO should we allow prefetches anyway if they will not
                     // be filled to this level?
     }
@@ -369,6 +376,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       it->event_cycle = std::numeric_limits<uint64_t>::max();
 
       cacheDataModel->mshr_queue[Basic::ADDED]++;
+      cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::ADDED]++;
     }
 
     if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
@@ -400,11 +408,21 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   uint32_t set = get_set(handle_pkt.address);
   uint32_t way = get_way(handle_pkt.address, set);
   uint64_t target_addr = handle_pkt.address;
-  auto it = std::find_if(reuse_history[set].begin(), reuse_history[set].end(), eq_addr<BLOCK>(target_addr, OFFSET_BITS));
-  if(it!=reuse_history[set].end())
   {
-    int dist = std::distance(reuse_history[set].begin(), it);
-    cacheDataModel->hist_reuse_distance[dist]++;
+    auto it = std::find_if(reuse_history[set].begin(), reuse_history[set].end(), eq_addr<BLOCK>(target_addr, OFFSET_BITS));
+    if(it!=reuse_history[set].end())
+    {
+      int dist = std::distance(reuse_history[set].begin(), it);
+      cacheDataModel->hist_reuse_distance[dist]++;
+    }
+  }
+  // checking for capacity miss
+  {
+    auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(target_addr, OFFSET_BITS));
+    if(it!=fa_array.end())
+    {
+      cacheDataModel->category_of_misses[MISS::CAP]++;
+    }
   }
  
   return true;
@@ -477,11 +495,17 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       // counting the number of times set has seen conflict and as a result a dirty block is sent-back
       cacheDataModel->hist_set_conflict_events[set]++;
+      cacheDataModel->category_of_misses[MISS::CONF]++;
+
       track_reuse = true;
 
     }
     else // clean 
     {
+      // check for compulsory miss
+      if(!fill_block.valid)
+        cacheDataModel->category_of_misses[MISS::COM]++;
+
       // set is full then increment count of dropped blocks as a block will be overwritten
       if(func_set_full(set))
       {
@@ -507,6 +531,14 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       if(reuse_history[set].size() >= 4*NUM_WAY-1)
         reuse_history[set].pop_front();
       reuse_history[set].push_back(block[set*NUM_WAY + way]);
+
+      if(fa_array.size() >= FA_SIZE)
+        fa_array.pop_back();
+      auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address, OFFSET_BITS));
+      if(found_out!=fa_array.end())
+      {
+        fa_array.push_back(block[set*NUM_WAY + way]);
+      }
     }
 
     if (ever_seen_data)

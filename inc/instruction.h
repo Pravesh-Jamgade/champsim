@@ -26,6 +26,10 @@
 #define BRANCH_OTHER 7
 
 struct ooo_model_instr {
+
+  int chain_id = -1;
+  int branch_id = -1;
+  
   uint64_t instr_id = 0, ip = 0, event_cycle = 0;
 
   bool is_branch = 0, is_memory = 0, branch_taken = 0, branch_mispredicted = 0, source_added[NUM_INSTR_SOURCES] = {},

@@ -13,6 +13,7 @@
 #include "operable.h"
 
 #include "DataModel.h"
+#include "ptw.h"
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -25,6 +26,7 @@ public:
   //usercode
   CacheDataModel* cacheDataModel;
   list<BLOCK>* reuse_history;
+  list<BLOCK> fa_array;
 
   bool cache_is[CACHE_ID_END] = {false};
 
@@ -62,6 +64,7 @@ public:
   uint64_t total_miss_latency = 0;
 
   int **prefetch_hit_histo;
+  int FA_SIZE =0;
 
   // functions
   int add_rq(PACKET* packet) override;
@@ -105,6 +108,12 @@ public:
   {
     delete cacheDataModel;
     cacheDataModel = new CacheDataModel(NAME, cpu, NUM_SET, NUM_WAY);
+
+    // if(cache_is[CACHE_ID::IS_STLB])
+    // {
+    //   PageTableWalker* ptw = (PageTableWalker*) lower_level->getObject();
+    //   ptw->reset_datamodel();
+    // }
   }
 
   bool func_set_full(size_t set)
@@ -119,6 +128,11 @@ public:
   void print_logs()
   {
     string prefix = NAME + " ";
+
+    cout << "Number of times the misses are w.r.t entries available in STLB\n";
+    cout << prefix << "misses per entry, " << (cacheDataModel->mshr_queue[Basic::ACCESS]/(NUM_SET * NUM_WAY)) << '\n';
+    cout << prefix << "misses per set, " << (cacheDataModel->mshr_queue[Basic::ACCESS]/(NUM_SET)) << '\n';
+
     if(cache_is[CACHE_ID::IS_LLC])
     {
       int rd_avg = 0;
@@ -201,6 +215,8 @@ public:
     {
       cache_is[CACHE_ID::IS_ITLB] = true;
     }
+
+    FA_SIZE = NUM_WAY * NUM_SET;
   }
 
   ~CACHE()

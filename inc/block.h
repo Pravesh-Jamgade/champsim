@@ -30,7 +30,9 @@ public:
 
   uint8_t translation_level = 0, init_translation_level = 0;
 
-  uint64_t uv_cycle_enqueue = 0;
+  uint64_t ptw_cycle_enqueue = 0;
+  uint64_t translation_time = std::numeric_limits<uint64_t>::max();
+  uint64_t access_time = std::numeric_limits<uint64_t>::max();
   bool ttp = false;
 };
 

@@ -93,6 +93,12 @@ public:
   void print_deadlock() override;
 
   void* getObject(){return this;}
+
+  void reset_datamodel()
+  {
+    delete ptw_datamodel;
+    ptw_datamodel = new PTWDataModel(cpu);
+  }
 };
 
 #endif

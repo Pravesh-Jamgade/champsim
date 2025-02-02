@@ -86,7 +86,7 @@ void PageTableWalker::handle_read()
 
     // count psc level used to sent memory read 
     ptw_datamodel->queue_psc_metric[packet.init_translation_level]++;
-    it->uv_cycle_enqueue = current_cycle;
+    it->ptw_cycle_enqueue = current_cycle;
   }
 }
 
@@ -177,7 +177,7 @@ void PageTableWalker::handle_fill()
       else 
       {
         // usercode
-        ptw_datamodel->psc_level_packet_processed_miss_latency[fill_mshr->translation_level] += current_cycle - fill_mshr->uv_cycle_enqueue;
+        ptw_datamodel->psc_level_packet_processed_miss_latency[fill_mshr->translation_level] += current_cycle - fill_mshr->ptw_cycle_enqueue;
 
         if (fill_mshr->translation_level == PSCL5.level)
           PSCL5.fill_cache(addr, fill_mshr->v_address);
@@ -198,6 +198,9 @@ void PageTableWalker::handle_fill()
           std::cout << " event: " << fill_mshr->event_cycle << " current: " << current_cycle << std::endl;
         });
 
+        // usercode
+        ptw_datamodel->psc_level_packet_processed[fill_mshr->translation_level]++;
+
         PACKET packet = *fill_mshr;
         packet.cpu = cpu;
         packet.type = TRANSLATION;
@@ -215,8 +218,7 @@ void PageTableWalker::handle_fill()
           MSHR.splice(std::end(MSHR), MSHR, fill_mshr);
 
           // usercode
-          ptw_datamodel->psc_level_packet_processed[packet.translation_level]++;
-          fill_mshr->uv_cycle_enqueue = current_cycle;
+          fill_mshr->ptw_cycle_enqueue = current_cycle;
         }
       }
     }

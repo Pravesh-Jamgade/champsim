@@ -2,6 +2,7 @@
 #define DATAMODEL_H
 #include <iostream>
 #include <map>
+#include <set>
 #include <iomanip>  
 
 using namespace std;
@@ -78,6 +79,14 @@ static string CacheStat_str[CacheStat::CacheStat_End] = {
 
 enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_STLB, IS_DTLB, IS_ITLB, CACHE_ID_END};
 
+enum MISS
+{
+    COM=0,
+    CONF,
+    CAP,
+    MISS_END
+};
+
 class CacheDataModel
 {
     public:
@@ -100,6 +109,20 @@ class CacheDataModel
         {
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
         }
+
+        category_of_misses = (int*)malloc(sizeof(int*) *  4);
+        for(int i=0; i< 5; i++)
+            category_of_misses[i] = 0;
+        
+        type_mshr_queue = (int**)malloc(sizeof(int**) * 5);
+        for(int i=0; i< 5; i++)
+            type_mshr_queue[i] = (int*) malloc(sizeof(int*)*BASIC_END);
+
+    }
+
+    ~CacheDataModel()
+    {
+        delete category_of_misses;
     }
 
     string name;
@@ -119,6 +142,16 @@ class CacheDataModel
 
     map<uint64_t,uint64_t> hist_set_conflict_events;  
     map<int,int> hist_reuse_distance;
+
+    set<uint64_t> unique_page_count;
+    
+    int* category_of_misses;
+
+    // type x category
+    int** type_rd_queue;
+    int** type_wr_queue;
+    int** type_pf_queue;
+    int** type_mshr_queue;
 
     void print_stats()
     {
@@ -174,6 +207,11 @@ class CacheDataModel
 
         cout << '\n';
 
+        cout << tag << "Capacity miss, " << category_of_misses[MISS::CAP] << '\n';
+        cout << tag << "Compulsory miss, " << category_of_misses[MISS::COM] << '\n';
+        cout << tag << "Conflict miss, " << category_of_misses[MISS::CONF] << '\n';
+        cout << tag << "Unique page count, " << unique_page_count.size() << '\n';
+
         cout << "readmiss --> mshr_full\n";
         cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << '\n';
 
@@ -201,7 +239,7 @@ class CacheDataModel
             if(entry.second == 0)
                 no_of_nonconflict_sets++;
         }
-
+        
         for(auto entry: hist_data)
             cout << entry.first << ", " << std::setw(5) << entry.second << '\n';
         
@@ -294,9 +332,86 @@ class PTWDataModel
 
 };
 
+enum RefType
+    {
+        refLOAD=0,
+        refSTORE,
+        refInstr,
+        RefTypeEnd
+    };
+
+enum O3_counter
+    {
+        rob_full=0,
+        LQ_full,
+        SQ_full,
+
+        RTL0_full,
+        RTS0_full,
+        RTL1_full,
+        RTS1_full,
+
+        ROB_FULL_LQ_FULL,
+        ROB_FULL_SQ_FULL,
+
+        LQ_FULL_RTL0_FULL,                
+        LQ_FULL_RTL0_EMPTY,
+        SQ_FULL_RTS0_FULL,                
+        SQ_FULL_RTS0_EMPTY,  
+
+        LQ_FULL_RTL1_FULL,                
+        LQ_FULL_RTL1_EMPTY,
+        SQ_FULL_RTS1_FULL,                
+        SQ_FULL_RTS1_EMPTY,               
+
+        O3_Count_End
+    };
+
 class O3_DataModel
 {
     public:
+    
+    int cpu;
+
+    string str_o3_counter[O3_Count_End] = {
+        "ROB_FULL", "LQ_FULL", "SQ_FULL",
+
+        "RTL0_full",
+        "RTS0_full",
+        "RTL1_full",
+        "RTS1_full",
+
+        "ROB_FULL_LQ_FULL",
+        "ROB_FULL_SQ_FULL",
+
+        "LQ_FULL_RTL0_FULL", 
+        "LQ_FULL_RTL0_EMPTY",
+        "SQ_FULL_RTS0_FULL", 
+        "SQ_FULL_RTS0_EMPTY",
+
+        "LQ_FULL_RTL1_FULL", 
+        "LQ_FULL_RTL1_EMPTY",
+        "SQ_FULL_RTS1_FULL", 
+        "SQ_FULL_RTS1_EMPTY"
+    };
+
+    map<uint64_t, uint64_t> instr_translation_time;
+    map<uint64_t, uint64_t> data_translation_time;
+    map<uint64_t, uint64_t> icache_access_time;
+    map<uint64_t, uint64_t> dcache_access_time;
+    int instr_resolved_translations[RefTypeEnd] = {0};
+    int data_resolved_translations[RefTypeEnd] = {0};
+
+    map<int,int> chain_freq;
+    map<int,int> branch_freq;
+
+    int counter[O3_counter::O3_Count_End] = {0};
+
+    O3_DataModel(){}
+    O3_DataModel(int cpu){
+        this->cpu = cpu;
+    }
+    void print_stats();
     
 };
 

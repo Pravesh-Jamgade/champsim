@@ -6,6 +6,7 @@
 #include "cache.h"
 #include "champsim.h"
 #include "instruction.h"
+#include "DataModel.h"
 
 #define DEADLOCK_CYCLE 1000000
 
@@ -41,6 +42,17 @@ void O3_CPU::initialize_core()
   impl_branch_predictor_initialize();
   impl_btb_initialize();
 }
+
+struct instr_mem_will_produce {
+  const uint64_t match_mem;
+  explicit instr_mem_will_produce(uint64_t mem) : match_mem(mem) {}
+  bool operator()(const ooo_model_instr& test) const
+  {
+    auto dmem_begin = std::begin(test.destination_memory);
+    auto dmem_end = std::end(test.destination_memory);
+    return std::find(dmem_begin, dmem_end, match_mem) != dmem_end;
+  }
+};
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr)
 {
@@ -320,6 +332,8 @@ void O3_CPU::do_translate_fetch(champsim::circular_buffer<ooo_model_instr>::iter
   trace_packet.asid[0] = 0;
   trace_packet.asid[1] = 0;
   trace_packet.to_return = {&ITLB_bus};
+  trace_packet.translation_time = current_cycle;
+
   for (; begin != end; ++begin)
     trace_packet.instr_depend_on_me.push_back(begin);
 
@@ -572,6 +586,75 @@ void O3_CPU::do_execution(champsim::circular_buffer<ooo_model_instr>::iterator r
 
 void O3_CPU::schedule_memory_instruction()
 {
+  // // tracking one dst to many src branches
+  // // tracking sequential chain
+  // for(auto rob_it = std::begin(ROB); rob_it!= std::end(ROB) && ROB.full(); rob_it++)
+  // {
+  //   if(rob_it->is_memory && rob_it->num_reg_dependent == 0)
+  //   {
+  //     for (uint32_t i = 0; i < NUM_INSTR_SOURCES; i++) 
+  //     {
+  //       int dependent_banches = 0;
+  //       int dependent_chain = 0;
+
+  //       bool count_chain = false;
+
+  //       if (rob_it->source_memory[i])
+  //       {
+  //         champsim::circular_buffer<ooo_model_instr>::reverse_iterator branch_it{rob_it};
+  //         champsim::circular_buffer<ooo_model_instr>::reverse_iterator chain_it{rob_it};
+  //         champsim::circular_buffer<ooo_model_instr>::reverse_iterator head_it{rob_it};
+
+  //         // skipping current element (tracked by head_it) and moving to prev one element
+  //         branch_it++;
+
+  //         // search if old entry are producing to which i am consuming
+  //         chain_it = branch_it = find_if(branch_it, rend(ROB), instr_mem_will_produce(rob_it->source_memory[i]));
+  //         while(branch_it!=ROB.rend())
+  //         {
+  //           // entry has branch_id == -1, never counted before
+  //           if(branch_it->branch_id == -1 || rob_it->branch_id == -1)
+  //           {
+  //             branch_it->branch_id = rob_it->branch_id = new_branch_id++;
+  //             dependent_banches++;
+  //           }
+              
+  //           branch_it++;
+  //           branch_it = find_if(branch_it, rend(ROB), instr_mem_will_produce(rob_it->source_memory[i]));
+  //         }
+
+  //         while(chain_it!=ROB.rend())
+  //         {
+  //           // entry has chain_id == -1, never counted before 
+  //           if(head_it->chain_id == -1)
+  //           {
+  //             chain_it->chain_id = head_it->chain_id = new_chain_id++;
+  //             count_chain = true;
+  //           }
+  //           else
+  //           {
+  //             if(head_it->chain_id != chain_it->chain_id)
+  //             {
+  //               chain_it->chain_id = head_it->chain_id;
+  //               count_chain = true;
+  //             }
+  //           }
+            
+  //           head_it = chain_it;
+  //           chain_it++;
+  //           chain_it = find_if(chain_it, rend(ROB), instr_mem_will_produce(head_it->source_memory[i]));
+  //         }
+  //       }
+
+  //       if(rob_it != ROB.begin())
+  //       {
+  //         o3_datamodel->branch_freq[dependent_banches]++;
+  //         o3_datamodel->chain_freq[dependent_chain]++;
+  //       }
+  //     }
+  //   }
+  // }
+
   // execution is out-of-order but we have an in-order scheduling algorithm to
   // detect all RAW dependencies
   unsigned search_bw = SCHEDULER_SIZE;
@@ -664,17 +747,6 @@ void O3_CPU::do_sq_forward_to_lq(LSQ_ENTRY& sq_entry, LSQ_ENTRY& lq_entry)
   LSQ_ENTRY empty_entry;
   lq_entry = empty_entry;
 }
-
-struct instr_mem_will_produce {
-  const uint64_t match_mem;
-  explicit instr_mem_will_produce(uint64_t mem) : match_mem(mem) {}
-  bool operator()(const ooo_model_instr& test) const
-  {
-    auto dmem_begin = std::begin(test.destination_memory);
-    auto dmem_end = std::end(test.destination_memory);
-    return std::find(dmem_begin, dmem_end, match_mem) != dmem_end;
-  }
-};
 
 struct sq_will_forward {
   const uint64_t match_id, match_addr;
@@ -813,6 +885,7 @@ int O3_CPU::do_translate_store(std::vector<LSQ_ENTRY>::iterator sq_it)
   data_packet.asid[1] = sq_it->asid[1];
   data_packet.to_return = {&DTLB_bus};
   data_packet.sq_index_depend_on_me = {sq_it};
+  data_packet.translation_time = current_cycle;
 
   DP(if (warmup_complete[cpu]) {
     std::cout << "[RTS0] " << __func__ << " instr_id: " << sq_it->instr_id << " rob_index: " << sq_it->rob_index << " is popped from to RTS0" << std::endl;
@@ -876,6 +949,7 @@ int O3_CPU::do_translate_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.asid[1] = lq_it->asid[1];
   data_packet.to_return = {&DTLB_bus};
   data_packet.lq_index_depend_on_me = {lq_it};
+  data_packet.translation_time = current_cycle;
 
   DP(if (warmup_complete[cpu]) {
     std::cout << "[RTL0] " << __func__ << " instr_id: " << lq_it->instr_id << " rob_index: " << lq_it->rob_index << " is popped to RTL0" << std::endl;
@@ -977,6 +1051,9 @@ void O3_CPU::handle_memory_return()
 
   while (available_fetch_bandwidth > 0 && to_read > 0 && !ITLB_bus.PROCESSED.empty()) {
     PACKET& itlb_entry = ITLB_bus.PROCESSED.front();
+    
+    uint64_t translation_time = current_cycle - itlb_entry.translation_time;
+    o3_datamodel->instr_translation_time[translation_time]++;
 
     // mark the appropriate instructions in the IFETCH_BUFFER as translated and
     // ready to fetch
@@ -990,8 +1067,8 @@ void O3_CPU::handle_memory_return()
           // recalculate a physical address for this cache line based on the
           // translated physical page address
           it->instruction_pa = splice_bits(itlb_entry.data, it->ip, LOG2_PAGE_SIZE);
+          o3_datamodel->instr_resolved_translations[RefType::refInstr]++;
         }
-
         available_fetch_bandwidth--;
       }
 
@@ -1010,6 +1087,9 @@ void O3_CPU::handle_memory_return()
 
   while (available_fetch_bandwidth > 0 && to_read > 0 && !L1I_bus.PROCESSED.empty()) {
     PACKET& l1i_entry = L1I_bus.PROCESSED.front();
+
+    uint64_t access_time = current_cycle - l1i_entry.access_time;
+    o3_datamodel->icache_access_time[access_time]++;
 
     // this is the L1I cache, so instructions are now fully fetched, so mark
     // them as such
@@ -1034,6 +1114,9 @@ void O3_CPU::handle_memory_return()
 
   while (to_read > 0 && !DTLB_bus.PROCESSED.empty()) { // DTLB
     PACKET& dtlb_entry = DTLB_bus.PROCESSED.front();
+    
+    uint64_t translation_time = current_cycle - dtlb_entry.translation_time;
+    o3_datamodel->data_translation_time[translation_time]++;
 
     for (auto sq_merged : dtlb_entry.sq_index_depend_on_me) {
       sq_merged->physical_address = splice_bits(dtlb_entry.data, sq_merged->virtual_address,
@@ -1041,6 +1124,8 @@ void O3_CPU::handle_memory_return()
       sq_merged->translated = COMPLETED;
       sq_merged->event_cycle = current_cycle;
 
+      o3_datamodel->data_resolved_translations[RefType::refSTORE]++;
+      
       RTS1.push(sq_merged);
     }
 
@@ -1049,6 +1134,8 @@ void O3_CPU::handle_memory_return()
                                                 LOG2_PAGE_SIZE); // translated address
       lq_merged->translated = COMPLETED;
       lq_merged->event_cycle = current_cycle;
+
+      o3_datamodel->data_resolved_translations[RefType::refLOAD]++;
 
       RTL1.push(lq_merged);
     }
@@ -1061,6 +1148,8 @@ void O3_CPU::handle_memory_return()
   to_read = static_cast<CACHE*>(L1D_bus.lower_level)->MAX_READ;
   while (to_read > 0 && !L1D_bus.PROCESSED.empty()) { // L1D
     PACKET& l1d_entry = L1D_bus.PROCESSED.front();
+    uint64_t access_time = current_cycle - l1d_entry.access_time;
+    o3_datamodel->dcache_access_time[access_time]++;
 
     for (auto merged : l1d_entry.lq_index_depend_on_me) {
       merged->fetched = COMPLETED;

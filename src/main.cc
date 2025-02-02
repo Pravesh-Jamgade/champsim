@@ -670,6 +670,10 @@ for(auto cache: caches)
   cache->print_logs();
 }
 
+for(auto o3: ooo_cpu)
+{
+  o3->o3_datamodel->print_stats();
+}
 
 cout << "\nDone!\n\n";
 
