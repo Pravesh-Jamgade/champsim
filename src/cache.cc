@@ -535,7 +535,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       if(fa_array.size() >= FA_SIZE)
         fa_array.pop_back();
       auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address, OFFSET_BITS));
-      if(found_out!=fa_array.end())
+      if(found_out==fa_array.end())
       {
         fa_array.push_back(block[set*NUM_WAY + way]);
       }
