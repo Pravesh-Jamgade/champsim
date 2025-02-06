@@ -42,6 +42,12 @@ void O3_DataModel::print_stats()
     // cout << tag << "direct-dependency (len=1) branches histo (count and freq)\n";
     // for(auto entry: branch_freq)
     //     cout << entry.first << ", " << std::setw(5) << entry.second << '\n';
+
+    cout << "(Number of cycles)\n";
+    for(int i=0; i< O3_counter::O3_Count_End; i++)
+    {
+        cout << tag << str_o3_counter[i] << ", " << counter[i] << '\n';
+    }
     cout << '\n';
 
 }

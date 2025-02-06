@@ -342,28 +342,9 @@ enum RefType
 
 enum O3_counter
     {
-        rob_full=0,
-        LQ_full,
-        SQ_full,
-
-        RTL0_full,
-        RTS0_full,
-        RTL1_full,
-        RTS1_full,
-
-        ROB_FULL_LQ_FULL,
-        ROB_FULL_SQ_FULL,
-
-        LQ_FULL_RTL0_FULL,                
-        LQ_FULL_RTL0_EMPTY,
-        SQ_FULL_RTS0_FULL,                
-        SQ_FULL_RTS0_EMPTY,  
-
-        LQ_FULL_RTL1_FULL,                
-        LQ_FULL_RTL1_EMPTY,
-        SQ_FULL_RTS1_FULL,                
-        SQ_FULL_RTS1_EMPTY,               
-
+        rob_full=0,lq_full,sq_full,
+        rob_full_lq_full, rob_full_sq_full, 
+        rob_full_lq_empty, rob_full_sq_empty,
         O3_Count_End
     };
 
@@ -375,24 +356,8 @@ class O3_DataModel
 
     string str_o3_counter[O3_Count_End] = {
         "ROB_FULL", "LQ_FULL", "SQ_FULL",
-
-        "RTL0_full",
-        "RTS0_full",
-        "RTL1_full",
-        "RTS1_full",
-
-        "ROB_FULL_LQ_FULL",
-        "ROB_FULL_SQ_FULL",
-
-        "LQ_FULL_RTL0_FULL", 
-        "LQ_FULL_RTL0_EMPTY",
-        "SQ_FULL_RTS0_FULL", 
-        "SQ_FULL_RTS0_EMPTY",
-
-        "LQ_FULL_RTL1_FULL", 
-        "LQ_FULL_RTL1_EMPTY",
-        "SQ_FULL_RTS1_FULL", 
-        "SQ_FULL_RTS1_EMPTY"
+        "ROB_FULL_LQ_FULL", "ROB_FULL_SQ_FULL",
+        "ROB_FULL_LQ_EMPTY", "ROB_FULL_SQ_EMPTY"
     };
 
     map<uint64_t, uint64_t> instr_translation_time;

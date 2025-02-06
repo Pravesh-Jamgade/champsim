@@ -484,6 +484,21 @@ void O3_CPU::dispatch_instruction()
 
   std::size_t available_dispatch_bandwidth = DISPATCH_WIDTH;
 
+  if(ROB.full())
+  {
+    o3_datamodel->counter[O3_counter::rob_full]++;
+
+    if(check_lsu_full(LQ))
+      o3_datamodel->counter[O3_counter::rob_full_lq_full]++;
+    else if(check_lsu_empty(LQ))
+      o3_datamodel->counter[O3_counter::rob_full_lq_empty]++;
+
+    if(check_lsu_full(SQ))
+      o3_datamodel->counter[O3_counter::rob_full_sq_full]++;
+    else if(check_lsu_empty(SQ))
+      o3_datamodel->counter[O3_counter::rob_full_sq_empty]++;
+  }
+
   // dispatch DISPATCH_WIDTH instructions into the ROB
   while (available_dispatch_bandwidth > 0 && DISPATCH_BUFFER.has_ready() && !ROB.full()) {
     // Add to ROB
@@ -681,6 +696,7 @@ void O3_CPU::do_memory_scheduling(champsim::circular_buffer<ooo_model_instr>::it
         add_load_queue(rob_it, i);
         num_added++;
       } else {
+        o3_datamodel->counter[O3_counter::lq_full]++;
         DP(if (warmup_complete[cpu]) {
           cout << "[LQ] " << __func__ << " instr_id: " << rob_it->instr_id;
           cout << " cannot be added in the load queue occupancy: " << std::count_if(std::begin(LQ), std::end(LQ), is_valid<LSQ_ENTRY>())
@@ -702,6 +718,7 @@ void O3_CPU::do_memory_scheduling(champsim::circular_buffer<ooo_model_instr>::it
           num_added++;
         }
       } else {
+        o3_datamodel->counter[O3_counter::sq_full]++;
         DP(if (warmup_complete[cpu]) {
           cout << "[SQ] " << __func__ << " instr_id: " << rob_it->instr_id;
           cout << " cannot be added in the store queue occupancy: " << std::count_if(std::begin(SQ), std::end(SQ), is_valid<LSQ_ENTRY>())

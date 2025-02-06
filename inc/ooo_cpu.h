@@ -133,6 +133,21 @@ public:
 
   int prefetch_code_line(uint64_t pf_v_addr);
 
+  // test if all entries are valid, if so then full
+  bool check_lsu_full(vector<LSQ_ENTRY>& queue)
+  {
+    return std::all_of(std::begin(queue), std::end(queue), is_valid<LSQ_ENTRY>());
+  }
+
+  // test if all entries are invalid, if so complete empty
+  bool check_lsu_empty(vector<LSQ_ENTRY>& queue)
+  {
+    for(auto entry: queue)
+      if(entry.virtual_address != 0)
+        return  false;
+    return true;
+  }
+
 #include "ooo_cpu_modules.inc"
 
   const bpred_t bpred_type;

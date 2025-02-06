@@ -66,4 +66,5 @@ struct is_valid<LSQ_ENTRY> {
   bool operator()(const LSQ_ENTRY& test) { return test.virtual_address != 0; }
 };
 
+
 #endif
