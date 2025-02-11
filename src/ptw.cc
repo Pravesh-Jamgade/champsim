@@ -42,33 +42,29 @@ void PageTableWalker::handle_read()
       std::cout << " event: " << handle_pkt.event_cycle << " current: " << current_cycle << std::endl;
     });
 
-    uint8_t ptw_level = handle_pkt.init_translation_level;
-    // if first after tlb miss (right before mixing cr3 to start traversing radix) then its a VA 
-    // otherwise it is PA (look down at section where ptw_addr is assigned to new packet)
-    uint64_t ptw_addr = handle_pkt.address;
-    // if 0 it impplies that the packet has not started yet radix traversal
-    if(ptw_level == 0)
-    {
-      ptw_level = vmem.pt_levels;
-      ptw_addr = splice_bits(CR3_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
-    }
-
-    ptw_level -= 1;
-
-    // auto ptw_level = vmem.pt_levels - 1;
+    // initalizing ptw from root
+    uint8_t ptw_level = ptw_level = vmem.pt_levels - 1;
+    // first pa to start page table walk
+    uint64_t next_pt_addr = splice_bits(CR3_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+    // look for this levels PSC, if corresponding entry found then we can skip the memory access for this level
     for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
       if(ptw_level != pscl->level)
         continue;
-      if (auto check_addr = pscl->check_hit(handle_pkt.address); check_addr.has_value()) {
-        ptw_addr = check_addr.value();
+      if (auto check_addr = pscl->check_hit(next_pt_addr); check_addr.has_value()) {
+        // hit at psc
+        ptw_datamodel->queue_psc_hit[ptw_level]++;
+        // get the next pt addr
+        next_pt_addr = check_addr.value();
+        // update to next level
         ptw_level = pscl->level; 
-        break;
+        // mix to lookup next level
+        next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
       }
     }
 
     PACKET packet = handle_pkt;
     packet.fill_level = lower_level->fill_level; // This packet will be sent from L1 to PTW.
-    packet.address = ptw_addr;
+    packet.address = next_pt_addr; // if not found in psc it will use cr3 + vp9bits
     packet.v_address = handle_pkt.address;
     packet.cpu = cpu;
     packet.type = TRANSLATION;
@@ -100,7 +96,7 @@ void PageTableWalker::handle_read()
     reads_this_cycle--;
 
     // count psc level used to sent memory read 
-    ptw_datamodel->queue_psc_metric[packet.init_translation_level]++;
+    ptw_datamodel->queue_psc_miss[packet.init_translation_level]++;
     it->ptw_cycle_enqueue = current_cycle;
   }
 }
@@ -203,6 +199,23 @@ void PageTableWalker::handle_fill()
         if (fill_mshr->translation_level == PSCL2.level)
           PSCL2.fill_cache(addr, fill_mshr->v_address);
 
+
+        // search next level page table
+        uint8_t ptw_level = fill_mshr->translation_level - 1;
+        // use next 9bits with base addr of next level page table
+        uint64_t next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+        // lookup this levels PSC, if found in PSC then update next_pt_addr, ptw_level and continue search
+        for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+          if(ptw_level != pscl->level)
+            continue;
+          if (auto check_addr = pscl->check_hit(next_pt_addr); check_addr.has_value()) {
+            ptw_datamodel->queue_psc_hit[ptw_level]++;
+            next_pt_addr = check_addr.value();
+            ptw_level = pscl->level; 
+            next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+          }
+        }
+
         DP(if (warmup_complete[packet->cpu]) {
           std::cout << "[" << NAME << "] " << __func__ << " instr_id: " << fill_mshr->instr_id;
           std::cout << " address: " << std::hex << (fill_mshr->address >> LOG2_PAGE_SIZE) << " full_addr: " << fill_mshr->address;
@@ -219,9 +232,9 @@ void PageTableWalker::handle_fill()
         PACKET packet = *fill_mshr;
         packet.cpu = cpu;
         packet.type = TRANSLATION;
-        packet.address = addr;
+        packet.address = next_pt_addr;
         packet.to_return = {this};
-        packet.translation_level = fill_mshr->translation_level - 1;
+        packet.translation_level = ptw_level;
 
         int rq_index = lower_level->add_rq(&packet);
         if (rq_index != -2) 
@@ -234,6 +247,7 @@ void PageTableWalker::handle_fill()
 
           // usercode
           fill_mshr->ptw_cycle_enqueue = current_cycle;
+          ptw_datamodel->queue_psc_miss[ptw_level]++;
         }
       }
     }

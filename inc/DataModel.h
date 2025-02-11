@@ -287,9 +287,11 @@ class PTWDataModel
 
     // count psc level hit count. If hit in pscl5, says we have base address for next_level. And we dont need separate memory access
     // for pscl5. For 1 miss in STLB: Not hit in any pscl --> 4 memory access, Hit in pscl5 --> 3 memory access, Hit in pscl4 --> 2 memory access
-    uint64_t queue_psc_metric[PSCLevel::PSCL_END] = {0};
-    string PSCL_Hit_str[PSCL_END] = {"pscl2_Hit", "pscl3_Hit", "pscl4_Hit", "pscl5_Hit", "PSCL_NO"};
-
+    uint64_t queue_psc_hit[PSCLevel::PSCL_END] = {0};
+    uint64_t queue_psc_miss[PSCLevel::PSCL_END] = {0};
+    string PSCL_Hit_str[PSCLevel::PSCL_END] = {"#", "pscl2_Hit", "pscl3_Hit", "pscl4_Hit", "pscl5_Hit", "PSCL_all_Miss"};
+    string PSCL_Miss_str[PSCLevel::PSCL_END] = {"#","pscl2_Miss send to memory", "pscl3_Miss send to memory", "pscl4_Miss send to memory", "pscl5_Miss send to memory", "PSCL_all_Hit"};
+    string psc_level_packet_processed_str[PSCLevel::PSCL_END] = {"#","pscl2_processed", "pscl3_processed", "pscl4_processed", "pscl5_processed", "#"};
     uint64_t queue_basic_metric[Basic::BASIC_END] = {0};
 
     // packet removed from mshr
@@ -302,7 +304,7 @@ class PTWDataModel
     // total miss latency experienced by packet waiting at each psc level in mshr
     uint64_t psc_level_packet_processed_miss_latency[PSCLevel::PSCL_END] = {0};
 
-    string pscl_packet_processed_str[PSCL_END] = {"pscl2_avg_miss_latency", "pscl3_avg_miss_latency", "pscl4_avg_miss_latency", "pscl5_avg_miss_latency", "--"};
+    string pscl_packet_processed_str[PSCLevel::PSCL_END] = {"#", "pscl2_avg_miss_latency", "pscl3_avg_miss_latency", "pscl4_avg_miss_latency", "pscl5_avg_miss_latency", "#"};
 
     // page-faults at each level of radix tree (psc level)
     uint64_t page_fault[PSCL_END] = {0};
@@ -316,13 +318,25 @@ class PTWDataModel
         {
             cout << tag << Basic_str[i] << ", " << queue_basic_metric[i] << '\n';
         }
-
+        
+        cout << "hit and miss in psc levels\n";
         for(int i=0; i< PSCLevel::PSCL_END; i++)
         {
-            cout << tag << PSCL_Hit_str[i] << ", " << queue_psc_metric[i] << '\n';
+            cout << tag << PSCL_Hit_str[i] << ", " << queue_psc_hit[i] << '\n';
         }
 
-        for(int i=0; i< PSCLevel::PSCL_END; i++)
+        for(int i=1; i< PSCLevel::PSCL_END; i++)
+        {
+            cout << tag << PSCL_Miss_str[i] << ", " << queue_psc_miss[i] << '\n';
+        }
+        
+        cout << "all requests successfully returned with data\n";
+        for(int i=1; i< PSCLevel::PSCL_END; i++)
+        {
+            cout << tag << psc_level_packet_processed_str[i] << ", " << psc_level_packet_processed[i] << '\n';
+        }
+
+        for(int i=1; i< PSCLevel::PSCL_END; i++)
         {
             cout << tag << pscl_packet_processed_str[i] << ", " << ((double)psc_level_packet_processed_miss_latency[i]/psc_level_packet_processed[i]) << '\n';
         }
