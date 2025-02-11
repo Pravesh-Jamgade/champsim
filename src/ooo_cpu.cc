@@ -995,6 +995,7 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.asid[1] = lq_it->asid[1];
   data_packet.to_return = {&L1D_bus};
   data_packet.lq_index_depend_on_me = {lq_it};
+  data_packet.access_time = current_cycle;
 
   int rq_index = L1D_bus.lower_level->add_rq(&data_packet);
 

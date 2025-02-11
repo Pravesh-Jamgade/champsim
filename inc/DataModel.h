@@ -277,7 +277,7 @@ class PTWDataModel
     // actual PSC Level initalized with base index 1, but when they send the requests in memory hierary they make it 0 indexed.
     enum PSCLevel
     {
-        PSCL2=0,
+        PSCL2=1,
         PSCL3,
         PSCL4,
         PSCL5,
@@ -364,6 +364,7 @@ class O3_DataModel
     map<uint64_t, uint64_t> data_translation_time;
     map<uint64_t, uint64_t> icache_access_time;
     map<uint64_t, uint64_t> dcache_access_time;
+    map<pair<uint64_t, uint64_t>, uint64_t> hist_trans_plus_access_time;
     int instr_resolved_translations[RefTypeEnd] = {0};
     int data_resolved_translations[RefTypeEnd] = {0};
 

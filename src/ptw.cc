@@ -42,12 +42,27 @@ void PageTableWalker::handle_read()
       std::cout << " event: " << handle_pkt.event_cycle << " current: " << current_cycle << std::endl;
     });
 
-    auto ptw_addr = splice_bits(CR3_addr, vmem.get_offset(handle_pkt.address, vmem.pt_levels - 1) * PTE_BYTES, LOG2_PAGE_SIZE);
-    auto ptw_level = vmem.pt_levels - 1;
+    uint8_t ptw_level = handle_pkt.init_translation_level;
+    // if first after tlb miss (right before mixing cr3 to start traversing radix) then its a VA 
+    // otherwise it is PA (look down at section where ptw_addr is assigned to new packet)
+    uint64_t ptw_addr = handle_pkt.address;
+    // if 0 it impplies that the packet has not started yet radix traversal
+    if(ptw_level == 0)
+    {
+      ptw_level = vmem.pt_levels;
+      ptw_addr = splice_bits(CR3_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+    }
+
+    ptw_level -= 1;
+
+    // auto ptw_level = vmem.pt_levels - 1;
     for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+      if(ptw_level != pscl->level)
+        continue;
       if (auto check_addr = pscl->check_hit(handle_pkt.address); check_addr.has_value()) {
         ptw_addr = check_addr.value();
-        ptw_level = pscl->level - 1; 
+        ptw_level = pscl->level; 
+        break;
       }
     }
 
