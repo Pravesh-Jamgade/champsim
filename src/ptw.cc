@@ -56,7 +56,7 @@ void PageTableWalker::handle_read()
         // get the next pt addr
         next_pt_addr = check_addr.value();
         // update to next level
-        ptw_level = pscl->level; 
+        ptw_level = pscl->level-1; 
         // mix to lookup next level
         next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
       }
@@ -211,7 +211,7 @@ void PageTableWalker::handle_fill()
           if (auto check_addr = pscl->check_hit(next_pt_addr); check_addr.has_value()) {
             ptw_datamodel->queue_psc_hit[ptw_level]++;
             next_pt_addr = check_addr.value();
-            ptw_level = pscl->level; 
+            ptw_level = pscl->level - 1; 
             next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
           }
         }
