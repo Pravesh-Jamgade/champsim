@@ -13,6 +13,7 @@
 #include "operable.h"
 
 #include "DataModel.h"
+#include "utils.h"
 #include "ptw.h"
 
 // virtual address space prefetching
@@ -29,6 +30,7 @@ public:
   list<BLOCK> fa_array;
 
   bool cache_is[CACHE_ID_END] = {false};
+  CACHE_ID cache_id = CACHE_ID::CACHE_ID_END;
 
   uint32_t cpu;
   const std::string NAME;
@@ -201,19 +203,38 @@ public:
 
     if(NAME.find("LLC") != string::npos)
     {
-      cache_is[CACHE_ID::IS_LLC] = true;
+      cache_is[CACHE_ID::IS_LLC] = true; 
+      cache_id = CACHE_ID::IS_LLC;
     }
     else if(NAME.find("STLB") != string::npos)
     {
       cache_is[CACHE_ID::IS_STLB] = true;
+      cache_id = CACHE_ID::IS_STLB;
     }
     else if(NAME.find("DTLB") != string::npos)
     {
       cache_is[CACHE_ID::IS_DTLB] = true;
+      cache_id = CACHE_ID::IS_DTLB;
     }
     else if(NAME.find("ITLB") != string::npos)
     {
       cache_is[CACHE_ID::IS_ITLB] = true;
+      cache_id = CACHE_ID::IS_ITLB;
+    }
+    else if(NAME.find("L2") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_L2] = true;
+      cache_id = CACHE_ID::IS_L2;
+    }
+    else if(NAME.find("L1D") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_L1D] = true;
+      cache_id = CACHE_ID::IS_L1D;
+    }
+    else if(NAME.find("L1I") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_L1I] = true;
+      cache_id = CACHE_ID::IS_L1I;
     }
 
     FA_SIZE = NUM_WAY * NUM_SET;

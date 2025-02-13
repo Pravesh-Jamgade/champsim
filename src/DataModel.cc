@@ -50,4 +50,16 @@ void O3_DataModel::print_stats()
     }
     cout << '\n';
 
+    cout << "Number of hits in cache even when their TLB miss [or upon Page fault miss --> this is highly unlikely]\n";
+    cout << "tlbmiss_cachehit and pagefault_cachehit\n";
+    for(int i=0; i< CACHE_ID::CACHE_ID_END; i++)
+    {
+        cout << tag << cache_name_str[i] << ", " << std::setw(3) << tlbmiss_cachehit[i] << ", " << std::setw(5) << pagefault_cachehit[i] << '\n';
+    }
+    cout << '\n';
+
+    cout << tag << "count of tracked instructions stlbmiss, " << count_instr_tlbmiss << '\n';
+    cout << tag << "count of tracked instructions pagefault, " << count_instr_pagefault << '\n';
+    cout << tag << "count of tracked data stlbmiss, " << count_data_tlbmiss << '\n';
+    cout << tag << "count of tracked data pagefault, " << count_data_pagefault << '\n';
 }

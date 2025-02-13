@@ -132,6 +132,7 @@ void PageTableWalker::handle_fill()
         fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
         MSHR.sort(ord_event_cycle<PACKET>{});
 
+        fill_mshr->packet_flags[Flags::Page_Fault_Address] = 1;
         ptw_datamodel->page_fault[0]++;
       } 
       // Translation finally complete

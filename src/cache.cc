@@ -256,6 +256,8 @@ void CACHE::handle_prefetch()
 
 void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
+  handle_pkt.hit_where = cache_id;
+
   DP(if (warmup_complete[handle_pkt.cpu]) {
     std::cout << "[" << NAME << "] " << __func__ << " hit";
     std::cout << " instr_id: " << handle_pkt.instr_id << " address: " << std::hex << (handle_pkt.address >> OFFSET_BITS);
@@ -306,6 +308,12 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
+  // part of analysis: Does the tlb miss has a cache hierarchy hit for same address ?
+  if(cache_is[CACHE_ID::IS_STLB])
+  {
+    handle_pkt.packet_flags[Flags::TLB_Miss_Address] = 1;
+  }
+
   cacheDataModel->mshr_queue[Basic::REQUESTED]++;
   cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::REQUESTED]++;
 
@@ -970,6 +978,10 @@ void CACHE::return_data(PACKET* packet)
   mshr_entry->data = packet->data;
   mshr_entry->pf_metadata = packet->pf_metadata;
   mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
+
+  mshr_entry->hit_where = packet->hit_where;
+  for(int i=0; i< Flags::Packet_Flags_End; i++)
+    mshr_entry->packet_flags[i] = packet->packet_flags[i];
 
   DP(if (warmup_complete[packet->cpu]) {
     std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry->instr_id;

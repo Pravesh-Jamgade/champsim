@@ -8,8 +8,17 @@
 #include "circular_buffer.hpp"
 #include "instruction.h"
 
+#include "utils.h"
+
 class MemoryRequestProducer;
 class LSQ_ENTRY;
+
+enum Flags
+{
+  TLB_Miss_Address = 0,
+  Page_Fault_Address,
+  Packet_Flags_End
+};
 
 // message packet
 class PACKET
@@ -34,6 +43,9 @@ public:
   uint64_t translation_time = std::numeric_limits<uint64_t>::max();
   uint64_t access_time = std::numeric_limits<uint64_t>::max();
   bool ttp = false;
+
+  CACHE_ID hit_where = CACHE_ID::CACHE_ID_END;
+  bool packet_flags [Flags::Packet_Flags_End] = {false};
 };
 
 template <>

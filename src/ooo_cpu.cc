@@ -1069,9 +1069,6 @@ void O3_CPU::handle_memory_return()
 
   while (available_fetch_bandwidth > 0 && to_read > 0 && !ITLB_bus.PROCESSED.empty()) {
     PACKET& itlb_entry = ITLB_bus.PROCESSED.front();
-    
-    uint64_t translation_time = current_cycle - itlb_entry.translation_time;
-    o3_datamodel->instr_translation_time[translation_time]++;
 
     // mark the appropriate instructions in the IFETCH_BUFFER as translated and
     // ready to fetch
@@ -1085,7 +1082,12 @@ void O3_CPU::handle_memory_return()
           // recalculate a physical address for this cache line based on the
           // translated physical page address
           it->instruction_pa = splice_bits(itlb_entry.data, it->ip, LOG2_PAGE_SIZE);
+
           o3_datamodel->instr_resolved_translations[RefType::refInstr]++;
+          o3_datamodel->count_instr_tlbmiss += itlb_entry.packet_flags[Flags::TLB_Miss_Address];
+          o3_datamodel->count_instr_pagefault += itlb_entry.packet_flags[Flags::Page_Fault_Address];
+          uint64_t translation_time = current_cycle - itlb_entry.translation_time;
+          o3_datamodel->instr_translation_time[translation_time]++;
         }
         available_fetch_bandwidth--;
       }
@@ -1106,20 +1108,26 @@ void O3_CPU::handle_memory_return()
   while (available_fetch_bandwidth > 0 && to_read > 0 && !L1I_bus.PROCESSED.empty()) {
     PACKET& l1i_entry = L1I_bus.PROCESSED.front();
 
-    uint64_t access_time = current_cycle - l1i_entry.access_time;
-    o3_datamodel->icache_access_time[access_time]++;
-
     // this is the L1I cache, so instructions are now fully fetched, so mark
     // them as such
     while (available_fetch_bandwidth > 0 && !l1i_entry.instr_depend_on_me.empty()) {
-      auto it = l1i_entry.instr_depend_on_me.front();
-      if ((it->instruction_pa >> LOG2_BLOCK_SIZE) == (l1i_entry.address >> LOG2_BLOCK_SIZE) && it->fetched != 0 && it->translated == COMPLETED) {
-        it->fetched = COMPLETED;
-        available_fetch_bandwidth--;
-      }
+        auto it = l1i_entry.instr_depend_on_me.front();
+        if ((it->instruction_pa >> LOG2_BLOCK_SIZE) == (l1i_entry.address >> LOG2_BLOCK_SIZE) && it->fetched != 0 && it->translated == COMPLETED) {
+          it->fetched = COMPLETED;
+          available_fetch_bandwidth--;
 
-      l1i_entry.instr_depend_on_me.erase(std::begin(l1i_entry.instr_depend_on_me));
-    }
+          uint64_t access_time = current_cycle - l1i_entry.access_time;
+          o3_datamodel->icache_access_time[access_time]++;
+
+          if(l1i_entry.packet_flags[Flags::TLB_Miss_Address])
+            o3_datamodel->tlbmiss_cachehit[l1i_entry.hit_where]++;
+        
+          if(l1i_entry.packet_flags[Flags::Page_Fault_Address])
+            o3_datamodel->pagefault_cachehit[l1i_entry.hit_where]++;
+        }
+
+        l1i_entry.instr_depend_on_me.erase(std::begin(l1i_entry.instr_depend_on_me));
+      }
 
     // remove this entry if we have serviced all of its instructions
     if (l1i_entry.instr_depend_on_me.empty())
@@ -1132,9 +1140,7 @@ void O3_CPU::handle_memory_return()
 
   while (to_read > 0 && !DTLB_bus.PROCESSED.empty()) { // DTLB
     PACKET& dtlb_entry = DTLB_bus.PROCESSED.front();
-    
-    uint64_t translation_time = current_cycle - dtlb_entry.translation_time;
-    o3_datamodel->data_translation_time[translation_time]++;
+    bool track = false;
 
     for (auto sq_merged : dtlb_entry.sq_index_depend_on_me) {
       sq_merged->physical_address = splice_bits(dtlb_entry.data, sq_merged->virtual_address,
@@ -1143,8 +1149,9 @@ void O3_CPU::handle_memory_return()
       sq_merged->event_cycle = current_cycle;
 
       o3_datamodel->data_resolved_translations[RefType::refSTORE]++;
-      
       RTS1.push(sq_merged);
+
+      track=true;
     }
 
     for (auto lq_merged : dtlb_entry.lq_index_depend_on_me) {
@@ -1154,8 +1161,17 @@ void O3_CPU::handle_memory_return()
       lq_merged->event_cycle = current_cycle;
 
       o3_datamodel->data_resolved_translations[RefType::refLOAD]++;
-
       RTL1.push(lq_merged);
+
+      track=true;
+    }
+
+    if(track)
+    {
+      o3_datamodel->count_data_tlbmiss += dtlb_entry.packet_flags[Flags::TLB_Miss_Address];
+      o3_datamodel->count_data_pagefault += dtlb_entry.packet_flags[Flags::Page_Fault_Address];
+      uint64_t translation_time = current_cycle - dtlb_entry.translation_time;
+      o3_datamodel->data_translation_time[translation_time]++;
     }
 
     // remove this entry
@@ -1166,10 +1182,19 @@ void O3_CPU::handle_memory_return()
   to_read = static_cast<CACHE*>(L1D_bus.lower_level)->MAX_READ;
   while (to_read > 0 && !L1D_bus.PROCESSED.empty()) { // L1D
     PACKET& l1d_entry = L1D_bus.PROCESSED.front();
-    uint64_t access_time = current_cycle - l1d_entry.access_time;
-    o3_datamodel->dcache_access_time[access_time]++;
 
     for (auto merged : l1d_entry.lq_index_depend_on_me) {
+
+      uint64_t access_time = current_cycle - l1d_entry.access_time;
+      o3_datamodel->dcache_access_time[access_time]++;
+
+      if(l1d_entry.packet_flags[Flags::TLB_Miss_Address])
+        o3_datamodel->tlbmiss_cachehit[l1d_entry.hit_where]++;
+      
+      if(l1d_entry.packet_flags[Flags::Page_Fault_Address])
+        o3_datamodel->pagefault_cachehit[l1d_entry.hit_where]++;
+      
+
       merged->fetched = COMPLETED;
       merged->event_cycle = current_cycle;
       merged->rob_index->num_mem_ops--;

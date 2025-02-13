@@ -5,6 +5,8 @@
 #include <set>
 #include <iomanip>  
 
+#include "utils.h"
+
 using namespace std;
 
 enum Basic
@@ -77,7 +79,9 @@ static string CacheStat_str[CacheStat::CacheStat_End] = {
                                                         "Translation Write", "Translation Drop", "Translation Writeback"
                                                         };
 
-enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_STLB, IS_DTLB, IS_ITLB, CACHE_ID_END};
+static string cache_name_str[CACHE_ID::CACHE_ID_END] = {
+    "itlb", "dtlb", "stlb", "l1i", "l1d", "l2", "llc"
+};
 
 enum MISS
 {
@@ -308,6 +312,7 @@ class PTWDataModel
 
     // page-faults at each level of radix tree (psc level)
     uint64_t page_fault[PSCL_END] = {0};
+    string page_fault_str[PSCL_END] = {"leaf page", "pscl2", "pscl3", "pscl4", "pscl5", "no pf"};
 
     uint32_t cpu =0;
 
@@ -342,6 +347,12 @@ class PTWDataModel
         }
 
         cout << tag << "avg miss latency, " << ((double)packet_processed_total_miss_latency/packet_processed) << '\n';
+
+        cout << "\npage fault\n";
+        for(int i=0; i< PSCLevel::PSCL_END; i++)
+        {
+            cout << tag << page_fault_str[i] << ", " << page_fault[i] << '\n';
+        }
     }
 
 };
@@ -386,10 +397,16 @@ class O3_DataModel
     map<int,int> branch_freq;
 
     int counter[O3_counter::O3_Count_End] = {0};
+    int tlbmiss_cachehit[CACHE_ID::CACHE_ID_END] = {0};
+    int pagefault_cachehit[CACHE_ID::CACHE_ID_END] = {0};
+    int count_instr_tlbmiss, count_instr_pagefault;
+    int count_data_tlbmiss, count_data_pagefault;
 
     O3_DataModel(){}
     O3_DataModel(int cpu){
         this->cpu = cpu;
+        count_instr_tlbmiss = count_instr_pagefault = 0;
+        count_data_tlbmiss = count_data_pagefault = 0;
     }
     void print_stats();
     
