@@ -424,14 +424,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       cacheDataModel->hist_reuse_distance[dist]++;
     }
   }
-  // checking for capacity miss
-  {
-    auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(target_addr, OFFSET_BITS));
-    if(it!=fa_array.end())
-    {
-      cacheDataModel->category_of_misses[MISS::CAP]++;
-    }
-  }
  
   return true;
 }
@@ -469,6 +461,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   uint64_t evicting_address = 0;
 
   bool track_reuse = false;
+  bool set_full = func_set_full(set);
 
   if (!bypass) {
     if (evicting_dirty) 
@@ -498,24 +491,14 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         cacheDataModel->cache_stat[CacheStat::RFO_Writeback]++;
       else if(handle_pkt.type == PREFETCH)
         cacheDataModel->cache_stat[CacheStat::Prefetch_Writeback]++;
-      
       cacheDataModel->cache_stat[CacheStat::Total_Writeback]++;
 
-      // counting the number of times set has seen conflict and as a result a dirty block is sent-back
-      cacheDataModel->hist_set_conflict_events[set]++;
-      cacheDataModel->category_of_misses[MISS::CONF]++;
-
       track_reuse = true;
-
     }
     else // clean 
     {
-      // check for compulsory miss
-      if(!fill_block.valid)
-        cacheDataModel->category_of_misses[MISS::COM]++;
-
       // set is full then increment count of dropped blocks as a block will be overwritten
-      if(func_set_full(set))
+      if(set_full)
       {
         if(handle_pkt.type == LOAD)
           cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
@@ -531,6 +514,27 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         // counting the number of times set has seen conflict and as a result a clean block is overwritten
         cacheDataModel->hist_set_conflict_events[set]++;
         track_reuse = true;
+      }
+    }
+
+    // check for compulsory miss
+    if(!fill_block.valid)
+      cacheDataModel->category_of_misses[MISS::COM]++;
+
+    // check for conflict misses && capacity misses
+    if(set_full)
+    {
+      // counting the number of times set has seen conflict and as a result a dirty block is sent-back
+      cacheDataModel->hist_set_conflict_events[set]++;
+      cacheDataModel->category_of_misses[MISS::CONF]++;
+
+      // checking for capacity miss
+      {
+        auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, OFFSET_BITS));
+        if(it!=fa_array.end())
+        {
+          cacheDataModel->category_of_misses[MISS::CAP]++;
+        }
       }
     }
 
