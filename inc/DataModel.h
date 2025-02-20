@@ -6,6 +6,8 @@
 #include <iomanip>  
 
 #include "utils.h"
+#define MERGE_RANGE 10
+static int arr[MERGE_RANGE] = {0,10,20,30,40,50,60,70,80,90};
 
 using namespace std;
 
@@ -104,6 +106,9 @@ class CacheDataModel
 
     CacheDataModel(string name, uint32_t cpu, size_t sets, size_t ways):name(name), cpu(cpu)
     {
+        // last index is for merge count higher than we have kept in arr histogram of get_index func
+        MSHR_sublocking_oppo = vector<int>(MERGE_RANGE+1, 0);
+
         for(int i=0; i< sets; i++)
         {
             hist_set_conflict_events[i]=0;
@@ -157,76 +162,15 @@ class CacheDataModel
     int** type_pf_queue;
     int** type_mshr_queue;
 
-    void print_stats()
-    {
-        string tag = name + " ";
+    // frequency table: frequency mshr subblocking opportunity; calculated from counting counting page merges
+    // index - page merges
+    // val - frequency of merges
+    vector<int> MSHR_sublocking_oppo;
 
-        for(int i=0; i< Basic::BASIC_END; i++)
-            cout << tag << Basic_str[i] << " Load Queue, " << rd_queue[i] << '\n';
-        
-        cout << '\n';
-        
-        for(int i=0; i< Basic::BASIC_END; i++)
-            cout << tag << Basic_str[i] << " Store Queue, " << wr_queue[i] << '\n';
-
-        cout << '\n';
-
-        for(int i=0; i< Basic::BASIC_END; i++)
-            cout << tag << Basic_str[i] << " Prefetch Queue, " << pf_queue[i] << '\n';
-        
-        cout << '\n';
-
-        for(int i=0; i< Basic::BASIC_END; i++)
-            cout << tag << Basic_str[i] << " MSHR Queue, " << mshr_queue[i] << '\n';
-        
-        cout << tag << "Miss Rate, " << ((double)(rd_queue[Basic::MISS] + wr_queue[Basic::MISS] + pf_queue[Basic::MISS]) * 100 /(double) (rd_queue[Basic::ACCESS] + wr_queue[Basic::ACCESS] + pf_queue[Basic::ACCESS])) << '\n';
-        
-        cout << '\n';
-        /////////////////////////////////////////////////////////////////////////////////////
-
-        for(int i=0; i< Stall::STALL_END; i++)
-            cout << tag << Stall_str[i] << " Load Queue, " << rd_queue_stalls[i] << '\n';
-        
-        cout << '\n';
-
-        for(int i=0; i< Stall::STALL_END; i++)
-            cout << tag << Stall_str[i] << " Store Queue, " << wr_queue_stalls[i] << '\n';
-        
-        cout << '\n';
-
-        for(int i=0; i< Stall::STALL_END; i++)
-            cout << tag << Stall_str[i] << " Prefetch Queue, " << pf_queue_stalls[i] << '\n';
-        
-        cout << '\n';
-
-        for(int i=0; i< Stall::STALL_END; i++)
-            cout << tag << Stall_str[i] << " MSHR Queue, " << mshr_queue_stalls[i] << '\n';
-
-        cout << '\n';
-
-        for(int i=0; i< CacheStat::CacheStat_End; i++)
-        {
-            cout << tag << CacheStat_str[i] << ", " << cache_stat[i] << '\n';
-        }
-
-        cout << '\n';
-
-        cout << tag << "Capacity miss, " << category_of_misses[MISS::CAP] << '\n';
-        cout << tag << "Compulsory miss, " << category_of_misses[MISS::COM] << '\n';
-        cout << tag << "Conflict miss, " << category_of_misses[MISS::CONF] << '\n';
-        cout << tag << "Unique page count, " << unique_page_count.size() << '\n';
-
-        cout << "readmiss --> mshr_full\n";
-        cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL] << '\n';
-
-        cout << "readmiss --> mshr_avail --> nextlevel_full\n";
-        cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL] << '\n';
-
-        cout << "mshr write --> eviction_writeback --> nextlevel_full\n";
-        cout << tag << AdvStat_str[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << ", " << adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL] << '\n';
-        
-        cout << '\n';
-    }
+    // ret i -> between i-1 to i
+    // ret 10 -> more than 90
+    int get_sublock_opp_index(int val);
+    void print_stats();
 
     void print_end_stats()
     {

@@ -7,6 +7,7 @@
 #include "champsim_constants.h"
 #include "util.h"
 #include "vmem.h"
+#include <numeric>
 
 #ifndef SANITY_CHECK
 #define NDEBUG
@@ -636,6 +637,81 @@ void CACHE::operate_reads()
   RQ.operate();
   PQ.operate();
   VAPQ.operate();
+
+  // Counting packets for requests from same pages. Making sure a window is never reused to do this counting (by marking a packet)
+  if(1){
+    auto found = find_if(begin(MSHR), end(MSHR), [](PACKET p){return p.packet_flags[Flags::Packet_is_Part_of_Moving_Window]; });
+    
+    if(found == MSHR.end())
+    {
+      // // // LOG size too big (for window data)
+      // // backup histogram
+      // int sum = std::accumulate(cacheDataModel->MSHR_sublocking_oppo.begin(), cacheDataModel->MSHR_sublocking_oppo.end(), 0);
+      
+      // bookkeeap cluster merge count freq as it will be cleared now
+      for(auto cluster_freq_entry: cluster_freq)
+      {
+        // skip 0 merge clusters
+        if(cluster_freq_entry.second <=0)
+          continue;
+        cacheDataModel->MSHR_sublocking_oppo[cacheDataModel->get_sublock_opp_index(cluster_freq_entry.second)]++;
+      }
+
+      // clear prev
+      cluster_freq = map<size_t, int>();
+      
+      // init new window
+      if(MSHR.size() <= 0)
+        return;
+      MSHR.back().packet_flags[Flags::Packet_is_Part_of_Moving_Window] = 1;
+    }
+
+    found = find_if(begin(MSHR), end(MSHR), [](PACKET p){return p.packet_flags[Flags::Packet_is_Counted_for_Merge] == false;});
+    
+    // some packets not yet marked as counted 
+    if(found != MSHR.end())
+    {
+      // page/cluster and its current merge count in this window
+      
+      for(auto entry: MSHR)
+      {
+        size_t entry_page = entry.address >> LOG2_PAGE_SIZE;//shamt by cluster_size
+
+        // get list of mshr entry from same pages/cluster
+        vector<PACKET*> same_page;
+        for(auto curr: MSHR)
+        {
+          // track page (rather cluster, we can vary sublocking width by going beyond or below page size)
+          size_t curr_page = curr.address >> LOG2_PAGE_SIZE;
+          if(entry_page == curr_page)
+            same_page.push_back(&curr);
+        }
+
+        // update freq of mergeable mshr entries
+        if(same_page.size() > 1)
+        {
+          
+          int count = 0;
+          for(auto mshr_entry: same_page)
+          {
+            if(mshr_entry->packet_flags[Flags::Packet_is_Counted_for_Merge] == false)
+            {
+              count++;
+              mshr_entry->packet_flags[Flags::Packet_is_Counted_for_Merge] = 1;
+            }
+          }
+
+          // track page/cluster merge count, valid for given window
+          cluster_freq[entry_page] += count;
+        }
+      }
+
+    } // end marking of counted pages
+
+
+  }
+
+
 }
 
 uint32_t CACHE::get_set(uint64_t address) { return ((address >> OFFSET_BITS) & bitmask(lg2(NUM_SET))); }
