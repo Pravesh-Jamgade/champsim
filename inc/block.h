@@ -73,6 +73,9 @@ struct LSQ_ENTRY {
   champsim::circular_buffer<ooo_model_instr>::iterator rob_index;
 
   uint8_t translated = 0, fetched = 0, asid[2] = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()};
+
+  //usercode
+  bool packet_flags [Flags::Packet_Flags_End] = {false};
 };
 
 template <>

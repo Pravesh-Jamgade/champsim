@@ -996,6 +996,8 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.to_return = {&L1D_bus};
   data_packet.lq_index_depend_on_me = {lq_it};
   data_packet.access_time = current_cycle;
+  data_packet.packet_flags[Flags::TLB_Miss_Address] = lq_it->packet_flags[Flags::TLB_Miss_Address];
+  data_packet.packet_flags[Flags::Page_Fault_Address] = lq_it->packet_flags[Flags::Page_Fault_Address];
 
   int rq_index = L1D_bus.lower_level->add_rq(&data_packet);
 
@@ -1149,6 +1151,11 @@ void O3_CPU::handle_memory_return()
       sq_merged->event_cycle = current_cycle;
 
       o3_datamodel->data_resolved_translations[RefType::refSTORE]++;
+
+       // update LSQ_ENTRY's packet flags from PACKET
+      sq_merged->packet_flags[Flags::TLB_Miss_Address] = dtlb_entry.packet_flags[Flags::TLB_Miss_Address];
+      sq_merged->packet_flags[Flags::Page_Fault_Address] = dtlb_entry.packet_flags[Flags::Page_Fault_Address];
+
       RTS1.push(sq_merged);
 
       track=true;
@@ -1161,6 +1168,11 @@ void O3_CPU::handle_memory_return()
       lq_merged->event_cycle = current_cycle;
 
       o3_datamodel->data_resolved_translations[RefType::refLOAD]++;
+
+      // update LSQ_ENTRY's packet flags from PACKET
+      lq_merged->packet_flags[Flags::TLB_Miss_Address] = dtlb_entry.packet_flags[Flags::TLB_Miss_Address];
+      lq_merged->packet_flags[Flags::Page_Fault_Address] = dtlb_entry.packet_flags[Flags::Page_Fault_Address];
+
       RTL1.push(lq_merged);
 
       track=true;
