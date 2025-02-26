@@ -33,8 +33,6 @@ void PageTableWalker::handle_read()
   while (reads_this_cycle > 0 && RQ.has_ready() && std::size(MSHR) != MSHR_SIZE) {
     PACKET& handle_pkt = RQ.front();
 
-    cout << handle_pkt.v_address << '\n';
-
     DP(if (warmup_complete[packet->cpu]) {
       std::cout << "[" << NAME << "] " << __func__ << " instr_id: " << handle_pkt.instr_id;
       std::cout << " address: " << std::hex << (handle_pkt.address >> LOG2_PAGE_SIZE) << " full_addr: " << handle_pkt.address;
