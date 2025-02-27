@@ -328,6 +328,12 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     std::cout << " cycle: " << current_cycle << std::endl;
   });
 
+  // int cluster_size = OFFSET_BITS;
+  // if(cache_is[CACHE_ID::IS_L2])
+  // {
+  //   cluster_size = OFFSET_BITS + OFFSET_BITS;
+  // }
+
   // check mshr
   auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS));
   bool mshr_full = (MSHR.size() == MSHR_SIZE);

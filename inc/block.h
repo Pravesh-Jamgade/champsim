@@ -50,6 +50,14 @@ public:
   bool packet_flags [Flags::Packet_Flags_End] = {false};
 };
 
+class MSHR_ENTRY: public PACKET
+{
+  public:
+  int limit = 8;
+  vector<uint64_t> sub_addresses;
+  vector<uint64_t> sub_data;
+};
+
 template <>
 struct is_valid<PACKET> {
   bool operator()(const PACKET& test) { return test.address != 0; }

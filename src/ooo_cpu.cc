@@ -908,6 +908,8 @@ int O3_CPU::do_translate_store(std::vector<LSQ_ENTRY>::iterator sq_it)
     std::cout << "[RTS0] " << __func__ << " instr_id: " << sq_it->instr_id << " rob_index: " << sq_it->rob_index << " is popped from to RTS0" << std::endl;
   })
 
+  // cout << "VA, " << std::hex << sq_it->virtual_address << '\n';
+
   int rq_index = DTLB_bus.lower_level->add_rq(&data_packet);
 
   if (rq_index != -2)
@@ -998,6 +1000,10 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.access_time = current_cycle;
   data_packet.packet_flags[Flags::TLB_Miss_Address] = lq_it->packet_flags[Flags::TLB_Miss_Address];
   data_packet.packet_flags[Flags::Page_Fault_Address] = lq_it->packet_flags[Flags::Page_Fault_Address];
+
+  // cout << "L1D-VA, " << std::hex << lq_it->virtual_address << '\n';
+  // cout << "L1D-PA, " << std::hex << lq_it->physical_address << '\n';
+  // exit(0);
 
   int rq_index = L1D_bus.lower_level->add_rq(&data_packet);
 
