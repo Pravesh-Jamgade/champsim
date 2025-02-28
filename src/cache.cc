@@ -334,6 +334,13 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   //   cluster_size = OFFSET_BITS + OFFSET_BITS;
   // }
 
+  // STEPS
+  // check we are at L1
+  // check if cluster id match
+  // check if count of cluster member is above decided cluster_size -> if so stall
+  // check if cluster_member match -> if so do dep merging, else insert full packet
+  // track count of cluster_members
+
   // check mshr
   auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS));
   bool mshr_full = (MSHR.size() == MSHR_SIZE);

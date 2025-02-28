@@ -8,7 +8,7 @@
 #include "cache.h"
 
 // Extra configguration
-extern int KNOB_TTP;
+extern int KNOB_TTP, KNOB_ENABLE_PT_OPTIMIZATION;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -43,22 +43,37 @@ void PageTableWalker::handle_read()
     });
 
     // initalizing ptw from root
-    uint8_t ptw_level = ptw_level = vmem.pt_levels - 1;
+    uint8_t ptw_level = vmem.pt_levels - 1;
     // first pa to start page table walk
     uint64_t next_pt_addr = splice_bits(CR3_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
-    // look for this levels PSC, if corresponding entry found then we can skip the memory access for this level
-    for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
-      if(ptw_level != pscl->level)
-        continue;
-      if (auto check_addr = pscl->check_hit(next_pt_addr); check_addr.has_value()) {
-        // hit at psc
-        ptw_datamodel->queue_psc_hit[ptw_level]++;
-        // get the next pt addr
-        next_pt_addr = check_addr.value();
-        // update to next level
-        ptw_level = pscl->level-1; 
-        // mix to lookup next level
-        next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+
+    if(KNOB_ENABLE_PT_OPTIMIZATION)
+    {
+      // optimized
+      for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+        if (auto check_addr = pscl->check_hit(handle_pkt.address); check_addr.has_value()) {
+          next_pt_addr = check_addr.value();
+          ptw_level = pscl->level - 1; 
+        }
+      }
+    }
+    else
+    {
+      //detailed
+      // look for this levels PSC, if corresponding entry found then we can skip the memory access for this level
+      for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+        if(ptw_level != pscl->level)
+          continue;
+        if (auto check_addr = pscl->check_hit(next_pt_addr); check_addr.has_value()) {
+          // hit at psc
+          ptw_datamodel->queue_psc_hit[ptw_level]++;
+          // get the next pt addr
+          next_pt_addr = check_addr.value();
+          // update to next level
+          ptw_level = pscl->level-1; 
+          // mix to lookup next level
+          next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+        }
       }
     }
 
@@ -183,7 +198,6 @@ void PageTableWalker::handle_fill()
       {
         fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
         MSHR.sort(ord_event_cycle<PACKET>{});
-
         ptw_datamodel->page_fault[fill_mshr->translation_level]++;
       } 
       else 
@@ -204,16 +218,22 @@ void PageTableWalker::handle_fill()
         // search next level page table
         uint8_t ptw_level = fill_mshr->translation_level - 1;
         // use next 9bits with base addr of next level page table
-        uint64_t next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
-        // lookup this levels PSC, if found in PSC then update next_pt_addr, ptw_level and continue search
-        for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
-          if(ptw_level != pscl->level)
-            continue;
-          if (auto check_addr = pscl->check_hit(next_pt_addr); check_addr.has_value()) {
-            ptw_datamodel->queue_psc_hit[ptw_level]++;
-            next_pt_addr = check_addr.value();
-            ptw_level = pscl->level - 1; 
-            next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+        uint64_t next_pt_addr = addr;// use if pt opt. enabled
+        
+        // detailed
+        if(KNOB_ENABLE_PT_OPTIMIZATION == 0)
+        {
+          next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+          // lookup this levels PSC, if found in PSC then update next_pt_addr, ptw_level and continue search
+          for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+            if(ptw_level != pscl->level)
+              continue;
+            if (auto check_addr = pscl->check_hit(next_pt_addr); check_addr.has_value()) {
+              ptw_datamodel->queue_psc_hit[ptw_level]++;
+              next_pt_addr = check_addr.value();
+              ptw_level = pscl->level - 1; 
+              next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+            }
           }
         }
 

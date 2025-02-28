@@ -11,4 +11,7 @@ int KNOB_STLB_DO_NOT_TRACK_MISS = 0;
 // STT_MRAM
 int KNOB_STTMRAM_STLB = 0;
 
+// Page table
+int KNOB_ENABLE_PT_OPTIMIZATION = 1; // default is allow use of opt ptw; works faster 
+
 #endif
