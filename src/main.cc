@@ -35,6 +35,7 @@ extern VirtualMemory vmem;
 extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 extern std::array<CACHE*, NUM_CACHES> caches;
 extern std::array<champsim::operable*, NUM_OPERABLES> operables;
+extern CACHE* Buffer;
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE, KNOB_TTP, KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_STTMRAM_STLB, KNOB_ENABLE_PT_OPTIMIZATION;
@@ -486,6 +487,9 @@ int main(int argc, char** argv)
       }
     }
     std::sort(std::begin(operables), std::end(operables), champsim::by_next_operate());
+
+    // buffer
+    Buffer->operate();
 
     for (std::size_t i = 0; i < ooo_cpu.size(); ++i) {
       // read from trace

@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 #include <iostream>
+// #include "cache.h"
 
 using namespace std;
 /*same as PACKET::HitWhere*/

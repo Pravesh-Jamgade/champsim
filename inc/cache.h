@@ -32,6 +32,7 @@ public:
 
   bool cache_is[CACHE_ID_END] = {false};
   CACHE_ID cache_id = CACHE_ID::CACHE_ID_END;
+  MemoryRequestProducer* llc_to_buffer;
 
   uint32_t cpu;
   const std::string NAME;
