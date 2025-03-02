@@ -20,10 +20,10 @@ int KNOB_STTMRAM_STLB = 0;
 int KNOB_ENABLE_PT_OPTIMIZATION = 1; // default is allow use of opt ptw; works faster 
 
 extern CACHE* Buffer = new CACHE (
-    "Buffer", 1.0, 6, 
+    "Buffer", 0.5, 6, 
     1, 1500, 16, 
     16, 0, 0, 
-    1, 1, 4,
+    0, 1, 1,
     1, LOG2_BLOCK_SIZE, 0,
     0, 0, 5, 
     &DRAM, CACHE::pref_t::pprefetcherDno, CACHE::repl_t::rreplacementDlru);
