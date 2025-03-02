@@ -38,7 +38,7 @@ extern std::array<champsim::operable*, NUM_OPERABLES> operables;
 extern CACHE* Buffer;
 
 // Extra configguration
-extern int KNOB_TRANSLATION_QUEUE, KNOB_TTP, KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_STTMRAM_STLB, KNOB_ENABLE_PT_OPTIMIZATION;
+extern int KNOB_TRANSLATION_QUEUE, KNOB_TTP, KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_STTMRAM_STLB, KNOB_ENABLE_PT_OPTIMIZATION, KNOB_ENABLE_LLC_BUFFER;
 
 std::vector<tracereader*> traces;
 
@@ -294,6 +294,9 @@ void finish_warmup()
 
     for (auto it = caches.rbegin(); it != caches.rend(); ++it)
       reset_cache_stats(i, *it);
+    
+    // Buffer datamodel reset
+    Buffer->reset_datamodel();
   }
   cout << endl;
 
@@ -432,6 +435,7 @@ int main(int argc, char** argv)
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_ENABLE_PT_OPTIMIZATION = iniReader->GetInteger("PageTable", "ENABLE_OPTIMIZATION", 0);
+  KNOB_ENABLE_LLC_BUFFER = iniReader->GetInteger("Buffer", "ENABLE_LLC_BUFFER", 0);
 
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
@@ -439,6 +443,7 @@ int main(int argc, char** argv)
   std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << "ENABLE_PT_OPT="<<KNOB_ENABLE_PT_OPTIMIZATION<<'\n';
+  std::cout << "ENABLE_LLC_BUFFER="<<KNOB_ENABLE_LLC_BUFFER<<'\n';
   std::cout << '\n';
 
   // overwrite relevant to extra settings
@@ -463,6 +468,8 @@ int main(int argc, char** argv)
     (*it)->impl_prefetcher_initialize();
     (*it)->impl_replacement_initialize();
   }
+  
+  Buffer->producer = caches[0];
 
   // simulation entry point
   while (std::any_of(std::begin(simulation_complete), std::end(simulation_complete), std::logical_not<uint8_t>())) {
@@ -672,6 +679,7 @@ for(auto cache: caches)
   cache->cacheDataModel->print_stats();
   cache->print_logs();
 }
+Buffer->cacheDataModel->print_stats();
 
 for(auto o3: ooo_cpu)
 {

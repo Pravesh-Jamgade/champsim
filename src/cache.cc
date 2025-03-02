@@ -16,14 +16,35 @@
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
+extern int KNOB_ENABLE_LLC_BUFFER;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
+extern CACHE* Buffer;
 
 void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
     auto fill_mshr = MSHR.begin();
+
+    ///// Buffer Op
+    if(fill_mshr->hit_where == CACHE_ID::IS_DRAM && cache_id == CACHE_ID::IS_LLC && fill_mshr != std::end(MSHR) && KNOB_ENABLE_LLC_BUFFER)
+    {
+      if(fill_mshr->type == PREFETCH)
+      {
+        if(Buffer->get_occupancy(2, fill_mshr->address) == Buffer->get_size(2, fill_mshr->address))
+          return;
+        Buffer->add_wq(&*fill_mshr);
+        for (auto ret : fill_mshr->to_return)
+          ret->return_data(&(*fill_mshr));
+        MSHR.erase(fill_mshr);
+        cacheDataModel->unique_page_count.insert(fill_mshr->address >>LOG2_PAGE_SIZE);   
+        cacheDataModel->mshr_queue[Basic::ACCESS]++;
+        continue;
+      }
+    }
+
+    //////// Normal Op
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
     {
       cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
@@ -55,7 +76,7 @@ void CACHE::handle_fill()
       for (auto ret : fill_mshr->to_return)
         ret->return_data(&(*fill_mshr));
     }
-
+    
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
 
@@ -274,10 +295,14 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   handle_pkt.data = hit_block.data;
 
   // update prefetcher on load instruction
-  if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
-    cpu = handle_pkt.cpu;
-    uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
-    handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 1, handle_pkt.type, handle_pkt.pf_metadata);
+  if(cache_id != CACHE_ID::IS_Buffer)
+  {
+    func_act_prefetch(handle_pkt);
+  }
+  else
+  {
+    CACHE* llc = (CACHE*)producer->getObject();
+    llc->func_act_prefetch(handle_pkt);
   }
 
   // update replacement policy
@@ -310,6 +335,20 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
+  // read miss in buffer
+  if(cache_id == CACHE_ID::IS_Buffer && KNOB_ENABLE_LLC_BUFFER)
+  {
+    // no space in DRAM read queue
+    if(lower_level->get_occupancy(1, handle_pkt.address) == lower_level->get_size(1, handle_pkt.address))
+      return false;
+    
+    CACHE* llc = (CACHE*)producer->getObject();
+    llc->func_act_prefetch(handle_pkt);
+    
+    lower_level->add_rq(&handle_pkt);
+    return true;
+  }
+
   // part of analysis: Does the stlb miss has a cache hierarchy hit for same address ?
   if(cache_is[CACHE_ID::IS_STLB])
   {
@@ -385,11 +424,22 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
 
     // check to make sure the lower level queue has room for this read miss
-    int queue_type = (is_read) ? 1 : 3;
-    if (lower_level->get_occupancy(queue_type, handle_pkt.address) == lower_level->get_size(queue_type, handle_pkt.address))
+    if(cache_id == CACHE_ID::IS_LLC && KNOB_ENABLE_LLC_BUFFER)
     {
-      cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
-      return false;
+      if(Buffer->get_occupancy(1, handle_pkt.address) == Buffer->get_size(1, handle_pkt.address))
+      {
+        cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
+        return false;
+      }
+    }
+    else
+    {
+      int queue_type = (is_read) ? 1 : 3;
+      if (lower_level->get_occupancy(queue_type, handle_pkt.address) == lower_level->get_size(queue_type, handle_pkt.address))
+      {
+        cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
+        return false;
+      }
     }
 
     // Allocate an MSHR
@@ -410,21 +460,26 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
         handle_pkt.to_return.clear();
     }
     
-
-    if (!is_read)
-      lower_level->add_pq(&handle_pkt);
+    if(cache_id == CACHE_ID::IS_LLC && KNOB_ENABLE_LLC_BUFFER)
+    {
+      Buffer->add_rq(&handle_pkt);
+    }
     else
     {
-      lower_level->add_rq(&handle_pkt);
+      if (!is_read)
+        lower_level->add_pq(&handle_pkt);
+      else
+      {
+        lower_level->add_rq(&handle_pkt);
+      }
     }
-      
   }
 
-  // update prefetcher on load instructions and prefetches from upper levels
-  if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
-    cpu = handle_pkt.cpu;
-    uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
-    handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 0, handle_pkt.type, handle_pkt.pf_metadata);
+  // because of Buffer
+  if((cache_id == CACHE_ID::IS_LLC && !KNOB_ENABLE_LLC_BUFFER) || cache_id != CACHE_ID::IS_LLC)
+  {
+    // update prefetcher on load instructions and prefetches from upper levels
+    func_act_prefetch(handle_pkt);
   }
   
   //check if reuse_history has tracked this miss
@@ -595,10 +650,17 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     total_miss_latency += current_cycle - handle_pkt.cycle_enqueued;
 
   // update prefetcher
-  cpu = handle_pkt.cpu;
-  handle_pkt.pf_metadata =
-      impl_prefetcher_cache_fill((virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS), set, way,
-                                 handle_pkt.type == PREFETCH, evicting_address, handle_pkt.pf_metadata);
+
+  if(cache_id != CACHE_ID::IS_Buffer)
+    func_update_prefetch(handle_pkt, evicting_address, set, way);
+  else
+  {
+    CACHE* llc = (CACHE*)producer->getObject();
+    llc->func_update_prefetch(handle_pkt, evicting_address, set, way);
+  }
+  // handle_pkt.pf_metadata =
+  //     impl_prefetcher_cache_fill((virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS), set, way,
+  //                                handle_pkt.type == PREFETCH, evicting_address, handle_pkt.pf_metadata);
 
   // update replacement policy
   impl_replacement_update_state(handle_pkt.cpu, set, way, handle_pkt.address, handle_pkt.ip, 0, handle_pkt.type, 0);
@@ -1085,6 +1147,25 @@ void CACHE::return_data(PACKET* packet)
     std::cout << " event: " << mshr_entry->event_cycle << " current: " << current_cycle << std::endl;
   });
 
+
+  ///// Buffer Op
+  if(mshr_entry->hit_where == CACHE_ID::IS_DRAM && cache_id == CACHE_ID::IS_LLC && mshr_entry != std::end(MSHR) && KNOB_ENABLE_LLC_BUFFER)
+  {
+    if(mshr_entry->type == PREFETCH)
+    {
+      if(Buffer->get_occupancy(2, mshr_entry->address) != Buffer->get_size(2, mshr_entry->address))
+      {
+        Buffer->add_wq(&*mshr_entry);
+        for (auto ret : mshr_entry->to_return)
+          ret->return_data(&(*mshr_entry));
+        MSHR.erase(mshr_entry);
+        cacheDataModel->unique_page_count.insert(mshr_entry->address >>LOG2_PAGE_SIZE);   
+        cacheDataModel->mshr_queue[Basic::ACCESS]++;
+        return;
+      }
+    }
+  }
+
   // Order this entry after previously-returned entries, but before non-returned
   // entries
   std::iter_swap(mshr_entry, first_unreturned);
@@ -1133,4 +1214,21 @@ void CACHE::print_deadlock()
   } else {
     std::cout << NAME << " MSHR empty" << std::endl;
   }
+}
+
+void CACHE::func_act_prefetch(PACKET& handle_pkt)
+{
+  if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
+    cpu = handle_pkt.cpu;
+    uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
+    handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 1, handle_pkt.type, handle_pkt.pf_metadata);
+  }
+}
+
+void CACHE::func_update_prefetch(PACKET& handle_pkt, uint64_t evicting_address, size_t set, size_t way)
+{
+  cpu = handle_pkt.cpu;
+  handle_pkt.pf_metadata =
+      impl_prefetcher_cache_fill((virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS), set, way,
+                                 handle_pkt.type == PREFETCH, evicting_address, handle_pkt.pf_metadata);
 }

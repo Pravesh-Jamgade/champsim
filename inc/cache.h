@@ -32,7 +32,8 @@ public:
 
   bool cache_is[CACHE_ID_END] = {false};
   CACHE_ID cache_id = CACHE_ID::CACHE_ID_END;
-  MemoryRequestProducer* llc_to_buffer;
+
+  MemoryRequestProducer* producer;
 
   uint32_t cpu;
   const std::string NAME;
@@ -128,6 +129,9 @@ public:
     uint32_t way = std::distance(set_begin, first_inv);
     return way == NUM_WAY;
   }
+
+  void func_act_prefetch(PACKET& handle_pkt);
+  void func_update_prefetch(PACKET& handle_pkt, uint64_t evicting_address, size_t set, size_t way);
 
   void print_logs()
   {
@@ -237,6 +241,11 @@ public:
     {
       cache_is[CACHE_ID::IS_L1I] = true;
       cache_id = CACHE_ID::IS_L1I;
+    }
+    else if(NAME.find("Buffer") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_Buffer] = true;
+      cache_id = CACHE_ID::IS_Buffer;
     }
 
     FA_SIZE = NUM_WAY * NUM_SET;

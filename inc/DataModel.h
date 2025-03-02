@@ -82,7 +82,7 @@ static string CacheStat_str[CacheStat::CacheStat_End] = {
                                                         };
 
 static string cache_name_str[CACHE_ID::CACHE_ID_END] = {
-    "itlb", "dtlb", "stlb", "l1i", "l1d", "l2", "llc"
+    "itlb", "dtlb", "stlb", "l1i", "l1d", "l2", "llc", "buffer", "dram"
 };
 
 enum MISS
