@@ -495,8 +495,8 @@ int main(int argc, char** argv)
     }
     std::sort(std::begin(operables), std::end(operables), champsim::by_next_operate());
 
-    // buffer
-    Buffer->operate();
+    // buffer, we need to clock buffer internally from LLC so that parallel rd could be simulate with LLC
+    // Buffer->_operate();
 
     for (std::size_t i = 0; i < ooo_cpu.size(); ++i) {
       // read from trace

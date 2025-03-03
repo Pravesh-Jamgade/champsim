@@ -23,7 +23,7 @@ extern CACHE* Buffer = new CACHE (
     "Buffer", 0.5, 6, 
     1, 1500, 16, 
     16, 0, 0, 
-    0, 1, 1,
+    0, 0, 2,
     1, LOG2_BLOCK_SIZE, 0,
     0, 0, 5, 
     &DRAM, CACHE::pref_t::pprefetcherDno, CACHE::repl_t::rreplacementDlru);

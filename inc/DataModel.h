@@ -98,7 +98,7 @@ class CacheDataModel
     public:
     CacheDataModel()
     {
-        for(int i=0; i< REJECTED; i++)
+        for(int i=0; i< BASIC_END; i++)
         {
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
         }
@@ -114,7 +114,7 @@ class CacheDataModel
             hist_set_conflict_events[i]=0;
         }
 
-        for(int i=0; i< REJECTED; i++)
+        for(int i=0; i< BASIC_END; i++)
         {
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
         }
@@ -136,18 +136,17 @@ class CacheDataModel
 
     string name;
     uint32_t cpu=0;
-    uint64_t rd_queue[Basic::BASIC_END] = {0};
-    uint64_t wr_queue[Basic::BASIC_END] = {0};
-    uint64_t pf_queue[Basic::BASIC_END] = {0};
-    uint64_t mshr_queue[Basic::BASIC_END] = {0};
+    int rd_queue[Basic::BASIC_END] = {0};
+    int wr_queue[Basic::BASIC_END] = {0};
+    int pf_queue[Basic::BASIC_END] = {0};
+    int mshr_queue[Basic::BASIC_END] = {0};
 
-    uint64_t rd_queue_stalls[Stall::STALL_END] = {0};
-    uint64_t wr_queue_stalls[Stall::STALL_END] = {0};
-    uint64_t pf_queue_stalls[Stall::STALL_END] = {0};
-    uint64_t mshr_queue_stalls[Stall::STALL_END] = {0};
-    
-    uint64_t adv_stats[AdvStat::ADVSTAT_END] = {0};
-    uint64_t cache_stat[CacheStat::CacheStat_End] = {0};  
+    int rd_queue_stalls[Stall::STALL_END] = {0};
+    int wr_queue_stalls[Stall::STALL_END] = {0};
+    int pf_queue_stalls[Stall::STALL_END] = {0};
+    int mshr_queue_stalls[Stall::STALL_END] = {0};
+    int adv_stats[AdvStat::ADVSTAT_END] = {0};
+    int cache_stat[CacheStat::CacheStat_End] = {0};  
 
     map<uint64_t,uint64_t> hist_set_conflict_events;  
     map<int,int> hist_reuse_distance;

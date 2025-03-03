@@ -230,6 +230,14 @@ void CACHE::handle_read()
         cacheDataModel->rd_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         return;
       }
+
+      // if(cache_id == CACHE_ID::IS_LLC || cache_id == CACHE_ID::IS_Buffer)
+      // {
+      //   CACHE* llc = this;
+      //   if(cache_id == CACHE_ID::IS_Buffer)
+      //    llc = (CACHE*)producer->getObject();
+      //   cout << "cycle, " << std::dec << llc->current_cycle  <<", " << NAME << ", " << std::hex << handle_pkt.address << " complete\n";
+      // }  
       cacheDataModel->rd_queue[Basic::MISS]++;
     }
 
@@ -687,8 +695,11 @@ void CACHE::operate()
 {
   operate_writes();
   operate_reads();
-
+  
   impl_prefetcher_cycle_operate();
+
+  if(cache_id == CACHE_ID::IS_LLC)
+    Buffer->_operate();
 }
 
 void CACHE::operate_writes()
@@ -926,6 +937,7 @@ int CACHE::add_rq(PACKET* packet)
 
   cacheDataModel->rd_queue[Basic::ADDED]++;
   // cacheDataModel->rd_queue[Basic::ACCESS]++;
+
   return RQ.occupancy();
 }
 
@@ -975,6 +987,7 @@ int CACHE::add_wq(PACKET* packet)
 
   cacheDataModel->wr_queue[Basic::ADDED]++;
   // cacheDataModel->wr_queue[Basic::ACCESS]++;
+  
   return WQ.occupancy();
 }
 

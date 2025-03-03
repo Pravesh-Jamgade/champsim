@@ -111,7 +111,7 @@ public:
 
   void reset_datamodel()
   {
-    delete cacheDataModel;
+    // delete cacheDataModel;
     cacheDataModel = new CacheDataModel(NAME, cpu, NUM_SET, NUM_WAY);
 
     // if(cache_is[CACHE_ID::IS_STLB])

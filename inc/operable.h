@@ -27,6 +27,8 @@ public:
     operate();
 
     leap_operation += CLOCK_SCALE;
+    // if(CLOCK_SCALE < 0)
+      // cout << std::dec << current_cycle << '\n';
     ++current_cycle;
   }
 
