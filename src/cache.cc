@@ -388,9 +388,22 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     {
       if(MSHR_cluster.size() == MSHR_SIZE)
       {
-        cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_REJECTED]++;
-        // cluster full
-        return false;
+        auto mshr_cluster_entry = MSHR_cluster.begin();
+        while(mshr_cluster_entry != MSHR_cluster.end())
+        {
+          if(mshr_cluster_entry->limit == 0)
+          {
+            mshr_cluster_entry = MSHR_cluster.erase(mshr_cluster_entry);
+            break;
+          }
+        }
+
+        if(MSHR_cluster.size() == MSHR_SIZE)
+        {
+          cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_REJECTED]++;
+          // cluster full
+          return false;
+        }
       }
       MSHR_ENTRY mshr_cluster;
       mshr_cluster.address = cid;
