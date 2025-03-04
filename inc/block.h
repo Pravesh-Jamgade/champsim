@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <list>
 
 #include "champsim_constants.h"
 #include "circular_buffer.hpp"
@@ -50,12 +51,24 @@ public:
   bool packet_flags [Flags::Packet_Flags_End] = {false};
 };
 
-class MSHR_ENTRY: public PACKET
+class MSHR_ENTRY
 {
   public:
   int limit = 8;
-  vector<uint64_t> sub_addresses;
-  vector<uint64_t> sub_data;
+  // clusters private MSHR
+  std::list<PACKET> packets;
+  uint64_t address =0;
+
+  MSHR_ENTRY(){
+    packets = list<PACKET>();
+    limit = 0;
+    address = 0;
+  }
+};
+
+template <>
+struct is_valid<MSHR_ENTRY> {
+  bool operator()(const MSHR_ENTRY& test) { return test.address != 0; }
 };
 
 template <>

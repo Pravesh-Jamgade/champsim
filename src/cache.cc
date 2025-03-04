@@ -15,7 +15,7 @@
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
-extern int KNOB_STLB_DO_NOT_TRACK_MISS;
+extern int KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_MSHR_SUBLOCK;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -23,8 +23,33 @@ extern uint8_t warmup_complete[NUM_CPUS];
 void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
-    auto fill_mshr = MSHR.begin();
-    if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
+    list<PACKET>* mshr_list = &MSHR;
+    list<MSHR_ENTRY>::iterator ptr_cluster;
+    if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
+    {
+      // no clusters
+      if(MSHR_cluster.begin() == MSHR_cluster.end())
+        return;
+      
+      // cluster private mshr
+      mshr_list = &(MSHR_cluster.begin()->packets);
+      ptr_cluster = MSHR_cluster.begin();
+
+      // private mshr is empty, remove that cluster and choose next one
+      while(mshr_list->empty())
+      {
+        MSHR_cluster.erase(MSHR_cluster.begin());
+        cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_DELETED]++;
+        if(MSHR_cluster.begin() == MSHR_cluster.end())
+          return;
+        mshr_list = &(MSHR_cluster.begin()->packets);
+        ptr_cluster = MSHR_cluster.begin();
+      }
+    }
+    
+    auto fill_mshr = mshr_list->begin();
+
+    if (fill_mshr == std::end(*mshr_list) || fill_mshr->event_cycle > current_cycle)
     {
       cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
       return;
@@ -56,7 +81,10 @@ void CACHE::handle_fill()
         ret->return_data(&(*fill_mshr));
     }
 
-    MSHR.erase(fill_mshr);
+    mshr_list->erase(fill_mshr);
+    if(cache_id == CACHE_ID::IS_L1D)
+      ptr_cluster->limit++;
+    
     writes_available_this_cycle--;
 
     cacheDataModel->unique_page_count.insert(fill_mshr->address >>LOG2_PAGE_SIZE);   
@@ -328,25 +356,57 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     std::cout << " cycle: " << current_cycle << std::endl;
   });
 
-  // int cluster_size = OFFSET_BITS;
-  // if(cache_is[CACHE_ID::IS_L2])
-  // {
-  //   cluster_size = OFFSET_BITS + OFFSET_BITS;
-  // }
+  // each cluster has its own MSHR, simply put to understand
+  list<PACKET>* cluster_member_entry = &MSHR;
+  list<MSHR_ENTRY>::iterator ptr_cluster;
 
-  // STEPS
+  // mshr size for others except for L1 it is Cluster Entry Size (private mshr)
+  int size = MSHR_SIZE;
+  int cluster_size;
+
   // check we are at L1
-  // check if cluster id match
-  // check if count of cluster member is above decided cluster_size -> if so stall
-  // check if cluster_member match -> if so do dep merging, else insert full packet
-  // track count of cluster_members
+  if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
+  {
+    // cluster_entry size
+    size = 8;
+
+    // check if cluster id match
+    cluster_size = OFFSET_BITS + OFFSET_BITS;
+
+    uint64_t cid = handle_pkt.address >> cluster_size;;
+    auto cluster_entry = std::find_if(MSHR_cluster.begin(), MSHR_cluster.end(), [cid](MSHR_ENTRY a){return a.address == cid;});
+
+    // cluster found
+    if(cluster_entry != MSHR_cluster.end())
+    {
+      ptr_cluster = cluster_entry;
+      // use this as MSHR
+      cluster_member_entry = &cluster_entry->packets;
+      cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_FOUND]++;
+    }
+    else //add new cluster
+    {
+      if(MSHR_cluster.size() == MSHR_SIZE)
+      {
+        cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_REJECTED]++;
+        // cluster full
+        return false;
+      }
+      MSHR_ENTRY mshr_cluster;
+      mshr_cluster.address = cid;
+      auto it = MSHR_cluster.insert(end(MSHR_cluster), mshr_cluster);
+      ptr_cluster = it;
+      cluster_member_entry = &it->packets;
+      cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_CREATED]++;
+    }
+  }
 
   // check mshr
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS));
-  bool mshr_full = (MSHR.size() == MSHR_SIZE);
+  auto mshr_entry = std::find_if(cluster_member_entry->begin(), cluster_member_entry->end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS));
+  bool mshr_full = (cluster_member_entry->size() == size);
 
   // usercode
-  if (mshr_entry != MSHR.end() && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) // miss already inflight
+  if (mshr_entry != cluster_member_entry->end() && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) // miss already inflight
   {
     // update fill location
     mshr_entry->fill_level = std::min(mshr_entry->fill_level, handle_pkt.fill_level);
@@ -371,11 +431,13 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
     cacheDataModel->mshr_queue[Basic::MERGED]++;
     cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::MERGED]++;
+    cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_MEMBER_MERGE]++;
   } 
   else 
   {
     if (mshr_full)  // not enough MSHR resource
     {
+      cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_MEMBER_REJECTED]++;
       cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL]++;
       cacheDataModel->mshr_queue[Basic::REJECTED]++;
       cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::REJECTED]++;
@@ -394,12 +456,16 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
     // Allocate an MSHR
     if (handle_pkt.fill_level <= fill_level  && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) {
-      auto it = MSHR.insert(std::end(MSHR), handle_pkt);
+      auto it = cluster_member_entry->insert(std::end(*cluster_member_entry), handle_pkt);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
 
+      if(cache_id == CACHE_ID::IS_L1D)
+        ptr_cluster->limit--;
+
       cacheDataModel->mshr_queue[Basic::ADDED]++;
       cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::ADDED]++;
+      cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_MEMBER_INSERT]++;
     }
 
     if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
@@ -417,7 +483,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     {
       lower_level->add_rq(&handle_pkt);
     }
-      
   }
 
   // update prefetcher on load instructions and prefetches from upper levels
@@ -1054,12 +1119,38 @@ int CACHE::add_pq(PACKET* packet)
 
 void CACHE::return_data(PACKET* packet)
 {
+
+   // each cluster has its own MSHR, simply put to understand
+  list<PACKET>* cluster_member_entry = &MSHR;
+
+  // check we are at L1
+  if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
+  {
+    // check if cluster id match
+    int cluster_size = OFFSET_BITS + OFFSET_BITS;
+    uint64_t cid = packet->address >> cluster_size;;
+    auto cluster_entry = std::find_if(MSHR_cluster.begin(), MSHR_cluster.end(), [cid](MSHR_ENTRY a){return a.address == cid;});
+
+    // cluster found
+    if(cluster_entry != MSHR_cluster.end())
+    {
+      // use this as MSHR
+      cluster_member_entry = &cluster_entry->packets;
+    }
+    else
+    {
+      std::cout << std::hex << packet->address << '\n';
+      std::cerr << " error: Cluster not find\n";
+      assert(0);
+    }
+  }
+
   // check MSHR information
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS));
-  auto first_unreturned = std::find_if(MSHR.begin(), MSHR.end(), [](auto x) { return x.event_cycle == std::numeric_limits<uint64_t>::max(); });
+  auto mshr_entry = std::find_if(cluster_member_entry->begin(), cluster_member_entry->end(), eq_addr<PACKET>(packet->address, OFFSET_BITS));
+  auto first_unreturned = std::find_if(cluster_member_entry->begin(), cluster_member_entry->end(), [](auto x) { return x.event_cycle == std::numeric_limits<uint64_t>::max(); });
 
   // sanity check
-  if (mshr_entry == MSHR.end()) {
+  if (mshr_entry == cluster_member_entry->end()) {
     std::cerr << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << packet->instr_id << " cannot find a matching entry!";
     std::cerr << " address: " << std::hex << packet->address;
     std::cerr << " v_address: " << packet->v_address;

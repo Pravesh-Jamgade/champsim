@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include "DataModel.h"
+extern int KNOB_MSHR_SUBLOCK;
 
 // return index between 1 to MERGE_RANGE inclusive
 int CacheDataModel::get_sublock_opp_index(int val)
@@ -91,6 +92,14 @@ void CacheDataModel::print_stats()
     for(auto ele: MSHR_sublocking_oppo)
         str_log += to_string(ele) + ", ";
     cout << tag << str_log << '\n'; 
+
+    if(KNOB_MSHR_SUBLOCK)
+    {
+        for(int i=0; i< SUBBLOCK::CLUSTER_END; i++)
+        {
+            cout << tag << mshr_sublock_stat_str[i] <<", "<<mshr_sublock_stat[i]<<'\n';
+        }
+    }
 
     cout << '\n';
 }

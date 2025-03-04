@@ -14,4 +14,7 @@ int KNOB_STTMRAM_STLB = 0;
 // Page table
 int KNOB_ENABLE_PT_OPTIMIZATION = 1; // default is allow use of opt ptw; works faster 
 
+// MSHR Sublocking
+int KNOB_MSHR_SUBLOCK = 0;
+
 #endif

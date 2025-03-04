@@ -7,6 +7,7 @@
 
 #include "utils.h"
 #define MERGE_RANGE 10
+
 static int arr[MERGE_RANGE] = {0,10,20,30,40,50,60,70,80,90};
 
 using namespace std;
@@ -93,12 +94,25 @@ enum MISS
     MISS_END
 };
 
+enum SUBBLOCK
+{
+    CLUSTER_CREATED = 0,
+    CLUSTER_REJECTED,
+    CLUSTER_FOUND,
+    CLUSTER_DELETED,
+
+    CLUSTER_MEMBER_REJECTED,
+    CLUSTER_MEMBER_MERGE,
+    CLUSTER_MEMBER_INSERT,
+    CLUSTER_END
+};
+
 class CacheDataModel
 {
     public:
     CacheDataModel()
     {
-        for(int i=0; i< REJECTED; i++)
+        for(int i=0; i< BASIC_END; i++)
         {
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
         }
@@ -114,7 +128,7 @@ class CacheDataModel
             hist_set_conflict_events[i]=0;
         }
 
-        for(int i=0; i< REJECTED; i++)
+        for(int i=0; i< BASIC_END; i++)
         {
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
         }
@@ -126,6 +140,9 @@ class CacheDataModel
         type_mshr_queue = (int**)malloc(sizeof(int**) * 5);
         for(int i=0; i< 5; i++)
             type_mshr_queue[i] = (int*) malloc(sizeof(int*)*BASIC_END);
+
+        for(int i=0; i< CLUSTER_END; i++)
+            mshr_sublock_stat[i] = 0;
 
     }
 
@@ -166,6 +183,17 @@ class CacheDataModel
     // index - page merges
     // val - frequency of merges
     vector<int> MSHR_sublocking_oppo;
+    int mshr_sublock_stat[SUBBLOCK::CLUSTER_END] = {0};
+    string mshr_sublock_stat_str[SUBBLOCK::CLUSTER_END] = {
+    "cluster created", 
+    "cluster rejected", 
+    "cluster found", 
+    "cluster deleted",
+
+    "cluster member rejected",
+    "cluster member merge",
+    "cluster member insert",
+    };
 
     // ret i -> between i-1 to i
     // ret 10 -> more than 90

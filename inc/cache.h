@@ -57,6 +57,7 @@ public:
       TQ{RQ_SIZE, HIT_LATENCY};                           // write queue
 
   std::list<PACKET> MSHR; // MSHR
+  std::list<MSHR_ENTRY> MSHR_cluster; // MSHR
 
   uint64_t sim_access[NUM_CPUS][NUM_TYPES] = {}, sim_hit[NUM_CPUS][NUM_TYPES] = {}, sim_miss[NUM_CPUS][NUM_TYPES] = {}, roi_access[NUM_CPUS][NUM_TYPES] = {},
            roi_hit[NUM_CPUS][NUM_TYPES] = {}, roi_miss[NUM_CPUS][NUM_TYPES] = {};
