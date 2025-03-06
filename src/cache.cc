@@ -82,7 +82,7 @@ void CACHE::handle_fill()
     }
 
     mshr_list->erase(fill_mshr);
-    if(cache_id == CACHE_ID::IS_L1D)
+    if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
       ptr_cluster->limit++;
     
     writes_available_this_cycle--;
@@ -473,7 +473,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
 
-      if(cache_id == CACHE_ID::IS_L1D)
+      if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
         ptr_cluster->limit--;
 
       cacheDataModel->mshr_queue[Basic::ADDED]++;
