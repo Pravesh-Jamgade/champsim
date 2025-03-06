@@ -123,6 +123,23 @@ void CACHE::handle_writeback()
         prefetch_hit_histo[set*NUM_WAY+way][WRITEBACK_HIT]++;
     } else // MISS
     {
+      // writeback from LLC to DRAM, via soft-searching Buffer i.e. upon miss to Buffer going to DRAM
+      if(cache_id == CACHE_ID::IS_Buffer && KNOB_ENABLE_LLC_BUFFER)
+      {
+        int ret = lower_level->add_wq(&handle_pkt);
+        if(ret == -2)
+        {
+          cacheDataModel->wr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
+          cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL]++;
+          return;
+        }
+        writes_available_this_cycle--;
+        cacheDataModel->wr_queue[Basic::MISS]++;
+        cacheDataModel->wr_queue[Basic::ACCESS]++;
+        WQ.pop_front();
+        return;
+      }
+
       bool success;
       if (handle_pkt.type == RFO && handle_pkt.to_return.empty()) 
       {
@@ -554,7 +571,15 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.ip = 0;
       writeback_packet.type = WRITEBACK;
 
-      auto result = lower_level->add_wq(&writeback_packet);
+      int result;
+      // taking care of writeback from LLC to DRAM; it should go via Buffer though
+      if(cache_id == CACHE_ID::IS_LLC && KNOB_ENABLE_LLC_BUFFER)
+      {
+        result = Buffer->add_wq(&writeback_packet);
+      }
+      else
+       result = lower_level->add_wq(&writeback_packet);
+
       if (result == -2)
       {
         cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL]++;
@@ -698,7 +723,13 @@ void CACHE::operate()
   
   impl_prefetcher_cycle_operate();
 
-  if(cache_id == CACHE_ID::IS_LLC)
+  // internally clocking from LLC, as we are using rd_queue and wr_queue for Buffer
+  // if(cache_id == CACHE_ID::IS_LLC)
+  // {
+    
+  //   Buffer->_operate();
+  // }
+  if(cache_id != CACHE_ID::IS_Buffer)
     Buffer->_operate();
 }
 
