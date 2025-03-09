@@ -39,6 +39,7 @@ extern CACHE* Buffer;
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE, KNOB_TTP, KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_STTMRAM_STLB, KNOB_ENABLE_PT_OPTIMIZATION, KNOB_ENABLE_LLC_BUFFER;
+extern int KNOB_LLC_BUFFER_L2_PREF_OPT;
 
 std::vector<tracereader*> traces;
 
@@ -436,6 +437,7 @@ int main(int argc, char** argv)
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_ENABLE_PT_OPTIMIZATION = iniReader->GetInteger("PageTable", "ENABLE_OPTIMIZATION", 0);
   KNOB_ENABLE_LLC_BUFFER = iniReader->GetInteger("Buffer", "ENABLE_LLC_BUFFER", 0);
+  KNOB_LLC_BUFFER_L2_PREF_OPT = iniReader->GetInteger("Buffer", "L2_PREF_OPT", 0);
 
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
@@ -444,6 +446,7 @@ int main(int argc, char** argv)
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << "ENABLE_PT_OPT="<<KNOB_ENABLE_PT_OPTIMIZATION<<'\n';
   std::cout << "ENABLE_LLC_BUFFER="<<KNOB_ENABLE_LLC_BUFFER<<'\n';
+  std::cout << "LLC_BUFFER_L2_PREF_OPT="<<KNOB_LLC_BUFFER_L2_PREF_OPT<<'\n';
   std::cout << '\n';
 
   // overwrite relevant to extra settings
@@ -481,6 +484,7 @@ int main(int argc, char** argv)
     for (auto op : operables) {
       try {
         op->_operate();
+        Buffer->_operate();
       } catch (champsim::deadlock& dl) {
         // ooo_cpu[dl.which]->print_deadlock();
         // std::cout << std::endl;

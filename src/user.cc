@@ -18,13 +18,14 @@ int KNOB_STTMRAM_STLB = 0;
 
 // Page table
 int KNOB_ENABLE_PT_OPTIMIZATION = 1; // default is allow use of opt ptw; works faster 
+int KNOB_LLC_BUFFER_L2_PREF_OPT = 0;
 
 extern CACHE* Buffer = new CACHE (
     "Buffer", 0.5, 6, 
-    1, 1500, 16, 
+    1, 2000, 16, 
     16, 0, 0, 
-    0, 0, 4,
-    4, LOG2_BLOCK_SIZE, 0,
+    0, 0, 8,
+    8, LOG2_BLOCK_SIZE, 0,
     0, 0, 5, 
     &DRAM, CACHE::pref_t::pprefetcherDno, CACHE::repl_t::rreplacementDlru);
 

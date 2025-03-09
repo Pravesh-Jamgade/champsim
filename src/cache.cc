@@ -16,7 +16,7 @@
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
-extern int KNOB_ENABLE_LLC_BUFFER;
+extern int KNOB_ENABLE_LLC_BUFFER, KNOB_LLC_BUFFER_L2_PREF_OPT;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -33,13 +33,22 @@ void CACHE::handle_fill()
       if(fill_mshr->type == PREFETCH)
       {
         if(Buffer->get_occupancy(2, fill_mshr->address) == Buffer->get_size(2, fill_mshr->address))
+        {
+          cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL]++;
+          cacheDataModel->mshr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
           return;
+        }
         Buffer->add_wq(&*fill_mshr);
         for (auto ret : fill_mshr->to_return)
           ret->return_data(&(*fill_mshr));
-        MSHR.erase(fill_mshr);
+
+        sim_miss[fill_mshr->cpu][fill_mshr->type]++;
+        sim_access[fill_mshr->cpu][fill_mshr->type]++;
+
         cacheDataModel->unique_page_count.insert(fill_mshr->address >>LOG2_PAGE_SIZE);   
         cacheDataModel->mshr_queue[Basic::ACCESS]++;
+
+        MSHR.erase(fill_mshr);
         continue;
       }
     }
@@ -124,7 +133,7 @@ void CACHE::handle_writeback()
     } else // MISS
     {
       // writeback from LLC to DRAM, via soft-searching Buffer i.e. upon miss to Buffer going to DRAM
-      if(cache_id == CACHE_ID::IS_Buffer && KNOB_ENABLE_LLC_BUFFER)
+      if(cache_id == CACHE_ID::IS_Buffer && KNOB_ENABLE_LLC_BUFFER && handle_pkt.type != PREFETCH)
       {
         int ret = lower_level->add_wq(&handle_pkt);
         if(ret == -2)
@@ -360,17 +369,25 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
+  bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
+  int queue_type = (is_read) ? 1 : 3;
+
   // read miss in buffer
   if(cache_id == CACHE_ID::IS_Buffer && KNOB_ENABLE_LLC_BUFFER)
   {
     // no space in DRAM read queue
-    if(lower_level->get_occupancy(1, handle_pkt.address) == lower_level->get_size(1, handle_pkt.address))
+    if(lower_level->get_occupancy(queue_type, handle_pkt.address) == lower_level->get_size(queue_type, handle_pkt.address))
+    {
+      cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
       return false;
+    }
     
     CACHE* llc = (CACHE*)producer->getObject();
     llc->func_act_prefetch(handle_pkt);
-    
-    lower_level->add_rq(&handle_pkt);
+    if(queue_type == 1)
+      lower_level->add_rq(&handle_pkt);
+    else if(queue_type == 3)
+      lower_level->add_pq(&handle_pkt);
     return true;
   }
 
@@ -446,7 +463,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       return false; // TODO should we allow prefetches anyway if they will not
                     // be filled to this level?
     }
-    bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
 
     // check to make sure the lower level queue has room for this read miss
     if(cache_id == CACHE_ID::IS_LLC && KNOB_ENABLE_LLC_BUFFER)
@@ -459,7 +475,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
     else
     {
-      int queue_type = (is_read) ? 1 : 3;
       if (lower_level->get_occupancy(queue_type, handle_pkt.address) == lower_level->get_size(queue_type, handle_pkt.address))
       {
         cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
@@ -501,7 +516,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   }
 
   // because of Buffer
-  if((cache_id == CACHE_ID::IS_LLC && !KNOB_ENABLE_LLC_BUFFER) || cache_id != CACHE_ID::IS_LLC)
+  if((cache_id == CACHE_ID::IS_LLC && !KNOB_ENABLE_LLC_BUFFER) || cache_id != CACHE_ID::IS_LLC || mshr_entry != MSHR.end())
   {
     // update prefetcher on load instructions and prefetches from upper levels
     func_act_prefetch(handle_pkt);
@@ -729,8 +744,10 @@ void CACHE::operate()
     
   //   Buffer->_operate();
   // }
-  if(cache_id != CACHE_ID::IS_Buffer)
-    Buffer->_operate();
+  while(cache_id != CACHE_ID::IS_Buffer && (Buffer->get_occupancy(1,0) != 0 || Buffer->get_occupancy(2,0) != 0 || Buffer->get_occupancy(3,0) != 0))
+  {
+     Buffer->_operate();
+  }
 }
 
 void CACHE::operate_writes()
@@ -1197,14 +1214,30 @@ void CACHE::return_data(PACKET* packet)
   {
     if(mshr_entry->type == PREFETCH)
     {
-      if(Buffer->get_occupancy(2, mshr_entry->address) != Buffer->get_size(2, mshr_entry->address))
+      bool ok = false;
+
+      if(KNOB_LLC_BUFFER_L2_PREF_OPT && mshr_entry->fill_level < fill_level)
       {
+        ok=true;
+      }
+      else if(Buffer->get_occupancy(2, mshr_entry->address) != Buffer->get_size(2, mshr_entry->address))
+      {
+        ok=true;
         Buffer->add_wq(&*mshr_entry);
+      }
+
+      if(ok)
+      {
         for (auto ret : mshr_entry->to_return)
           ret->return_data(&(*mshr_entry));
-        MSHR.erase(mshr_entry);
+        
+        sim_miss[mshr_entry->cpu][mshr_entry->type]++;
+        sim_access[mshr_entry->cpu][mshr_entry->type]++;
+        
         cacheDataModel->unique_page_count.insert(mshr_entry->address >>LOG2_PAGE_SIZE);   
         cacheDataModel->mshr_queue[Basic::ACCESS]++;
+
+        MSHR.erase(mshr_entry);
         return;
       }
     }
