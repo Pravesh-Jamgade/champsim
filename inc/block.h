@@ -58,6 +58,7 @@ class MSHR_ENTRY
   // clusters private MSHR
   std::list<PACKET> packets;
   uint64_t address =0;
+  uint64_t latest_timestamp = std::numeric_limits<uint64_t>::max();
 
   MSHR_ENTRY(){
     packets = list<PACKET>();

@@ -16,6 +16,9 @@
 #include "utils.h"
 #include "ptw.h"
 
+typedef list<PACKET>::iterator lm;
+typedef list<MSHR_ENTRY>::iterator lc;
+
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
@@ -58,6 +61,7 @@ public:
 
   std::list<PACKET> MSHR; // MSHR
   std::list<MSHR_ENTRY> MSHR_cluster; // MSHR
+  vector<pair<lc,lm>> delete_ptr; // cluster & mshr ptr
 
   uint64_t sim_access[NUM_CPUS][NUM_TYPES] = {}, sim_hit[NUM_CPUS][NUM_TYPES] = {}, sim_miss[NUM_CPUS][NUM_TYPES] = {}, roi_access[NUM_CPUS][NUM_TYPES] = {},
            roi_hit[NUM_CPUS][NUM_TYPES] = {}, roi_miss[NUM_CPUS][NUM_TYPES] = {};

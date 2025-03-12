@@ -23,17 +23,20 @@ extern uint8_t warmup_complete[NUM_CPUS];
 void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
+
     list<PACKET>* mshr_list = &MSHR;
-    list<MSHR_ENTRY>::iterator ptr_cluster;
+
     if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
     {
       // no clusters
       if(MSHR_cluster.begin() == MSHR_cluster.end())
+      {
         return;
+      }
       
+      // ERASE useless clusters
       // cluster private mshr
       mshr_list = &(MSHR_cluster.begin()->packets);
-      ptr_cluster = MSHR_cluster.begin();
 
       // private mshr is empty, remove that cluster and choose next one
       while(mshr_list->empty())
@@ -41,13 +44,22 @@ void CACHE::handle_fill()
         MSHR_cluster.erase(MSHR_cluster.begin());
         cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_DELETED]++;
         if(MSHR_cluster.begin() == MSHR_cluster.end())
+        {
+          cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
           return;
+        }
         mshr_list = &(MSHR_cluster.begin()->packets);
-        ptr_cluster = MSHR_cluster.begin();
       }
+
+      // check if any recent return data
+      if(delete_ptr.size() == 0)
+        return;
+      
+      // fifo return data take it out
+      mshr_list = &(delete_ptr.front().first->packets);
     }
-    
-    auto fill_mshr = mshr_list->begin();
+
+    lm fill_mshr = mshr_list->begin();
 
     if (fill_mshr == std::end(*mshr_list) || fill_mshr->event_cycle > current_cycle)
     {
@@ -83,8 +95,7 @@ void CACHE::handle_fill()
 
     mshr_list->erase(fill_mshr);
     if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
-      ptr_cluster->limit++;
-    
+      delete_ptr.erase(delete_ptr.begin());
     writes_available_this_cycle--;
 
     cacheDataModel->unique_page_count.insert(fill_mshr->address >>LOG2_PAGE_SIZE);   
@@ -217,6 +228,18 @@ void CACHE::handle_read()
 
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
+    
+    // // always hit address translation at DTLB
+    // if(cache_id == CACHE_ID::IS_DTLB)
+    // {
+    //   handle_pkt.data = handle_pkt.v_address;
+    //   for(auto ret: handle_pkt.to_return)
+    //     ret->return_data(&handle_pkt);
+    //   RQ.pop_front();
+    //   reads_available_this_cycle--;
+    //   cacheDataModel->rd_queue[Basic::ACCESS]++;
+    //   continue;
+    // }
 
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
@@ -358,7 +381,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
   // each cluster has its own MSHR, simply put to understand
   list<PACKET>* cluster_member_entry = &MSHR;
-  list<MSHR_ENTRY>::iterator ptr_cluster;
 
   // mshr size for others except for L1 it is Cluster Entry Size (private mshr)
   int size = MSHR_SIZE;
@@ -379,7 +401,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     // cluster found
     if(cluster_entry != MSHR_cluster.end())
     {
-      ptr_cluster = cluster_entry;
       // use this as MSHR
       cluster_member_entry = &cluster_entry->packets;
       cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_FOUND]++;
@@ -391,7 +412,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
         auto mshr_cluster_entry = MSHR_cluster.begin();
         while(mshr_cluster_entry != MSHR_cluster.end())
         {
-          if(mshr_cluster_entry->limit == 0)
+          if(mshr_cluster_entry->packets.size() == 0)
           {
             mshr_cluster_entry = MSHR_cluster.erase(mshr_cluster_entry);
             break;
@@ -408,7 +429,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       MSHR_ENTRY mshr_cluster;
       mshr_cluster.address = cid;
       auto it = MSHR_cluster.insert(end(MSHR_cluster), mshr_cluster);
-      ptr_cluster = it;
       cluster_member_entry = &it->packets;
       cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_CREATED]++;
     }
@@ -472,9 +492,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       auto it = cluster_member_entry->insert(std::end(*cluster_member_entry), handle_pkt);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
-
-      if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
-        ptr_cluster->limit--;
 
       cacheDataModel->mshr_queue[Basic::ADDED]++;
       cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::ADDED]++;
@@ -1135,6 +1152,7 @@ void CACHE::return_data(PACKET* packet)
 
    // each cluster has its own MSHR, simply put to understand
   list<PACKET>* cluster_member_entry = &MSHR;
+  list<MSHR_ENTRY>::iterator cluster_entry;
 
   // check we are at L1
   if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
@@ -1142,13 +1160,13 @@ void CACHE::return_data(PACKET* packet)
     // check if cluster id match
     int cluster_size = OFFSET_BITS + OFFSET_BITS;
     uint64_t cid = packet->address >> cluster_size;;
-    auto cluster_entry = std::find_if(MSHR_cluster.begin(), MSHR_cluster.end(), [cid](MSHR_ENTRY a){return a.address == cid;});
+    cluster_entry = std::find_if(MSHR_cluster.begin(), MSHR_cluster.end(), [cid](MSHR_ENTRY a){return a.address == cid;});
 
     // cluster found
     if(cluster_entry != MSHR_cluster.end())
     {
       // use this as MSHR
-      cluster_member_entry = &cluster_entry->packets;
+      cluster_member_entry = &(cluster_entry->packets);
     }
     else
     {
@@ -1192,6 +1210,26 @@ void CACHE::return_data(PACKET* packet)
   // Order this entry after previously-returned entries, but before non-returned
   // entries
   std::iter_swap(mshr_entry, first_unreturned);
+
+  if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
+  {
+    cluster_entry->latest_timestamp = current_cycle;
+    // if // iter_swap(cluster_entry, MSHR_cluster.begin());
+
+    // else // MSHR_ENTRY copied = *cluster_entry;
+    // MSHR_cluster.erase(cluster_entry);
+    // list<MSHR_ENTRY>::iterator ii = MSHR_cluster.begin();
+    // for(; ii!= MSHR_cluster.end(); ii++)
+    // {
+    //   if(ii->latest_timestamp == std::numeric_limits<uint64_t>::max())
+    //   {
+    //     break;;
+    //   }
+    // }
+    // MSHR_cluster.emplace(ii, copied);
+
+    delete_ptr.push_back({cluster_entry, mshr_entry});
+  }
 }
 
 uint32_t CACHE::get_occupancy(uint8_t queue_type, uint64_t address)

@@ -27,6 +27,7 @@
 
 struct ooo_model_instr {
 
+  int rob_timestamp = std::numeric_limits<int>::max();
   int chain_id = -1;
   int branch_id = -1;
   
