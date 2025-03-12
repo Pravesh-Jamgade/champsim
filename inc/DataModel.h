@@ -128,11 +128,6 @@ class CacheDataModel
             hist_set_conflict_events[i]=0;
         }
 
-        for(int i=0; i< BASIC_END; i++)
-        {
-            rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
-        }
-
         category_of_misses = (int*)malloc(sizeof(int*) *  4);
         for(int i=0; i< 5; i++)
             category_of_misses[i] = 0;
@@ -143,6 +138,18 @@ class CacheDataModel
 
         for(int i=0; i< CLUSTER_END; i++)
             mshr_sublock_stat[i] = 0;
+        
+        for(int i=0; i< STALL_END; i++)
+            rd_queue_stalls[i] = wr_queue_stalls[i] = pf_queue_stalls[i] = mshr_queue_stalls[i] = 0;
+
+        for(int i=0; i< ADVSTAT_END; i++)
+            adv_stats[i] = 0;
+        
+        for(int i=0; i< CacheStat_End; i++)
+            cache_stat[i] = 0;
+        
+        for(int i=0; i< BASIC_END; i++)
+            rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
 
     }
 
@@ -342,6 +349,12 @@ enum O3_counter
         rob_full=0,lq_full,sq_full,
         rob_full_lq_full, rob_full_sq_full, 
         rob_full_lq_empty, rob_full_sq_empty,
+        rob_empty, rob_partially_filled,
+
+        rob_empty_lq_full, rob_empty_sq_full, // rob empty and lsq full not possible (unless you try some asyc computation)
+        rob_partially_filled_lq_full, rob_partially_filled_lq_empty,
+        rob_partially_filled_sq_full, rob_partially_filled_sq_empty,
+        rob_total_instr_exc_time, rob_total_instr_retired,
         O3_Count_End
     };
 
@@ -354,7 +367,13 @@ class O3_DataModel
     string str_o3_counter[O3_Count_End] = {
         "ROB_FULL", "LQ_FULL", "SQ_FULL",
         "ROB_FULL_LQ_FULL", "ROB_FULL_SQ_FULL",
-        "ROB_FULL_LQ_EMPTY", "ROB_FULL_SQ_EMPTY"
+        "ROB_FULL_LQ_EMPTY", "ROB_FULL_SQ_EMPTY",
+        "ROB_EMPTY", "ROB_PARTIALLY_FILLED",
+
+        "ROB_EMPTY_LQ_FULL", "ROB_EMPTY_SQ_FULL", // rob empty and lsq full not possible (unless you try some asyc computation)
+        "ROB_PARTIAL_FILLED_LQ_FULL", "ROB_PARTIAL_FILLED_LQ_EMPTY", 
+        "ROB_PARTIAL_FILLED_SQ_FULL", "ROB_PARTIAL_FILLED_SQ_EMPTY",
+        "ROB_TOTAL_INSTR_EXC_TIME", "ROB_TOTAL_INSTR_RETIRED"
     };
 
     map<uint64_t, uint64_t> instr_translation_time;

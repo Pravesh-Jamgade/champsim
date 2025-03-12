@@ -498,11 +498,41 @@ void O3_CPU::dispatch_instruction()
     else if(check_lsu_empty(SQ))
       o3_datamodel->counter[O3_counter::rob_full_sq_empty]++;
   }
+  else
+  {
+    if(ROB.empty())
+    {
+      o3_datamodel->counter[O3_counter::rob_empty]++;
+      if(check_lsu_empty(LQ))
+        o3_datamodel->counter[O3_counter::rob_full_lq_empty]++;
+      else 
+        o3_datamodel->counter[O3_counter::rob_full_lq_full]++;
+
+      if(check_lsu_empty(SQ))
+        o3_datamodel->counter[O3_counter::rob_full_sq_empty]++;
+      else
+        o3_datamodel->counter[O3_counter::rob_full_sq_full]++;
+    }
+    else // ROB partially filled
+    {
+      o3_datamodel->counter[O3_counter::rob_partially_filled]++;
+      if(check_lsu_empty(LQ))
+        o3_datamodel->counter[O3_counter::rob_partially_filled_lq_empty]++;
+      else 
+        o3_datamodel->counter[O3_counter::rob_partially_filled_lq_full]++;
+
+      if(check_lsu_empty(SQ))
+        o3_datamodel->counter[O3_counter::rob_partially_filled_sq_empty]++;
+      else
+        o3_datamodel->counter[O3_counter::rob_partially_filled_sq_full]++;
+    }
+  }
 
   // dispatch DISPATCH_WIDTH instructions into the ROB
   while (available_dispatch_bandwidth > 0 && DISPATCH_BUFFER.has_ready() && !ROB.full()) {
     // Add to ROB
     ROB.push_back(DISPATCH_BUFFER.front());
+    ROB.back().rob_timestamp = current_cycle;
     DISPATCH_BUFFER.pop_front();
     available_dispatch_bandwidth--;
   }
@@ -1268,6 +1298,10 @@ void O3_CPU::retire_rob()
 
     // release ROB entry
     DP(if (warmup_complete[cpu]) { cout << "[ROB] " << __func__ << " instr_id: " << ROB.front().instr_id << " is retired" << endl; });
+
+    int instr_exc_time = current_cycle - ROB.front().rob_timestamp;
+    o3_datamodel->counter[O3_counter::rob_total_instr_exc_time] += instr_exc_time;
+    o3_datamodel->counter[O3_counter::rob_total_instr_retired]++;
 
     ROB.pop_front();
     completed_executions--;
