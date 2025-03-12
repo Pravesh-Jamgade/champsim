@@ -152,6 +152,7 @@ void O3_DataModel::print_stats()
     {
         cout << tag << str_o3_counter[i] << ", " << counter[i] << '\n';
     }
+    cout << tag << "ROB_AVG_TIME_SPENT_BY_INSTRUCTION," << ((double)counter[O3_counter::rob_total_instr_exc_time]/counter[O3_counter::rob_total_instr_retired]) << '\n';
     cout << '\n';
 
     cout << "Number of hits in cache even when their TLB miss [or upon Page fault miss --> this is highly unlikely]\n";
