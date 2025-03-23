@@ -7,6 +7,7 @@
 #include "champsim_constants.h"
 #include "util.h"
 #include "vmem.h"
+#include <math.h>
 #include <numeric>
 
 #ifndef SANITY_CHECK
@@ -15,7 +16,7 @@
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
-extern int KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_MSHR_SUBLOCK;
+extern int KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_MSHR_SUBLOCK, KNOB_LOG_CLUSTER_SIZE;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -25,41 +26,18 @@ void CACHE::handle_fill()
   while (writes_available_this_cycle > 0) {
 
     list<PACKET>* mshr_list = &MSHR;
+    lm fill_mshr = mshr_list->begin();
 
     if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
     {
-      // no clusters
-      if(MSHR_cluster.begin() == MSHR_cluster.end())
-      {
-        return;
-      }
-      
-      // ERASE useless clusters
-      // cluster private mshr
-      mshr_list = &(MSHR_cluster.begin()->packets);
-
-      // private mshr is empty, remove that cluster and choose next one
-      while(mshr_list->empty())
-      {
-        MSHR_cluster.erase(MSHR_cluster.begin());
-        cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_DELETED]++;
-        if(MSHR_cluster.begin() == MSHR_cluster.end())
-        {
-          cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
-          return;
-        }
-        mshr_list = &(MSHR_cluster.begin()->packets);
-      }
-
       // check if any recent return data
       if(delete_ptr.size() == 0)
         return;
       
       // fifo return data take it out
       mshr_list = &(delete_ptr.front().first->packets);
+      fill_mshr = delete_ptr.front().second;
     }
-
-    lm fill_mshr = mshr_list->begin();
 
     if (fill_mshr == std::end(*mshr_list) || fill_mshr->event_cycle > current_cycle)
     {
@@ -93,16 +71,14 @@ void CACHE::handle_fill()
         ret->return_data(&(*fill_mshr));
     }
 
-    mshr_list->erase(fill_mshr);
-    if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
-      delete_ptr.erase(delete_ptr.begin());
-    writes_available_this_cycle--;
-
     cacheDataModel->unique_page_count.insert(fill_mshr->address >>LOG2_PAGE_SIZE);   
     cacheDataModel->mshr_queue[Basic::ACCESS]++;
+    
+    mshr_list->erase(fill_mshr);
+    writes_available_this_cycle--;
 
-    // cout << "here, " << (int)fill_mshr->type << '\n';
-    // cacheDataModel->type_mshr_queue[fill_mshr->type][Basic::ACCESS]++;
+    if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
+      delete_ptr.erase(delete_ptr.begin());
   }
 }
 
@@ -390,10 +366,10 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
   {
     // cluster_entry size
-    size = 8;
+    size = pow(2, KNOB_LOG_CLUSTER_SIZE);
 
     // check if cluster id match
-    cluster_size = OFFSET_BITS + OFFSET_BITS;
+    cluster_size = KNOB_LOG_CLUSTER_SIZE + OFFSET_BITS;
 
     uint64_t cid = handle_pkt.address >> cluster_size;;
     auto cluster_entry = std::find_if(MSHR_cluster.begin(), MSHR_cluster.end(), [cid](MSHR_ENTRY a){return a.address == cid;});
@@ -492,6 +468,16 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       auto it = cluster_member_entry->insert(std::end(*cluster_member_entry), handle_pkt);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
+
+      // tracking next window
+      if(curr_window.size() == MSHR_SIZE)
+      {
+        next_window.insert(end(next_window), handle_pkt);
+      }
+      else
+      {
+        curr_window.insert(end(curr_window), handle_pkt);
+      }
 
       cacheDataModel->mshr_queue[Basic::ADDED]++;
       cacheDataModel->type_mshr_queue[handle_pkt.type][Basic::ADDED]++;
@@ -718,10 +704,40 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 void CACHE::operate()
 {
+  operate_mshr();
   operate_writes();
   operate_reads();
 
   impl_prefetcher_cycle_operate();
+}
+
+void CACHE::operate_mshr()
+{
+  if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
+  {
+    // no clusters
+    if(MSHR_cluster.begin() == MSHR_cluster.end())
+    {
+      return;
+    }
+
+    // ERASE useless clusters
+    // cluster private mshr
+    list<PACKET>* mshr_list = &(MSHR_cluster.begin()->packets);
+
+    // private mshr is empty, remove that cluster and choose next one
+    while(mshr_list->empty())
+    {
+      MSHR_cluster.erase(MSHR_cluster.begin());
+      cacheDataModel->mshr_sublock_stat[SUBBLOCK::CLUSTER_DELETED]++;
+      if(MSHR_cluster.begin() == MSHR_cluster.end())
+      {
+        cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
+        return;
+      }
+      mshr_list = &(MSHR_cluster.begin()->packets);
+    }
+  }
 }
 
 void CACHE::operate_writes()
@@ -749,14 +765,13 @@ void CACHE::operate_reads()
 
   // Counting packets for requests from same pages. Making sure a window is never reused to do this counting (by marking a packet)
   if(1){
-    auto found = find_if(begin(MSHR), end(MSHR), [](PACKET p){return p.packet_flags[Flags::Packet_is_Part_of_Moving_Window]; });
-    
-    if(found == MSHR.end())
+
+    // check if window needs to update
+    auto found = find_if(curr_window.begin(), curr_window.end(), [](auto x){return x.hit_where == CACHE_ID::CACHE_ID_END;});
+
+    // if window is not waiting for some of the packets to return with data
+    if(found == curr_window.end())
     {
-      // // // LOG size too big (for window data)
-      // // backup histogram
-      // int sum = std::accumulate(cacheDataModel->MSHR_sublocking_oppo.begin(), cacheDataModel->MSHR_sublocking_oppo.end(), 0);
-      
       // bookkeeap cluster merge count freq as it will be cleared now
       for(auto cluster_freq_entry: cluster_freq)
       {
@@ -768,27 +783,26 @@ void CACHE::operate_reads()
 
       // clear prev
       cluster_freq = map<size_t, int>();
-      
-      // init new window
-      if(MSHR.size() <= 0)
-        return;
-      MSHR.back().packet_flags[Flags::Packet_is_Part_of_Moving_Window] = 1;
+
+      // update curr window
+      curr_window = next_window;
+      next_window.clear();
     }
 
-    found = find_if(begin(MSHR), end(MSHR), [](PACKET p){return p.packet_flags[Flags::Packet_is_Counted_for_Merge] == false;});
+    found = find_if(begin(curr_window), end(curr_window), [](PACKET p){return p.packet_flags[Flags::Packet_is_Counted_for_Merge] == false;});
     
     // some packets not yet marked as counted 
-    if(found != MSHR.end())
+    if(found != curr_window.end())
     {
       // page/cluster and its current merge count in this window
       
-      for(auto entry: MSHR)
+      for(auto entry: curr_window)
       {
         size_t entry_page = entry.address >> LOG2_PAGE_SIZE;//shamt by cluster_size
 
         // get list of mshr entry from same pages/cluster
         vector<PACKET*> same_page;
-        for(auto curr: MSHR)
+        for(auto curr: curr_window)
         {
           // track page (rather cluster, we can vary sublocking width by going beyond or below page size)
           size_t curr_page = curr.address >> LOG2_PAGE_SIZE;
@@ -816,7 +830,6 @@ void CACHE::operate_reads()
       }
 
     } // end marking of counted pages
-
 
   }
 
@@ -1158,7 +1171,7 @@ void CACHE::return_data(PACKET* packet)
   if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
   {
     // check if cluster id match
-    int cluster_size = OFFSET_BITS + OFFSET_BITS;
+    int cluster_size = KNOB_LOG_CLUSTER_SIZE + OFFSET_BITS;
     uint64_t cid = packet->address >> cluster_size;;
     cluster_entry = std::find_if(MSHR_cluster.begin(), MSHR_cluster.end(), [cid](MSHR_ENTRY a){return a.address == cid;});
 
@@ -1211,6 +1224,20 @@ void CACHE::return_data(PACKET* packet)
   // entries
   std::iter_swap(mshr_entry, first_unreturned);
 
+  // update returned data in curr window
+  auto found_x = find_if(curr_window.begin(), curr_window.end(), eq_addr<PACKET>(mshr_entry->address, OFFSET_BITS));
+  if(found_x != curr_window.end())
+  {
+    found_x->hit_where = mshr_entry->hit_where;
+  }
+
+  // update returned data in next window
+  found_x = find_if(next_window.begin(), next_window.end(), eq_addr<PACKET>(mshr_entry->address, OFFSET_BITS));
+  if(found_x != next_window.end())
+  {
+    found_x->hit_where = mshr_entry->hit_where;
+  }
+
   if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
   {
     cluster_entry->latest_timestamp = current_cycle;
@@ -1227,7 +1254,7 @@ void CACHE::return_data(PACKET* packet)
     //   }
     // }
     // MSHR_cluster.emplace(ii, copied);
-
+    mshr_entry = std::find_if(cluster_member_entry->begin(), cluster_member_entry->end(), eq_addr<PACKET>(packet->address, OFFSET_BITS));
     delete_ptr.push_back({cluster_entry, mshr_entry});
   }
 }

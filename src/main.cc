@@ -38,7 +38,7 @@ extern std::array<champsim::operable*, NUM_OPERABLES> operables;
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE, KNOB_TTP, KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_STTMRAM_STLB, KNOB_ENABLE_PT_OPTIMIZATION;
-extern int KNOB_MSHR_SUBLOCK;
+extern int KNOB_MSHR_SUBLOCK, KNOB_LOG_CLUSTER_SIZE;
 
 std::vector<tracereader*> traces;
 
@@ -433,6 +433,7 @@ int main(int argc, char** argv)
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_ENABLE_PT_OPTIMIZATION = iniReader->GetInteger("PageTable", "ENABLE_OPTIMIZATION", 0);
   KNOB_MSHR_SUBLOCK = iniReader->GetInteger("MSHR", "MSHR_SUBBLOCKING", 0);
+  KNOB_LOG_CLUSTER_SIZE = iniReader->GetInteger("MSHR", "MSHR_LOG_CLUSTER_SIZE", 3);
 
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
@@ -441,6 +442,7 @@ int main(int argc, char** argv)
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << "ENABLE_PT_OPT="<<KNOB_ENABLE_PT_OPTIMIZATION<<'\n';
   std::cout << "MSHR_SUBBLOCKING="<<KNOB_MSHR_SUBLOCK<<'\n';
+  std::cout << "- MSHR_LOG_CLUSTER_SIZE="<<KNOB_LOG_CLUSTER_SIZE<<'\n';
   std::cout << '\n';
 
   // overwrite relevant to extra settings

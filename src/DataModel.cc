@@ -10,11 +10,7 @@ int CacheDataModel::get_sublock_opp_index(int val)
         if(arr[i-1] < val && val <= arr[i])
             return i;
     }
-    if(val < arr[10])
-    {
-        cout << "merge range invalid\n";
-        exit(0);
-    }
+    
     return MERGE_RANGE;
 }
 

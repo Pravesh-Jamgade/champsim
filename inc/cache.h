@@ -31,7 +31,12 @@ public:
   CacheDataModel* cacheDataModel;
   list<BLOCK>* reuse_history;
   list<BLOCK> fa_array;
+
+  // window calc
+  list<PACKET> curr_window, next_window;
   map<size_t, int> cluster_freq; //cluster_freq valid for a window
+
+  void operate_mshr();
 
   bool cache_is[CACHE_ID_END] = {false};
   CACHE_ID cache_id = CACHE_ID::CACHE_ID_END;

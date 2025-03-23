@@ -16,5 +16,6 @@ int KNOB_ENABLE_PT_OPTIMIZATION = 1; // default is allow use of opt ptw; works f
 
 // MSHR Sublocking
 int KNOB_MSHR_SUBLOCK = 0;
+int KNOB_LOG_CLUSTER_SIZE = 0;
 
 #endif
