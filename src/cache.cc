@@ -19,6 +19,19 @@ extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
+BLOCK* CACHE::tag_search(size_t set, PACKET packet)
+{
+  auto set_begin = std::next(std::begin(block), set * NUM_WAY);
+  auto set_end = std::next(set_begin, NUM_WAY);
+  auto first_inv = std::find_if(set_begin, set_end, eq_addr<BLOCK>(packet.address, OFFSET_BITS));
+  size_t way = std::distance(set_begin, first_inv);
+  if(way != NUM_WAY)
+  {
+    return first_inv->fptr;
+  }
+  return nullptr;
+}
+
 void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
@@ -37,8 +50,10 @@ void CACHE::handle_fill()
     auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
     uint32_t way = std::distance(set_begin, first_inv);
     if (way == NUM_WAY)
+    {
       way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                          fill_mshr->type);
+    }
 
     bool success = filllike_miss(set, way, *fill_mshr);
     if (!success)
@@ -110,8 +125,10 @@ void CACHE::handle_writeback()
         auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
         way = std::distance(set_begin, first_inv);
         if (way == NUM_WAY)
+        {
           way = impl_replacement_find_victim(handle_pkt.cpu, handle_pkt.instr_id, set, &block.data()[set * NUM_WAY], handle_pkt.ip, handle_pkt.address,
-                                             handle_pkt.type);
+                                             handle_pkt.type);                               
+        }
 
         success = filllike_miss(set, way, handle_pkt);
       }
@@ -134,6 +151,8 @@ void CACHE::handle_writeback()
 
 void CACHE::handle_read()
 {
+  // Do not edit
+  // Special Translation Queue 
   while (reads_available_this_cycle > 0 && KNOB_TRANSLATION_QUEUE) {
     if (!TQ.has_ready())
     {
@@ -150,6 +169,8 @@ void CACHE::handle_read()
 
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
+
+    BLOCK* fptr = tag_search(set, handle_pkt);
 
     if (way < NUM_WAY) // HIT
     {
@@ -520,6 +541,32 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     if (handle_pkt.type == PREFETCH)
       pf_fill++;
+
+    if(cache_is[CACHE_ID::IS_LLC])
+    {
+      // there will be hole if intermediate block in data_arr is invalidated, filled with help of tail block
+      if(fill_block.valid)
+      {
+        // get tail
+        BLOCK* tail = vway_handle_tag_replacement();
+        
+        BLOCK* tails_parent = tail->bptr;
+        // hole 
+        BLOCK* hole = fill_block.fptr;
+        // assgin new hole to tail 
+        tails_parent->fptr = hole;
+        hole->bptr = tails_parent;
+
+        // invalidate old tail
+        tail->bptr = nullptr;
+        //tail is now moved indicated by vway_tail
+      }
+
+      // pointer to data_array block // returns queue head
+      fill_block.fptr = vway_get_fptr();
+      // set the current block of tag_array (i.e. block[set*NUM_WAY + way]) as bptr for data_array block
+      fill_block.fptr->bptr = &block[NUM_WAY*set + way];
+    }
 
     fill_block.valid = true;
     fill_block.prefetch = (handle_pkt.type == PREFETCH && handle_pkt.pf_origin_level == fill_level);
@@ -996,4 +1043,16 @@ void CACHE::print_deadlock()
   } else {
     std::cout << NAME << " MSHR empty" << std::endl;
   }
+}
+
+BLOCK* CACHE::vway_handle_tag_replacement()
+{
+  vector<BLOCK>::iterator temp = vway_tail;
+  // next tail is at end, move back to begin()
+  if(vway_tail+1 == data_arr.end())
+  {
+    vway_tail = data_arr.begin();
+  }
+  else vway_tail++;
+  return &*temp;
 }

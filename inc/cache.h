@@ -26,6 +26,11 @@ public:
   CacheDataModel* cacheDataModel;
   list<BLOCK>* reuse_history;
 
+  // TODO: dummy, not storing data, except counts of writes
+  std::vector<BLOCK> data_arr{NUM_SET * NUM_WAY};
+  vector<BLOCK>::iterator vway_head;
+  vector<BLOCK>::iterator vway_tail;
+
   bool cache_is[CACHE_ID_END] = {false};
 
   uint32_t cpu;
@@ -101,11 +106,53 @@ public:
 
   void* getObject(){return this;}
 
+  // v-way
+  BLOCK* vway_handle_tag_replacement();
+  BLOCK* vway_get_fptr()
+  {
+    vector<BLOCK>::iterator temp;
+    if(vway_head == data_arr.end() && vway_tail == data_arr.end())
+    {
+      vway_head = data_arr.begin();
+      vway_tail = data_arr.begin();
+      temp = vway_head;
+    }
+    else
+    {
+      temp = vway_head + 1;
+      // no fptr
+      if(temp == data_arr.end())
+      {
+        temp = data_arr.begin();
+      }
+
+      if(temp == vway_tail)
+      {
+        // replacement
+        // invaid bptr (i.e. block[NUM_WAY*set + way]) from data_array
+        BLOCK* tag_block = vway_tail->bptr;
+        tag_block->valid = 0;
+
+        // next tail is at end, move back to begin()
+        if(vway_tail+1 == data_arr.end())
+        {
+          vway_tail = data_arr.begin();
+        }
+        else vway_tail++;
+      }
+    }
+
+    BLOCK* ret= &*temp;
+    return ret;
+  }
+
   void reset_datamodel()
   {
     delete cacheDataModel;
     cacheDataModel = new CacheDataModel(NAME, cpu, NUM_SET, NUM_WAY);
   }
+
+  BLOCK* tag_search(size_t set, PACKET packet);
 
   bool func_set_full(size_t set)
   {
@@ -166,6 +213,9 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+    vway_head = data_arr.end();
+    vway_tail = data_arr.end();
+    
 
     reuse_history = new list<BLOCK>[NUM_SET];
     for(int i=0; i< NUM_SET; i++)

@@ -28,6 +28,12 @@ public:
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
 
   int came_from_request = NUM_TYPES; // default: invalid block
+
+  // for existing variable block[set*NUM_WAY + way] array i.e our tag array
+  BLOCK* fptr =nullptr;
+
+  // for data_array 
+  BLOCK* bptr =nullptr;
 };
 
 class MemoryRequestConsumer
