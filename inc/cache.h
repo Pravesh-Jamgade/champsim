@@ -253,7 +253,7 @@ public:
       set_avg_write[i] = 0;
     }
 
-    for(int i=0; i< 10; i++)
+    for(int i=0; i< NUM_WAY*NUM_SET; i++)
     {
       data_arr.push_back(BLOCK());
       data_arr.back().bid = i;
