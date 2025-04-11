@@ -14,7 +14,7 @@
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
-extern int KNOB_STLB_DO_NOT_TRACK_MISS;
+extern int KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_VWAY;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -110,6 +110,11 @@ void CACHE::handle_writeback()
 
       if(fill_block.came_from_request == PREFETCH)
         prefetch_hit_histo[set*NUM_WAY+way][WRITEBACK_HIT]++;
+
+      if(KNOB_VWAY && cache_is[CACHE_ID::IS_LLC])
+        fill_block.fptr->data_write++;
+      fill_block.data_write++;
+
     } else // MISS
     {
       bool success;
@@ -525,10 +530,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     if(track_reuse)
     {
-      if(reuse_history[set].size() >= 4*NUM_WAY)
+      if(reuse_history[set].size() >= 4*NUM_WAY-1)
         reuse_history[set].pop_front();
-      else 
-        reuse_history[set].push_back(block[set*NUM_SET + way]);
+      reuse_history[set].push_back(block[set*NUM_WAY + way]);
     }
 
     if (ever_seen_data)
@@ -542,7 +546,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     if (handle_pkt.type == PREFETCH)
       pf_fill++;
 
-    if(cache_is[CACHE_ID::IS_LLC])
+    if(cache_is[CACHE_ID::IS_LLC] && KNOB_VWAY)
     {
       // there will be hole if intermediate block in data_arr is invalidated, filled with help of tail block
       if(fill_block.valid)
@@ -563,7 +567,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       }
 
       // pointer to data_array block // returns queue head
-      fill_block.fptr = vway_get_fptr();
+      BLOCK* ss = vway_get_fptr();
+
+      ss->data_write++;
+
+      fill_block.fptr = ss;
       // set the current block of tag_array (i.e. block[set*NUM_WAY + way]) as bptr for data_array block
       fill_block.fptr->bptr = &block[NUM_WAY*set + way];
     }
@@ -606,6 +614,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     cacheDataModel->cache_stat[CacheStat::Prefetch_Write]++;
   
   cacheDataModel->cache_stat[CacheStat::Total_Write]++;
+  fill_block.data_write++;
 
   return true;
 }
@@ -1055,4 +1064,47 @@ BLOCK* CACHE::vway_handle_tag_replacement()
   }
   else vway_tail++;
   return &*temp;
+}
+
+BLOCK* CACHE::vway_get_fptr()
+{
+  vector<BLOCK>::iterator temp;
+  if(vway_head == data_arr.end() && vway_tail == data_arr.end())
+  {
+    vway_head = data_arr.begin();
+    vway_tail = data_arr.begin();
+    temp = vway_head;
+  }
+  else
+  {
+    temp = vway_head + 1;
+    // no fptr
+    if(temp == data_arr.end())
+    {
+      vway_head = temp = data_arr.begin();
+    }
+
+    if(temp == vway_tail)
+    {
+
+      // replacement
+      // invaid bptr (i.e. block[NUM_WAY*set + way]) from data_array
+      BLOCK* tag_block = vway_tail->bptr;
+      tag_block->valid = 0;
+
+      // next tail is at end, move back to begin()
+      if(vway_tail+1 == data_arr.end())
+      {
+        vway_tail = data_arr.begin();
+      }
+      else vway_tail++;
+
+    }
+
+  }
+
+  vway_head = temp;
+
+  BLOCK* ret= &*temp;
+  return ret;
 }

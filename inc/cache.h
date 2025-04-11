@@ -17,6 +17,8 @@
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
+extern int KNOB_VWAY;
+
 extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
@@ -27,9 +29,11 @@ public:
   list<BLOCK>* reuse_history;
 
   // TODO: dummy, not storing data, except counts of writes
-  std::vector<BLOCK> data_arr{NUM_SET * NUM_WAY};
+  std::vector<BLOCK> data_arr;
   vector<BLOCK>::iterator vway_head;
   vector<BLOCK>::iterator vway_tail;
+  int* set_avg_write;
+  int* set_total_write;
 
   bool cache_is[CACHE_ID_END] = {false};
 
@@ -108,43 +112,7 @@ public:
 
   // v-way
   BLOCK* vway_handle_tag_replacement();
-  BLOCK* vway_get_fptr()
-  {
-    vector<BLOCK>::iterator temp;
-    if(vway_head == data_arr.end() && vway_tail == data_arr.end())
-    {
-      vway_head = data_arr.begin();
-      vway_tail = data_arr.begin();
-      temp = vway_head;
-    }
-    else
-    {
-      temp = vway_head + 1;
-      // no fptr
-      if(temp == data_arr.end())
-      {
-        temp = data_arr.begin();
-      }
-
-      if(temp == vway_tail)
-      {
-        // replacement
-        // invaid bptr (i.e. block[NUM_WAY*set + way]) from data_array
-        BLOCK* tag_block = vway_tail->bptr;
-        tag_block->valid = 0;
-
-        // next tail is at end, move back to begin()
-        if(vway_tail+1 == data_arr.end())
-        {
-          vway_tail = data_arr.begin();
-        }
-        else vway_tail++;
-      }
-    }
-
-    BLOCK* ret= &*temp;
-    return ret;
-  }
+  BLOCK* vway_get_fptr();
 
   void reset_datamodel()
   {
@@ -161,6 +129,42 @@ public:
     auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
     uint32_t way = std::distance(set_begin, first_inv);
     return way == NUM_WAY;
+  }
+
+  void func_write_variation(std::vector<BLOCK> temp_arr)
+  {
+    int intra_set_wv = 0;
+    int inter_set_wv = 0;
+    int total_avg_write = 0;
+    for(int i=0; i< NUM_SET; i++)
+    {
+      int per_set = 0;
+      for(int j=0; j< NUM_WAY; j++)
+      {
+        per_set += temp_arr[i*NUM_SET + j].data_write;
+      }
+
+      set_total_write[i] = per_set;
+      set_avg_write[i] = per_set/NUM_WAY;
+
+      for(int k=0; k< NUM_WAY; k++)
+      {
+        int diff = abs(set_avg_write[i] - temp_arr[i*NUM_SET + k].data_write);
+        intra_set_wv += diff * diff;
+      }
+
+      total_avg_write += per_set;
+    }
+    total_avg_write /= (NUM_SET * NUM_WAY);
+
+    for(int i=0; i< NUM_SET; i++)
+    {
+      int diff = abs(set_avg_write[i] - total_avg_write);
+      inter_set_wv += NUM_WAY * diff * diff;
+    }
+
+    cout << "inter_set write variation, " << inter_set_wv << '\n';
+    cout << "intra_set write variation, " << intra_set_wv << '\n';
   }
 
   void print_logs()
@@ -196,6 +200,32 @@ public:
 
       cout << "prefetch block read access variance, " << rd_var << '\n';
       cout << "prefetch block wr access variance, " << wr_var << '\n';
+
+      if(cache_is[CACHE_ID::IS_LLC])
+      {
+        int total_data_array_write = 0;
+        if(KNOB_VWAY)
+        {
+          for(int i=0; i< NUM_WAY * NUM_SET; i++)
+          {
+            total_data_array_write += data_arr[i].data_write;
+          }
+        }
+        else
+        {
+          for(int i=0; i< NUM_WAY * NUM_SET; i++)
+          {
+            total_data_array_write += block[i].data_write;
+          }
+        }
+        cout << "data_arr write, " << total_data_array_write << '\n';
+
+        cout << "data_arr write_variation\n";
+        if(KNOB_VWAY)
+          func_write_variation(data_arr);
+        else
+          func_write_variation(block);
+      }
     }
   }
 
@@ -213,9 +243,24 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+
+    set_total_write = (int*)malloc(sizeof(int)*NUM_SET);
+    set_avg_write = (int*)malloc(sizeof(int)*NUM_SET);
+
+    for(int i=0; i< NUM_SET; i++)
+    {
+      set_total_write[i] = 0;
+      set_avg_write[i] = 0;
+    }
+
+    for(int i=0; i< 10; i++)
+    {
+      data_arr.push_back(BLOCK());
+      data_arr.back().bid = i;
+    }
+
     vway_head = data_arr.end();
     vway_tail = data_arr.end();
-    
 
     reuse_history = new list<BLOCK>[NUM_SET];
     for(int i=0; i< NUM_SET; i++)

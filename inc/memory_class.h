@@ -34,6 +34,11 @@ public:
 
   // for data_array 
   BLOCK* bptr =nullptr;
+
+  int bid=-1;
+
+  int data_write = 0;
+
 };
 
 class MemoryRequestConsumer
