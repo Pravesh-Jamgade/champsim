@@ -561,6 +561,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         tails_parent->fptr = hole;
         hole->bptr = tails_parent;
 
+        hole->data_write++;
         // invalidate old tail
         tail->bptr = nullptr;
         //tail is now moved indicated by vway_tail
