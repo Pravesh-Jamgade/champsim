@@ -141,7 +141,7 @@ public:
       int per_set = 0;
       for(int j=0; j< NUM_WAY; j++)
       {
-        per_set += temp_arr[i*NUM_SET + j].data_write;
+        per_set += temp_arr[i*NUM_WAY + j].data_write;
       }
 
       set_total_write[i] = per_set;
@@ -149,7 +149,7 @@ public:
 
       for(int k=0; k< NUM_WAY; k++)
       {
-        int diff = abs(set_avg_write[i] - temp_arr[i*NUM_SET + k].data_write);
+        int diff = abs(set_avg_write[i] - temp_arr[i*NUM_WAY + k].data_write);
         intra_set_wv += diff * diff;
       }
 
