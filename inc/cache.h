@@ -34,6 +34,7 @@ public:
   vector<BLOCK>::iterator vway_tail;
   int* set_avg_write;
   int* set_total_write;
+  enum VWAY_HOLE_OPT{LEAVE_HOLE=0, INC_TO_HOLE, TAIL_TO_HOLE};
 
   bool cache_is[CACHE_ID_END] = {false};
 

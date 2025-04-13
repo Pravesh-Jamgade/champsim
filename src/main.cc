@@ -40,7 +40,8 @@ extern std::array<champsim::operable*, NUM_OPERABLES> operables;
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
-extern int KNOB_STTMRAM_STLB, KNOB_VWAY;
+extern int KNOB_STTMRAM_STLB;
+extern int KNOB_VWAY, KNOB_ENABLE_VWAY_HOLE_OPT;
 
 std::vector<tracereader*> traces;
 
@@ -434,6 +435,7 @@ int main(int argc, char** argv)
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_VWAY = iniReader->GetInteger("VWAY", "ENABLE_VWAY", 0);
+  KNOB_ENABLE_VWAY_HOLE_OPT = iniReader->GetInteger("VWAY", "ENABLE_VWAY_HOLE_OPT", 0);
 
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';

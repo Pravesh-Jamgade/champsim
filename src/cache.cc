@@ -14,7 +14,7 @@
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
-extern int KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_VWAY;
+extern int KNOB_STLB_DO_NOT_TRACK_MISS, KNOB_VWAY, KNOB_ENABLE_VWAY_HOLE_OPT;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -548,27 +548,43 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     if(cache_is[CACHE_ID::IS_LLC] && KNOB_VWAY)
     {
+      // hole 
+      BLOCK* hole = fill_block.fptr;
+
       // there will be hole if intermediate block in data_arr is invalidated, filled with help of tail block
       if(fill_block.valid)
       {
-        // get tail
-        BLOCK* tail = vway_handle_tag_replacement();
-        
-        BLOCK* tails_parent = tail->bptr;
-        // hole 
-        BLOCK* hole = fill_block.fptr;
-        // assgin new hole to tail 
-        tails_parent->fptr = hole;
-        hole->bptr = tails_parent;
-
-        hole->data_write++;
-        // invalidate old tail
-        tail->bptr = nullptr;
-        //tail is now moved indicated by vway_tail
+        if(KNOB_ENABLE_VWAY_HOLE_OPT == VWAY_HOLE_OPT::TAIL_TO_HOLE)
+        {
+          // get tail
+          BLOCK* tail = vway_handle_tag_replacement();
+          BLOCK* tails_parent = tail->bptr;
+          // invalidate old tail
+          tail->bptr = nullptr;
+          // assgin new hole to tail 
+          tails_parent->fptr = hole;
+          hole->bptr = tails_parent;
+          hole->data_write++;
+          //tail is now moved indicated by vway_tail
+        }
+        else if(KNOB_ENABLE_VWAY_HOLE_OPT == VWAY_HOLE_OPT::LEAVE_HOLE)
+        {
+          fill_block.fptr = nullptr;
+          hole->bptr = nullptr;
+        }
       }
 
       // pointer to data_array block // returns queue head
-      BLOCK* ss = vway_get_fptr();
+      BLOCK* ss;
+      if(hole != nullptr && KNOB_ENABLE_VWAY_HOLE_OPT == VWAY_HOLE_OPT::INC_TO_HOLE)
+      {
+        ss = hole;
+      }
+      else
+      {
+        ss = vway_get_fptr();
+      }
+      
 
       ss->data_write++;
 
