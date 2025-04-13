@@ -443,6 +443,7 @@ int main(int argc, char** argv)
   std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << "ENABLE_VWAY="<<KNOB_VWAY<<'\n';
+  std::cout << "-ENABLE_VWAY_HOLE_OPT="<<KNOB_ENABLE_VWAY_HOLE_OPT<<'\n';
   std::cout << '\n';
 
   // overwrite relevant to extra settings
