@@ -469,6 +469,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   uint64_t evicting_address = 0;
 
   bool track_reuse = false;
+  bool set_full = func_set_full(set);
 
   if (!bypass) {
     if (evicting_dirty) 
@@ -528,11 +529,40 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       }
     }
 
+    // check for compulsory miss
+    if(!fill_block.valid)
+      cacheDataModel->category_of_misses[MISS::COM]++;
+
+    // check for conflict misses && capacity misses
+    if(set_full)
+    {
+      // counting the number of times set has seen conflict and as a result a dirty block is sent-back
+      cacheDataModel->hist_set_conflict_events[set]++;
+      cacheDataModel->category_of_misses[MISS::CONF]++;
+
+      // checking for capacity miss
+      {
+        auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, OFFSET_BITS));
+        if(it!=fa_array.end())
+        {
+          cacheDataModel->category_of_misses[MISS::CAP]++;
+        }
+      }
+    }
+
     if(track_reuse)
     {
       if(reuse_history[set].size() >= 4*NUM_WAY-1)
         reuse_history[set].pop_front();
       reuse_history[set].push_back(block[set*NUM_WAY + way]);
+
+      if(fa_array.size() >= FA_SIZE)
+        fa_array.pop_back();
+      auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address, OFFSET_BITS));
+      if(found_out==fa_array.end())
+      {
+        fa_array.push_back(block[set*NUM_WAY + way]);
+      }
     }
 
     if (ever_seen_data)

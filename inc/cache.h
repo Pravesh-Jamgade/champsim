@@ -37,6 +37,7 @@ public:
   enum VWAY_HOLE_OPT{LEAVE_HOLE=0, INC_TO_HOLE, TAIL_TO_HOLE};
 
   bool cache_is[CACHE_ID_END] = {false};
+  list<BLOCK> fa_array;
 
   uint32_t cpu;
   const std::string NAME;
@@ -72,6 +73,7 @@ public:
   uint64_t total_miss_latency = 0;
 
   int **prefetch_hit_histo;
+  int FA_SIZE =0;
 
   // functions
   int add_rq(PACKET* packet) override;
@@ -298,6 +300,8 @@ public:
     {
       cache_is[CACHE_ID::IS_ITLB] = true;
     }
+
+    FA_SIZE = NUM_WAY * NUM_SET;
   }
 
   ~CACHE()

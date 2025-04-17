@@ -78,6 +78,14 @@ static string CacheStat_str[CacheStat::CacheStat_End] = {
 
 enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_STLB, IS_DTLB, IS_ITLB, CACHE_ID_END};
 
+enum MISS
+{
+    COM=0,
+    CONF,
+    CAP,
+    MISS_END
+};
+
 class CacheDataModel
 {
     public:
@@ -100,6 +108,16 @@ class CacheDataModel
         {
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
         }
+
+        category_of_misses = (int*)malloc(sizeof(int*) *  4);
+        for(int i=0; i< 5; i++)
+            category_of_misses[i] = 0;
+        
+    }
+
+    ~CacheDataModel()
+    {
+        delete category_of_misses;
     }
 
     string name;
@@ -119,6 +137,7 @@ class CacheDataModel
 
     map<uint64_t,uint64_t> hist_set_conflict_events;  
     map<int,int> hist_reuse_distance;
+    int* category_of_misses;
 
     void print_stats()
     {
@@ -172,6 +191,11 @@ class CacheDataModel
             cout << tag << CacheStat_str[i] << ", " << cache_stat[i] << '\n';
         }
 
+        cout << '\n';
+
+        cout << tag << "Capacity miss, " << category_of_misses[MISS::CAP] << '\n';
+        cout << tag << "Compulsory miss, " << category_of_misses[MISS::COM] << '\n';
+        cout << tag << "Conflict miss, " << category_of_misses[MISS::CONF] << '\n';
         cout << '\n';
 
         cout << "readmiss --> mshr_full\n";
