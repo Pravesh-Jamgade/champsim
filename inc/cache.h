@@ -166,6 +166,7 @@ public:
 
     cout << "inter_set write variation, " << inter_set_wv << '\n';
     cout << "intra_set write variation, " << intra_set_wv << '\n';
+    cout << "total avg write per block, " << total_avg_write << '\n';
   }
 
   void print_logs()
