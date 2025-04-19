@@ -599,6 +599,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         }
         else if(KNOB_ENABLE_VWAY_HOLE_OPT == VWAY_HOLE_OPT::LEAVE_HOLE)
         {
+          // cout << "hole,"<<&*hole<<'\n';
           fill_block.fptr = nullptr;
           hole->bptr = nullptr;
         }
@@ -621,6 +622,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       fill_block.fptr = ss;
       // set the current block of tag_array (i.e. block[set*NUM_WAY + way]) as bptr for data_array block
       fill_block.fptr->bptr = &block[NUM_WAY*set + way];
+
+      if(hole!=nullptr  &&   (&*vway_tail == hole))
+      {
+        vway_tail++;
+      }
+      // cout << "after tag_block:"<<&fill_block<<", fptr:"<<&*fill_block.fptr<<", head:"<<&*vway_head<<", tail:"<<&*vway_tail<<'\n';
     }
 
     fill_block.valid = true;
@@ -1134,10 +1141,11 @@ BLOCK* CACHE::vway_get_fptr()
     if(temp == vway_tail)
     {
 
+      // cout << &*vway_head << ", " << &*vway_tail << '\n';
       // replacement
       // invaid bptr (i.e. block[NUM_WAY*set + way]) from data_array
       BLOCK* tag_block = vway_tail->bptr;
-      tag_block->valid = 0;
+      // tag_block->valid = 0;
 
       // next tail is at end, move back to begin()
       if(vway_tail+1 == data_arr.end())
