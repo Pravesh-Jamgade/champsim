@@ -148,14 +148,14 @@ void O3_DataModel::print_stats()
     cout << tag << "total ptw accesses," << access[LoadType::Translation_Using_PTW] << '\n'; 
     cout << tag << "total replay accesses," << access[LoadType::Replay] << '\n'; 
     cout << tag << "total regular accesses," << access[LoadType::Regular] << '\n'; 
-    cout << tag << "total ptw cycles," << access[LoadType::Translation_Using_PTW] << '\n'; 
-    cout << tag << "total replay cycles," << access[LoadType::Replay] << '\n'; 
-    cout << tag << "total regular cycles," << access[LoadType::Regular] << '\n'; 
+    cout << tag << "total ptw cycles," << data_access_time[LoadType::Translation_Using_PTW] << '\n'; 
+    cout << tag << "total replay cycles," << data_access_time[LoadType::Replay] << '\n'; 
+    cout << tag << "total regular cycles," << data_access_time[LoadType::Regular] << '\n'; 
     cout << '\n';
 
     cout << "ROB stalls for replay, regular till the ROB entry removed\n";
-    cout << tag << "total rob stall replay access count," << rob_stall[LoadType::Replay] << '\n';
-    cout << tag << "total rob stall regular access count," << rob_stall[LoadType::Regular] << '\n';
+    cout << tag << "total rob stall replay access count," << rob_access[LoadType::Replay] << '\n';
+    cout << tag << "total rob stall regular access count," << rob_access[LoadType::Regular] << '\n';
     cout << tag << "total rob stall replay cycles," << rob_stall[LoadType::Replay] << '\n';
     cout << tag << "total rob stall regular cycles," << rob_stall[LoadType::Regular] << '\n';
     cout << '\n';

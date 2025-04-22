@@ -1366,7 +1366,7 @@ void O3_CPU::retire_rob()
     o3_datamodel->counter[O3_counter::rob_total_instr_exc_time] += instr_exc_time;
     o3_datamodel->counter[O3_counter::rob_total_instr_retired]++;
 
-    if(ROB.front().is_memory)
+    if(ROB.front().is_memory && ROB.front().rob_complete_timestamp != std::numeric_limits<int>::max())
     {
       int rob_head_stall = (current_cycle - ROB.front().rob_complete_timestamp);
       if(ROB.front().access_replay_or_regular == LoadType::Replay)

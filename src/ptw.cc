@@ -316,6 +316,8 @@ void PageTableWalker::return_data(PACKET* packet)
 {
   for (auto& mshr_entry : MSHR) {
     if (eq_addr<PACKET>{packet->address, LOG2_BLOCK_SIZE}(mshr_entry)) {
+      mshr_entry.packet_flags[Flags::TLB_Miss_Address] = packet->packet_flags[Flags::TLB_Miss_Address];
+      mshr_entry.packet_flags[Flags::Page_Fault_Address] = packet->packet_flags[Flags::Page_Fault_Address];
       mshr_entry.event_cycle = current_cycle;
       mshr_entry.hit_where = packet->hit_where;
 
