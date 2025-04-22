@@ -764,7 +764,7 @@ void CACHE::operate_reads()
   VAPQ.operate();
 
   // Counting packets for requests from same pages. Making sure a window is never reused to do this counting (by marking a packet)
-  if(1){
+  if(0){
 
     // check if window needs to update
     auto found = find_if(curr_window.begin(), curr_window.end(), [](auto x){return x.hit_where == CACHE_ID::CACHE_ID_END;});
@@ -1224,22 +1224,22 @@ void CACHE::return_data(PACKET* packet)
   // entries
   std::iter_swap(mshr_entry, first_unreturned);
 
-  // update returned data in curr window
-  auto found_x = find_if(curr_window.begin(), curr_window.end(), eq_addr<PACKET>(mshr_entry->address, OFFSET_BITS));
-  if(found_x != curr_window.end())
-  {
-    found_x->hit_where = mshr_entry->hit_where;
-  }
-
-  // update returned data in next window
-  found_x = find_if(next_window.begin(), next_window.end(), eq_addr<PACKET>(mshr_entry->address, OFFSET_BITS));
-  if(found_x != next_window.end())
-  {
-    found_x->hit_where = mshr_entry->hit_where;
-  }
-
   if(cache_id == CACHE_ID::IS_L1D && KNOB_MSHR_SUBLOCK)
   {
+    // update returned data in curr window
+    auto found_x = find_if(curr_window.begin(), curr_window.end(), eq_addr<PACKET>(mshr_entry->address, OFFSET_BITS));
+    if(found_x != curr_window.end())
+    {
+      found_x->hit_where = mshr_entry->hit_where;
+    }
+
+    // update returned data in next window
+    found_x = find_if(next_window.begin(), next_window.end(), eq_addr<PACKET>(mshr_entry->address, OFFSET_BITS));
+    if(found_x != next_window.end())
+    {
+      found_x->hit_where = mshr_entry->hit_where;
+    }
+    
     cluster_entry->latest_timestamp = current_cycle;
     // if // iter_swap(cluster_entry, MSHR_cluster.begin());
 

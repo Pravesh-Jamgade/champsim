@@ -27,7 +27,11 @@
 
 struct ooo_model_instr {
 
+  bool packet_flag_tlb_miss = 0;
   int rob_timestamp = std::numeric_limits<int>::max();
+  int rob_complete_timestamp = std::numeric_limits<int>::max();
+  int access_replay_or_regular = -1; //  replay = 0 and regular = 1
+  
   int chain_id = -1;
   int branch_id = -1;
   

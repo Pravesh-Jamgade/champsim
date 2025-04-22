@@ -39,7 +39,11 @@ public:
     int add_rq(PACKET* packet) override {
         if (all_warmup_complete <= NUM_CPUS) {
             for (auto ret : packet->to_return)
+            {
+                packet->hit_where = CACHE_ID::IS_DRAM;
                 ret->return_data(packet);
+            }
+                
 
             return -1; // Fast-forward
         }
@@ -182,7 +186,10 @@ public:
                                     eq_addr<PACKET>(addr, LOG2_BLOCK_SIZE));
         if (rq_pkt != std::end(RQ)) {
             for (auto ret : rq_pkt->to_return) 
+            {
+                rq_pkt->hit_where = CACHE_ID::IS_DRAM;
                 ret->return_data(&(*rq_pkt));
+            }
             *rq_pkt = {};
         }
         else {

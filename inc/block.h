@@ -20,6 +20,7 @@ enum Flags
   Page_Fault_Address, // Address is part of Physical Page which caused Page fault
   Packet_is_Part_of_Moving_Window, // To assit in counting the number of packets within a virtual kind of window. As event cycle may cause counting again and again.
   Packet_is_Counted_for_Merge,
+  PTW_Packet,
   Packet_Flags_End
 };
 

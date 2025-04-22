@@ -12,7 +12,10 @@ enum CACHE_ID{
     IS_L1D,
     IS_L2,
     IS_LLC, 
+    IS_DRAM,
     CACHE_ID_END
 };
+
+typedef long long ll;
 
 #endif

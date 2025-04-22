@@ -388,6 +388,9 @@ void O3_CPU::do_fetch_instruction(champsim::circular_buffer<ooo_model_instr>::it
   fetch_packet.asid[0] = 0;
   fetch_packet.asid[1] = 0;
   fetch_packet.to_return = {&L1I_bus};
+
+  fetch_packet.packet_flags[Flags::TLB_Miss_Address] = begin->packet_flag_tlb_miss;
+
   for (; begin != end; ++begin)
     fetch_packet.instr_depend_on_me.push_back(begin);
 
@@ -1125,7 +1128,14 @@ void O3_CPU::handle_memory_return()
           o3_datamodel->count_instr_tlbmiss += itlb_entry.packet_flags[Flags::TLB_Miss_Address];
           o3_datamodel->count_instr_pagefault += itlb_entry.packet_flags[Flags::Page_Fault_Address];
           uint64_t translation_time = current_cycle - itlb_entry.translation_time;
-          o3_datamodel->instr_translation_time[translation_time]++;
+
+          // // if translation has accessed IS_DRAM
+          // if(itlb_entry.packet_flags[Flags::TLB_Miss_Address] && itlb_entry.hit_where == CACHE_ID::IS_DRAM)
+          // {
+          //   o3_datamodel->instr_translation_time[LoadType::] += translation_time;
+          //   it->packet_flag_tlb_miss = 1;
+          // }
+          
         }
         available_fetch_bandwidth--;
       }
@@ -1155,10 +1165,20 @@ void O3_CPU::handle_memory_return()
           available_fetch_bandwidth--;
 
           uint64_t access_time = current_cycle - l1i_entry.access_time;
-          o3_datamodel->icache_access_time[access_time]++;
-
-          if(l1i_entry.packet_flags[Flags::TLB_Miss_Address])
-            o3_datamodel->tlbmiss_cachehit[l1i_entry.hit_where]++;
+          
+          // // if replay or regular has accessed IS_DRAM
+          // if(l1i_entry.hit_where == CACHE_ID::IS_DRAM)
+          // {
+          //   if(l1i_entry.packet_flags[Flags::TLB_Miss_Address])
+          //   {
+          //     o3_datamodel->tlbmiss_cachehit[l1i_entry.hit_where]++;
+          //     o3_datamodel->instr_access_time[LoadType::Replay] += access_time;
+          //   }
+          //   else
+          //   {
+          //     o3_datamodel->instr_access_time[LoadType::Regular] += access_time;
+          //   }
+          // }
         
           if(l1i_entry.packet_flags[Flags::Page_Fault_Address])
             o3_datamodel->pagefault_cachehit[l1i_entry.hit_where]++;
@@ -1219,7 +1239,20 @@ void O3_CPU::handle_memory_return()
       o3_datamodel->count_data_tlbmiss += dtlb_entry.packet_flags[Flags::TLB_Miss_Address];
       o3_datamodel->count_data_pagefault += dtlb_entry.packet_flags[Flags::Page_Fault_Address];
       uint64_t translation_time = current_cycle - dtlb_entry.translation_time;
-      o3_datamodel->data_translation_time[translation_time]++;
+
+      if(dtlb_entry.packet_flags[Flags::TLB_Miss_Address])
+      {
+        // if translation PTW has reached to IS_DRAM
+        if(dtlb_entry.hit_where == CACHE_ID::IS_DRAM)
+        {
+          // track translation time for data
+          o3_datamodel->dram_data_access_time[LoadType::Translation_Using_PTW] += translation_time;
+          o3_datamodel->dram_access[LoadType::Translation_Using_PTW] += 1;
+        }
+
+        o3_datamodel->data_access_time[LoadType::Translation_Using_PTW] += translation_time;
+        o3_datamodel->access[LoadType::Translation_Using_PTW] += 1;        
+      }
     }
 
     // remove this entry
@@ -1234,10 +1267,37 @@ void O3_CPU::handle_memory_return()
     for (auto merged : l1d_entry.lq_index_depend_on_me) {
 
       uint64_t access_time = current_cycle - l1d_entry.access_time;
-      o3_datamodel->dcache_access_time[access_time]++;
 
+      // if replay or regular has accessed IS_DRAM
+      if(l1d_entry.hit_where == CACHE_ID::IS_DRAM)
+      {
+        if(l1d_entry.packet_flags[Flags::TLB_Miss_Address])
+        {
+          o3_datamodel->dram_data_access_time[LoadType::Replay] += access_time;
+          o3_datamodel->dram_access[LoadType::Replay] += 1;
+        }
+        else
+        {
+          o3_datamodel->dram_data_access_time[LoadType::Regular] += access_time;
+          o3_datamodel->dram_access[LoadType::Regular] += 1;
+        }
+      }
+
+      // replay load access time && regular access time
       if(l1d_entry.packet_flags[Flags::TLB_Miss_Address])
+      {
+        o3_datamodel->data_access_time[LoadType::Replay] += access_time;
+        o3_datamodel->access[LoadType::Replay] += 1;
+        // stlmiss during translation, where it did hit later in cache ?
         o3_datamodel->tlbmiss_cachehit[l1d_entry.hit_where]++;
+        merged->rob_index->access_replay_or_regular = LoadType::Replay;
+      }
+      else
+      {
+        o3_datamodel->data_access_time[LoadType::Regular] += access_time;
+        o3_datamodel->access[LoadType::Regular] += 1;
+        merged->rob_index->access_replay_or_regular = LoadType::Regular;
+      }
       
       if(l1d_entry.packet_flags[Flags::Page_Fault_Address])
         o3_datamodel->pagefault_cachehit[l1d_entry.hit_where]++;
@@ -1249,7 +1309,10 @@ void O3_CPU::handle_memory_return()
       merged->rob_index->event_cycle = current_cycle;
 
       if (merged->rob_index->num_mem_ops == 0)
+      {
         inflight_mem_executions++;
+        merged->rob_index->rob_complete_timestamp = current_cycle;
+      }
 
       LSQ_ENTRY empty_entry;
       *merged = empty_entry;
@@ -1302,6 +1365,21 @@ void O3_CPU::retire_rob()
     int instr_exc_time = current_cycle - ROB.front().rob_timestamp;
     o3_datamodel->counter[O3_counter::rob_total_instr_exc_time] += instr_exc_time;
     o3_datamodel->counter[O3_counter::rob_total_instr_retired]++;
+
+    if(ROB.front().is_memory)
+    {
+      int rob_head_stall = (current_cycle - ROB.front().rob_complete_timestamp);
+      if(ROB.front().access_replay_or_regular == LoadType::Replay)
+      {
+        o3_datamodel->rob_stall[LoadType::Replay] += rob_head_stall;
+        o3_datamodel->rob_access[LoadType::Replay] += 1;
+      }
+      else
+      {
+        o3_datamodel->rob_stall[LoadType::Regular] += rob_head_stall;
+        o3_datamodel->rob_access[LoadType::Regular] += 1;
+      }
+    }
 
     ROB.pop_front();
     completed_executions--;

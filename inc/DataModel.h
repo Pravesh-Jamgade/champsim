@@ -83,7 +83,7 @@ static string CacheStat_str[CacheStat::CacheStat_End] = {
                                                         };
 
 static string cache_name_str[CACHE_ID::CACHE_ID_END] = {
-    "itlb", "dtlb", "stlb", "l1i", "l1d", "l2", "llc"
+    "itlb", "dtlb", "stlb", "l1i", "l1d", "l2", "llc", "dram"
 };
 
 enum MISS
@@ -344,6 +344,14 @@ enum RefType
         RefTypeEnd
     };
 
+enum LoadType
+{
+    Replay =0,
+    Regular,
+    Translation_Using_PTW,
+    LoadTypeEnd
+};
+
 enum O3_counter
     {
         rob_full=0,lq_full,sq_full,
@@ -355,6 +363,7 @@ enum O3_counter
         rob_partially_filled_lq_full, rob_partially_filled_lq_empty,
         rob_partially_filled_sq_full, rob_partially_filled_sq_empty,
         rob_total_instr_exc_time, rob_total_instr_retired,
+
         O3_Count_End
     };
 
@@ -376,10 +385,17 @@ class O3_DataModel
         "ROB_TOTAL_INSTR_EXC_TIME", "ROB_TOTAL_INSTR_RETIRED"
     };
 
-    map<uint64_t, uint64_t> instr_translation_time;
-    map<uint64_t, uint64_t> data_translation_time;
-    map<uint64_t, uint64_t> icache_access_time;
-    map<uint64_t, uint64_t> dcache_access_time;
+    ll dram_instr_access_time[LoadType::LoadTypeEnd] = {0};
+    ll dram_data_access_time[LoadType::LoadTypeEnd] = {0};
+    ll dram_access[LoadType::LoadTypeEnd] = {0};
+
+    ll instr_access_time[LoadType::LoadTypeEnd] = {0};
+    ll data_access_time[LoadType::LoadTypeEnd] = {0};
+    ll access[LoadType::LoadTypeEnd] = {0};
+
+    ll rob_stall[LoadType::LoadTypeEnd] = {0};
+    ll rob_access[LoadType::LoadTypeEnd] = {0};
+
     map<pair<uint64_t, uint64_t>, uint64_t> hist_trans_plus_access_time;
     int instr_resolved_translations[RefTypeEnd] = {0};
     int data_resolved_translations[RefTypeEnd] = {0};

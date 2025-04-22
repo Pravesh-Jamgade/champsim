@@ -317,6 +317,7 @@ void PageTableWalker::return_data(PACKET* packet)
   for (auto& mshr_entry : MSHR) {
     if (eq_addr<PACKET>{packet->address, LOG2_BLOCK_SIZE}(mshr_entry)) {
       mshr_entry.event_cycle = current_cycle;
+      mshr_entry.hit_where = packet->hit_where;
 
       DP(if (warmup_complete[cpu]) {
         std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry.instr_id;

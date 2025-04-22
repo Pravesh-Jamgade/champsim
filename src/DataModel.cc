@@ -128,10 +128,36 @@ void O3_DataModel::print_stats()
     // for(auto entry: dcache_access_time)
     //     cout << entry.first << ", " << std::setw(5)<< entry.second << '\n';
     // cout << '\n';
-    
+
     cout << tag << "resolved instr translation, " << instr_resolved_translations[refInstr] << '\n';
     cout << tag << "resolved data load translation, " << data_resolved_translations[refLOAD] << '\n';
     cout << tag << "resolved data store translation, " << data_resolved_translations[refSTORE] << '\n';
+    cout << '\n';
+    
+    cout << " For TEMPO\n";
+    cout << tag << "total dram ptw accessed," << dram_access[LoadType::Translation_Using_PTW] << '\n';
+    cout << tag << "total dram replay accessed," << dram_access[LoadType::Replay] << '\n';
+    cout << tag << "total dram regular accessed," << dram_access[LoadType::Regular] << '\n';
+
+    cout << tag << "total dram ptw cycles," << (dram_data_access_time[LoadType::Translation_Using_PTW]+dram_instr_access_time[LoadType::Translation_Using_PTW]) << '\n';
+    cout << tag << "total dram replay cycles," << (dram_data_access_time[LoadType::Replay] + dram_instr_access_time[LoadType::Replay]) << '\n';
+    cout << tag << "total dram regular cycles," << (dram_data_access_time[LoadType::Regular] + dram_instr_access_time[LoadType::Regular]) << '\n';
+    cout << '\n';
+
+    cout << " For ATP\n";
+    cout << tag << "total ptw accesses," << access[LoadType::Translation_Using_PTW] << '\n'; 
+    cout << tag << "total replay accesses," << access[LoadType::Replay] << '\n'; 
+    cout << tag << "total regular accesses," << access[LoadType::Regular] << '\n'; 
+    cout << tag << "total ptw cycles," << access[LoadType::Translation_Using_PTW] << '\n'; 
+    cout << tag << "total replay cycles," << access[LoadType::Replay] << '\n'; 
+    cout << tag << "total regular cycles," << access[LoadType::Regular] << '\n'; 
+    cout << '\n';
+
+    cout << "ROB stalls for replay, regular till the ROB entry removed\n";
+    cout << tag << "total rob stall replay access count," << rob_stall[LoadType::Replay] << '\n';
+    cout << tag << "total rob stall regular access count," << rob_stall[LoadType::Regular] << '\n';
+    cout << tag << "total rob stall replay cycles," << rob_stall[LoadType::Replay] << '\n';
+    cout << tag << "total rob stall regular cycles," << rob_stall[LoadType::Regular] << '\n';
     cout << '\n';
 
     // cout << tag << "dependency chain histo (chain length and freq)\n";
