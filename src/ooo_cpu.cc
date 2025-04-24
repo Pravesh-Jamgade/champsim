@@ -841,6 +841,14 @@ void O3_CPU::add_load_queue(champsim::circular_buffer<ooo_model_instr>::iterator
   } else {
     // If this entry is not waiting on RAW
     RTL0.push(lq_it);
+
+    // TODO Thread is enabled
+    // Chechking if scheduled ld/st is at head of ROB
+    if(ROB.front().instr_id == rob_it->instr_id)
+    {
+      // rob_it->rob_head = 1;
+      rob_it->rob_head_timestamp = current_cycle;
+    }
   }
 }
 
@@ -864,6 +872,13 @@ void O3_CPU::add_store_queue(champsim::circular_buffer<ooo_model_instr>::iterato
   rob_it->destination_added[data_index] = 1;
 
   RTS0.push(sq_it);
+
+  // Chechking if scheduled ld/st is at head of ROB
+  if(ROB.front().instr_id == rob_it->instr_id)
+  {
+    // rob_it->rob_head = 1;
+    rob_it->rob_head_timestamp = current_cycle;
+  }
 
   DP(if (warmup_complete[cpu]) {
     std::cout << "[SQ] " << __func__ << " instr_id: " << sq_it->instr_id;
@@ -1199,6 +1214,7 @@ void O3_CPU::handle_memory_return()
   while (to_read > 0 && !DTLB_bus.PROCESSED.empty()) { // DTLB
     PACKET& dtlb_entry = DTLB_bus.PROCESSED.front();
     bool track = false;
+    int stalling_rob_head;
 
     for (auto sq_merged : dtlb_entry.sq_index_depend_on_me) {
       sq_merged->physical_address = splice_bits(dtlb_entry.data, sq_merged->virtual_address,
@@ -1213,8 +1229,8 @@ void O3_CPU::handle_memory_return()
       sq_merged->packet_flags[Flags::Page_Fault_Address] = dtlb_entry.packet_flags[Flags::Page_Fault_Address];
 
       RTS1.push(sq_merged);
-
       track=true;
+      stalling_rob_head = sq_merged->rob_index->rob_head_timestamp;
     }
 
     for (auto lq_merged : dtlb_entry.lq_index_depend_on_me) {
@@ -1228,18 +1244,18 @@ void O3_CPU::handle_memory_return()
       // update LSQ_ENTRY's packet flags from PACKET
       lq_merged->packet_flags[Flags::TLB_Miss_Address] = dtlb_entry.packet_flags[Flags::TLB_Miss_Address];
       lq_merged->packet_flags[Flags::Page_Fault_Address] = dtlb_entry.packet_flags[Flags::Page_Fault_Address];
-
+      
       RTL1.push(lq_merged);
-
       track=true;
+      stalling_rob_head = lq_merged->rob_index->rob_head_timestamp;
     }
 
     if(track)
     {
       o3_datamodel->count_data_tlbmiss += dtlb_entry.packet_flags[Flags::TLB_Miss_Address];
       o3_datamodel->count_data_pagefault += dtlb_entry.packet_flags[Flags::Page_Fault_Address];
-      uint64_t translation_time = current_cycle - dtlb_entry.translation_time;
 
+      uint64_t translation_time = current_cycle - dtlb_entry.translation_time;
       if(dtlb_entry.packet_flags[Flags::TLB_Miss_Address])
       {
         // if translation PTW has reached to IS_DRAM
@@ -1250,8 +1266,15 @@ void O3_CPU::handle_memory_return()
           o3_datamodel->dram_access[LoadType::Translation_Using_PTW] += 1;
         }
 
-        o3_datamodel->data_access_time[LoadType::Translation_Using_PTW] += translation_time;
-        o3_datamodel->access[LoadType::Translation_Using_PTW] += 1;        
+        if(stalling_rob_head != std::numeric_limits<int>::max())
+        {
+          int temp = (current_cycle - stalling_rob_head);
+          if(temp > 0)
+          {
+            o3_datamodel->data_access_time[LoadType::Translation_Using_PTW] += temp;
+            o3_datamodel->access[LoadType::Translation_Using_PTW] += 1; 
+          }
+        }
       }
     }
 
@@ -1284,23 +1307,30 @@ void O3_CPU::handle_memory_return()
       }
 
       // replay load access time && regular access time
-      if(l1d_entry.packet_flags[Flags::TLB_Miss_Address])
+      int stalling_rob_head = merged->rob_index->rob_head_timestamp;
+      int temp = (current_cycle - stalling_rob_head);
+
+      if( stalling_rob_head != std::numeric_limits<int>::max() && temp > 0)
       {
-        o3_datamodel->data_access_time[LoadType::Replay] += access_time;
-        o3_datamodel->access[LoadType::Replay] += 1;
-        // stlmiss during translation, where it did hit later in cache ?
-        o3_datamodel->tlbmiss_cachehit[l1d_entry.hit_where]++;
-        merged->rob_index->access_replay_or_regular = LoadType::Replay;
-      }
-      else
-      {
-        o3_datamodel->data_access_time[LoadType::Regular] += access_time;
-        o3_datamodel->access[LoadType::Regular] += 1;
-        merged->rob_index->access_replay_or_regular = LoadType::Regular;
+        if(l1d_entry.packet_flags[Flags::TLB_Miss_Address])
+        {
+          o3_datamodel->data_access_time[LoadType::Replay] += temp;
+          o3_datamodel->access[LoadType::Replay] += 1;
+          merged->rob_index->access_replay_or_regular = LoadType::Replay;
+        }
+        else
+        {
+          o3_datamodel->data_access_time[LoadType::Regular] += temp;
+          o3_datamodel->access[LoadType::Regular] += 1;
+          merged->rob_index->access_replay_or_regular = LoadType::Regular;
+        }
       }
       
+      // stlmiss during translation, where it did hit later in cache ?
       if(l1d_entry.packet_flags[Flags::Page_Fault_Address])
         o3_datamodel->pagefault_cachehit[l1d_entry.hit_where]++;
+      if(l1d_entry.packet_flags[Flags::TLB_Miss_Address])
+          o3_datamodel->tlbmiss_cachehit[l1d_entry.hit_where]++;
       
 
       merged->fetched = COMPLETED;
@@ -1329,6 +1359,9 @@ void O3_CPU::retire_rob()
 {
   unsigned retire_bandwidth = RETIRE_WIDTH;
 
+  if(ROB.front().rob_head_timestamp == std::numeric_limits<int>::max() && ROB.front().executed!=COMPLETED)
+    ROB.front().rob_head_timestamp = current_cycle;
+  
   while (retire_bandwidth > 0 && !ROB.empty() && (ROB.front().executed == COMPLETED)) {
     for (uint32_t i = 0; i < MAX_INSTR_DESTINATIONS; i++) {
       if (ROB.front().destination_memory[i]) {

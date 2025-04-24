@@ -27,6 +27,7 @@
 
 struct ooo_model_instr {
 
+  int rob_head_timestamp = std::numeric_limits<int>::max();
   bool packet_flag_tlb_miss = 0;
   int rob_timestamp = std::numeric_limits<int>::max();
   int rob_complete_timestamp = std::numeric_limits<int>::max();
