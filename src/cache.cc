@@ -228,14 +228,23 @@ void CACHE::handle_read()
       readlike_hit(set, way, handle_pkt);
       cacheDataModel->rd_queue[Basic::HIT]++;
     } else {
-      bool success = readlike_miss(handle_pkt);
-      
-      if (!success)
+
+      if(cache_is[CACHE_ID::IS_LLC])
       {
-        cacheDataModel->rd_queue_stalls[Stall::OP_FAIL_PENALTY]++;
-        return;
+        readlike_hit(set, way, handle_pkt);
+        vway_counter[VWAY_COUNTER::VWAY_INDIRECT_DATA_HIT]++;
       }
-      cacheDataModel->rd_queue[Basic::MISS]++;
+      else
+      {
+        bool success = readlike_miss(handle_pkt);
+        if (!success)
+        {
+          cacheDataModel->rd_queue_stalls[Stall::OP_FAIL_PENALTY]++;
+          return;
+        }
+        cacheDataModel->rd_queue[Basic::MISS]++;
+      }
+      
     }
 
     // remove this entry from RQ
@@ -281,7 +290,7 @@ void CACHE::handle_prefetch()
   }
 }
 
-void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
+void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt, BLOCK* dataBlock)
 {
   DP(if (warmup_complete[handle_pkt.cpu]) {
     std::cout << "[" << NAME << "] " << __func__ << " hit";
@@ -294,7 +303,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   BLOCK& hit_block = block[set * NUM_WAY + way];
 
-  handle_pkt.data = hit_block.data;
+  handle_pkt.data = dataBlock == nullptr ? hit_block.data : dataBlock->data;
 
   // update prefetcher on load instruction
   if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
@@ -557,22 +566,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     if(track_reuse)
     {
-      if(reuse_history[set].size() >= 4*NUM_WAY-1)
-        reuse_history[set].pop_front();
-      reuse_history[set].push_back(block[set*NUM_WAY + way]);
-
-      if(fa_array.size() >= FA_SIZE)
-        fa_array.pop_front();
-      auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address, OFFSET_BITS));
-      if(found_out==fa_array.end())
-      {
-        fa_array.push_back(block[set*NUM_WAY + way]);
-      }
-      else
-      {
-        fa_array.insert(fa_array.end(), *found_out);
-        fa_array.erase(found_out);
-      }
+      func_track_reuse(set, way);
     }
 
     if (ever_seen_data)
@@ -590,6 +584,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     {
       // hole 
       BLOCK* hole = fill_block.fptr;
+      if(fill_block.valid)
+      {
+        vway_counter[VWAY_COUNTER::VWAY_DIRECT_TAG_TO_DATA_INVL]++;
+      }
 
       // there will be hole if intermediate block in data_arr is invalidated, filled with help of tail block
       if(fill_block.valid)
@@ -623,9 +621,24 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       }
       else
       {
-        ss = vway_get_fptr();
+        ss = vway_get_head();
       }
       
+
+      BLOCK* tag_hole = ss->bptr;
+      if(tag_hole!=nullptr)
+      {
+        if(tag_hole->valid)
+        {
+          vway_counter[VWAY_COUNTER::VWAY_HEAD_INDIRECT_DATA_TO_TAG_INVL]++;
+          uint64_t addr = tag_hole->address;
+          uint32_t set = get_set(addr);
+          uint32_t way = get_way(addr, set);
+          func_track_reuse(set, way);
+
+          func_insert_invalid_buffer(tag_hole);
+        }
+      }
 
       ss->data_write++;
 
@@ -1130,7 +1143,7 @@ BLOCK* CACHE::vway_handle_tag_replacement()
   return &*temp;
 }
 
-BLOCK* CACHE::vway_get_fptr()
+BLOCK* CACHE::vway_get_head()
 {
   vector<BLOCK>::iterator temp;
   if(vway_head == data_arr.end() && vway_tail == data_arr.end())
@@ -1172,4 +1185,25 @@ BLOCK* CACHE::vway_get_fptr()
 
   BLOCK* ret= &*temp;
   return ret;
+}
+
+void CACHE::func_track_reuse(uint32_t set, uint32_t way)
+{
+  BLOCK& fill_block = block[set * NUM_WAY + way];
+  if(reuse_history[set].size() >= 4*NUM_WAY-1)
+    reuse_history[set].pop_front();
+  reuse_history[set].push_back(fill_block);
+
+  if(fa_array.size() >= FA_SIZE)
+    fa_array.pop_front();
+  auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address, OFFSET_BITS));
+  if(found_out==fa_array.end())
+  {
+    fa_array.push_back(block[set*NUM_WAY + way]);
+  }
+  else
+  {
+    fa_array.insert(fa_array.end(), *found_out);
+    fa_array.erase(found_out);
+  }
 }

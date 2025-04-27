@@ -14,6 +14,8 @@
 
 #include "DataModel.h"
 
+#define INVL_BUFF_SIZE 32
+
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
@@ -29,12 +31,14 @@ public:
   list<BLOCK>* reuse_history;
 
   // TODO: dummy, not storing data, except counts of writes
+  uint64_t vway_counter[VWAY_COUNTER::VWAY_COUNTER_END] = {0};
   std::vector<BLOCK> data_arr;
   vector<BLOCK>::iterator vway_head;
   vector<BLOCK>::iterator vway_tail;
   int* set_avg_write;
   int* set_total_write;
   enum VWAY_HOLE_OPT{LEAVE_HOLE=0, INC_TO_HOLE, TAIL_TO_HOLE};
+  std::list<BLOCK> invalid_buffer;
 
   bool cache_is[CACHE_ID_END] = {false};
   list<BLOCK> fa_array;
@@ -103,7 +107,7 @@ public:
   void handle_read();
   void handle_prefetch();
 
-  void readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt);
+  void readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt, BLOCK* data=nullptr);
   bool readlike_miss(PACKET& handle_pkt);
   bool filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt);
 
@@ -115,7 +119,9 @@ public:
 
   // v-way
   BLOCK* vway_handle_tag_replacement();
-  BLOCK* vway_get_fptr();
+  BLOCK* vway_get_head();
+
+  void func_track_reuse(uint32_t set, uint32_t way);
 
   void reset_datamodel()
   {
@@ -132,6 +138,25 @@ public:
     auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
     uint32_t way = std::distance(set_begin, first_inv);
     return way == NUM_WAY;
+  }
+
+  void func_insert_invalid_buffer(BLOCK* buff)
+  {
+    if(invalid_buffer.size() == INVL_BUFF_SIZE)
+    {
+      invalid_buffer.front().bptr->valid = 0;
+      invalid_buffer.front().bptr->fptr = nullptr;
+
+    }
+    invalid_buffer.push_back(*buff);
+    buff->fptr = &invalid_buffer.back();
+    invalid_buffer.back().bptr = buff;
+  }
+
+  bool func_search_invalid_buffer(PACKET packet)
+  {
+    auto find_data = find_if(invalid_buffer.begin(), invalid_buffer.end(), eq_addr<BLOCK>(packet.address, OFFSET_BITS));
+    return (find_data != invalid_buffer.end());
   }
 
   void func_write_variation(std::vector<BLOCK> temp_arr)
@@ -230,6 +255,11 @@ public:
         else
           func_write_variation(block);
       }
+    }
+
+    for(int i=0; i< VWAY_COUNTER::VWAY_COUNTER_END; i++)
+    {
+      cout << NAME << " " << vway_counter_str[i] << ", " << vway_counter[i] << '\n'; 
     }
   }
 

@@ -549,9 +549,9 @@ int main(int argc, char** argv)
       }
     }
   
-    sort(traces.begin(), traces.end(), [](auto p, auto q){
-        return p.first < q.first;
-      });
+    // sort(traces.begin(), traces.end(), [](auto p, auto q){
+    //     return p.first < q.first;
+    //   });
   }
 
   uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time), elapsed_minute = elapsed_second / 60, elapsed_hour = elapsed_minute / 60;
