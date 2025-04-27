@@ -43,7 +43,7 @@ extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
 extern int KNOB_VWAY, KNOB_ENABLE_VWAY_HOLE_OPT;
 
-std::vector<tracereader*> traces;
+std::vector<pair<uint64_t, tracereader*>> traces;
 
 uint64_t champsim::deprecated_clock_cycle::operator[](std::size_t cpu_idx)
 {
@@ -415,7 +415,7 @@ int main(int argc, char** argv)
   for (int i = optind; i < argc; i++) {
     std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
 
-    traces.push_back(get_tracereader(argv[i], traces.size(), knob_cloudsuite));
+    traces.push_back({0, get_tracereader(argv[i], traces.size(), knob_cloudsuite)});
 
     if (traces.size() > NUM_CPUS) {
       printf("\n*** Too many traces for the configured number of cores ***\n\n");
@@ -494,9 +494,11 @@ int main(int argc, char** argv)
     std::sort(std::begin(operables), std::end(operables), champsim::by_next_operate());
 
     for (std::size_t i = 0; i < ooo_cpu.size(); ++i) {
+
       // read from trace
       while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
-        ooo_cpu[i]->init_instruction(traces[i]->get());
+        ooo_cpu[i]->init_instruction(traces[i].second->get());
+        traces[i].first++;
       }
 
       // heartbeat information
@@ -546,6 +548,10 @@ int main(int argc, char** argv)
           record_roi_stats(i, *it);
       }
     }
+  
+    sort(traces.begin(), traces.end(), [](auto p, auto q){
+        return p.first < q.first;
+      });
   }
 
   uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time), elapsed_minute = elapsed_second / 60, elapsed_hour = elapsed_minute / 60;

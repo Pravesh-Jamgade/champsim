@@ -220,6 +220,11 @@ void CACHE::handle_read()
 
     if (way < NUM_WAY) // HIT
     {
+      if(block[NUM_WAY * set + way].cpu != handle_pkt.cpu)
+      {
+        cout << "[Error] requesting cpu != block owner cpu";
+        exit(0);
+      }
       readlike_hit(set, way, handle_pkt);
       cacheDataModel->rd_queue[Basic::HIT]++;
     } else {
@@ -557,11 +562,16 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       reuse_history[set].push_back(block[set*NUM_WAY + way]);
 
       if(fa_array.size() >= FA_SIZE)
-        fa_array.pop_back();
+        fa_array.pop_front();
       auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address, OFFSET_BITS));
       if(found_out==fa_array.end())
       {
         fa_array.push_back(block[set*NUM_WAY + way]);
+      }
+      else
+      {
+        fa_array.insert(fa_array.end(), *found_out);
+        fa_array.erase(found_out);
       }
     }
 
