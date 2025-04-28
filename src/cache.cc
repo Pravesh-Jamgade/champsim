@@ -229,7 +229,7 @@ void CACHE::handle_read()
       cacheDataModel->rd_queue[Basic::HIT]++;
     } else {
 
-      if(cache_is[CACHE_ID::IS_LLC])
+      if(cache_is[CACHE_ID::IS_LLC] && KNOB_VWAY)
       {
         readlike_hit(set, way, handle_pkt);
         vway_counter[VWAY_COUNTER::VWAY_INDIRECT_DATA_HIT]++;
