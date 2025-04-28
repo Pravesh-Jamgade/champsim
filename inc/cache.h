@@ -146,7 +146,7 @@ public:
     {
       invalid_buffer.front().bptr->valid = 0;
       invalid_buffer.front().bptr->fptr = nullptr;
-
+      invalid_buffer.pop_front();
     }
     invalid_buffer.push_back(*buff);
     buff->fptr = &invalid_buffer.back();
