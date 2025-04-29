@@ -142,17 +142,20 @@ public:
     return way == NUM_WAY;
   }
 
-  void func_insert_invalid_buffer(BLOCK* buff)
+  void func_insert_invalid_buffer(BLOCK* tag)
   {
+    BLOCK* data = tag;
+    data->fptr = nullptr;
+    data->bptr = tag;
+    tag->fptr = data;
+
     if(invalid_buffer.size() == INVL_BUFF_SIZE)
     {
-      invalid_buffer.front().bptr->valid = 0;
-      invalid_buffer.front().bptr->fptr = nullptr;
+      invalid_buffer.front().valid = 0;
+      invalid_buffer.front().bptr = nullptr;
       invalid_buffer.pop_front();
     }
-    invalid_buffer.push_back(*buff);
-    buff->fptr = &invalid_buffer.back();
-    invalid_buffer.back().bptr = buff;
+    invalid_buffer.push_back(*data);
   }
 
   bool func_search_invalid_buffer(PACKET packet)

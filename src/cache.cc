@@ -228,13 +228,25 @@ void CACHE::handle_read()
       readlike_hit(set, way, handle_pkt);
       cacheDataModel->rd_queue[Basic::HIT]++;
     } else {
-
+      
+      bool record_miss = 1;
+      
       if(cache_is[CACHE_ID::IS_LLC] && KNOB_VWAY)
       {
-        readlike_hit(set, way, handle_pkt);
-        vway_counter[VWAY_COUNTER::VWAY_INDIRECT_DATA_HIT]++;
+        if(func_search_invalid_buffer(handle_pkt))
+        {
+          record_miss =0;
+          readlike_hit(set, way, handle_pkt);
+          vway_counter[VWAY_COUNTER::VWAY_INDIRECT_DATA_HIT]++;
+        }
+        else
+        {
+          vway_counter[VWAY_COUNTER::VWAY_INDIRECT_DATA_HIT]++;
+        }
+        
       }
-      else
+      
+      if(record_miss)
       {
         bool success = readlike_miss(handle_pkt);
         if (!success)
@@ -700,7 +712,7 @@ void CACHE::operate()
 {
   operate_writes();
   operate_reads();
-
+  
   impl_prefetcher_cycle_operate();
 }
 
