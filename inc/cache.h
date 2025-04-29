@@ -13,6 +13,7 @@
 #include "operable.h"
 
 #include "DataModel.h"
+#include "epoch.h"
 
 #define INVL_BUFF_SIZE 32
 
@@ -31,6 +32,7 @@ public:
   list<BLOCK>* reuse_history;
 
   // TODO: dummy, not storing data, except counts of writes
+  Epoc* epoc;
   uint64_t vway_counter[VWAY_COUNTER::VWAY_COUNTER_END] = {0};
   std::vector<BLOCK> data_arr;
   vector<BLOCK>::iterator vway_head;
@@ -256,11 +258,14 @@ public:
           func_write_variation(block);
       }
     }
-
+    cout << '\n';
+    
     for(int i=0; i< VWAY_COUNTER::VWAY_COUNTER_END; i++)
     {
       cout << NAME << " " << vway_counter_str[i] << ", " << vway_counter[i] << '\n'; 
     }
+
+    cout << '\n';
   }
 
 #include "cache_modules.inc"
@@ -277,6 +282,8 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+    
+    // epoc = new Epoc();
 
     set_total_write = (int*)malloc(sizeof(int)*NUM_SET);
     set_avg_write = (int*)malloc(sizeof(int)*NUM_SET);
