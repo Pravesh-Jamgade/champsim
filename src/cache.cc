@@ -238,10 +238,11 @@ void CACHE::handle_read()
           record_miss =0;
           readlike_hit(set, way, handle_pkt);
           vway_counter[VWAY_COUNTER::VWAY_INDIRECT_DATA_HIT]++;
+          cacheDataModel->rd_queue[Basic::HIT]++;
         }
         else
         {
-          vway_counter[VWAY_COUNTER::VWAY_INDIRECT_DATA_HIT]++;
+          vway_counter[VWAY_COUNTER::VWAY_INDIRECT_DATA_MISS]++;
         }
         
       }
@@ -314,6 +315,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt, B
   });
 
   BLOCK& hit_block = block[set * NUM_WAY + way];
+  hit_block.recvd_hits++;
 
   handle_pkt.data = dataBlock == nullptr ? hit_block.data : dataBlock->data;
 
@@ -638,17 +640,23 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       
 
       BLOCK* tag_hole = ss->bptr;
+
       if(tag_hole!=nullptr)
       {
         if(tag_hole->valid)
         {
           vway_counter[VWAY_COUNTER::VWAY_HEAD_INDIRECT_DATA_TO_TAG_INVL]++;
-          uint64_t addr = tag_hole->address;
-          uint32_t set = get_set(addr);
-          uint32_t way = get_way(addr, set);
-          func_track_reuse(set, way);
+          if(tag_hole->recvd_hits >= KNOB_THRESHOLD_REDIRECT_TO_BUFFER)
+          {
+            vway_counter[VWAY_COUNTER::VWAY_BUFFER_INSERT_ACCEPTED]++;
+            uint64_t addr = tag_hole->address;
+            uint32_t set = get_set(addr);
+            uint32_t way = get_way(addr, set);
+            func_track_reuse(set, way);
 
-          func_insert_invalid_buffer(tag_hole);
+            func_insert_invalid_buffer(tag_hole);
+          }
+          else vway_counter[VWAY_COUNTER::VWAY_BUFFER_INSERT_REJECTED]++;
         }
       }
 
@@ -675,6 +683,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
     fill_block.came_from_request = handle_pkt.type;
+    fill_block.recvd_hits = 0;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

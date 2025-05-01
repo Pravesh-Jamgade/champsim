@@ -13,5 +13,6 @@ int KNOB_STTMRAM_STLB = 0;
 
 int KNOB_VWAY = 0;
 int KNOB_ENABLE_VWAY_HOLE_OPT = 0; // leave hole as it is (0), move incomming to hole (1), move tail to hole (2)
+int KNOB_THRESHOLD_REDIRECT_TO_BUFFER = 1; // default 1, if number of hits >=1 then record them in buffer // To disable threshold based migration use "-1"
 
 #endif

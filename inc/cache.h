@@ -20,7 +20,7 @@
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
 
-extern int KNOB_VWAY;
+extern int KNOB_VWAY, KNOB_THRESHOLD_REDIRECT_TO_BUFFER;
 
 extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 

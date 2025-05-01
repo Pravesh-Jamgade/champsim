@@ -436,6 +436,7 @@ int main(int argc, char** argv)
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_VWAY = iniReader->GetInteger("VWAY", "ENABLE_VWAY", 0);
   KNOB_ENABLE_VWAY_HOLE_OPT = iniReader->GetInteger("VWAY", "ENABLE_VWAY_HOLE_OPT", 0);
+  KNOB_THRESHOLD_REDIRECT_TO_BUFFER = iniReader->GetInteger("VWAY", "THRESHOLD_REDIRECT_TO_BUFFER", 1);
 
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
@@ -444,6 +445,7 @@ int main(int argc, char** argv)
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << "ENABLE_VWAY="<<KNOB_VWAY<<'\n';
   std::cout << "-ENABLE_VWAY_HOLE_OPT="<<KNOB_ENABLE_VWAY_HOLE_OPT<<'\n';
+  std::cout << "-THRESHOLD_REDIRECT_TO_BUFFER="<<KNOB_THRESHOLD_REDIRECT_TO_BUFFER<<'\n';
   std::cout << '\n';
 
   // overwrite relevant to extra settings

@@ -12,12 +12,14 @@ enum VWAY_COUNTER
   VWAY_DIRECT_TAG_TO_DATA_INVL,
   VWAY_INDIRECT_DATA_HIT,
   VWAY_INDIRECT_DATA_MISS,
+  VWAY_BUFFER_INSERT_ACCEPTED,
+  VWAY_BUFFER_INSERT_REJECTED,
   VWAY_COUNTER_END
 };
 
 static string vway_counter_str[VWAY_COUNTER::VWAY_COUNTER_END] = {
   "Invalidate at head indirectly data to tag", "Invalidate directly tag to data", "Indirect data hit in buffer",
-  "Indirect data miss in buffer"
+  "Indirect data miss in buffer", "Indirect data accepted by threshold", "Indirect data rejected by threshold"
 };
 
 enum Basic

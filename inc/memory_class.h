@@ -39,6 +39,9 @@ public:
 
   int data_write = 0;
 
+  // num of hits after block is inserted
+  int recvd_hits = 0;
+
 };
 
 class MemoryRequestConsumer
