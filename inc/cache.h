@@ -25,6 +25,8 @@ public:
   //usercode
   CacheDataModel* cacheDataModel;
   bool cache_is[CACHE_ID_END] = {false};
+  list<BLOCK> fa_array;
+  int FA_SIZE =0;
 
   uint32_t cpu;
   const std::string NAME;
@@ -187,6 +189,8 @@ public:
     {
       cache_is[CACHE_ID::IS_ITLB] = true;
     }
+
+    FA_SIZE = NUM_WAY * NUM_SET;
   }
 
   ~CACHE()

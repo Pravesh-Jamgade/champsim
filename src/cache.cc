@@ -477,6 +477,27 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
     }
 
+    // check for compulsory miss
+    if(!fill_block.valid)
+    {  
+      cacheDataModel->category_of_misses[MISS::COM]++;
+    }
+    // check for conflict misses && capacity misses
+    else
+    {
+      // counting the number of times set has seen conflict and as a result a dirty block is sent-back
+      cacheDataModel->category_of_misses[MISS::CONF]++;
+
+      // checking for capacity miss
+      {
+        auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, OFFSET_BITS));
+        if(it!=fa_array.end())
+        {
+          cacheDataModel->category_of_misses[MISS::CAP]++;
+        }
+      }
+    }
+
     if (ever_seen_data)
       evicting_address = fill_block.address & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
     else
