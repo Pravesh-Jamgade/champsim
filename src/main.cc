@@ -41,6 +41,7 @@ extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
+extern int KNOB_VICTIMA;
 
 std::vector<tracereader*> traces;
 
@@ -433,12 +434,14 @@ int main(int argc, char** argv)
   KNOB_TTP = iniReader->GetInteger("KNOB", "TTP", 0);
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
+  KNOB_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_VICTIMA", 0);
 
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
   std::cout << "TTP="<<KNOB_TTP<<'\n';
   std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
+  std::cout << "VICTIMA="<<KNOB_VICTIMA<<'\n';
   std::cout << '\n';
 
   // overwrite relevant to extra settings

@@ -74,7 +74,7 @@ static string CacheStat_str[CacheStat::CacheStat_End] = {
                                                         "Translation Write", "Translation Drop", "Translation Writeback"
                                                         };
 
-enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_STLB, IS_DTLB, IS_ITLB, CACHE_ID_END};
+enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_L1I, IS_STLB, IS_DTLB, IS_ITLB, CACHE_ID_END};
 
 enum MISS
 {

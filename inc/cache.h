@@ -177,6 +177,18 @@ public:
     {
       cache_is[CACHE_ID::IS_LLC] = true;
     }
+    else if(NAME.find("L2") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_L2] = true;
+    }
+    else if(NAME.find("L1D") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_L1D] = true;
+    }
+    else if(NAME.find("L1I") != string::npos)
+    {
+      cache_is[CACHE_ID::IS_L1I] = true;
+    }
     else if(NAME.find("STLB") != string::npos)
     {
       cache_is[CACHE_ID::IS_STLB] = true;
