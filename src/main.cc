@@ -328,6 +328,12 @@ void overwrite_cache()
     stlb->WRITE_LANTENCY = 3 * stlb->HIT_LATENCY;
     stlb->FILL_LATENCY = 3 * stlb->HIT_LATENCY;
   }
+  if(KNOB_VICTIMA)
+  {
+    CACHE* stlb = get_cache_by_name("STLB");
+    CACHE* l2 = get_cache_by_name("L2");
+    stlb->l2cache = l2;
+  }
 }
 
 void signal_handler(int signal)

@@ -11,7 +11,7 @@
 #include "memory_class.h"
 #include "ooo_cpu.h"
 #include "operable.h"
-
+#include <map>
 #include "DataModel.h"
 
 // virtual address space prefetching
@@ -22,7 +22,24 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+  enum VC
+  {
+    STLB_EVICT=0,
+    STLB_VICTIMA_HIT,
+    STLB_PTW_HIT,
+    L2_EVICT,
+    L2_WRITE,
+    L2_READ_HIT,
+    L2_READ_MISS,
+    VC_END
+  };
   //usercode
+  int victima_counters[VC_END] = {0};
+  int victima_block_usage[9] = {0};
+
+  // illusiong of stored cache line by 8byte granularity
+  map<uint32_t, uint32_t> l2_pte_map;
+  MemoryRequestConsumer* l2cache;
   CacheDataModel* cacheDataModel;
   bool cache_is[CACHE_ID_END] = {false};
   list<BLOCK> fa_array;
@@ -76,8 +93,8 @@ public:
   uint32_t get_occupancy(uint8_t queue_type, uint64_t address) override;
   uint32_t get_size(uint8_t queue_type, uint64_t address) override;
 
-  uint32_t get_set(uint64_t address);
-  uint32_t get_way(uint64_t address, uint32_t set);
+  uint32_t get_set(uint64_t address, bool victima=false);
+  uint32_t get_way(uint64_t address, uint32_t set, bool victima=false);
 
   int invalidate_entry(uint64_t inval_addr);
   int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata);
@@ -141,6 +158,36 @@ public:
 
       cout << "prefetch block read access variance, " << rd_var << '\n';
       cout << "prefetch block wr access variance, " << wr_var << '\n';
+    }
+    
+    if(cache_is[IS_L2])
+    {
+      cout << NAME << "\n<<<<<<<<<<<<<<< Victima Counters L2 >>>>>>>>>>>>>>>\n";
+      cout << "victima l2 evict, " << victima_counters[L2_EVICT] << '\n'; 
+      cout << "victima l2 write, " << victima_counters[L2_WRITE] << '\n'; 
+      cout << "victima l2 read hit, " << victima_counters[L2_READ_HIT] << '\n'; 
+      cout << "victima l2 read miss, " << victima_counters[L2_READ_MISS] << '\n'; 
+
+      cout << "\nvictima cache block usage @ L2 cache\n";
+      for(int i=1; i< 9; i++)
+      {
+        cout << "victima_block_usage " << i << ", " << victima_block_usage[i] << '\n';
+      }
+
+      // cout << "\nvictima PTE stored from stlb to l2\n";
+      // cout << "vitima_pte vp, pp\n";
+      // for(auto entry: l2_pte_map)
+      //   cout << "victima_pte " << entry.first << ", " << entry.second;
+      
+      cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
+    }
+    if(cache_is[IS_STLB])
+    {
+      cout << NAME << "\n<<<<<<<<<<<<<<< Victima Counters STLB >>>>>>>>>>>>>>>\n";
+      cout << "victima stlb evict, " << victima_counters[STLB_EVICT] << '\n';
+      cout << "victima stlb pte from victima, " << victima_counters[STLB_VICTIMA_HIT] << '\n';
+      cout << "victima stlb ptr from ptw, " << victima_counters[STLB_PTW_HIT] << '\n';
+      cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
     }
   }
 

@@ -32,6 +32,9 @@ public:
 
   uint64_t uv_cycle_enqueue = 0;
   bool ttp = false;
+  bool victima = false;
+  bool vitima_copy_sent = false;
+  bool recv_victima = false;
 };
 
 template <>

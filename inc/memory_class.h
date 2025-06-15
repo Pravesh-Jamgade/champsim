@@ -28,6 +28,21 @@ public:
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
 
   int came_from_request = NUM_TYPES; // default: invalid block
+
+  uint8_t m_used = 0; // 8 entries of 8B each
+  bool victima_block = 0;
+
+  // for tlb block, each PTE is 8Byte, so we have 8 entries in 64B block
+  void updateUsage(uint32_t offset){
+    uint8_t mask = offset;
+    m_used |= mask;
+  }
+
+  // use only for TLB blocks
+  int getUsage()
+  {
+    return __builtin_popcount(m_used);
+  }
 };
 
 class MemoryRequestConsumer
