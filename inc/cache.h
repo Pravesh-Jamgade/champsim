@@ -31,6 +31,8 @@ public:
     L2_WRITE,
     L2_READ_HIT,
     L2_READ_MISS,
+    STLB_DROP_VICTIMA,
+    STLB_DROP_PTW,
     VC_END
   };
   //usercode
@@ -186,7 +188,11 @@ public:
       cout << NAME << "\n<<<<<<<<<<<<<<< Victima Counters STLB >>>>>>>>>>>>>>>\n";
       cout << "victima stlb evict, " << victima_counters[STLB_EVICT] << '\n';
       cout << "victima stlb pte from victima, " << victima_counters[STLB_VICTIMA_HIT] << '\n';
-      cout << "victima stlb ptr from ptw, " << victima_counters[STLB_PTW_HIT] << '\n';
+      cout << "victima stlb pte from ptw, " << victima_counters[STLB_PTW_HIT] << '\n';
+
+      cout << "victima pte dropped because either (both ptw and victima)it was late or victima was miss at L2\n";
+      cout << "victima stlb dropped return ptw, " << victima_counters[STLB_DROP_PTW] << '\n';
+      cout << "victima stlb dropped return victima, " << victima_counters[STLB_DROP_VICTIMA] << '\n';
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
     }
   }

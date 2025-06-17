@@ -85,11 +85,16 @@ void CACHE::handle_writeback()
 
     bool hit = way < NUM_WAY;
 
+    if(cache_is[IS_LLC] && hit)
+    {
+      hit = handle_pkt.cpu == block[set * NUM_WAY + way].cpu;
+    }
+
     if(KNOB_VICTIMA && 
       cache_is[CACHE_ID::IS_L2] &&
       handle_pkt.victima)
     {
-      hit = block[set*NUM_WAY + way].victima_block ? true : false;
+      hit = block[set*NUM_WAY + way].victima_block && hit ? true : false;
     }
       
     if (hit) // HIT
@@ -242,11 +247,16 @@ void CACHE::handle_read()
 
     bool hit = way < NUM_WAY;
 
+    if(cache_is[IS_LLC] && hit)
+    {
+      hit = handle_pkt.cpu == block[set * NUM_WAY + way].cpu;
+    }
+
     if(KNOB_VICTIMA && 
       cache_is[CACHE_ID::IS_L2] &&
       handle_pkt.victima)
     {
-      hit = block[set*NUM_WAY + way].victima_block ? true : false;
+      hit = block[set*NUM_WAY + way].victima_block && hit ? true : false;
     }
       
     if (hit) // HIT
@@ -290,7 +300,14 @@ void CACHE::handle_prefetch()
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
 
-    if (way < NUM_WAY) // HIT
+    bool hit = way < NUM_WAY;
+
+    if(cache_is[IS_LLC] && hit)
+    {
+      hit = handle_pkt.cpu == block[set * NUM_WAY + way].cpu;
+    }
+
+    if (hit) // HIT
     {
       readlike_hit(set, way, handle_pkt);
       cacheDataModel->pf_queue[Basic::HIT]++;
@@ -339,6 +356,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     }
     else
     {
+      cout << std::hex << hit_block.address << '\n';
       cout << NAME << ", vitima_block, " << hit_block.victima_block << ", " << hit_block.getUsage() << ", " << hit_block.came_from_request << '\n';
       cout << "PTE not found in L2\n";
       exit(-1);
@@ -731,7 +749,7 @@ uint32_t CACHE::get_set(uint64_t address, bool victima)
   int offset = OFFSET_BITS;
   if(KNOB_VICTIMA && victima && cache_is[IS_L2])
   {
-    offset = LOG2_PAGE_SIZE + 3;
+    offset = 3;
   }
   return ((address >> offset) & bitmask(lg2(NUM_SET)));
 }
@@ -742,7 +760,7 @@ uint32_t CACHE::get_way(uint64_t address, uint32_t set, bool victima)
   if(KNOB_VICTIMA && victima && cache_is[IS_L2])
   {
     // TODO: add log(NUM_SET)
-    offset = LOG2_PAGE_SIZE + lg2(NUM_SET) + 3;
+    offset = lg2(NUM_SET) + 3;
   }
   
   auto begin = std::next(block.begin(), set * NUM_WAY);
@@ -825,7 +843,7 @@ int CACHE::add_rq(PACKET* packet)
   champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
   if(KNOB_VICTIMA && cache_is[IS_L2] && packet->victima)
   {
-    found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE));
+    found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, 3+lg2(NUM_SET)));
   }
 
   if (found_wq != WQ.end()) {
@@ -1077,8 +1095,25 @@ void CACHE::return_data(PACKET* packet)
 
   if(KNOB_VICTIMA && cache_is[IS_STLB])
   {
-    if(packet->data == 0) return;
-    if(mshr_entry->recv_victima){
+    if(packet->data == 0)
+    {
+      if(packet->victima) victima_counters[STLB_DROP_VICTIMA]++;
+      else victima_counters[STLB_DROP_PTW]++;
+      return;
+    }
+
+    if(mshr_entry == MSHR.end())
+    {
+      if(packet->victima) victima_counters[STLB_DROP_VICTIMA]++;
+      else victima_counters[STLB_DROP_PTW]++;
+      // cout << "MSHR_not_here:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
+      return;
+    }
+
+    if(mshr_entry->recv_victima)
+    {
+      if(packet->victima) victima_counters[STLB_DROP_VICTIMA]++;
+      else victima_counters[STLB_DROP_PTW]++;
 
       if(mshr_entry->data != packet->data)
       {
@@ -1087,11 +1122,7 @@ void CACHE::return_data(PACKET* packet)
       cout << "Second:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
       return;
     }
-    if(mshr_entry == MSHR.end())
-    {
-      // cout << "MSHR_not_here:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-      return;
-    }
+
     mshr_entry->recv_victima = true;
     mshr_entry->data = packet->data;
 
