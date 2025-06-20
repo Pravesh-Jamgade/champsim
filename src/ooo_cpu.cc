@@ -42,11 +42,12 @@ void O3_CPU::initialize_core()
   impl_btb_initialize();
 }
 
-void O3_CPU::init_instruction(ooo_model_instr arch_instr)
+void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
 {
   instrs_to_read_this_cycle--;
 
   arch_instr.instr_id = instr_unique_id;
+  arch_instr.thread_id = thread;
 
   bool reads_sp = false;
   bool writes_sp = false;

@@ -42,6 +42,7 @@ extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
 extern int KNOB_VICTIMA;
+extern int KNOB_SMT_ENABLE;
 
 std::vector<tracereader*> traces;
 
@@ -412,22 +413,7 @@ int main(int argc, char** argv)
   std::cout << "VirtualMemory page size: " << PAGE_SIZE << " log2_page_size: " << LOG2_PAGE_SIZE << std::endl;
 
   std::cout << std::endl;
-  for (int i = optind; i < argc; i++) {
-    std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
 
-    traces.push_back(get_tracereader(argv[i], traces.size(), knob_cloudsuite));
-
-    if (traces.size() > NUM_CPUS) {
-      printf("\n*** Too many traces for the configured number of cores ***\n\n");
-      assert(0);
-    }
-  }
-
-  if (traces.size() != NUM_CPUS) {
-    printf("\n*** Not enough traces for the configured number of cores ***\n\n");
-    assert(0);
-  }
-  
   INIReader* iniReader = new INIReader(string("./config.ini"));
 
   KNOB_TRANSLATION_QUEUE = iniReader->GetInteger("KNOB", "TQ", 0);
@@ -435,6 +421,7 @@ int main(int argc, char** argv)
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_VICTIMA", 0);
+  KNOB_SMT_ENABLE = iniReader->GetInteger("SMT", "ENABLE_SMT", 0);
 
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
@@ -442,7 +429,36 @@ int main(int argc, char** argv)
   std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << "VICTIMA="<<KNOB_VICTIMA<<'\n';
+  std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
   std::cout << '\n';
+
+  int total_cores = KNOB_SMT_ENABLE >0 ? NUM_CPUS * KNOB_SMT_ENABLE:  traces.size();
+
+  for (int i = optind; i < argc; i++) {
+    std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
+
+    traces.push_back(get_tracereader(argv[i], traces.size(), knob_cloudsuite));
+
+    if(KNOB_SMT_ENABLE>0)
+    {
+      if(traces.size() > total_cores)
+      {
+        cout << "Missmatch!!!\n";
+        cout << "Number of traces, " << traces.size() << '\n';
+        cout << "Number of cores, " << total_cores << '\n';
+        assert(0);
+      }
+    }
+    else if (traces.size() > NUM_CPUS) {
+      printf("\n*** Too many traces for the configured number of cores ***\n\n");
+      assert(0);
+    }
+  }
+
+  if (traces.size() != total_cores) {
+    printf("\n*** Not enough traces for the configured number of cores ***\n\n");
+    assert(0);
+  }
 
   // overwrite relevant to extra settings
   overwrite_cache();
@@ -491,57 +507,61 @@ int main(int argc, char** argv)
     }
     std::sort(std::begin(operables), std::end(operables), champsim::by_next_operate());
 
-    for (std::size_t i = 0; i < ooo_cpu.size(); ++i) {
-      // read from trace
-      while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
-        ooo_cpu[i]->init_instruction(traces[i]->get());
-      }
+    for (std::size_t i = 0; i < ooo_cpu.size(); ++i) 
+    {
+      for(int th=0; th< KNOB_SMT_ENABLE; th++)
+      {
+        // read from trace
+        while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
+          ooo_cpu[i]->init_instruction(traces[th]->get(), th);
+        }
 
-      // heartbeat information
-      if (show_heartbeat && (ooo_cpu[i]->num_retired >= ooo_cpu[i]->next_print_instruction)) {
-        float cumulative_ipc;
-        if (warmup_complete[i])
-          cumulative_ipc = (1.0 * (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
-        else
-          cumulative_ipc = (1.0 * ooo_cpu[i]->num_retired) / ooo_cpu[i]->current_cycle;
-        float heartbeat_ipc = (1.0 * ooo_cpu[i]->num_retired - ooo_cpu[i]->last_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->last_sim_cycle);
+        // heartbeat information
+        if (show_heartbeat && (ooo_cpu[i]->num_retired >= ooo_cpu[i]->next_print_instruction)) {
+          float cumulative_ipc;
+          if (warmup_complete[i])
+            cumulative_ipc = (1.0 * (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
+          else
+            cumulative_ipc = (1.0 * ooo_cpu[i]->num_retired) / ooo_cpu[i]->current_cycle;
+          float heartbeat_ipc = (1.0 * ooo_cpu[i]->num_retired - ooo_cpu[i]->last_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->last_sim_cycle);
 
-        cout << "Heartbeat CPU " << i << " instructions: " << ooo_cpu[i]->num_retired << " cycles: " << ooo_cpu[i]->current_cycle;
-        cout << " heartbeat IPC: " << heartbeat_ipc << " cumulative IPC: " << cumulative_ipc;
-        cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
-        ooo_cpu[i]->next_print_instruction += STAT_PRINTING_PERIOD;
+          cout << "Heartbeat CPU " << i << " instructions: " << ooo_cpu[i]->num_retired << " cycles: " << ooo_cpu[i]->current_cycle;
+          cout << " heartbeat IPC: " << heartbeat_ipc << " cumulative IPC: " << cumulative_ipc;
+          cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
+          ooo_cpu[i]->next_print_instruction += STAT_PRINTING_PERIOD;
 
-        ooo_cpu[i]->last_sim_instr = ooo_cpu[i]->num_retired;
-        ooo_cpu[i]->last_sim_cycle = ooo_cpu[i]->current_cycle;
-      }
+          ooo_cpu[i]->last_sim_instr = ooo_cpu[i]->num_retired;
+          ooo_cpu[i]->last_sim_cycle = ooo_cpu[i]->current_cycle;
+        }
 
-      // check for warmup
-      // warmup complete
-      if ((warmup_complete[i] == 0) && (ooo_cpu[i]->num_retired > warmup_instructions)) {
-        warmup_complete[i] = 1;
-        all_warmup_complete++;
-      }
-      if (all_warmup_complete == NUM_CPUS) { // this part is called only once
-                                             // when all cores are warmed up
-        all_warmup_complete++;
-        finish_warmup();
-      }
+        // check for warmup
+        // warmup complete
+        if ((warmup_complete[i] == 0) && (ooo_cpu[i]->num_retired > warmup_instructions)) {
+          warmup_complete[i] = 1;
+          all_warmup_complete++;
+        }
+        if (all_warmup_complete == NUM_CPUS) { // this part is called only once
+                                               // when all cores are warmed up
+          all_warmup_complete++;
+          finish_warmup();
+        }
 
-      // simulation complete
-      if ((all_warmup_complete > NUM_CPUS) && (simulation_complete[i] == 0)
-          && (ooo_cpu[i]->num_retired >= (ooo_cpu[i]->begin_sim_instr + simulation_instructions))) {
-        simulation_complete[i] = 1;
-        ooo_cpu[i]->finish_sim_instr = ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr;
-        ooo_cpu[i]->finish_sim_cycle = ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
+        // simulation complete
+        if ((all_warmup_complete > NUM_CPUS) && (simulation_complete[i] == 0)
+            && (ooo_cpu[i]->num_retired >= (ooo_cpu[i]->begin_sim_instr + simulation_instructions))) {
+          simulation_complete[i] = 1;
+          ooo_cpu[i]->finish_sim_instr = ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr;
+          ooo_cpu[i]->finish_sim_cycle = ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
 
-        cout << "Finished CPU " << i << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle;
-        cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
-        cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
+          cout << "Finished CPU " << i << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle;
+          cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
+          cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
 
-        cout << "cpu" << i << " IPC, " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
-        cout << "cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
-        for (auto it = caches.rbegin(); it != caches.rend(); ++it)
-          record_roi_stats(i, *it);
+          cout << "cpu" << i << " IPC, " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
+          cout << "cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
+          for (auto it = caches.rbegin(); it != caches.rend(); ++it)
+            record_roi_stats(i, *it);
+        }
       }
     }
   }
