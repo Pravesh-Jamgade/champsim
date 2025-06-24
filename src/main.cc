@@ -519,16 +519,30 @@ int main(int argc, char** argv)
     }
     std::sort(std::begin(operables), std::end(operables), champsim::by_next_operate());
 
-    for (std::size_t i = 0; i < ooo_cpu.size(); ++i) 
+    map<uint64_t, pair<int,int>> choice_of_th;
+    for(std::size_t i = 0; i < ooo_cpu.size(); ++i)
     {
-      for(int th=0; th< KNOB_SMT_ENABLE; th++)
+      for(std::size_t j = 0; j < KNOB_SMT_ENABLE; ++j)
       {
+        auto coreth = make_pair<int,int>(i,j);
+        choice_of_th.insert( {ooo_cpu[i]->num_retired[j], coreth} );
+      }
+    }
+
+    // for (std::size_t i = 0; i < ooo_cpu.size(); ++i) 
+    for(auto entry: choice_of_th)
+    {
+      int i = entry.second.first;
+      int th = entry.second.second;
+
+      // for(int th=0; th< KNOB_SMT_ENABLE; th++)
+      // {
         int global_th_index = i * KNOB_SMT_ENABLE + th;
 
         // read from trace
         while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
           ooo_cpu[i]->init_instruction(traces[th]->get(), th);
-          break;
+          // break;
         }
 
         // heartbeat information
@@ -579,7 +593,7 @@ int main(int argc, char** argv)
           for (auto it = caches.rbegin(); it != caches.rend(); ++it)
             record_roi_stats(i, *it);
         }
-      }
+      // }
     }
   }
 
@@ -607,6 +621,10 @@ int main(int argc, char** argv)
   }
 
   cout << endl << "Region of Interest Statistics" << endl;
+  for (uint32_t i = 0; i < NUM_CPUS; i++) 
+  {
+    cout << endl << "IPC " << i << ", " <<  ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
+  }
 
   for (uint32_t i = 0; i < NUM_CPUS; i++) 
   {
