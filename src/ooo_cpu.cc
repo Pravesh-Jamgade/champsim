@@ -1120,9 +1120,9 @@ void O3_CPU::retire_rob()
     // release ROB entry
     DP(if (warmup_complete[cpu]) { cout << "[ROB] " << __func__ << " instr_id: " << ROB.front().instr_id << " is retired" << endl; });
 
+    num_retired[ROB.front().thread_id]++;
     ROB.pop_front();
     completed_executions--;
-    num_retired++;
     retire_bandwidth--;
   }
 
