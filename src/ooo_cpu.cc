@@ -321,6 +321,10 @@ void O3_CPU::do_translate_fetch(champsim::circular_buffer<ooo_model_instr>::iter
   trace_packet.asid[0] = 0;
   trace_packet.asid[1] = 0;
   trace_packet.to_return = {&ITLB_bus};
+  trace_packet.thread_id = begin->thread_id;
+
+  assert(trace_packet.thread_id != -1);
+
   for (; begin != end; ++begin)
     trace_packet.instr_depend_on_me.push_back(begin);
 
@@ -375,6 +379,8 @@ void O3_CPU::do_fetch_instruction(champsim::circular_buffer<ooo_model_instr>::it
   fetch_packet.asid[0] = 0;
   fetch_packet.asid[1] = 0;
   fetch_packet.to_return = {&L1I_bus};
+  fetch_packet.thread_id = begin->thread_id;
+  
   for (; begin != end; ++begin)
     fetch_packet.instr_depend_on_me.push_back(begin);
 
@@ -911,6 +917,7 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.lq_index_depend_on_me = {lq_it};
   data_packet.thread_id = lq_it->rob_index->thread_id;
 
+  assert(data_packet.thread_id!=-1);
   int rq_index = L1D_bus.lower_level->add_rq(&data_packet);
 
   if (rq_index != -2)
@@ -1110,7 +1117,9 @@ void O3_CPU::retire_rob()
         data_packet.type = RFO;
         data_packet.asid[0] = sq_it->asid[0];
         data_packet.asid[1] = sq_it->asid[1];
+        data_packet.thread_id = sq_it->rob_index->thread_id;
 
+        assert(data_packet.thread_id!=-1);
         auto result = L1D_bus.lower_level->add_wq(&data_packet);
         if (result != -2) {
           ROB.front().destination_memory[i] = 0;

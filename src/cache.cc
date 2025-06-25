@@ -79,8 +79,15 @@ void CACHE::handle_writeback()
     uint32_t way = get_way(handle_pkt.address, set);
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
+    bool hit = way < NUM_WAY;
 
-    if (way < NUM_WAY) // HIT
+    if(hit)
+    {
+      BLOCK* hit_block = &block[set * NUM_WAY + way];
+      hit = hit_block->thread_id == handle_pkt.thread_id && hit_block->cpu == handle_pkt.cpu;
+    }
+
+    if (hit) // HIT
     {
       impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
 
@@ -184,6 +191,7 @@ void CACHE::handle_read()
 
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
+    assert(handle_pkt.thread_id!=-1);
 
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
@@ -192,7 +200,15 @@ void CACHE::handle_read()
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
 
-    if (way < NUM_WAY) // HIT
+    bool hit = way < NUM_WAY;
+
+    if(hit)
+    {
+      BLOCK* hit_block = &block[set * NUM_WAY + way];
+      hit = hit_block->thread_id == handle_pkt.thread_id && hit_block->cpu == handle_pkt.cpu;
+    }
+
+    if (hit) // HIT
     {
       readlike_hit(set, way, handle_pkt);
       cacheDataModel->rd_queue[Basic::HIT]++;
@@ -229,7 +245,15 @@ void CACHE::handle_prefetch()
     uint32_t set = get_set(handle_pkt.address);
     uint32_t way = get_way(handle_pkt.address, set);
 
-    if (way < NUM_WAY) // HIT
+    bool hit = way < NUM_WAY;
+
+    if(hit)
+    {
+      BLOCK* hit_block = &block[set * NUM_WAY + way];
+      hit = hit_block->thread_id == handle_pkt.thread_id && hit_block->cpu == handle_pkt.cpu;
+    }
+
+    if (hit) // HIT
     {
       readlike_hit(set, way, handle_pkt);
       cacheDataModel->pf_queue[Basic::HIT]++;
@@ -519,6 +543,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
     fill_block.came_from_request = handle_pkt.type;
+    fill_block.thread_id = handle_pkt.thread_id;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

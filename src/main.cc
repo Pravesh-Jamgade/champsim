@@ -484,6 +484,7 @@ int main(int argc, char** argv)
 
   // end trace file setup
 
+  
   // SHARED CACHE
   for (O3_CPU* cpu : ooo_cpu) {
     cpu->o3_setup();

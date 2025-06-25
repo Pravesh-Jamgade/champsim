@@ -20,6 +20,7 @@ class PagingStructureCache
     uint64_t address;
     uint64_t data;
     uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
+    int thread_id = -1;
   };
 
   const std::string NAME;
@@ -30,8 +31,8 @@ public:
   const std::size_t level;
   PagingStructureCache(std::string v1, uint8_t v2, uint32_t v3, uint32_t v4) : NAME(v1), NUM_SET(v3), NUM_WAY(v4), level(v2) {}
 
-  std::optional<uint64_t> check_hit(uint64_t address);
-  void fill_cache(uint64_t next_level_paddr, uint64_t vaddr);
+  std::optional<uint64_t> check_hit(uint64_t address, int thread_id);
+  void fill_cache(uint64_t next_level_paddr, uint64_t vaddr, int thread_id);
 };
 
 typedef struct Track
@@ -61,7 +62,7 @@ public:
 
   PagingStructureCache PSCL5, PSCL4, PSCL3, PSCL2;
 
-  const uint64_t CR3_addr;
+  vector<uint64_t> CR3_addr;
   std::map<std::pair<uint64_t, std::size_t>, uint64_t> page_table;
 
   // usercode
@@ -93,6 +94,7 @@ public:
   void print_deadlock() override;
 
   void* getObject(){return this;}
+
 };
 
 #endif
