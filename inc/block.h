@@ -32,6 +32,8 @@ public:
 
   uint64_t uv_cycle_enqueue = 0;
   bool ttp = false;
+
+  int thread_id=-1;
 };
 
 template <>
