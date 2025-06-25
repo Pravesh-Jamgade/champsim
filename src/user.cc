@@ -12,4 +12,6 @@ int KNOB_STLB_DO_NOT_TRACK_MISS = 0;
 int KNOB_STTMRAM_STLB = 0;
 int KNOB_VICTIMA = 0;
 
+int KNOB_SMT_ENABLE = 0;
+
 #endif

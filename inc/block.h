@@ -35,6 +35,8 @@ public:
   bool victima = false;
   bool vitima_copy_sent = false;
   bool recv_victima = false;
+
+  int thread_id=-1;
 };
 
 template <>

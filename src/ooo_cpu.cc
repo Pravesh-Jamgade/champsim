@@ -42,11 +42,12 @@ void O3_CPU::initialize_core()
   impl_btb_initialize();
 }
 
-void O3_CPU::init_instruction(ooo_model_instr arch_instr)
+void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
 {
   instrs_to_read_this_cycle--;
 
   arch_instr.instr_id = instr_unique_id;
+  arch_instr.thread_id = thread;
 
   bool reads_sp = false;
   bool writes_sp = false;
@@ -320,6 +321,10 @@ void O3_CPU::do_translate_fetch(champsim::circular_buffer<ooo_model_instr>::iter
   trace_packet.asid[0] = 0;
   trace_packet.asid[1] = 0;
   trace_packet.to_return = {&ITLB_bus};
+  trace_packet.thread_id = begin->thread_id;
+
+  assert(trace_packet.thread_id != -1);
+
   for (; begin != end; ++begin)
     trace_packet.instr_depend_on_me.push_back(begin);
 
@@ -374,6 +379,8 @@ void O3_CPU::do_fetch_instruction(champsim::circular_buffer<ooo_model_instr>::it
   fetch_packet.asid[0] = 0;
   fetch_packet.asid[1] = 0;
   fetch_packet.to_return = {&L1I_bus};
+  fetch_packet.thread_id = begin->thread_id;
+  
   for (; begin != end; ++begin)
     fetch_packet.instr_depend_on_me.push_back(begin);
 
@@ -667,21 +674,23 @@ void O3_CPU::do_sq_forward_to_lq(LSQ_ENTRY& sq_entry, LSQ_ENTRY& lq_entry)
 
 struct instr_mem_will_produce {
   const uint64_t match_mem;
-  explicit instr_mem_will_produce(uint64_t mem) : match_mem(mem) {}
+  const int thread_id;
+  explicit instr_mem_will_produce(uint64_t mem, int thread_id) : match_mem(mem), thread_id(thread_id) {}
   bool operator()(const ooo_model_instr& test) const
   {
     auto dmem_begin = std::begin(test.destination_memory);
     auto dmem_end = std::end(test.destination_memory);
-    return std::find(dmem_begin, dmem_end, match_mem) != dmem_end;
+    return std::find(dmem_begin, dmem_end, match_mem) != dmem_end && test.thread_id == thread_id;
   }
 };
 
 struct sq_will_forward {
   const uint64_t match_id, match_addr;
-  sq_will_forward(uint64_t id, uint64_t addr) : match_id(id), match_addr(addr) {}
-  bool operator()(const LSQ_ENTRY& sq_test) const
+  const int thread_id;
+  sq_will_forward(uint64_t id, uint64_t addr, int thread_id) : match_id(id), match_addr(addr), thread_id(thread_id) {}
+  bool operator()(LSQ_ENTRY& sq_test) const
   {
-    return sq_test.fetched == COMPLETED && sq_test.instr_id == match_id && sq_test.virtual_address == match_addr;
+    return sq_test.fetched == COMPLETED && sq_test.instr_id == match_id && sq_test.virtual_address == match_addr && sq_test.rob_index->thread_id == thread_id;
   }
 };
 
@@ -705,7 +714,7 @@ void O3_CPU::add_load_queue(champsim::circular_buffer<ooo_model_instr>::iterator
   // Mark RAW in the ROB since the producer might not be added in the store
   // queue yet
   champsim::circular_buffer<ooo_model_instr>::reverse_iterator prior_it{rob_it};
-  prior_it = std::find_if(prior_it, ROB.rend(), instr_mem_will_produce(lq_it->virtual_address));
+  prior_it = std::find_if(prior_it, ROB.rend(), instr_mem_will_produce(lq_it->virtual_address, lq_it->rob_index->thread_id));
   if (prior_it != ROB.rend()) {
     // this load cannot be executed until the prior store gets executed
     prior_it->memory_instrs_depend_on_me.push_back(rob_it);
@@ -713,7 +722,7 @@ void O3_CPU::add_load_queue(champsim::circular_buffer<ooo_model_instr>::iterator
     lq_it->translated = INFLIGHT;
 
     // Is this already in the SQ?
-    auto sq_it = std::find_if(std::begin(SQ), std::end(SQ), sq_will_forward(prior_it->instr_id, lq_it->virtual_address));
+    auto sq_it = std::find_if(std::begin(SQ), std::end(SQ), sq_will_forward(prior_it->instr_id, lq_it->virtual_address, lq_it->rob_index->thread_id));
     if (sq_it != std::end(SQ))
       do_sq_forward_to_lq(*sq_it, *lq_it);
   } else {
@@ -813,6 +822,7 @@ int O3_CPU::do_translate_store(std::vector<LSQ_ENTRY>::iterator sq_it)
   data_packet.asid[1] = sq_it->asid[1];
   data_packet.to_return = {&DTLB_bus};
   data_packet.sq_index_depend_on_me = {sq_it};
+  data_packet.thread_id = sq_it->rob_index->thread_id;
 
   DP(if (warmup_complete[cpu]) {
     std::cout << "[RTS0] " << __func__ << " instr_id: " << sq_it->instr_id << " rob_index: " << sq_it->rob_index << " is popped from to RTS0" << std::endl;
@@ -876,6 +886,7 @@ int O3_CPU::do_translate_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.asid[1] = lq_it->asid[1];
   data_packet.to_return = {&DTLB_bus};
   data_packet.lq_index_depend_on_me = {lq_it};
+  data_packet.thread_id = lq_it->rob_index->thread_id;
 
   DP(if (warmup_complete[cpu]) {
     std::cout << "[RTL0] " << __func__ << " instr_id: " << lq_it->instr_id << " rob_index: " << lq_it->rob_index << " is popped to RTL0" << std::endl;
@@ -904,7 +915,9 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.asid[1] = lq_it->asid[1];
   data_packet.to_return = {&L1D_bus};
   data_packet.lq_index_depend_on_me = {lq_it};
+  data_packet.thread_id = lq_it->rob_index->thread_id;
 
+  assert(data_packet.thread_id!=-1);
   int rq_index = L1D_bus.lower_level->add_rq(&data_packet);
 
   if (rq_index != -2)
@@ -1104,7 +1117,9 @@ void O3_CPU::retire_rob()
         data_packet.type = RFO;
         data_packet.asid[0] = sq_it->asid[0];
         data_packet.asid[1] = sq_it->asid[1];
+        data_packet.thread_id = sq_it->rob_index->thread_id;
 
+        assert(data_packet.thread_id!=-1);
         auto result = L1D_bus.lower_level->add_wq(&data_packet);
         if (result != -2) {
           ROB.front().destination_memory[i] = 0;
@@ -1119,9 +1134,9 @@ void O3_CPU::retire_rob()
     // release ROB entry
     DP(if (warmup_complete[cpu]) { cout << "[ROB] " << __func__ << " instr_id: " << ROB.front().instr_id << " is retired" << endl; });
 
+    num_retired[ROB.front().thread_id]++;
     ROB.pop_front();
     completed_executions--;
-    num_retired++;
     retire_bandwidth--;
   }
 

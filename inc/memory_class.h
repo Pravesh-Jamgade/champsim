@@ -43,6 +43,7 @@ public:
   {
     return __builtin_popcount(m_used);
   }
+  int thread_id = -1;
 };
 
 class MemoryRequestConsumer

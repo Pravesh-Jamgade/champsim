@@ -12,6 +12,8 @@
 #include "memory_class.h"
 #include "operable.h"
 
+extern int KNOB_SMT_ENABLE;
+
 using namespace std;
 
 class CACHE;
@@ -34,8 +36,11 @@ public:
   // instruction
   uint64_t instr_unique_id = 0, completed_executions = 0, begin_sim_cycle = 0, begin_sim_instr = 0, last_sim_cycle = 0, last_sim_instr = 0,
            finish_sim_cycle = 0, finish_sim_instr = 0, instrs_to_read_this_cycle = 0, instrs_to_fetch_this_cycle = 0,
-           next_print_instruction = STAT_PRINTING_PERIOD, num_retired = 0;
+           next_print_instruction = STAT_PRINTING_PERIOD;
   uint32_t inflight_reg_executions = 0, inflight_mem_executions = 0;
+
+
+  vector<uint64_t> num_retired;
 
   struct dib_entry_t {
     bool valid = false;
@@ -87,7 +92,7 @@ public:
   void operate();
 
   // functions
-  void init_instruction(ooo_model_instr instr);
+  void init_instruction(ooo_model_instr instr, int thread);
   void check_dib();
   void translate_fetch();
   void fetch_instruction();
@@ -125,6 +130,11 @@ public:
   void print_deadlock() override;
 
   int prefetch_code_line(uint64_t pf_v_addr);
+
+  void o3_setup()
+  {
+    num_retired.resize(KNOB_SMT_ENABLE, 0);
+  }
 
 #include "ooo_cpu_modules.inc"
 

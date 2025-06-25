@@ -82,21 +82,28 @@ void CACHE::handle_writeback()
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
-
     bool hit = way < NUM_WAY;
 
-    if(cache_is[IS_LLC] && hit)
+    if(hit)
     {
-      hit = handle_pkt.cpu == block[set * NUM_WAY + way].cpu;
+      BLOCK* hit_block = &block[set * NUM_WAY + way];
+
+      // only checking threads at STLB
+      if(KNOB_SMT_ENABLE )
+      {
+        hit = hit_block->thread_id == handle_pkt.thread_id;
+      }
+
+      if(KNOB_VICTIMA && 
+        cache_is[CACHE_ID::IS_L2] &&
+        handle_pkt.victima)
+      {
+        hit = block[set*NUM_WAY + way].victima_block && hit ? true : false;
+      }
+
+      hit = hit && hit_block->cpu == handle_pkt.cpu;
     }
 
-    if(KNOB_VICTIMA && 
-      cache_is[CACHE_ID::IS_L2] &&
-      handle_pkt.victima)
-    {
-      hit = block[set*NUM_WAY + way].victima_block && hit ? true : false;
-    }
-      
     if (hit) // HIT
     {
       impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
@@ -178,6 +185,7 @@ void CACHE::handle_writeback()
 
 void CACHE::handle_read()
 {
+  #ifdef TQ
   while (reads_available_this_cycle > 0 && KNOB_TRANSLATION_QUEUE) {
     if (!TQ.has_ready())
     {
@@ -227,6 +235,7 @@ void CACHE::handle_read()
     reads_available_this_cycle--;
     cacheDataModel->rd_queue[Basic::ACCESS]++;
   }
+  #endif
 
   while (reads_available_this_cycle > 0) {
     if (!RQ.has_ready())
@@ -237,6 +246,7 @@ void CACHE::handle_read()
 
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
+    assert(handle_pkt.thread_id!=-1);
 
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
@@ -246,19 +256,27 @@ void CACHE::handle_read()
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
 
     bool hit = way < NUM_WAY;
-
-    if(cache_is[IS_LLC] && hit)
-    {
-      hit = handle_pkt.cpu == block[set * NUM_WAY + way].cpu;
-    }
-
-    if(KNOB_VICTIMA && 
-      cache_is[CACHE_ID::IS_L2] &&
-      handle_pkt.victima)
-    {
-      hit = block[set*NUM_WAY + way].victima_block && hit ? true : false;
-    }
       
+    if(hit)
+    {
+      BLOCK* hit_block = &block[set * NUM_WAY + way];
+      
+      // only checking threads at STLB
+      if(KNOB_SMT_ENABLE )
+      {
+        hit = hit_block->thread_id == handle_pkt.thread_id;
+      }
+
+      if(KNOB_VICTIMA && 
+        cache_is[CACHE_ID::IS_L2] &&
+        handle_pkt.victima)
+      {
+        hit = block[set*NUM_WAY + way].victima_block && hit ? true : false;
+      }
+
+      hit = hit && hit_block->cpu == handle_pkt.cpu;
+    }
+
     if (hit) // HIT
     {
       readlike_hit(set, way, handle_pkt);
@@ -302,9 +320,24 @@ void CACHE::handle_prefetch()
 
     bool hit = way < NUM_WAY;
 
-    if(cache_is[IS_LLC] && hit)
+    if(hit)
     {
-      hit = handle_pkt.cpu == block[set * NUM_WAY + way].cpu;
+      BLOCK* hit_block = &block[set * NUM_WAY + way];
+      
+      // only checking threads at STLB
+      if(KNOB_SMT_ENABLE )
+      {
+        hit = hit_block->thread_id == handle_pkt.thread_id;
+      }
+
+      if(KNOB_VICTIMA && 
+        cache_is[CACHE_ID::IS_L2] &&
+        handle_pkt.victima)
+      {
+        hit = block[set*NUM_WAY + way].victima_block && hit ? true : false;
+      }
+
+      hit = hit && hit_block->cpu == handle_pkt.cpu;
     }
 
     if (hit) // HIT
@@ -680,6 +713,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.came_from_request = handle_pkt.type;
     fill_block.m_used = 0;
     fill_block.victima_block = handle_pkt.victima;
+    fill_block.thread_id = handle_pkt.thread_id;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

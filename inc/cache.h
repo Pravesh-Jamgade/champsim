@@ -22,6 +22,9 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+
+  bool is_tlb =false;
+
   enum VC
   {
     STLB_EVICT=0,
@@ -245,14 +248,17 @@ public:
     else if(NAME.find("STLB") != string::npos)
     {
       cache_is[CACHE_ID::IS_STLB] = true;
+      is_tlb = true;
     }
     else if(NAME.find("DTLB") != string::npos)
     {
       cache_is[CACHE_ID::IS_DTLB] = true;
+      is_tlb = true;
     }
     else if(NAME.find("ITLB") != string::npos)
     {
       cache_is[CACHE_ID::IS_ITLB] = true;
+      is_tlb = true;
     }
 
     FA_SIZE = NUM_WAY * NUM_SET;
