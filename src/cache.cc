@@ -88,11 +88,11 @@ void CACHE::handle_writeback()
     {
       BLOCK* hit_block = &block[set * NUM_WAY + way];
 
-      // only checking threads at STLB
-      if(KNOB_SMT_ENABLE )
-      {
-        hit = hit_block->thread_id == handle_pkt.thread_id;
-      }
+      // // only checking threads at STLB
+      // if(KNOB_SMT_ENABLE )
+      // {
+      //   hit = hit_block->thread_id == handle_pkt.thread_id;
+      // }
 
       if(KNOB_VICTIMA && 
         cache_is[CACHE_ID::IS_L2] &&
@@ -261,11 +261,11 @@ void CACHE::handle_read()
     {
       BLOCK* hit_block = &block[set * NUM_WAY + way];
       
-      // only checking threads at STLB
-      if(KNOB_SMT_ENABLE )
-      {
-        hit = hit_block->thread_id == handle_pkt.thread_id;
-      }
+      // // only checking threads at STLB
+      // if(KNOB_SMT_ENABLE )
+      // {
+      //   hit = hit_block->thread_id == handle_pkt.thread_id;
+      // }
 
       if(KNOB_VICTIMA && 
         cache_is[CACHE_ID::IS_L2] &&
@@ -324,11 +324,11 @@ void CACHE::handle_prefetch()
     {
       BLOCK* hit_block = &block[set * NUM_WAY + way];
       
-      // only checking threads at STLB
-      if(KNOB_SMT_ENABLE )
-      {
-        hit = hit_block->thread_id == handle_pkt.thread_id;
-      }
+      // // only checking threads at STLB
+      // if(KNOB_SMT_ENABLE )
+      // {
+      //   hit = hit_block->thread_id == handle_pkt.thread_id;
+      // }
 
       if(KNOB_VICTIMA && 
         cache_is[CACHE_ID::IS_L2] &&
@@ -637,7 +637,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     {
       if(KNOB_VICTIMA)
       {
-        if(cache_is[CACHE_ID::IS_STLB])
+        if(cache_is[CACHE_ID::IS_STLB] && victima_lookup(handle_pkt.v_address))
         {
           if(l2cache->get_occupancy(2,0) == l2cache->get_size(2,0))
           {
@@ -789,7 +789,7 @@ uint32_t CACHE::get_set(uint64_t address, bool victima)
 }
 
 //  |----- TAG/Page Number --------|
-//  |------EXTRA------|---PO(3b)---|----SET----|---BO(3b)---|
+//  |------EXTRA------|---PTEO(3b)---|----SET----|---BO(3b)---|
 uint32_t CACHE::get_way(uint64_t address, uint32_t set, bool victima)
 {
   int offset = OFFSET_BITS;

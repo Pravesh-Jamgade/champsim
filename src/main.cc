@@ -19,6 +19,9 @@
 
 #include "dramsim3_wrapper.hpp"
 #include "INIReader.h"
+#include "victima.h"
+
+map<uint64_t, PTWC> ptw_pred;
 
 uint8_t warmup_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;

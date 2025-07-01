@@ -13,6 +13,9 @@
 #include "operable.h"
 #include <map>
 #include "DataModel.h"
+#include "victima.h"
+
+extern map<uint64_t, PTWC> ptw_pred;
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -127,6 +130,22 @@ public:
   {
     delete cacheDataModel;
     cacheDataModel = new CacheDataModel(NAME, cpu);
+  }
+
+  bool victima_lookup(uint64_t addr)
+  {
+    uint64_t page = addr & ~(PAGE_SIZE-1);
+    auto found = ptw_pred.find(page);
+
+    if(found != ptw_pred.end())
+    {
+      for(auto entry: ptw_pred)
+      {
+        cout <<  entry.second.cost << ", " << entry.second.freq << '\n';
+      }
+    }
+    // page already there
+    return found != ptw_pred.end();
   }
 
   void print_logs()

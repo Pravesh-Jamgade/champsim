@@ -94,6 +94,7 @@ public:
   void print_deadlock() override;
 
   void* getObject(){return this;}
+  void victima_update(uint64_t addr, int cost_or_freq);
 
 };
 
