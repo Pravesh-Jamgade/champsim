@@ -788,13 +788,15 @@ uint32_t CACHE::get_set(uint64_t address, bool victima)
   return ((address >> offset) & bitmask(lg2(NUM_SET)));
 }
 
+//  |----- TAG/Page Number --------|
+//  |------EXTRA------|---PO(3b)---|----SET----|---BO(3b)---|
 uint32_t CACHE::get_way(uint64_t address, uint32_t set, bool victima)
 {
   int offset = OFFSET_BITS;
   if(KNOB_VICTIMA && victima && cache_is[IS_L2])
   {
-    // TODO: add log(NUM_SET)
-    offset = lg2(NUM_SET) + 3;
+    // we need page offset hence
+    offset = LOG2_PAGE_SIZE + 3;//lg2(NUM_SET) + 3;
   }
   
   auto begin = std::next(block.begin(), set * NUM_WAY);
