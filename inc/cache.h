@@ -16,6 +16,7 @@
 #include "victima.h"
 
 extern map<uint64_t, PTWC> ptw_pred;
+extern map<uint32_t, uint32_t> l2_pte_map;
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -45,8 +46,6 @@ public:
   int victima_counters[VC_END] = {0};
   int victima_block_usage[9] = {0};
 
-  // illusiong of stored cache line by 8byte granularity
-  map<uint32_t, uint32_t> l2_pte_map;
   MemoryRequestConsumer* l2cache;
   CacheDataModel* cacheDataModel;
   bool cache_is[CACHE_ID_END] = {false};
@@ -136,14 +135,6 @@ public:
   {
     uint64_t page = addr & ~(PAGE_SIZE-1);
     auto found = ptw_pred.find(page);
-
-    if(found != ptw_pred.end())
-    {
-      for(auto entry: ptw_pred)
-      {
-        cout <<  entry.second.cost << ", " << entry.second.freq << '\n';
-      }
-    }
     // page already there
     return found != ptw_pred.end();
   }
@@ -201,7 +192,7 @@ public:
       // cout << "\nvictima PTE stored from stlb to l2\n";
       // cout << "vitima_pte vp, pp\n";
       // for(auto entry: l2_pte_map)
-      //   cout << "victima_pte " << entry.first << ", " << entry.second;
+      //   cout << "victima_pte " << entry.first << ", " << entry.second << '\n';
       
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
     }

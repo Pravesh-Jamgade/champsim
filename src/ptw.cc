@@ -50,18 +50,52 @@ void PageTableWalker::handle_read()
 
     assert(handle_pkt.thread_id!=-1);
 
-    auto ptw_addr = splice_bits(CR3_addr[cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, vmem.pt_levels - 1) * PTE_BYTES, LOG2_PAGE_SIZE);
-    auto ptw_level = vmem.pt_levels - 1;
-    for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
-      if (auto check_addr = pscl->check_hit(handle_pkt.address, handle_pkt.thread_id); check_addr.has_value()) {
-        ptw_addr = check_addr.value();
-        ptw_level = pscl->level - 1; 
+      // initalizing ptw from root
+      uint8_t ptw_level = vmem.pt_levels - 1;
+      // first pa to start page table walk
+      uint64_t next_pt_addr = splice_bits(CR3_addr[handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+  
+      if(0)
+      {
+        // optimized
+        for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+          if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) {
+            next_pt_addr = check_addr.value();
+            ptw_level = pscl->level - 1; 
+          }
+        }
       }
-    }
+      else
+      {
+        //detailed
+        // look for this levels PSC, if corresponding entry found then we can skip the memory access for this level
+        for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+          if(ptw_level != pscl->level)
+            continue;
+          if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) {
+            // hit at psc
+            // get the next pt addr
+            next_pt_addr = check_addr.value();
+            // update to next level
+            ptw_level = pscl->level-1; 
+            // mix to lookup next level
+            next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+          }
+        }
+      }
+
+    // auto ptw_addr = splice_bits(CR3_addr[cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, vmem.pt_levels - 1) * PTE_BYTES, LOG2_PAGE_SIZE);
+    // auto ptw_level = vmem.pt_levels - 1;
+    // for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+    //   if (auto check_addr = pscl->check_hit(handle_pkt.address, handle_pkt.thread_id); check_addr.has_value()) {
+    //     ptw_addr = check_addr.value();
+    //     ptw_level = pscl->level - 1; 
+    //   }
+    // }
 
     PACKET packet = handle_pkt;
     packet.fill_level = lower_level->fill_level; // This packet will be sent from L1 to PTW.
-    packet.address = ptw_addr;
+    packet.address = next_pt_addr;
     packet.v_address = handle_pkt.address;
     packet.cpu = cpu;
     packet.type = TRANSLATION;
