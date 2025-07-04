@@ -564,7 +564,7 @@ int main(int argc, char** argv)
             cumulative_ipc = (1.0 * ooo_cpu[i]->num_retired[th]) / ooo_cpu[i]->current_cycle;
           float heartbeat_ipc = (1.0 * ooo_cpu[i]->num_retired[th] - ooo_cpu[i]->last_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->last_sim_cycle);
 
-          cout << "Heartbeat CPU " << i << " instructions: " << ooo_cpu[i]->num_retired[th] << " cycles: " << ooo_cpu[i]->current_cycle;
+          cout << "Heartbeat CPU " << i << " Thread " << th << " instructions: " << ooo_cpu[i]->num_retired[th] << " cycles: " << ooo_cpu[i]->current_cycle;
           cout << " heartbeat IPC: " << heartbeat_ipc << " cumulative IPC: " << cumulative_ipc;
           cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
           ooo_cpu[i]->next_print_instruction += STAT_PRINTING_PERIOD;
@@ -594,20 +594,42 @@ int main(int argc, char** argv)
           ooo_cpu[i]->finish_sim_instr += ooo_cpu[i]->num_retired[th] - ooo_cpu[i]->begin_sim_instr;
           ooo_cpu[i]->finish_sim_cycle += ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
 
-          cout << "Finished CPU " << i << " Thread " << th << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle << '\n';
+          cout << "Finished CPU " << i << " @ Thread " << th << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle << '\n';
           // cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
           // cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
           // cout << "cpu" << i << " IPC, " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
           
-          uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time), elapsed_minute = elapsed_second / 60, elapsed_hour = elapsed_minute / 60;
-          elapsed_minute -= elapsed_hour * 60;
-          elapsed_second -= (elapsed_hour * 3600 + elapsed_minute * 60);
+          // uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time), elapsed_minute = elapsed_second / 60, elapsed_hour = elapsed_minute / 60;
+          // elapsed_minute -= elapsed_hour * 60;
+          // elapsed_second -= (elapsed_hour * 3600 + elapsed_minute * 60);
           
-          cout << "cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
+          // cout << "cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
           for (auto it = caches.rbegin(); it != caches.rend(); ++it)
             record_roi_stats(i, *it);
         }
       // }
+    }
+  }
+
+  for(int i=0; i< NUM_CPUS; i++)
+  {
+    // simulation complete
+    for(int j=0; j< KNOB_SMT_ENABLE; j++)
+    {
+      // summation across threads
+      uint64_t finish_sim_instr = ooo_cpu[i]->num_retired[j] - ooo_cpu[i]->begin_sim_instr;
+      uint64_t finish_sim_cycle = ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
+
+      cout << "Stats CPU " << i << " Thread " << j << " instructions: " << finish_sim_instr << " cycles: " <<finish_sim_cycle << '\n';
+      // cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
+      // cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
+      // cout << "cpu" << i << " IPC, " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
+
+      uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time), elapsed_minute = elapsed_second / 60, elapsed_hour = elapsed_minute / 60;
+      elapsed_minute -= elapsed_hour * 60;
+      elapsed_second -= (elapsed_hour * 3600 + elapsed_minute * 60);
+
+      cout << "Stats cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
     }
   }
 
