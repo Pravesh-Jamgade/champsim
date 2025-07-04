@@ -48,18 +48,60 @@ void PageTableWalker::handle_read()
 
     assert(handle_pkt.thread_id!=-1);
 
-    auto ptw_addr = splice_bits(CR3_addr[cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, vmem.pt_levels - 1) * PTE_BYTES, LOG2_PAGE_SIZE);
-    auto ptw_level = vmem.pt_levels - 1;
-    for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
-      if (auto check_addr = pscl->check_hit(handle_pkt.address, handle_pkt.thread_id); check_addr.has_value()) {
-        ptw_addr = check_addr.value();
-        ptw_level = pscl->level - 1; 
+    // initalizing ptw from root
+    uint8_t ptw_level = vmem.pt_levels - 1;
+    // first pa to start page table walk
+    uint64_t next_pt_addr = splice_bits(CR3_addr[handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+    bool miss_at_root = true;
+    if(0)
+    {
+      // optimized
+      for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+        if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) {
+          next_pt_addr = check_addr.value();
+          ptw_level = pscl->level - 1; 
+        }
+      }
+    }
+    else
+    {
+      //detailed
+      // look for this levels PSC, if corresponding entry found then we can skip the memory access for this level
+      for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+        if(ptw_level != pscl->level)
+          continue;
+        if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) 
+        {
+          ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
+          // hit at psc
+          // get the next pt addr
+          next_pt_addr = check_addr.value();
+          // update to next level
+          ptw_level = pscl->level-1; 
+          // mix to lookup next level
+          next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+          miss_at_root = false;
+        }
+        else
+        {
+          ptw_datamodel->queue_psc_miss_metric[ptw_level]++;
+          miss_at_root = true;
+        }
       }
     }
 
+    // auto ptw_addr = splice_bits(CR3_addr[cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, vmem.pt_levels - 1) * PTE_BYTES, LOG2_PAGE_SIZE);
+    // auto ptw_level = vmem.pt_levels - 1;
+    // for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+    //   if (auto check_addr = pscl->check_hit(handle_pkt.address, handle_pkt.thread_id); check_addr.has_value()) {
+    //     ptw_addr = check_addr.value();
+    //     ptw_level = pscl->level - 1; 
+    //   }
+    // }
+
     PACKET packet = handle_pkt;
     packet.fill_level = lower_level->fill_level; // This packet will be sent from L1 to PTW.
-    packet.address = ptw_addr;
+    packet.address = next_pt_addr;
     packet.v_address = handle_pkt.address;
     packet.cpu = cpu;
     packet.type = TRANSLATION;
@@ -91,8 +133,6 @@ void PageTableWalker::handle_read()
     RQ.pop_front();
     reads_this_cycle--;
 
-    // count psc level used to sent memory read 
-    ptw_datamodel->queue_psc_metric[packet.init_translation_level]++;
     it->uv_cycle_enqueue = current_cycle;
   }
 }
@@ -204,6 +244,32 @@ void PageTableWalker::handle_fill()
           std::cout << " index: " << std::distance(MSHR.begin(), fill_mshr) << " occupancy: " << get_occupancy(0, 0);
           std::cout << " event: " << fill_mshr->event_cycle << " current: " << current_cycle << std::endl;
         });
+
+
+        bool miss_at_root = false;
+        // search next level page table
+        uint8_t ptw_level = fill_mshr->translation_level - 1;
+        // use next 9bits with base addr of next level page table
+        uint64_t next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+        // lookup this levels PSC, if found in PSC then update next_pt_addr, ptw_level and continue search
+        for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) 
+        {
+          if(ptw_level != pscl->level)
+            continue;
+          if (auto check_addr = pscl->check_hit(next_pt_addr, fill_mshr->thread_id); check_addr.has_value()) {
+            ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
+            next_pt_addr = check_addr.value();
+            ptw_level = pscl->level - 1; 
+            next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+            miss_at_root = false;
+            
+          }
+          else
+          {
+            ptw_datamodel->queue_psc_miss_metric[ptw_level]++;
+            miss_at_root = true;
+          }
+        }
 
         PACKET packet = *fill_mshr;
         packet.cpu = cpu;

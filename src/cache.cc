@@ -8,6 +8,7 @@
 #include "util.h"
 #include "vmem.h"
 
+#define SHARED 3
 #ifndef SANITY_CHECK
 #define NDEBUG
 #endif
@@ -84,7 +85,7 @@ void CACHE::handle_writeback()
     if(hit)
     {
       BLOCK* hit_block = &block[set * NUM_WAY + way];
-      hit = hit_block->thread_id == handle_pkt.thread_id && hit_block->cpu == handle_pkt.cpu;
+      hit = hit_block->thread_id == handle_pkt.thread_id && hit_block->cpu == handle_pkt.cpu || hit_block->thread_id == SHARED;
     }
 
     if (hit) // HIT
@@ -141,6 +142,7 @@ void CACHE::handle_writeback()
 
 void CACHE::handle_read()
 {
+  #ifdef TQ
   while (reads_available_this_cycle > 0 && KNOB_TRANSLATION_QUEUE) {
     if (!TQ.has_ready())
     {
@@ -181,6 +183,7 @@ void CACHE::handle_read()
     reads_available_this_cycle--;
     cacheDataModel->rd_queue[Basic::ACCESS]++;
   }
+  #endif
 
   while (reads_available_this_cycle > 0) {
     if (!RQ.has_ready())
@@ -205,7 +208,7 @@ void CACHE::handle_read()
     if(hit)
     {
       BLOCK* hit_block = &block[set * NUM_WAY + way];
-      hit = hit_block->thread_id == handle_pkt.thread_id && hit_block->cpu == handle_pkt.cpu;
+      hit = hit_block->thread_id == handle_pkt.thread_id && hit_block->cpu == handle_pkt.cpu || hit_block->thread_id == SHARED;
     }
 
     if (hit) // HIT
@@ -246,12 +249,6 @@ void CACHE::handle_prefetch()
     uint32_t way = get_way(handle_pkt.address, set);
 
     bool hit = way < NUM_WAY;
-
-    if(hit)
-    {
-      BLOCK* hit_block = &block[set * NUM_WAY + way];
-      hit = hit_block->thread_id == handle_pkt.thread_id && hit_block->cpu == handle_pkt.cpu;
-    }
 
     if (hit) // HIT
     {
@@ -865,6 +862,7 @@ void CACHE::va_translate_prefetches()
 
 int CACHE::add_pq(PACKET* packet)
 {
+  packet->thread_id = SHARED;
   cacheDataModel->pf_queue[Basic::REQUESTED]++;
   assert(packet->address != 0);
   PQ_ACCESS++;

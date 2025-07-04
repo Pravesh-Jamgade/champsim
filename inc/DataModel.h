@@ -200,6 +200,15 @@ class CacheDataModel
     }
 };
 
+// actual PSC Level initalized with base index 1, but when they send the requests in memory hierary they make it 0 indexed.
+enum PSCLevel
+{
+    PSCL2=1,
+    PSCL3,
+    PSCL4,
+    PSCL5,
+    PSCL_END
+};
 class PTWDataModel
 {
     public:
@@ -219,21 +228,11 @@ class PTWDataModel
         }
     }
 
-    // actual PSC Level initalized with base index 1, but when they send the requests in memory hierary they make it 0 indexed.
-    enum PSCLevel
-    {
-        PSCL2=0,
-        PSCL3,
-        PSCL4,
-        PSCL5,
-        PSCL_NO,
-        PSCL_END
-    };
-
     // count psc level hit count. If hit in pscl5, says we have base address for next_level. And we dont need separate memory access
     // for pscl5. For 1 miss in STLB: Not hit in any pscl --> 4 memory access, Hit in pscl5 --> 3 memory access, Hit in pscl4 --> 2 memory access
-    uint64_t queue_psc_metric[PSCLevel::PSCL_END] = {0};
-    string PSCL_Hit_str[PSCL_END] = {"pscl2_Hit", "pscl3_Hit", "pscl4_Hit", "pscl5_Hit", "PSCL_NO"};
+    uint64_t queue_psc_hit_metric[PSCLevel::PSCL_END] = {0};
+    uint64_t queue_psc_miss_metric[PSCLevel::PSCL_END] = {0};
+    string PSCL_Hit_str[PSCL_END] = {"*", "pscl2_", "pscl3_", "pscl4_", "pscl5_"};
 
     uint64_t queue_basic_metric[Basic::BASIC_END] = {0};
 
@@ -247,7 +246,7 @@ class PTWDataModel
     // total miss latency experienced by packet waiting at each psc level in mshr
     uint64_t psc_level_packet_processed_miss_latency[PSCLevel::PSCL_END] = {0};
 
-    string pscl_packet_processed_str[PSCL_END] = {"pscl2_avg_miss_latency", "pscl3_avg_miss_latency", "pscl4_avg_miss_latency", "pscl5_avg_miss_latency", "--"};
+    string pscl_packet_processed_str[PSCL_END] = {"*", "pscl2_avg_miss_latency", "pscl3_avg_miss_latency", "pscl4_avg_miss_latency", "pscl5_avg_miss_latency"};
 
     // page-faults at each level of radix tree (psc level)
     uint64_t page_fault[PSCL_END] = {0};
@@ -257,6 +256,7 @@ class PTWDataModel
     void print_stats()
     {
         string tag = "cpu" + to_string(cpu) + "_PTW" + " ";
+        
         for(int i=0; i< Basic::BASIC_END; i++)
         {
             cout << tag << Basic_str[i] << ", " << queue_basic_metric[i] << '\n';
@@ -264,7 +264,17 @@ class PTWDataModel
 
         for(int i=0; i< PSCLevel::PSCL_END; i++)
         {
-            cout << tag << PSCL_Hit_str[i] << ", " << queue_psc_metric[i] << '\n';
+            cout << tag << PSCL_Hit_str[i] << "HIT, " << queue_psc_hit_metric[i] << '\n';
+        }
+
+        for(int i=0; i< PSCLevel::PSCL_END; i++)
+        {
+            cout << tag << PSCL_Hit_str[i] << "MISS, " << queue_psc_miss_metric[i] << '\n';
+        }
+
+        for(int i=0; i< PSCLevel::PSCL_END; i++)
+        {
+            cout << tag << PSCL_Hit_str[i] << "Fault, " << page_fault[i] << '\n';
         }
 
         for(int i=0; i< PSCLevel::PSCL_END; i++)
