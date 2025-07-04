@@ -2,6 +2,7 @@
 #define MEMORY_CLASS_H
 
 #include <limits>
+#include <map>
 
 #include "block.h"
 
@@ -15,6 +16,14 @@
 
 #define READ_HIT 0
 #define WRITEBACK_HIT 1
+
+class VPN
+{
+  public:
+  bool valid = false;
+  uint64_t vp = 0;
+  uint64_t pp = 0;
+};
 
 // CACHE BLOCK
 class BLOCK
@@ -31,6 +40,8 @@ public:
 
   uint8_t m_used = 0; // 8 entries of 8B each
   bool victima_block = 0;
+
+  std::map<uint64_t, uint64_t> vp_2_pp_map;
 
   // for tlb block, each PTE is 8Byte, so we have 8 entries in 64B block
   void updateUsage(uint32_t offset){

@@ -54,7 +54,9 @@ void PageTableWalker::handle_read()
       uint8_t ptw_level = vmem.pt_levels - 1;
       // first pa to start page table walk
       uint64_t next_pt_addr = splice_bits(CR3_addr[handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
-  
+
+      bool miss_at_root = true;
+
       if(0)
       {
         // optimized
@@ -72,7 +74,9 @@ void PageTableWalker::handle_read()
         for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
           if(ptw_level != pscl->level)
             continue;
-          if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) {
+          if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) 
+          {
+            ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
             // hit at psc
             // get the next pt addr
             next_pt_addr = check_addr.value();
@@ -80,6 +84,13 @@ void PageTableWalker::handle_read()
             ptw_level = pscl->level-1; 
             // mix to lookup next level
             next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+
+            miss_at_root = false;
+          }
+          else
+          {
+            ptw_datamodel->queue_psc_miss_metric[ptw_level]++;
+            miss_at_root = true;
           }
         }
       }
@@ -127,8 +138,6 @@ void PageTableWalker::handle_read()
     RQ.pop_front();
     reads_this_cycle--;
 
-    // count psc level used to sent memory read 
-    ptw_datamodel->queue_psc_metric[packet.init_translation_level]++;
     it->uv_cycle_enqueue = current_cycle;
 
     victima_update(packet.v_address, 0);
@@ -141,6 +150,13 @@ void PageTableWalker::handle_fill()
 
   while (fill_this_cycle > 0 && !std::empty(MSHR) && MSHR.front().event_cycle <= current_cycle) {
     auto fill_mshr = MSHR.begin();
+
+    // if(!fill_mshr->valid_psc_event)
+    // {
+    //   fill_mshr->event_cycle = current_cycle + 2;
+    //   fill_mshr->valid_psc_event = 1;
+    //   MSHR.sort(ord_event_cycle<PACKET>{});
+    // }
 
     // Translation complete now remove MSHR entry, when translation level is 0
     if (fill_mshr->translation_level == 0) // If translation complete
@@ -166,7 +182,7 @@ void PageTableWalker::handle_fill()
         fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
         MSHR.sort(ord_event_cycle<PACKET>{});
 
-        ptw_datamodel->page_fault[0]++;
+        ptw_datamodel->page_fault[fill_mshr->translation_level]++;
         victima_update(fill_mshr->v_address, 1);
       } 
       // Translation finally complete
@@ -245,12 +261,37 @@ void PageTableWalker::handle_fill()
           std::cout << " event: " << fill_mshr->event_cycle << " current: " << current_cycle << std::endl;
         });
 
+
+        bool miss_at_root = false;
+        // search next level page table
+        uint8_t ptw_level = fill_mshr->translation_level - 1;
+        // use next 9bits with base addr of next level page table
+        uint64_t next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+        // lookup this levels PSC, if found in PSC then update next_pt_addr, ptw_level and continue search
+        for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+          if(ptw_level != pscl->level)
+            continue;
+          if (auto check_addr = pscl->check_hit(next_pt_addr, fill_mshr->thread_id); check_addr.has_value()) {
+            ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
+            next_pt_addr = check_addr.value();
+            ptw_level = pscl->level - 1; 
+            next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+            miss_at_root = false;
+            
+          }
+          else
+          {
+            ptw_datamodel->queue_psc_miss_metric[ptw_level]++;
+            miss_at_root = true;
+          }
+        }
+
         PACKET packet = *fill_mshr;
         packet.cpu = cpu;
         packet.type = TRANSLATION;
-        packet.address = addr;
+        packet.address = next_pt_addr;
         packet.to_return = {this};
-        packet.translation_level = fill_mshr->translation_level - 1;
+        packet.translation_level = ptw_level;
         packet.thread_id = fill_mshr->thread_id;
 
         int rq_index = lower_level->add_rq(&packet);
@@ -351,6 +392,7 @@ uint32_t PageTableWalker::get_size(uint8_t queue_type, uint64_t address)
 
 void PagingStructureCache::fill_cache(uint64_t next_level_paddr, uint64_t vaddr, int thread_id)
 {
+  assert(thread_id != -1);
   auto set_idx = (vaddr >> vmem.shamt(level + 1)) & bitmask(lg2(NUM_SET));
   auto set_begin = std::next(std::begin(block), set_idx * NUM_WAY);
   auto set_end = std::next(set_begin, NUM_WAY);

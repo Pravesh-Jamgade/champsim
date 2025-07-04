@@ -85,40 +85,23 @@ void CACHE::handle_writeback()
     // access cache
     uint32_t set = get_set(handle_pkt.address, handle_pkt.victima);
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
+    uint32_t off = get_offset(handle_pkt.address);
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
     bool hit = way < NUM_WAY;
 
-    // @ L2 check vp in the map
-    bool test = false;
-    if(KNOB_VICTIMA && cache_is[IS_L2])
+    uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));
+    uint64_t pp = (handle_pkt.data & ~(PAGE_SIZE-1));
+
+    bool test = l2_pte_map.find(vp)!=l2_pte_map.end();
+    if(handle_pkt.victima && KNOB_VICTIMA && cache_is[IS_L2])
     {
-      uint32_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
-      auto find_page = l2_pte_map.find(vp_addr);
-      if(find_page != l2_pte_map.end())
+      hit = hit && test;
+      if(hit)
       {
-        test = true;
+        BLOCK* hit_block = &block[set * NUM_WAY + way];
+        hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
       }
-    }
-      
-    if(hit)
-    {
-      BLOCK* hit_block = &block[set * NUM_WAY + way];
-
-      // only checking threads at STLB
-      if(KNOB_SMT_ENABLE )
-      {
-        hit = hit_block->thread_id == handle_pkt.thread_id || hit_block->thread_id == SHARED;
-      }
-
-      if(KNOB_VICTIMA && 
-        cache_is[CACHE_ID::IS_L2] &&
-        handle_pkt.victima)
-      {
-        hit = block[set*NUM_WAY + way].victima_block && hit;
-      }
-
-      hit = hit && hit_block->cpu == handle_pkt.cpu;
     }
 
     if (hit) // HIT
@@ -138,6 +121,7 @@ void CACHE::handle_writeback()
 
       if(fill_block.came_from_request == PREFETCH)
         prefetch_hit_histo[set*NUM_WAY+way][WRITEBACK_HIT]++;
+      
     } else // MISS
     {
       bool success;
@@ -171,24 +155,16 @@ void CACHE::handle_writeback()
 
     if(write_true)
     {
-      // victima update offset usage
-      // remove page offset then take out 3 bits to update the block offset usage
       uint32_t offset = handle_pkt.address >> LOG2_PAGE_SIZE & 0x7;
       fill_block.updateUsage(offset);
 
       // writing stlb PTE to L2
       if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.victima)
       {
-        victima_counters[VC::L2_WRITE]++;
-        // zeroing page offset bits
-        uint32_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
-        auto find_page = l2_pte_map.find(vp_addr);
-        // successfully stored vp-pp mapping
+        auto find_page = l2_pte_map.find(vp);
         if(find_page == l2_pte_map.end())
         {
-          // zeroing page offset bits
-          uint32_t pp_addr = handle_pkt.data & ~(PAGE_SIZE-1);
-          l2_pte_map.insert({vp_addr, pp_addr});
+          l2_pte_map.insert({vp, pp});
         }
       }
     }
@@ -271,43 +247,24 @@ void CACHE::handle_read()
 
     uint32_t set = get_set(handle_pkt.address, handle_pkt.victima);
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
+    uint32_t off = get_offset(handle_pkt.address);
 
     bool hit = way < NUM_WAY;
 
-    bool test = false;
-    if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.victima)
+    uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));
+    uint64_t pp = (handle_pkt.data & ~(PAGE_SIZE-1));
+
+    bool test = l2_pte_map.find(vp)!=l2_pte_map.end();
+    if(handle_pkt.victima && KNOB_VICTIMA && cache_is[IS_L2])
     {
-      // zeroing page offset bits
-      uint32_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
-      auto find_page = l2_pte_map.find(vp_addr);
-      if(find_page != l2_pte_map.end())
+      hit = hit && test;
+      if(hit)
       {
-        test= true;
+        BLOCK* hit_block = &block[set * NUM_WAY + way];
+        // cout << "hit," << hit << ", vic_block," << (hit_block->victima_block) << ", pkt_thread," << (handle_pkt.thread_id) << ", block_thread," << (hit_block->thread_id) << ", " << (hit_block->came_from_request) << '\n';
+        hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
       }
     }
-    
-    bool thread_match=false, cpu_match=false, victima_match=false;
-    if(hit)
-    {
-      BLOCK* hit_block = &block[set * NUM_WAY + way];
-
-      // only checking threads at STLB
-      if(KNOB_SMT_ENABLE )
-      {
-        thread_match = hit_block->thread_id == handle_pkt.thread_id || hit_block->thread_id == SHARED;
-      }
-
-      if(KNOB_VICTIMA && 
-        cache_is[CACHE_ID::IS_L2] &&
-        handle_pkt.victima)
-      {
-        victima_match = block[set*NUM_WAY + way].victima_block;
-      }
-
-      cpu_match = hit_block->cpu == handle_pkt.cpu;
-    }
-
-   hit = hit && thread_match && cpu_match && victima_match;
 
     if (hit) // HIT
     {
@@ -352,26 +309,6 @@ void CACHE::handle_prefetch()
 
     bool hit = way < NUM_WAY;
 
-    if(hit)
-    {
-      BLOCK* hit_block = &block[set * NUM_WAY + way];
-      
-      // only checking threads at STLB
-      if(KNOB_SMT_ENABLE )
-      {
-        hit = hit_block->thread_id == handle_pkt.thread_id || hit_block->thread_id == SHARED;
-      }
-
-      if(KNOB_VICTIMA && 
-        cache_is[CACHE_ID::IS_L2] &&
-        handle_pkt.victima)
-      {
-        hit = block[set*NUM_WAY + way].victima_block && hit ? true : false;
-      }
-
-      hit = hit && hit_block->cpu == handle_pkt.cpu;
-    }
-
     if (hit) // HIT
     {
       readlike_hit(set, way, handle_pkt);
@@ -410,22 +347,27 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   if(KNOB_VICTIMA && cache_is[CACHE_ID::IS_L2] && handle_pkt.victima)
   {
-    // writing stlb PTE to L2
-    // zeroing page offset bits
-    uint32_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
-    auto find_page = l2_pte_map.find(vp_addr);
-    // successfully stored vp-pp mapping
-    if(find_page != l2_pte_map.end())
-    {
-      handle_pkt.data = find_page->second;
-    }
-    else
-    {
-      cout << std::hex << hit_block.address << '\n';
-      cout << NAME << ", vitima_block, " << hit_block.victima_block << ", " << hit_block.getUsage() << ", " << hit_block.came_from_request << '\n';
-      cout << "PTE not found in L2\n";
-      exit(-1);
-    }
+    uint64_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
+    auto found = l2_pte_map.find(vp_addr);
+    if(found != l2_pte_map.end())
+      handle_pkt.data = found->second;
+
+    // // writing stlb PTE to L2
+    // // zeroing page offset bits
+    // uint32_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
+    // auto find_page = l2_pte_map.find(vp_addr);
+    // // successfully stored vp-pp mapping
+    // if(find_page != l2_pte_map.end())
+    // {
+    //   handle_pkt.data = find_page->second;
+    // }
+    // else
+    // {
+    //   cout << std::hex << hit_block.address << ", " << handle_pkt.address << '\n';
+    //   cout << NAME << ", vitima_block, " << hit_block.victima_block << ", " << hit_block.getUsage() << ", " << hit_block.came_from_request << '\n';
+    //   cout << "PTE not found in L2\n";
+    //   exit(-1);
+    // }
   }
 
   // update prefetcher on load instruction
@@ -469,22 +411,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   {
     if(cache_is[IS_L2] && handle_pkt.victima)
       return true;
-
-    bool test = false;
-    if(cache_is[IS_STLB])
-    {
-      // zeroing page offset bits
-      uint32_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
-      auto find_page = l2_pte_map.find(vp_addr);
-      if(find_page != l2_pte_map.end())
-      {
-        test= true;
-      }
-    }
-    
   }
-
-
 
   cacheDataModel->mshr_queue[Basic::REQUESTED]++;
 
@@ -548,16 +475,27 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
     if(KNOB_VICTIMA && cache_is[IS_STLB])
     {
+      PACKET newPacket = handle_pkt;
+      newPacket.to_return = {this};
+      newPacket.victima = true;
+      newPacket.thread_id = handle_pkt.thread_id;
+
+      // soft lookup
+      bool found = ((CACHE*)l2cache->getObject())->peek_singleline(newPacket);
+
+      // to fix difference in returned physical address ex. F: 346681344, S: 4641652728
+      // do softlookup, if not in cache then set dumy status to simulate traffic and dont use its results.
+      newPacket.victima_dumy = !found;
+
       if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
       {
         return false;
       }
 
-      PACKET newPacket = handle_pkt;
-      newPacket.to_return = {this};
-      newPacket.victima = true;
       l2cache->add_rq(&newPacket);
-      handle_pkt.vitima_copy_sent = true;
+
+      // if victima_block @L2 has PTE then send dumy to PTW
+      handle_pkt.victima_dumy = found;
     }
 
     // Allocate an MSHR
@@ -582,7 +520,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       lower_level->add_pq(&handle_pkt);
     else
     {
-      lower_level->add_rq(&handle_pkt);
+      // at L2 only, packet could be dummy = True
+      if(!handle_pkt.victima_dumy)
+        lower_level->add_rq(&handle_pkt);
     }
       
   }
@@ -702,6 +642,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           writeback_packet.ip = 0;
           writeback_packet.type = WRITEBACK;
           writeback_packet.victima = true;
+          writeback_packet.thread_id = handle_pkt.thread_id;
           l2cache->add_wq(&writeback_packet);
           victima_counters[VC::STLB_EVICT]++;
 
@@ -758,9 +699,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
     fill_block.came_from_request = handle_pkt.type;
-    fill_block.m_used = 0;
+    fill_block.m_used = handle_pkt.type==WRITEBACK ? 0: fill_block.m_used;
     fill_block.victima_block = handle_pkt.victima;
     fill_block.thread_id = handle_pkt.thread_id;
+    fill_block.vp_2_pp_map.clear();
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
@@ -849,6 +791,12 @@ uint32_t CACHE::get_way(uint64_t address, uint32_t set, bool victima)
   auto begin = std::next(block.begin(), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
   return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, offset)));
+}
+
+uint32_t CACHE::get_offset(uint64_t address)
+{
+  uint32_t offset = address >> LOG2_PAGE_SIZE & 0x7;
+  return offset;
 }
 
 int CACHE::invalidate_entry(uint64_t inval_addr)
@@ -1179,25 +1127,32 @@ void CACHE::return_data(PACKET* packet)
 
   if(KNOB_VICTIMA && cache_is[IS_STLB])
   {
+    if(packet->victima_dumy)
+    {
+      if(packet->victima) victima_counters[STLB_DUMY_VICTIMA]++;
+      else victima_counters[STLB_DUMY_PTW]++;
+      return;
+    }
+
     if(packet->data == 0)
     {
-      if(packet->victima) victima_counters[STLB_DROP_VICTIMA]++;
-      else victima_counters[STLB_DROP_PTW]++;
+      if(packet->victima) victima_counters[STLB_ZERO_DROP_VICTIMA]++;
+      else victima_counters[STLB_ZERO_DROP_PTW]++;
       return;
     }
 
     if(mshr_entry == MSHR.end())
     {
-      if(packet->victima) victima_counters[STLB_DROP_VICTIMA]++;
-      else victima_counters[STLB_DROP_PTW]++;
+      if(packet->victima) victima_counters[STLB_MSHRMISS_DROP_VICTIMA]++;
+      else victima_counters[STLB_MSHRMISS_DROP_PTW]++;
       // cout << "MSHR_not_here:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
       return;
     }
 
     if(mshr_entry->recv_victima)
     {
-      if(packet->victima) victima_counters[STLB_DROP_VICTIMA]++;
-      else victima_counters[STLB_DROP_PTW]++;
+      if(packet->victima) victima_counters[STLB_MSHRRECV_DROP_VICTIMA]++;
+      else victima_counters[STLB_MSHRRECV_DROP_PTW]++;
 
       if(mshr_entry->data != packet->data)
       {
@@ -1288,4 +1243,29 @@ void CACHE::print_deadlock()
   } else {
     std::cout << NAME << " MSHR empty" << std::endl;
   }
+}
+
+bool CACHE::peek_singleline(PACKET handle_pkt)
+{
+  // found in cache
+  uint32_t set = get_set(handle_pkt.address, handle_pkt.victima);
+  uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
+  bool hit = way < NUM_WAY;
+
+  uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));
+  uint64_t pp = (handle_pkt.data & ~(PAGE_SIZE-1));
+
+  bool test = l2_pte_map.find(vp)!=l2_pte_map.end();
+  if(handle_pkt.victima && KNOB_VICTIMA && cache_is[IS_L2])
+  {
+    hit = hit && test;
+    if(hit)
+    {
+      BLOCK* hit_block = &block[set * NUM_WAY + way];
+      // cout << "hit," << hit << ", vic_block," << (hit_block->victima_block) << ", pkt_thread," << (handle_pkt.thread_id) << ", block_thread," << (hit_block->thread_id) << ", " << (hit_block->came_from_request) << '\n';
+      hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
+    }
+  }
+
+  return hit;
 }

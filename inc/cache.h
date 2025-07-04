@@ -38,8 +38,14 @@ public:
     L2_WRITE,
     L2_READ_HIT,
     L2_READ_MISS,
-    STLB_DROP_VICTIMA,
-    STLB_DROP_PTW,
+    STLB_MSHRRECV_DROP_VICTIMA,
+    STLB_MSHRMISS_DROP_VICTIMA,
+    STLB_ZERO_DROP_VICTIMA,
+    STLB_ZERO_DROP_PTW,
+    STLB_MSHRMISS_DROP_PTW,
+    STLB_MSHRRECV_DROP_PTW,
+    STLB_DUMY_VICTIMA,
+    STLB_DUMY_PTW,
     VC_END
   };
   //usercode
@@ -125,6 +131,10 @@ public:
 
   void* getObject(){return this;}
 
+  uint32_t get_offset(uint64_t address);
+
+  bool peek_singleline(PACKET handle_pkt);
+
   void reset_datamodel()
   {
     delete cacheDataModel;
@@ -200,12 +210,19 @@ public:
     {
       cout << NAME << "\n<<<<<<<<<<<<<<< Victima Counters STLB >>>>>>>>>>>>>>>\n";
       cout << "victima stlb evict, " << victima_counters[STLB_EVICT] << '\n';
-      cout << "victima stlb pte from victima, " << victima_counters[STLB_VICTIMA_HIT] << '\n';
-      cout << "victima stlb pte from ptw, " << victima_counters[STLB_PTW_HIT] << '\n';
+      cout << "victima stlb pte hit victima, " << victima_counters[STLB_VICTIMA_HIT] << '\n';
+      cout << "victima stlb pte hit ptw, " << victima_counters[STLB_PTW_HIT] << '\n';
 
       cout << "victima pte dropped because either (both ptw and victima)it was late or victima was miss at L2\n";
-      cout << "victima stlb dropped return ptw, " << victima_counters[STLB_DROP_PTW] << '\n';
-      cout << "victima stlb dropped return victima, " << victima_counters[STLB_DROP_VICTIMA] << '\n';
+      cout << "victima stlb zero-drop ptw, " << victima_counters[STLB_ZERO_DROP_PTW] << '\n';
+      cout << "victima stlb mshrmiss-drop ptw, " << victima_counters[STLB_MSHRMISS_DROP_PTW] << '\n';
+      cout << "victima stlb mshr_recv_already-drop ptw, " << victima_counters[STLB_MSHRRECV_DROP_PTW] << '\n';
+      cout << "victima stlb dumy ptw, " << victima_counters[STLB_DUMY_PTW] << '\n';
+
+      cout << "victima stlb zero-drop victima, " << victima_counters[STLB_ZERO_DROP_VICTIMA] << '\n';
+      cout << "victima stlb mshrmiss-drop victima, " << victima_counters[STLB_MSHRMISS_DROP_VICTIMA] << '\n';
+      cout << "victima stlb mshr_recv_already-drop victima, " << victima_counters[STLB_MSHRRECV_DROP_VICTIMA] << '\n';
+      cout << "victima stlb dumy victima, " << victima_counters[STLB_DUMY_VICTIMA] << '\n';
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
     }
   }
