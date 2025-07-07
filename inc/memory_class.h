@@ -46,7 +46,7 @@ public:
   // for tlb block, each PTE is 8Byte, so we have 8 entries in 64B block
   void updateUsage(uint32_t offset){
     uint8_t mask = offset;
-    m_used |= mask;
+    m_used |= 1 << mask;
   }
 
   // use only for TLB blocks
