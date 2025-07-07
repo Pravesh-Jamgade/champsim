@@ -83,8 +83,8 @@ void CACHE::handle_writeback()
     PACKET& handle_pkt = WQ.front();
 
     // access cache
-    uint32_t set = get_set(handle_pkt.address, handle_pkt.victima);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
+    uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
@@ -94,7 +94,7 @@ void CACHE::handle_writeback()
     uint64_t pp = (handle_pkt.data & ~(PAGE_SIZE-1));
 
     bool test = l2_pte_map.find(vp)!=l2_pte_map.end();
-    if(handle_pkt.victima && KNOB_VICTIMA && cache_is[IS_L2])
+    if(handle_pkt.vflag[VF::victima] && KNOB_VICTIMA && cache_is[IS_L2])
     {
       hit = hit && test;
       if(hit)
@@ -159,7 +159,7 @@ void CACHE::handle_writeback()
       fill_block.updateUsage(offset);
 
       // writing stlb PTE to L2
-      if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.victima)
+      if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
       {
         auto find_page = l2_pte_map.find(vp);
         if(find_page == l2_pte_map.end())
@@ -193,14 +193,14 @@ void CACHE::handle_read()
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
 
-    uint32_t set = get_set(handle_pkt.address, handle_pkt.victima);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
+    uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
 
     bool hit = way < NUM_WAY;
 
     if(KNOB_VICTIMA && 
       cache_is[CACHE_ID::IS_L2] &&
-      handle_pkt.victima)
+      handle_pkt.vflag[VF::victima])
     {
       hit = block[set*NUM_WAY + way].victima_block ? true : false;
     }
@@ -245,8 +245,8 @@ void CACHE::handle_read()
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
 
-    uint32_t set = get_set(handle_pkt.address, handle_pkt.victima);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
+    uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
 
     bool hit = way < NUM_WAY;
@@ -255,7 +255,7 @@ void CACHE::handle_read()
     uint64_t pp = (handle_pkt.data & ~(PAGE_SIZE-1));
 
     bool test = l2_pte_map.find(vp)!=l2_pte_map.end();
-    if(handle_pkt.victima && KNOB_VICTIMA && cache_is[IS_L2])
+    if(handle_pkt.vflag[VF::victima] && KNOB_VICTIMA && cache_is[IS_L2])
     {
       hit = hit && test;
       if(hit)
@@ -270,7 +270,7 @@ void CACHE::handle_read()
     {
       readlike_hit(set, way, handle_pkt);
 
-      if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.victima) victima_counters[VC::L2_READ_HIT]++;
+      if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]) victima_counters[VC::L2_READ_HIT]++;
       cacheDataModel->rd_queue[Basic::HIT]++;
     } else {
       bool success = readlike_miss(handle_pkt);
@@ -281,7 +281,7 @@ void CACHE::handle_read()
         return;
       }
 
-      if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.victima) victima_counters[VC::L2_READ_MISS]++;
+      if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]) victima_counters[VC::L2_READ_MISS]++;
       cacheDataModel->rd_queue[Basic::MISS]++;
     }
 
@@ -304,8 +304,8 @@ void CACHE::handle_prefetch()
     // handle the oldest entry
     PACKET& handle_pkt = PQ.front();
 
-    uint32_t set = get_set(handle_pkt.address, handle_pkt.victima);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
+    uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
 
     bool hit = way < NUM_WAY;
 
@@ -345,7 +345,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   handle_pkt.data = hit_block.data;
 
-  if(KNOB_VICTIMA && cache_is[CACHE_ID::IS_L2] && handle_pkt.victima)
+  if(KNOB_VICTIMA && cache_is[CACHE_ID::IS_L2] && handle_pkt.vflag[VF::victima])
   {
     uint64_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
     auto found = l2_pte_map.find(vp_addr);
@@ -409,8 +409,16 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
   if(KNOB_VICTIMA)
   {
-    if(cache_is[IS_L2] && handle_pkt.victima)
+    if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
+    {
+      // its a miss and not DP (dummy packet) hence set, AP miss
+      handle_pkt.vflag[victima_acutal_packet_miss] = !handle_pkt.vflag[VF::victima_dumy];
+      for(auto ret: handle_pkt.to_return)
+      {
+        ret->return_data(&handle_pkt);
+      }
       return true;
+    }
   }
 
   cacheDataModel->mshr_queue[Basic::REQUESTED]++;
@@ -477,7 +485,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     {
       PACKET newPacket = handle_pkt;
       newPacket.to_return = {this};
-      newPacket.victima = true;
+      newPacket.vflag[VF::victima] = true;
       newPacket.thread_id = handle_pkt.thread_id;
 
       // soft lookup
@@ -485,7 +493,19 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
       // to fix difference in returned physical address ex. F: 346681344, S: 4641652728
       // do softlookup, if not in cache then set dumy status to simulate traffic and dont use its results.
-      newPacket.victima_dumy = !found;
+      if(found)
+      {
+        newPacket.vflag[VF::victima_dumy] = false;
+        newPacket.vflag[VF::PACKET_AP_RECV] = true;
+        newPacket.vflag[VF::PACKET_DP_RECV] = false;
+      }
+      else
+      {
+        newPacket.vflag[VF::victima_dumy] = true;
+        newPacket.vflag[VF::PACKET_AP_RECV] = false;
+        newPacket.vflag[VF::PACKET_DP_RECV] = true;
+      }
+      
 
       if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
       {
@@ -495,7 +515,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       l2cache->add_rq(&newPacket);
 
       // if victima_block @L2 has PTE then send dumy to PTW
-      handle_pkt.victima_dumy = found;
+      handle_pkt.vflag[VF::victima_dumy] = !newPacket.vflag[VF::victima_dumy];
+      handle_pkt.vflag[VF::PACKET_AP_RECV] = !newPacket.vflag[VF::PACKET_AP_RECV];
+      handle_pkt.vflag[VF::PACKET_DP_RECV] = !newPacket.vflag[VF::PACKET_DP_RECV];
     }
 
     // Allocate an MSHR
@@ -521,7 +543,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     else
     {
       // at L2 only, packet could be dummy = True
-      if(!handle_pkt.victima_dumy)
+      if(!handle_pkt.vflag[VF::victima_dumy])
         lower_level->add_rq(&handle_pkt);
     }
       
@@ -641,7 +663,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           writeback_packet.instr_id = handle_pkt.instr_id;
           writeback_packet.ip = 0;
           writeback_packet.type = WRITEBACK;
-          writeback_packet.victima = true;
+          writeback_packet.vflag[VF::victima] = true;
           writeback_packet.thread_id = handle_pkt.thread_id;
           l2cache->add_wq(&writeback_packet);
           victima_counters[VC::STLB_EVICT]++;
@@ -700,7 +722,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.instr_id = handle_pkt.instr_id;
     fill_block.came_from_request = handle_pkt.type;
     fill_block.m_used = handle_pkt.type==WRITEBACK ? 0: fill_block.m_used;
-    fill_block.victima_block = handle_pkt.victima;
+    fill_block.victima_block = handle_pkt.vflag[VF::victima];
     fill_block.thread_id = handle_pkt.thread_id;
     fill_block.vp_2_pp_map.clear();
   }
@@ -872,7 +894,7 @@ int CACHE::add_rq(PACKET* packet)
 
   // check for the latest writebacks in the write queue
   champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
-  if(KNOB_VICTIMA && cache_is[IS_L2] && packet->victima)
+  if(KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima])
   {
     found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, 3+lg2(NUM_SET)));
   }
@@ -1125,52 +1147,52 @@ void CACHE::return_data(PACKET* packet)
   auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS));
   auto first_unreturned = std::find_if(MSHR.begin(), MSHR.end(), [](auto x) { return x.event_cycle == std::numeric_limits<uint64_t>::max(); });
 
-  if(KNOB_VICTIMA && cache_is[IS_STLB])
-  {
-    if(packet->victima_dumy)
-    {
-      if(packet->victima) victima_counters[STLB_DUMY_VICTIMA]++;
-      else victima_counters[STLB_DUMY_PTW]++;
-      return;
-    }
+  // if(KNOB_VICTIMA && cache_is[IS_STLB])
+  // {
+  //   if(packet->vflag[VF::victima_dumy])
+  //   {
+  //     if(packet->victima) victima_counters[STLB_DUMY_VICTIMA]++;
+  //     else victima_counters[STLB_DUMY_PTW]++;
+  //     return;
+  //   }
 
-    if(packet->data == 0)
-    {
-      if(packet->victima) victima_counters[STLB_ZERO_DROP_VICTIMA]++;
-      else victima_counters[STLB_ZERO_DROP_PTW]++;
-      return;
-    }
+  //   if(packet->data == 0)
+  //   {
+  //     if(packet->victima) victima_counters[STLB_ZERO_DROP_VICTIMA]++;
+  //     else victima_counters[STLB_ZERO_DROP_PTW]++;
+  //     return;
+  //   }
 
-    if(mshr_entry == MSHR.end())
-    {
-      if(packet->victima) victima_counters[STLB_MSHRMISS_DROP_VICTIMA]++;
-      else victima_counters[STLB_MSHRMISS_DROP_PTW]++;
-      // cout << "MSHR_not_here:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-      return;
-    }
+  //   if(mshr_entry == MSHR.end())
+  //   {
+  //     if(packet->victima) victima_counters[STLB_MSHRMISS_DROP_VICTIMA]++;
+  //     else victima_counters[STLB_MSHRMISS_DROP_PTW]++;
+  //     // cout << "MSHR_not_here:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
+  //     return;
+  //   }
 
-    if(mshr_entry->recv_victima)
-    {
-      if(packet->victima) victima_counters[STLB_MSHRRECV_DROP_VICTIMA]++;
-      else victima_counters[STLB_MSHRRECV_DROP_PTW]++;
+  //   if(mshr_entry->.vflag[VF::recv_victima])
+  //   {
+  //     if(packet->victima) victima_counters[STLB_MSHRRECV_DROP_VICTIMA]++;
+  //     else victima_counters[STLB_MSHRRECV_DROP_PTW]++;
 
-      if(mshr_entry->data != packet->data)
-      {
-        cout << "F: " << mshr_entry->data << ", S: " << packet->data << '\n';  
-      }
-      cout << "Second:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-      return;
-    }
+  //     if(mshr_entry->data != packet->data)
+  //     {
+  //       cout << "F: " << mshr_entry->data << ", S: " << packet->data << '\n';  
+  //     }
+  //     cout << "Second:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
+  //     return;
+  //   }
 
-    mshr_entry->recv_victima = true;
-    mshr_entry->data = packet->data;
+  //   mshr_entry->.vflag[VF::recv_victima] = true;
+  //   mshr_entry->data = packet->data;
 
-    if(packet->victima)
-      victima_counters[VC::STLB_VICTIMA_HIT]++;
-    else
-      victima_counters[VC::STLB_PTW_HIT]++;
-    // cout << "First:" << ", victima_issue, " << mshr_entry->vitima_copy_sent << ", " << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-  }
+  //   if(packet->victima)
+  //     victima_counters[VC::STLB_VICTIMA_HIT]++;
+  //   else
+  //     victima_counters[VC::STLB_PTW_HIT]++;
+  //   // cout << "First:" << ", victima_issue, " << mshr_entry->vitima_copy_sent << ", " << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
+  // }
 
   // sanity check
   if (mshr_entry == MSHR.end()) {
@@ -1182,11 +1204,93 @@ void CACHE::return_data(PACKET* packet)
     assert(0);
   }
 
-  // MSHR holds the most updated information about this request
-  mshr_entry->data = packet->data;
-  mshr_entry->pf_metadata = packet->pf_metadata;
-  mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
+  if(KNOB_VICTIMA && cache_is[IS_STLB])
+  {
+    // count:
+    // We sent out actual and a dummy packet.
+    // Data can be brought by dummy (DP) and actual (AP) packet.
+    // We release when we receive actual packet.
+    // Possibility of packets sent:
+    // Case 1: AP/L2 and DP/PTW.
+    // Case 2: AP/PTW and DP/L2
 
+    // Order of receiving:
+    // Case 1: AP/L2 DP/PTW --> (A) AP/L2 missed wait for DP/PTW (B) Otherwise release packet
+    // Case 2: AP/PTW DP/L2 --> Release Packet
+    // Case 3: DP/L2 AP/PTW --> Wait for AP
+    // Case 4: DP/PTW AP/L2 --> AP/L2 missed used value from DP/PTW 
+
+    bool release = false;
+
+    if(mshr_entry->vflag[VF::recv_victima])
+    {
+      return;
+    }
+    else if(packet->vflag[VF::PACKET_AP_RECV])
+    {
+      //case1
+      if(packet->vflag[VF::victima])// victima L2
+      {
+        // miss at L2
+        if(packet->vflag[VF::victima_acutal_packet_miss])
+        {
+          // came from CASE 4
+          if(mshr_entry->mshr_state == VF::MSHR_WAIT_AP)
+          {
+            release = true;
+          }
+          else mshr_entry->mshr_state = VF::MSHR_WAIT_DP;
+        }
+        // all good: release
+        else
+        {
+          release = true;
+        }
+      }
+      //case2; else sent by PTW
+      else
+      {
+        release = true;
+      }
+    }
+    else if(packet->vflag[VF::PACKET_DP_RECV])
+    {
+      //case3
+      if(packet->vflag[VF::victima])
+      {
+        // mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
+        return;
+      }
+      else //case4
+      {
+        // sent by PTW, keep its value and wait to release by AP/L2
+        mshr_entry->data = packet->data;
+        mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
+        return;
+      }
+    }
+
+    if(release)
+    {
+      mshr_entry->vflag[VF::recv_victima] = true;
+
+      // MSHR holds the most updated information about this request
+      mshr_entry->data = packet->data;
+      mshr_entry->pf_metadata = packet->pf_metadata;
+      mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
+    }
+
+  }
+  else
+  {
+    // MSHR holds the most updated information about this request
+    mshr_entry->data = packet->data;
+    mshr_entry->pf_metadata = packet->pf_metadata;
+    mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
+
+  }
+
+  
   DP(if (warmup_complete[packet->cpu]) {
     std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry->instr_id;
     std::cout << " address: " << std::hex << (mshr_entry->address >> OFFSET_BITS) << " full_addr: " << mshr_entry->address;
@@ -1248,15 +1352,15 @@ void CACHE::print_deadlock()
 bool CACHE::peek_singleline(PACKET handle_pkt)
 {
   // found in cache
-  uint32_t set = get_set(handle_pkt.address, handle_pkt.victima);
-  uint32_t way = get_way(handle_pkt.address, set, handle_pkt.victima);
+  uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
+  uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
   bool hit = way < NUM_WAY;
 
   uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));
   uint64_t pp = (handle_pkt.data & ~(PAGE_SIZE-1));
 
   bool test = l2_pte_map.find(vp)!=l2_pte_map.end();
-  if(handle_pkt.victima && KNOB_VICTIMA && cache_is[IS_L2])
+  if(handle_pkt.vflag[VF::victima] && KNOB_VICTIMA && cache_is[IS_L2])
   {
     hit = hit && test;
     if(hit)

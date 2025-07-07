@@ -11,6 +11,26 @@
 class MemoryRequestProducer;
 class LSQ_ENTRY;
 
+
+enum VF
+{
+  victima = 0,
+  // we do peek cache line before sending victima packet, if cache line is found then we make PTW packet a dumy and victima as actual.
+  // PTW packet is needed to simulate traffic, we will discard its results.
+  // Its possible cacheline gets evicted while we wait in the queue, this happens after we already have decided which could be the dumy or actual packet.
+  // This will create problems at return_data. TODO: add mechanism to accept results of dummy packets as well when the victima packet fails to retrive.
+  victima_dumy,
+  victima_acutal_packet_miss,
+  recv_victima,
+  valid_psc_event,
+
+  PACKET_DP_RECV,
+  PACKET_AP_RECV,
+  MSHR_WAIT_AP,
+  MSHR_WAIT_DP,
+  VF_END
+};
+
 // message packet
 class PACKET
 {
@@ -32,14 +52,15 @@ public:
 
   uint64_t uv_cycle_enqueue = 0;
   bool ttp = false;
-  bool victima = false;
-  bool victima_dumy = false;
-  bool vitima_copy_sent = false;
-  bool recv_victima = false;
 
+  
+
+  bool vflag[VF::VF_END] = {0};
+  // default: wait for Actual Packet
+  VF mshr_state = VF::VF_END;
   int thread_id=-1;
 
-  bool valid_psc_event = false;
+  
 };
 
 template <>

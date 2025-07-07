@@ -151,12 +151,12 @@ void PageTableWalker::handle_fill()
   while (fill_this_cycle > 0 && !std::empty(MSHR) && MSHR.front().event_cycle <= current_cycle) {
     auto fill_mshr = MSHR.begin();
 
-    // if(!fill_mshr->valid_psc_event)
-    // {
-    //   fill_mshr->event_cycle = current_cycle + 2;
-    //   fill_mshr->valid_psc_event = 1;
-    //   MSHR.sort(ord_event_cycle<PACKET>{});
-    // }
+    if(!fill_mshr->vflag[VF::valid_psc_event])
+    {
+      fill_mshr->event_cycle = current_cycle + 2;
+      fill_mshr->vflag[VF::valid_psc_event] = 1;
+      MSHR.sort(ord_event_cycle<PACKET>{});
+    }
 
     // Translation complete now remove MSHR entry, when translation level is 0
     if (fill_mshr->translation_level == 0) // If translation complete
