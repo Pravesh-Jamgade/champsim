@@ -1194,16 +1194,6 @@ void CACHE::return_data(PACKET* packet)
   //   // cout << "First:" << ", victima_issue, " << mshr_entry->vitima_copy_sent << ", " << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
   // }
 
-  // sanity check
-  if (mshr_entry == MSHR.end()) {
-    std::cerr << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << packet->instr_id << " cannot find a matching entry!";
-    std::cerr << " address: " << std::hex << packet->address;
-    std::cerr << " v_address: " << packet->v_address;
-    std::cerr << " address: " << (packet->address >> OFFSET_BITS) << std::dec;
-    std::cerr << " event: " << packet->event_cycle << " current: " << current_cycle << std::endl;
-    assert(0);
-  }
-
   if(KNOB_VICTIMA && cache_is[IS_STLB])
   {
     // count:
@@ -1294,13 +1284,23 @@ void CACHE::return_data(PACKET* packet)
   }
   else
   {
+
+    // sanity check
+    if (mshr_entry == MSHR.end()) {
+      std::cerr << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << packet->instr_id << " cannot find a matching entry!";
+      std::cerr << " address: " << std::hex << packet->address;
+      std::cerr << " v_address: " << packet->v_address;
+      std::cerr << " address: " << (packet->address >> OFFSET_BITS) << std::dec;
+      std::cerr << " event: " << packet->event_cycle << " current: " << current_cycle << std::endl;
+      assert(0);
+    }
+
     // MSHR holds the most updated information about this request
     mshr_entry->data = packet->data;
     mshr_entry->pf_metadata = packet->pf_metadata;
     mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
 
   }
-
   
   DP(if (warmup_complete[packet->cpu]) {
     std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry->instr_id;
