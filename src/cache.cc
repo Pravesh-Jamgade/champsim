@@ -1222,7 +1222,11 @@ void CACHE::return_data(PACKET* packet)
 
     bool release = false;
 
-    if(mshr_entry->vflag[VF::recv_victima])
+    if(mshr_entry == MSHR.end())
+    {
+      return;
+    }
+    else if(mshr_entry->vflag[VF::recv_victima])
     {
       return;
     }
@@ -1263,10 +1267,17 @@ void CACHE::return_data(PACKET* packet)
       }
       else //case4
       {
-        // sent by PTW, keep its value and wait to release by AP/L2
         mshr_entry->data = packet->data;
-        mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
-        return;
+        // sent by PTW, keep its value and wait to release by AP/L2
+        if(mshr_entry->mshr_state == VF::MSHR_WAIT_DP)
+        {
+          release = true;
+        }
+        else
+        {
+          mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
+          return;
+        }
       }
     }
 
