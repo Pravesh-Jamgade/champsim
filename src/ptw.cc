@@ -274,7 +274,7 @@ void PageTableWalker::handle_fill()
         PACKET packet = *fill_mshr;
         packet.cpu = cpu;
         packet.type = TRANSLATION;
-        packet.address = addr;
+        packet.address = next_pt_addr;
         packet.to_return = {this};
         packet.translation_level = fill_mshr->translation_level - 1;
         packet.thread_id = fill_mshr->thread_id;
