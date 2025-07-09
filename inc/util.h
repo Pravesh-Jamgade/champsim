@@ -22,13 +22,15 @@ struct eq_addr {
   const decltype(argument_type::address) val;
   const std::size_t shamt = 0;
 
+  const int thread_id = -1;
+
   explicit eq_addr(decltype(argument_type::address) val) : val(val) {}
-  eq_addr(decltype(argument_type::address) val, std::size_t shamt) : val(val), shamt(shamt) {}
+  eq_addr(decltype(argument_type::address) val, std::size_t shamt, int thread_id=-1) : val(val), shamt(shamt), thread_id(thread_id) {}
 
   bool operator()(const argument_type& test)
   {
     is_valid<argument_type> validtest;
-    return validtest(test) && (test.address >> shamt) == (val >> shamt);
+    return validtest(test) && (test.address >> shamt) == (val >> shamt) ;
   }
 };
 

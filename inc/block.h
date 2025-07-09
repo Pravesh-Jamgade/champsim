@@ -24,11 +24,20 @@ enum VF
   recv_victima,
   valid_psc_event,
 
+  ptw_copy,
+
   PACKET_DP_RECV,
   PACKET_AP_RECV,
   MSHR_WAIT_AP,
   MSHR_WAIT_DP,
   VF_END
+};
+
+enum HitWhere
+{
+  NONE,
+  wq,
+  HIT_END
 };
 
 // message packet
@@ -60,6 +69,7 @@ public:
   VF mshr_state = VF::VF_END;
   int thread_id=-1;
 
+  HitWhere hit_where = HitWhere::NONE;
   
 };
 
