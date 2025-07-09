@@ -1266,6 +1266,7 @@ void CACHE::return_data(PACKET* packet)
         if(packet->vflag[VF::victima_acutal_packet_miss])
         {
           mshr_entry->mshr_state = VF::MSHR_WAIT_DP;
+          return;
         }
         // all good: release
         else
@@ -1294,6 +1295,7 @@ void CACHE::return_data(PACKET* packet)
       {
         mshr_entry->data = packet->data;
         mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
+        return;
       }
     }
 
