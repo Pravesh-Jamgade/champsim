@@ -913,11 +913,12 @@ int CACHE::add_rq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
+  // TAG: Victima
   // check for the latest writebacks in the write queue
   champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
   if(KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima])
   {
-    found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, 3+lg2(NUM_SET)));
+    found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE+3));
   }
 
   if (found_wq != WQ.end()) {

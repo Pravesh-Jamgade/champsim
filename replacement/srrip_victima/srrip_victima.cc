@@ -16,6 +16,7 @@ uint32_t CACHE::find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const
   auto begin = std::next(std::begin(block), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
   auto victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV; }); // hijack the lru field
+  auto backup_way = victim; // hijack the lru field
 
   int ktimes = maxRRPV;
   while (victim == end && ktimes) {
@@ -30,9 +31,13 @@ uint32_t CACHE::find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const
       victim = end;
       ktimes--;
     }
+    else backup_way = victim;
   }
 
-  return std::distance(begin, victim);
+  uint32_t way1 = std::distance(begin, victim);
+  uint32_t way2 = std::distance(begin, backup_way);
+
+  return way1==NUM_WAY ? way2 : way1;
 }
 
 // called on every cache hit and cache fill
