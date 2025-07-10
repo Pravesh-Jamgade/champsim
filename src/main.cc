@@ -550,9 +550,21 @@ int main(int argc, char** argv)
       // {
         int global_th_index = i * KNOB_SMT_ENABLE + th;
 
+        int useful_bw = ooo_cpu[i]->instrs_to_read_this_cycle;
+        if(useful_bw / KNOB_SMT_ENABLE == 0)
+        {
+          useful_bw = useful_bw % KNOB_SMT_ENABLE;
+        }
+        else
+        {
+          useful_bw = useful_bw / KNOB_SMT_ENABLE;
+        }
+
         // read from trace
-        while (ooo_cpu[i]->fetch_stall == 0 && ooo_cpu[i]->instrs_to_read_this_cycle > 0) {
+        while (ooo_cpu[i]->fetch_stall == 0 && useful_bw > 0) {
           ooo_cpu[i]->init_instruction(traces[th]->get(), th);
+          // break;
+          useful_bw--;
         }
 
         // heartbeat information
@@ -564,7 +576,7 @@ int main(int argc, char** argv)
             cumulative_ipc = (1.0 * ooo_cpu[i]->num_retired[th]) / ooo_cpu[i]->current_cycle;
           float heartbeat_ipc = (1.0 * ooo_cpu[i]->num_retired[th] - ooo_cpu[i]->last_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->last_sim_cycle);
 
-          cout << "Heartbeat CPU " << i << " Thread " << th << " instructions: " << ooo_cpu[i]->num_retired[th] << " cycles: " << ooo_cpu[i]->current_cycle;
+          cout << "Heartbeat CPU " << i << " Thread: " << th << " instructions: " << ooo_cpu[i]->num_retired[th] << " cycles: " << ooo_cpu[i]->current_cycle;
           cout << " heartbeat IPC: " << heartbeat_ipc << " cumulative IPC: " << cumulative_ipc;
           cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
           ooo_cpu[i]->next_print_instruction += STAT_PRINTING_PERIOD;
