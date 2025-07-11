@@ -30,7 +30,7 @@ struct eq_addr {
   bool operator()(const argument_type& test)
   {
     is_valid<argument_type> validtest;
-    return validtest(test) && (test.address >> shamt) == (val >> shamt) ;
+    return validtest(test) && (test.address >> shamt) == (val >> shamt) && (test.thread_id == thread_id || test.thread_id == -1) ;
   }
 };
 
