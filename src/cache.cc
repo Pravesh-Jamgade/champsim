@@ -433,7 +433,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   });
 
   // check mshr
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS));
+  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS, handle_pkt.thread_id, is_tlb));
   bool mshr_full = (MSHR.size() == MSHR_SIZE);
 
   // usercode
@@ -915,12 +915,12 @@ int CACHE::add_rq(PACKET* packet)
 
   // TAG: Victima
   // check for the latest writebacks in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
   if(KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima])
   {
     found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE+3));
   }
-
+  
   if (found_wq != WQ.end()) {
 
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;)
@@ -936,7 +936,7 @@ int CACHE::add_rq(PACKET* packet)
   }
 
   // check for duplicates in the read queue
-  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS));
+  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb));
   if (found_rq != RQ.end()) {
 
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
@@ -989,7 +989,7 @@ int CACHE::add_wq(PACKET* packet)
   })
 
   // check for duplicates in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
 
   if (found_wq != WQ.end()) {
 
@@ -1107,7 +1107,7 @@ int CACHE::add_pq(PACKET* packet)
   })
 
   // check for the latest wirtebacks in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
 
   if (found_wq != WQ.end()) {
 
@@ -1124,7 +1124,7 @@ int CACHE::add_pq(PACKET* packet)
   }
 
   // check for duplicates in the PQ
-  auto found = std::find_if(PQ.begin(), PQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS));
+  auto found = std::find_if(PQ.begin(), PQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb));
   if (found != PQ.end()) {
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_PQ" << std::endl;)
 
@@ -1166,7 +1166,7 @@ int CACHE::add_pq(PACKET* packet)
 void CACHE::return_data(PACKET* packet)
 {
   // check MSHR information
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id));
+  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb));
   auto first_unreturned = std::find_if(MSHR.begin(), MSHR.end(), [](auto x) { return x.event_cycle == std::numeric_limits<uint64_t>::max(); });
 
   // if(KNOB_VICTIMA && cache_is[IS_STLB])

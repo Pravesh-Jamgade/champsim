@@ -239,6 +239,9 @@ void PageTableWalker::handle_fill()
       } 
       else 
       {
+
+        if(fill_mshr->event_cycle)
+
         // usercode
         ptw_datamodel->psc_level_packet_processed_miss_latency[fill_mshr->translation_level] += current_cycle - fill_mshr->uv_cycle_enqueue;
 
@@ -355,7 +358,8 @@ void PageTableWalker::return_data(PACKET* packet)
 {
   for (auto& mshr_entry : MSHR) {
     if (eq_addr<PACKET>{packet->address, LOG2_BLOCK_SIZE}(mshr_entry)) {
-      mshr_entry.event_cycle = current_cycle;
+      // PTW: added PSC write cost
+      mshr_entry.event_cycle = current_cycle + 1;
 
       DP(if (warmup_complete[cpu]) {
         std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry.instr_id;

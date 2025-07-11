@@ -36,7 +36,8 @@ public:
 
     void* getObject(){return this;}
     
-    int add_rq(PACKET* packet) override {
+    int add_rq(PACKET* packet) override 
+    {
         if (all_warmup_complete <= NUM_CPUS) {
             for (auto ret : packet->to_return)
                 ret->return_data(packet);
@@ -51,13 +52,16 @@ public:
         // Check for duplicates
         auto rq_it = std::find_if(std::begin(RQ), std::end(RQ), 
                                     eq_addr<PACKET>(packet->address, LOG2_BLOCK_SIZE));
-        if (rq_it != std::end(RQ)) { // Duplicate found
+        if (rq_it != std::end(RQ)) 
+        { // Duplicate found
             std::cout << "[Meta-RQ] duplicate rq_it->type: " << int(rq_it->type) 
                         << " rq_it->address: " << rq_it->address
                         << " rq_it->cpu: " << rq_it->cpu
                         << " pkt->type: " << int(packet->type) 
                         << " pkt->address: " << packet->address
                         << " pkt->cpu: " << packet->cpu << std::endl;
+
+            rq_it->thread_id = packet->thread_id;
             rq_it->scheduled = packet->scheduled;
             rq_it->asid[0] = packet->asid[0], rq_it->asid[1] = packet->asid[1];
             rq_it->type = packet->type;
@@ -98,6 +102,7 @@ public:
         // Remember this packet to later return data
         // *rq_it = *packet;
 
+        rq_it->thread_id = packet->thread_id;
         rq_it->scheduled = packet->scheduled;
         rq_it->asid[0] = packet->asid[0], rq_it->asid[1] = packet->asid[1];
         rq_it->type = packet->type;

@@ -273,7 +273,7 @@ void O3_CPU::do_check_dib(ooo_model_instr& instr)
   // Check DIB to see if we recently fetched this line
   auto dib_set_begin = std::next(DIB.begin(), ((instr.ip >> lg2(dib_window)) % dib_set) * dib_way);
   auto dib_set_end = std::next(dib_set_begin, dib_way);
-  auto way = std::find_if(dib_set_begin, dib_set_end, eq_addr<dib_t::value_type>(instr.ip, lg2(dib_window)));
+  auto way = std::find_if(dib_set_begin, dib_set_end, eq_addr<dib_t::value_type>(instr.ip, lg2(dib_window), instr.thread_id, true));
 
   if (way != dib_set_end) {
     // The cache line is in the L0, so we can mark this as complete
@@ -455,7 +455,7 @@ void O3_CPU::do_dib_update(const ooo_model_instr& instr)
   // Search DIB to see if we need to add this instruction
   auto dib_set_begin = std::next(DIB.begin(), ((instr.ip >> lg2(dib_window)) % dib_set) * dib_way);
   auto dib_set_end = std::next(dib_set_begin, dib_way);
-  auto way = std::find_if(dib_set_begin, dib_set_end, eq_addr<dib_t::value_type>(instr.ip, lg2(dib_window)));
+  auto way = std::find_if(dib_set_begin, dib_set_end, eq_addr<dib_t::value_type>(instr.ip, lg2(dib_window), instr.thread_id, true));
 
   // If we did not find the entry in the DIB, find a victim
   if (way == dib_set_end) {
@@ -465,6 +465,7 @@ void O3_CPU::do_dib_update(const ooo_model_instr& instr)
     // update way
     way->valid = true;
     way->address = instr.ip;
+    way->address = instr.thread_id;
   }
 
   std::for_each(dib_set_begin, dib_set_end, lru_updater<dib_entry_t>(way));
@@ -518,12 +519,14 @@ void O3_CPU::schedule_instruction()
 
 struct instr_reg_will_produce {
   const uint8_t match_reg;
+  const int thread_id = -1;
   explicit instr_reg_will_produce(uint8_t reg) : match_reg(reg) {}
+  explicit instr_reg_will_produce(uint8_t reg, int thread_id) : match_reg(reg), thread_id(thread_id) {}
   bool operator()(const ooo_model_instr& test) const
   {
     auto dreg_begin = std::begin(test.destination_registers);
     auto dreg_end = std::end(test.destination_registers);
-    return test.executed != COMPLETED && std::find(dreg_begin, dreg_end, match_reg) != dreg_end;
+    return test.executed != COMPLETED && std::find(dreg_begin, dreg_end, match_reg) != dreg_end && (test.thread_id == thread_id);
   }
 };
 
@@ -533,7 +536,7 @@ void O3_CPU::do_scheduling(champsim::circular_buffer<ooo_model_instr>::iterator 
   for (auto src_reg : rob_it->source_registers) {
     if (src_reg) {
       champsim::circular_buffer<ooo_model_instr>::reverse_iterator prior{rob_it};
-      prior = std::find_if(prior, ROB.rend(), instr_reg_will_produce(src_reg));
+      prior = std::find_if(prior, ROB.rend(), instr_reg_will_produce(src_reg, rob_it->thread_id));
       if (prior != ROB.rend() && (prior->registers_instrs_depend_on_me.empty() || prior->registers_instrs_depend_on_me.back() != rob_it)) {
         prior->registers_instrs_depend_on_me.push_back(rob_it);
         rob_it->num_reg_dependent++;
