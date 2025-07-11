@@ -21,14 +21,18 @@ struct eq_addr {
   using argument_type = T;
   const decltype(argument_type::address) val;
   const std::size_t shamt = 0;
+  const int thread_id = -1;
+  const bool is_tlb = false;
 
   explicit eq_addr(decltype(argument_type::address) val) : val(val) {}
+  eq_addr(decltype(argument_type::address) val, std::size_t shamt, int thread_id, bool is_tlb) : val(val), shamt(shamt), thread_id(thread_id), is_tlb(is_tlb) {}
+
   eq_addr(decltype(argument_type::address) val, std::size_t shamt) : val(val), shamt(shamt) {}
 
   bool operator()(const argument_type& test)
   {
     is_valid<argument_type> validtest;
-    return validtest(test) && (test.address >> shamt) == (val >> shamt);
+    return validtest(test) && (test.address >> shamt) == (val >> shamt) && (is_tlb ? test.thread_id == thread_id: 1);
   }
 };
 

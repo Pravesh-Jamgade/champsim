@@ -23,6 +23,7 @@ class CACHE : public champsim::operable, public MemoryRequestConsumer, public Me
 {
 public:
   //usercode
+  bool is_tlb = false;
   CacheDataModel* cacheDataModel;
   list<BLOCK>* reuse_history;
 
@@ -202,15 +203,15 @@ public:
     }
     else if(NAME.find("STLB") != string::npos)
     {
-      cache_is[CACHE_ID::IS_STLB] = true;
+      is_tlb = cache_is[CACHE_ID::IS_STLB] = true;
     }
     else if(NAME.find("DTLB") != string::npos)
     {
-      cache_is[CACHE_ID::IS_DTLB] = true;
+      is_tlb = cache_is[CACHE_ID::IS_DTLB] = true;
     }
     else if(NAME.find("ITLB") != string::npos)
     {
-      cache_is[CACHE_ID::IS_ITLB] = true;
+      is_tlb = cache_is[CACHE_ID::IS_ITLB] = true;
     }
 
     FA_SIZE = NUM_WAY * NUM_SET;

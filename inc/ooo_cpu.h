@@ -46,6 +46,7 @@ public:
     bool valid = false;
     unsigned lru = 999999;
     uint64_t address = 0;
+    int thread_id = -1;
   };
 
   // instruction buffer
