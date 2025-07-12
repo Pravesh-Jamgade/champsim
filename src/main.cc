@@ -41,6 +41,7 @@ extern VirtualMemory vmem;
 extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 extern std::array<CACHE*, NUM_CACHES> caches;
 extern std::array<champsim::operable*, NUM_OPERABLES> operables;
+extern const char* instantiation_code;
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
@@ -483,6 +484,8 @@ int main(int argc, char** argv)
 
   // overwrite relevant to extra settings
   overwrite_cache();
+
+  printf("Simulator Configuration\n%s", instantiation_code);
 
   std::cout << "Cache configuration\n";
   for(auto ca: caches)

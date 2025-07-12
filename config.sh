@@ -455,6 +455,26 @@ with open(instantiation_file_name, 'wt') as wfp:
     wfp.write(', '.join('&{name}'.format(**elem) for elem in itertools.chain(cores, memory_system, (config_file['physical_memory'],))))
     wfp.write('\n};\n')
 
+# Read content
+with open(instantiation_file_name, 'rt') as rfp:
+    content = rfp.read()
+
+# Escape content for C string
+escaped = (
+    content
+    .replace('\\', '\\\\')
+    .replace('"', '\\"')
+    .replace('\n', '\\n"\n"')
+)
+
+# Build C string
+c_string = f'const char* instantiation_code = "{escaped}";\n'
+
+# Optionally append to the same file or print
+with open(instantiation_file_name, 'at') as wfp:
+    wfp.write('\n\n// Embedded C string version\n')
+    wfp.write(c_string)
+
 # Core modules file
 bpred_names        = {c['bpred_name'] for c in cores}
 bpred_inits        = {(c['bpred_name'], c['bpred_initialize']) for c in cores}
