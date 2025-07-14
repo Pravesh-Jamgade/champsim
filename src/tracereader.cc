@@ -6,6 +6,11 @@
 #include <iostream>
 #include <string>
 
+#include "../tracer/pin/shared_buff.h"
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+
 tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(_ts)
 {
   std::string last_dot = trace_string.substr(trace_string.find_last_of("."));
@@ -38,7 +43,7 @@ tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(
     assert(0);
   }
 
-  trace_open(trace_string, 1);
+  trace_open(trace_string);
 }
 
 tracereader::~tracereader() { close(); }
@@ -48,17 +53,28 @@ ooo_model_instr tracereader::read_single_instr()
 {
   T trace_read_instr;
 
-  while (!fread(&trace_read_instr, sizeof(T), 1, trace_file)) {
-    // reached end of file for this trace
-    std::cout << "*** Reached end of trace: " << trace_string << std::endl;
+  // while (!fread(&trace_read_instr, sizeof(T), 1, trace_file)) {
+  //   // reached end of file for this trace
+  //   std::cout << "*** Reached end of trace: " << trace_string << std::endl;
 
-    // close the trace file and re-open it
-    close();
-    open(trace_string);
+  //   // close the trace file and re-open it
+  //   close();
+  //   open(trace_string);
+  // }
+
+  while (buf->tail == buf->head) {
+      usleep(10); // buffer empty
   }
 
+  input_instr* te = (input_instr*)&buf->buffer[buf->tail];
+  std::cout << std::hex << "IP=" << te->ip << '\n';
+  __sync_synchronize(); // memory barrier
+  buf->tail = (buf->tail + 1) % TRACE_BUF_CAP;
+
   // copy the instruction into the performance model's instruction format
-  ooo_model_instr retval(cpu, trace_read_instr);
+  ooo_model_instr retval(cpu, *te);
+
+
   return retval;
 }
 

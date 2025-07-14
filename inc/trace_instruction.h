@@ -4,9 +4,9 @@
 #include <limits>
 
 // instruction format
-constexpr std::size_t NUM_INSTR_DESTINATIONS_SPARC = 4;
-constexpr std::size_t NUM_INSTR_DESTINATIONS = 2;
-constexpr std::size_t NUM_INSTR_SOURCES = 4;
+const int NUM_INSTR_DESTINATIONS_SPARC = 4;
+const int NUM_INSTR_DESTINATIONS = 2;
+const int NUM_INSTR_SOURCES = 4;
 
 class LSQ_ENTRY;
 
