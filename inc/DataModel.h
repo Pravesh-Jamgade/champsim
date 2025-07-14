@@ -1,6 +1,7 @@
 #ifndef DATAMODEL_H
 #define DATAMODEL_H
 #include <iostream>
+#include "user.h"
 
 using namespace std;
 
@@ -73,8 +74,6 @@ static string CacheStat_str[CacheStat::CacheStat_End] = {
                                                         "RFO Write", "RFO Drop", "RFO Writeback",
                                                         "Translation Write", "Translation Drop", "Translation Writeback"
                                                         };
-
-enum CACHE_ID{IS_LLC=0, IS_L2, IS_L1D, IS_L1I, IS_STLB, IS_DTLB, IS_ITLB, CACHE_ID_END};
 
 enum MISS
 {

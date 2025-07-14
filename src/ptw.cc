@@ -240,8 +240,6 @@ void PageTableWalker::handle_fill()
       else 
       {
 
-        if(fill_mshr->event_cycle)
-
         // usercode
         ptw_datamodel->psc_level_packet_processed_miss_latency[fill_mshr->translation_level] += current_cycle - fill_mshr->uv_cycle_enqueue;
 

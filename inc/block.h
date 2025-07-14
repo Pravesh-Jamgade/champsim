@@ -7,6 +7,7 @@
 #include "champsim_constants.h"
 #include "circular_buffer.hpp"
 #include "instruction.h"
+#include "user.h"
 
 class MemoryRequestProducer;
 class LSQ_ENTRY;
@@ -31,13 +32,6 @@ enum VF
   MSHR_WAIT_AP,
   MSHR_WAIT_DP,
   VF_END
-};
-
-enum HitWhere
-{
-  NONE,
-  wq,
-  HIT_END
 };
 
 // message packet
@@ -69,7 +63,7 @@ public:
   VF mshr_state = VF::VF_END;
   int thread_id=-1;
 
-  HitWhere hit_where = HitWhere::NONE;
+  CACHE_ID hit_where = CACHE_ID::CACHE_ID_END;
   
 };
 

@@ -7,6 +7,7 @@
 #include "champsim_constants.h"
 #include "util.h"
 #include "vmem.h"
+#include "user.h"
 
 #ifndef SANITY_CHECK
 #define NDEBUG
@@ -344,6 +345,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   BLOCK& hit_block = block[set * NUM_WAY + way];
 
   handle_pkt.data = hit_block.data;
+  handle_pkt.hit_where = cache_id;
 
   if(KNOB_VICTIMA && cache_is[CACHE_ID::IS_L2] && handle_pkt.vflag[VF::victima])
   {
@@ -411,8 +413,12 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
     {
+      if(23075325 == handle_pkt.instr_id)
+      {
+        cout << "read misss \n";
+      }
       // its a miss and not DP (dummy packet) hence set, AP miss
-      handle_pkt.vflag[victima_acutal_packet_miss] = !handle_pkt.vflag[VF::victima_dumy];
+      handle_pkt.vflag[victima_acutal_packet_miss] = 1;
       for(auto ret: handle_pkt.to_return)
       {
         ret->return_data(&handle_pkt);
@@ -520,7 +526,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       handle_pkt.vflag[VF::PACKET_DP_RECV] = !newPacket.vflag[VF::PACKET_DP_RECV];
       handle_pkt.vflag[VF::ptw_copy] = true;
 
-      if(28946035 == handle_pkt.instr_id)
+      if(23075325 == handle_pkt.instr_id)
       {
         cout << "Sending PTW\n";
       }
@@ -533,12 +539,12 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       it->event_cycle = std::numeric_limits<uint64_t>::max();
 
       cacheDataModel->mshr_queue[Basic::ADDED]++;
-    }
 
-    // placed here making sure MSHR entry is first inserted. The reason is it might receive hit in WQ of L2, that time it will
-    // try to return data to STLB and wont find MSHR hence to prevent such situtation
-    if(KNOB_VICTIMA && cache_is[IS_STLB])
-      l2cache->add_rq(&newPacket);
+      // placed here making sure MSHR entry is first inserted. The reason is it might receive hit in WQ of L2, that time it will
+      // try to return data to STLB and wont find MSHR hence to prevent such situtation
+      if(KNOB_VICTIMA && cache_is[IS_STLB])
+        l2cache->add_rq(&newPacket);
+    }
 
     if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
     {
@@ -924,7 +930,7 @@ int CACHE::add_rq(PACKET* packet)
   if (found_wq != WQ.end()) {
 
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;)
-    packet->hit_where = HitWhere::wq;
+    packet->hit_where = CACHE_ID::WQ;
     packet->data = found_wq->data;
     for (auto ret : packet->to_return)
       ret->return_data(packet);
@@ -1232,10 +1238,15 @@ void CACHE::return_data(PACKET* packet)
     // Case 3: DP/L2 AP/PTW --> Wait for AP
     // Case 4: DP/PTW AP/L2 --> AP/L2 missed used value from DP/PTW 
 
+    cout <<current_cycle<<", th, "<< packet->thread_id <<std::hex << ", addr, " << packet->address <<std::dec<< ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", actual, " << packet->vflag[VF::PACKET_AP_RECV] << ", dupli, " << packet->vflag[VF::PACKET_DP_RECV] << ", dummy, " << packet->vflag[VF::victima_dumy]<< ", ptwcopy, " << packet->vflag[VF::ptw_copy] << ", hw, " << packet->hit_where << ", type, " << (int)packet->type << "\n";
+
     if(mshr_entry == MSHR.end())
     {
+      cout << "not found\n";
       return;
     }
+
+    cout <<current_cycle<<", th, "<< mshr_entry->thread_id <<", addr, "<<std::hex<< mshr_entry->address <<std::dec << ", recv, " << mshr_entry->vflag[VF::recv_victima] << ", mshr_state, " << mshr_entry->mshr_state << ", type, " << (int)mshr_entry->type << '\n';
 
     bool release = false;
 
@@ -1249,6 +1260,7 @@ void CACHE::return_data(PACKET* packet)
     }
     else if(mshr_entry->vflag[VF::recv_victima])
     {
+      cout << "revc stall\n";
       return;
     }
     else if(packet->vflag[VF::PACKET_AP_RECV])
@@ -1260,6 +1272,7 @@ void CACHE::return_data(PACKET* packet)
         if(packet->vflag[VF::victima_acutal_packet_miss])
         {
           mshr_entry->mshr_state = VF::MSHR_WAIT_DP;
+          cout << "MSHR_WAIT_DP stall\n";
           return;
         }
         // all good: release
@@ -1280,12 +1293,14 @@ void CACHE::return_data(PACKET* packet)
       if(packet->vflag[VF::victima])
       {
         // mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
+        cout << "victima stall\n";
         return;
       }
       else //case4
       {
         mshr_entry->data = packet->data;
         mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
+        cout << "MSHR_WAIT_AP stall\n";
         return;
       }
     }
@@ -1298,6 +1313,8 @@ void CACHE::return_data(PACKET* packet)
       mshr_entry->data = packet->data;
       mshr_entry->pf_metadata = packet->pf_metadata;
       mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
+
+      cout << "release: " <<current_cycle<<", addr, "<<std::hex<< mshr_entry->address <<std::dec << ", recv, " << mshr_entry->vflag[VF::recv_victima] << ", mshr_state, " << mshr_entry->mshr_state << ", type, " << (int)mshr_entry->type << '\n';
     }
   }
   else
@@ -1372,7 +1389,7 @@ void CACHE::print_deadlock()
       std::cout << "[" << NAME << " MSHR] entry: " << j++ << " instr_id: " << entry.instr_id;
       std::cout << " address: " << std::hex << (entry.address >> LOG2_BLOCK_SIZE) << " full_addr: " << entry.address << std::dec << " type: " << +entry.type;
       std::cout << " fill_level: " << +entry.fill_level << " event_cycle: " << entry.event_cycle << std::endl;
-      cout << "recv, " << entry.vflag[VF::recv_victima] << ", mshr_state, " << entry.mshr_state << ", AP, " << entry.vflag[VF::PACKET_AP_RECV] << ", DP, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptw_copy, " << entry.vflag[VF::ptw_copy] << ", victima, " << entry.vflag[VF::victima] << ", victima_miss, " << entry.vflag[VF::victima_acutal_packet_miss] << ", dummy, " << entry.vflag[VF::victima_dumy] << '\n';
+      cout << "recv, " << entry.vflag[VF::recv_victima] << ", mshr_state, " << entry.mshr_state << ", AP, " << entry.vflag[VF::PACKET_AP_RECV] << ", DP, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptw_copy, " << entry.vflag[VF::ptw_copy] << ", victima, " << entry.vflag[VF::victima] << ", victima_miss, " << entry.vflag[VF::victima_acutal_packet_miss] << ", dummy, " << entry.vflag[VF::victima_dumy] << ", th, " << entry.thread_id << '\n';
     }
   } else {
     std::cout << NAME << " MSHR empty" << std::endl;
