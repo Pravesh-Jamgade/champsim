@@ -11,4 +11,19 @@ enum CACHE_ID{
     WQ,
     CACHE_ID_END
 };
+
+class PTE
+{
+    public:
+    uint64_t vaddr, paddr;
+    int thread_id;
+    
+    PTE(){}
+    PTE(uint64_t vaddr, uint64_t paddr, int thread_id)
+    {
+        this->vaddr = vaddr;
+        this->paddr = paddr;
+        this->thread_id = thread_id;
+    }
+};
 #endif

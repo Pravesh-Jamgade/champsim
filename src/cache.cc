@@ -1017,6 +1017,14 @@ int CACHE::add_wq(PACKET* packet)
     return -2;
   }
 
+  // right before to adding to WQ
+  if(cache_is[IS_L2] && KNOB_VICTIMA && packet->vflag[VF::victima])
+  {
+    // collect 8 entries
+    uint64_t offset = (packet->address >> LOG2_PAGE_SIZE) & 0x7f;
+    collect_pte[offset].push_back(PTE(packet->address, packet->data, packet->thread_id));
+  }
+
   // if there is no duplicate, add it to the write queue
   if (warmup_complete[cpu])
     WQ.push_back(*packet);

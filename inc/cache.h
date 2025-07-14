@@ -14,6 +14,7 @@
 #include <map>
 #include "DataModel.h"
 #include "victima.h"
+#include "user.h"
 
 extern map<uint64_t, PTWC> ptw_pred;
 extern map<uint32_t, uint32_t> l2_pte_map;
@@ -26,6 +27,9 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+
+  // collect 8 PTE
+  vector<PTE> collect_pte[8];
 
   bool is_tlb =false;
 
@@ -242,6 +246,11 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+
+    for(int i=0; i< 8; i++)
+    {
+      collect_pte[i] = vector<PTE>();
+    }
 
     prefetch_hit_histo = (int**)malloc(sizeof(int*) * NUM_WAY * NUM_SET);
     for(int i=0; i< NUM_WAY*NUM_SET; i++)
