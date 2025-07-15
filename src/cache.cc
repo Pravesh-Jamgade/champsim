@@ -90,7 +90,7 @@ void CACHE::handle_writeback()
 
     if(23076482 == handle_pkt.instr_id)
     {
-      cout << current_cycle << ", " << NAME << '\n';
+      cout <<"read:"<< current_cycle << ", " << NAME << '\n';
     }
     
     BLOCK& fill_block = block[set * NUM_WAY + way];
@@ -255,9 +255,9 @@ void CACHE::handle_read()
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
 
-    if(23076482 == handle_pkt.instr_id)
+    if(23076482 == handle_pkt.instr_id || 23076131 == handle_pkt.instr_id)
     {
-      cout << current_cycle << ", " << NAME << '\n';
+      cout <<"req: "<< current_cycle << ", " << NAME <<std::hex<< ", addr, " << handle_pkt.address <<std::dec<<", th, " << handle_pkt.thread_id <<", ins, "<< handle_pkt.instr_id << ", vic, " << handle_pkt.vflag[VF::victima] <<", dummy, "<< handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] <<'\n';
     }
 
     bool hit = way < NUM_WAY;
@@ -352,6 +352,11 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     std::cout << " cycle: " << current_cycle << std::endl;
   });
 
+  if(23076482 == handle_pkt.instr_id || 23076131 == handle_pkt.instr_id)
+  {
+    cout <<"readmiss: "<< current_cycle << ", " << NAME <<std::hex<< ", addr, " << handle_pkt.address <<std::dec<<", th, " << handle_pkt.thread_id <<", ins, "<< handle_pkt.instr_id << ", vic, " << handle_pkt.vflag[VF::victima] <<", dummy, "<< handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] <<'\n';
+  }
+
   BLOCK& hit_block = block[set * NUM_WAY + way];
 
   handle_pkt.data = hit_block.data;
@@ -364,22 +369,8 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     if(found != l2_pte_map.end())
       handle_pkt.data = found->second;
 
-    // // writing stlb PTE to L2
-    // // zeroing page offset bits
-    // uint32_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
-    // auto find_page = l2_pte_map.find(vp_addr);
-    // // successfully stored vp-pp mapping
-    // if(find_page != l2_pte_map.end())
-    // {
-    //   handle_pkt.data = find_page->second;
-    // }
-    // else
-    // {
-    //   cout << std::hex << hit_block.address << ", " << handle_pkt.address << '\n';
-    //   cout << NAME << ", vitima_block, " << hit_block.victima_block << ", " << hit_block.getUsage() << ", " << hit_block.came_from_request << '\n';
-    //   cout << "PTE not found in L2\n";
-    //   exit(-1);
-    // }
+    
+    cout <<"victima_readhit:"<< current_cycle << ", " << NAME << ", addr, " << handle_pkt.address << ", instr, " << std::dec << handle_pkt.instr_id << '\n';
   }
 
   // update prefetcher on load instruction
@@ -399,14 +390,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   for (auto ret : handle_pkt.to_return)
     ret->return_data(&handle_pkt);
 
-  // if(handle_pkt.type == LOAD || handle_pkt.type == TRANSLATION)
-  //   cacheDataModel->rd_queue[Basic::HIT]++;
-  // else if(handle_pkt.type == RFO)
-  //   cacheDataModel->wr_queue[Basic::HIT]++;
-  // else if(handle_pkt.type == PREFETCH)
-  //   cacheDataModel->pf_queue[Basic::HIT]++;
-    
-
   // update prefetch stats and reset prefetch bit
   if (hit_block.prefetch) {
     pf_useful++;
@@ -419,6 +402,12 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
+
+  if(23076482 == handle_pkt.instr_id || 23076131 == handle_pkt.instr_id)
+  {
+    cout <<"readmiss: "<< current_cycle << ", " << NAME <<std::hex<< ", addr, " << handle_pkt.address <<std::dec<<", th, " << handle_pkt.thread_id <<", ins, "<< handle_pkt.instr_id << ", vic, " << handle_pkt.vflag[VF::victima] <<", dummy, "<< handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] <<'\n';
+  }
+
   if(KNOB_VICTIMA)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
@@ -496,6 +485,11 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     PACKET newPacket = handle_pkt;
     if(KNOB_VICTIMA && cache_is[IS_STLB])
     {
+      if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
+      {
+        return false;
+      }
+
       newPacket.address = handle_pkt.address;
       newPacket.v_address = handle_pkt.v_address;
       newPacket.to_return = {this};
@@ -518,12 +512,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
         newPacket.vflag[VF::victima_dumy] = true;
         newPacket.vflag[VF::PACKET_AP_RECV] = false;
         newPacket.vflag[VF::PACKET_DP_RECV] = true;
-      }
-      
-
-      if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
-      {
-        return false;
       }
 
       // if victima_block @L2 has PTE then send dumy to PTW
@@ -565,6 +553,11 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     {
       // // at L2 only, packet could be dummy = True
       // if(!handle_pkt.vflag[VF::victima_dumy])
+
+      if(KNOB_VICTIMA && cache_is[IS_STLB])
+      {
+        cout << "PTW " << current_cycle << ", addr, " <<std::hex<< handle_pkt.address <<std::dec<<", th, " << handle_pkt.thread_id<< ", dumy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << handle_pkt.vflag[VF::ptw_copy] << ", vic, " << handle_pkt.vflag[VF::victima] << ", ins, " << handle_pkt.instr_id << '\n';
+      }
         lower_level->add_rq(&handle_pkt);
     }
       
@@ -1225,6 +1218,12 @@ void CACHE::return_data(PACKET* packet)
   //     victima_counters[VC::STLB_PTW_HIT]++;
   //   // cout << "First:" << ", victima_issue, " << mshr_entry->vitima_copy_sent << ", " << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
   // }
+
+  if(23076482 == packet->instr_id || 23076131 == packet->instr_id)
+  {
+    cout <<"return:"<< current_cycle << ", " << NAME << ", addr, " <<std::hex<< packet->address<<std::dec<< ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", actual, " << packet->vflag[VF::PACKET_AP_RECV]  << '\n';
+  }
+
 
   if(KNOB_VICTIMA && cache_is[IS_STLB])
   {
