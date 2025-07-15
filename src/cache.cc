@@ -528,12 +528,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
       if(23075325 == handle_pkt.instr_id)
       {
-        cout << "Sending PTW\n";
-      }
-
-      if(94423614332652 == handle_pkt.address)
-      {
-        cout << current_cycle << ", dummy, " << handle_pkt.vflag[VF::victima_dumy] << ", act, " << handle_pkt.vflag[VF::PACKET_AP_RECV] << ", ptwcopy, " << handle_pkt.vflag[VF::ptw_copy] << '\n';
+        cout << "Sending PTW th," << handle_pkt.thread_id << ", addr, " << handle_pkt.address << ", dumy, " << handle_pkt.vflag[VF::victima_dumy] << ", ptwcopy, " << handle_pkt.vflag[VF::ptw_copy] << '\n';
       }
     }
 
@@ -548,7 +543,10 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // placed here making sure MSHR entry is first inserted. The reason is it might receive hit in WQ of L2, that time it will
       // try to return data to STLB and wont find MSHR hence to prevent such situtation
       if(KNOB_VICTIMA && cache_is[IS_STLB])
+      {
         l2cache->add_rq(&newPacket);
+        cout << "Miss Rec: " << current_cycle << ", addr, " << newPacket.address <<", th, " << newPacket.thread_id<< ", dumy, " << newPacket.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << newPacket.vflag[VF::ptw_copy] << '\n';
+      }
     }
 
     if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
@@ -1330,10 +1328,10 @@ void CACHE::return_data(PACKET* packet)
       mshr_entry->pf_metadata = packet->pf_metadata;
       mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
 
-      for(auto entry: MSHR)
-      {
-        cout << current_cycle<<std::hex  << ", addr, " << entry.address <<std::dec << ", th, " << entry.thread_id << ", recv, " << entry.vflag[VF::recv_victima] << ", state, " << entry.mshr_state << '\n';
-      }
+      // for(auto entry: MSHR)
+      // {
+      //   cout << current_cycle<<std::hex  << ", addr, " << entry.address <<std::dec << ", th, " << entry.thread_id << ", recv, " << entry.vflag[VF::recv_victima] << ", state, " << entry.mshr_state << '\n';
+      // }
 
       if(print)
       cout << "release: " <<current_cycle<<", addr, "<<std::hex<< mshr_entry->address <<std::dec << ", recv, " << mshr_entry->vflag[VF::recv_victima] << ", mshr_state, " << mshr_entry->mshr_state << ", type, " << (int)mshr_entry->type << '\n';
