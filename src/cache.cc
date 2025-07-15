@@ -88,6 +88,11 @@ void CACHE::handle_writeback()
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
 
+    if(23076482 == handle_pkt.instr_id)
+    {
+      cout << current_cycle << ", " << NAME << '\n';
+    }
+    
     BLOCK& fill_block = block[set * NUM_WAY + way];
     bool hit = way < NUM_WAY;
 
@@ -249,6 +254,11 @@ void CACHE::handle_read()
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
+
+    if(23076482 == handle_pkt.instr_id)
+    {
+      cout << current_cycle << ", " << NAME << '\n';
+    }
 
     bool hit = way < NUM_WAY;
 
@@ -413,10 +423,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
     {
-      if(23075325 == handle_pkt.instr_id)
-      {
-        cout << "read misss \n";
-      }
       // its a miss and not DP (dummy packet) hence set, AP miss
       handle_pkt.vflag[victima_acutal_packet_miss] = 1;
       for(auto ret: handle_pkt.to_return)
@@ -525,11 +531,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       handle_pkt.vflag[VF::PACKET_AP_RECV] = !newPacket.vflag[VF::PACKET_AP_RECV];
       handle_pkt.vflag[VF::PACKET_DP_RECV] = !newPacket.vflag[VF::PACKET_DP_RECV];
       handle_pkt.vflag[VF::ptw_copy] = true;
-
-      if(23075325 == handle_pkt.instr_id)
-      {
-        cout << "Sending PTW th," << handle_pkt.thread_id << ", addr, " << handle_pkt.address << ", dumy, " << handle_pkt.vflag[VF::victima_dumy] << ", ptwcopy, " << handle_pkt.vflag[VF::ptw_copy] << '\n';
-      }
     }
 
     // Allocate an MSHR
@@ -545,7 +546,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       if(KNOB_VICTIMA && cache_is[IS_STLB])
       {
         l2cache->add_rq(&newPacket);
-        cout << "Miss Rec: " << current_cycle << ", addr, " << newPacket.address <<", th, " << newPacket.thread_id<< ", dumy, " << newPacket.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << newPacket.vflag[VF::ptw_copy] << '\n';
+        cout << "Miss Rec: " << current_cycle << ", addr, " <<std::hex<< newPacket.address <<std::dec<<", th, " << newPacket.thread_id<< ", dumy, " << newPacket.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << newPacket.vflag[VF::ptw_copy] << ", vic, " << newPacket.vflag[VF::victima] << ", ins, " << newPacket.instr_id << '\n';
       }
     }
 
@@ -1333,8 +1334,8 @@ void CACHE::return_data(PACKET* packet)
       //   cout << current_cycle<<std::hex  << ", addr, " << entry.address <<std::dec << ", th, " << entry.thread_id << ", recv, " << entry.vflag[VF::recv_victima] << ", state, " << entry.mshr_state << '\n';
       // }
 
-      if(print)
-      cout << "release: " <<current_cycle<<", addr, "<<std::hex<< mshr_entry->address <<std::dec << ", recv, " << mshr_entry->vflag[VF::recv_victima] << ", mshr_state, " << mshr_entry->mshr_state << ", type, " << (int)mshr_entry->type << '\n';
+      if(packet->vflag[VF::victima])
+      cout << "release: " <<current_cycle<<", addr, "<<std::hex<< packet->address <<std::dec << ", th, " << packet->thread_id << ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", mshr_state, " << mshr_entry->mshr_state<< ", mshr_recv, " << mshr_entry->vflag[VF::recv_victima] << ", type, " << (int)packet->type << '\n';
     }
   }
   else
