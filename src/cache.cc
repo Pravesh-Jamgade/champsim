@@ -85,7 +85,7 @@ void CACHE::handle_writeback()
 
     // access cache
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
 
     BLOCK& fill_block = block[set * NUM_WAY + way];
@@ -247,7 +247,7 @@ void CACHE::handle_read()
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
 
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
 
     bool hit = way < NUM_WAY;
@@ -306,7 +306,7 @@ void CACHE::handle_prefetch()
     PACKET& handle_pkt = PQ.front();
 
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
 
     bool hit = way < NUM_WAY;
 
@@ -529,6 +529,11 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       if(23075325 == handle_pkt.instr_id)
       {
         cout << "Sending PTW\n";
+      }
+
+      if(94423614332652 == handle_pkt.address)
+      {
+        cout << current_cycle << ", dummy, " << handle_pkt.vflag[VF::victima_dumy] << ", act, " << handle_pkt.vflag[VF::PACKET_AP_RECV] << ", ptwcopy, " << handle_pkt.vflag[VF::ptw_copy] << '\n';
       }
     }
 
@@ -828,7 +833,7 @@ uint32_t CACHE::get_set(uint64_t address, bool victima)
 
 //  |----- TAG/Page Number --------|
 //  |------EXTRA------|---PTEO(3b)---|----SET----|---BO(3b)---|
-uint32_t CACHE::get_way(uint64_t address, uint32_t set, bool victima)
+uint32_t CACHE::get_way(uint64_t address, uint32_t set, int th, bool victima)
 {
   int offset = OFFSET_BITS;
   if(KNOB_VICTIMA && victima && cache_is[IS_L2])
@@ -839,7 +844,7 @@ uint32_t CACHE::get_way(uint64_t address, uint32_t set, bool victima)
   
   auto begin = std::next(block.begin(), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
-  return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, offset)));
+  return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, offset, th, is_tlb)));
 }
 
 uint32_t CACHE::get_offset(uint64_t address)
@@ -851,7 +856,7 @@ uint32_t CACHE::get_offset(uint64_t address)
 int CACHE::invalidate_entry(uint64_t inval_addr)
 {
   uint32_t set = get_set(inval_addr);
-  uint32_t way = get_way(inval_addr, set);
+  uint32_t way = get_way(inval_addr, set, -1);
 
   if (way < NUM_WAY)
     block[set * NUM_WAY + way].valid = 0;
@@ -924,7 +929,7 @@ int CACHE::add_rq(PACKET* packet)
   champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
   if(KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima])
   {
-    found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE+3));
+    found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE+3, packet->thread_id, is_tlb));
   }
   
   if (found_wq != WQ.end()) {
@@ -1238,14 +1243,21 @@ void CACHE::return_data(PACKET* packet)
     // Case 3: DP/L2 AP/PTW --> Wait for AP
     // Case 4: DP/PTW AP/L2 --> AP/L2 missed used value from DP/PTW 
 
+    bool print = false;
+    if(23075325 == packet->instr_id)
+      print = true;
+
+    if(print)
     cout <<current_cycle<<", th, "<< packet->thread_id <<std::hex << ", addr, " << packet->address <<std::dec<< ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", actual, " << packet->vflag[VF::PACKET_AP_RECV] << ", dupli, " << packet->vflag[VF::PACKET_DP_RECV] << ", dummy, " << packet->vflag[VF::victima_dumy]<< ", ptwcopy, " << packet->vflag[VF::ptw_copy] << ", hw, " << packet->hit_where << ", type, " << (int)packet->type << "\n";
 
     if(mshr_entry == MSHR.end())
     {
+      if(print)
       cout << "not found\n";
       return;
     }
 
+    if(print)
     cout <<current_cycle<<", th, "<< mshr_entry->thread_id <<", addr, "<<std::hex<< mshr_entry->address <<std::dec << ", recv, " << mshr_entry->vflag[VF::recv_victima] << ", mshr_state, " << mshr_entry->mshr_state << ", type, " << (int)mshr_entry->type << '\n';
 
     bool release = false;
@@ -1260,6 +1272,7 @@ void CACHE::return_data(PACKET* packet)
     }
     else if(mshr_entry->vflag[VF::recv_victima])
     {
+      if(print)
       cout << "revc stall\n";
       return;
     }
@@ -1272,6 +1285,7 @@ void CACHE::return_data(PACKET* packet)
         if(packet->vflag[VF::victima_acutal_packet_miss])
         {
           mshr_entry->mshr_state = VF::MSHR_WAIT_DP;
+          if(print)
           cout << "MSHR_WAIT_DP stall\n";
           return;
         }
@@ -1293,6 +1307,7 @@ void CACHE::return_data(PACKET* packet)
       if(packet->vflag[VF::victima])
       {
         // mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
+        if(print)
         cout << "victima stall\n";
         return;
       }
@@ -1300,6 +1315,7 @@ void CACHE::return_data(PACKET* packet)
       {
         mshr_entry->data = packet->data;
         mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
+        if(print)
         cout << "MSHR_WAIT_AP stall\n";
         return;
       }
@@ -1314,6 +1330,12 @@ void CACHE::return_data(PACKET* packet)
       mshr_entry->pf_metadata = packet->pf_metadata;
       mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
 
+      for(auto entry: MSHR)
+      {
+        cout << current_cycle<<std::hex  << ", addr, " << entry.address <<std::dec << ", th, " << entry.thread_id << ", recv, " << entry.vflag[VF::recv_victima] << ", state, " << entry.mshr_state << '\n';
+      }
+
+      if(print)
       cout << "release: " <<current_cycle<<", addr, "<<std::hex<< mshr_entry->address <<std::dec << ", recv, " << mshr_entry->vflag[VF::recv_victima] << ", mshr_state, " << mshr_entry->mshr_state << ", type, " << (int)mshr_entry->type << '\n';
     }
   }
@@ -1400,7 +1422,7 @@ bool CACHE::peek_singleline(PACKET handle_pkt)
 {
   // found in cache
   uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
-  uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
+  uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
   bool hit = way < NUM_WAY;
 
   uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));

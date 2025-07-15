@@ -108,7 +108,7 @@ public:
   uint32_t get_size(uint8_t queue_type, uint64_t address) override;
 
   uint32_t get_set(uint64_t address, bool victima=false);
-  uint32_t get_way(uint64_t address, uint32_t set, bool victima=false);
+  uint32_t get_way(uint64_t address, uint32_t set, int thread_id, bool victima=false);
 
   int invalidate_entry(uint64_t inval_addr);
   int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata);
