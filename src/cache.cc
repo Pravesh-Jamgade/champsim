@@ -916,17 +916,10 @@ int CACHE::add_rq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
-  bool check_thread_id = NAME.find("PTW") != string::npos;
+  bool check_thread_id = NAME.find("PTW") != string::npos || KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima];
 
   // check for the latest writebacks in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id));
-  
-  // TAG: Victima
-  if(KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima])
-  {
-    // to avoid thread miss_match, we are setting is_tlb = 1 (although its a L2)
-    found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE+3, packet->thread_id, is_tlb));
-  }
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
   
   if (found_wq != WQ.end()) {
 
@@ -943,7 +936,7 @@ int CACHE::add_rq(PACKET* packet)
   }
 
   // check for duplicates in the read queue
-  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb));
+  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb || (cache_is[CACHE_ID::IS_L2] && packet->vflag[VF::victima]) ));
   if (found_rq != RQ.end()) {
 
     if(23076482 == packet->instr_id || 23076131 == packet->instr_id)
