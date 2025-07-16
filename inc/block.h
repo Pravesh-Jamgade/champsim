@@ -34,6 +34,13 @@ enum VF
   VF_END
 };
 
+enum State
+{
+  PTW_FILL,
+  PSC_Search,
+  State_end
+};
+
 // message packet
 class PACKET
 {
@@ -65,6 +72,7 @@ public:
 
   CACHE_ID hit_where = CACHE_ID::CACHE_ID_END;
   
+  State state = State::State_end;
 };
 
 template <>
