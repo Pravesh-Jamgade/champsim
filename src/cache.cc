@@ -524,14 +524,15 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     else
     {
       // counting the number of times set has seen conflict and as a result a dirty block is sent-back
-      cacheDataModel->category_of_misses[MISS::CONF]++;
+      // it needs infinit FA cache to keep history
+      // cacheDataModel->category_of_misses[MISS::CAP]++;
 
-      // checking for capacity miss
+      // checking for CONFLICT miss only can be tracked.
       {
         auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, match_offset_bits ? 0 : OFFSET_BITS));
         if(it!=fa_array.end())
         {
-          cacheDataModel->category_of_misses[MISS::CAP]++;
+          cacheDataModel->category_of_misses[MISS::CONF]++;
         }
 
         // counting the number of times set has seen conflict and as a result a clean block is overwritten
