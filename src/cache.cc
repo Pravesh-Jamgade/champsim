@@ -533,8 +533,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // try to return data to STLB and wont find MSHR hence to prevent such situtation
       if(KNOB_VICTIMA && cache_is[IS_STLB])
       {
-        l2cache->add_rq(&newPacket);
-        cout << "Miss Rec: " << current_cycle << ", addr, " <<std::hex<< newPacket.address <<std::dec<<", th, " << newPacket.thread_id<< ", dumy, " << newPacket.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << newPacket.vflag[VF::ptw_copy] << ", vic, " << newPacket.vflag[VF::victima] << ", ins, " << newPacket.instr_id << '\n';
+        int status = l2cache->add_rq(&newPacket);
+        cout << "Miss Rec: " << current_cycle << ", addr, " <<std::hex<< newPacket.address <<std::dec<<", th, " << newPacket.thread_id<< ", dumy, " << newPacket.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << newPacket.vflag[VF::ptw_copy] << ", vic, " << newPacket.vflag[VF::victima] << ", ins, " << newPacket.instr_id << ", rq, " << status << '\n';
       }
     }
 
@@ -916,11 +916,15 @@ int CACHE::add_rq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
-  // TAG: Victima
+  bool check_thread_id = NAME.find("PTW") != string::npos;
+
   // check for the latest writebacks in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id));
+  
+  // TAG: Victima
   if(KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima])
   {
+    // to avoid thread miss_match, we are setting is_tlb = 1 (although its a L2)
     found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE+3, packet->thread_id, is_tlb));
   }
   
@@ -942,6 +946,11 @@ int CACHE::add_rq(PACKET* packet)
   auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb));
   if (found_rq != RQ.end()) {
 
+    if(23076482 == packet->instr_id || 23076131 == packet->instr_id)
+    {
+      cout << "merge, " << std::hex<<found_rq->address<<std::dec<<", ins, "<<found_rq->instr_id<<", dummy, "<<found_rq->vflag[VF::PACKET_DP_RECV]<<", vic, "<<found_rq->vflag[VF::victima] <<", vic_dummy, "<<found_rq->vflag[VF::victima_dumy]<<", ptwcopy, "<<found_rq->vflag[VF::ptw_copy] << '\n';
+      cout << "add_rq, " <<std::hex<<packet->address<<std::dec<<", ins, "<<packet->instr_id<<", dummy, "<<packet->vflag[VF::PACKET_DP_RECV]<<", vic, "<<packet->vflag[VF::victima] <<", vic_dummy, "<<packet->vflag[VF::victima_dumy]<<", ptwcopy, "<<packet->vflag[VF::ptw_copy] << '\n';
+    }
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
 
     packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
@@ -1221,7 +1230,7 @@ void CACHE::return_data(PACKET* packet)
 
   if(23076482 == packet->instr_id || 23076131 == packet->instr_id)
   {
-    cout <<"return:"<< current_cycle << ", " << NAME << ", addr, " <<std::hex<< packet->address<<std::dec<< ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", actual, " << packet->vflag[VF::PACKET_AP_RECV]  << '\n';
+    cout <<"return:"<< current_cycle << ", " << NAME << ", addr, " <<std::hex<< packet->address<<std::dec<< ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", actual, " << packet->vflag[VF::PACKET_AP_RECV] << ", ins, " << packet->instr_id << ", hw, " << packet->hit_where  << '\n';
   }
 
 
@@ -1327,6 +1336,7 @@ void CACHE::return_data(PACKET* packet)
       mshr_entry->data = packet->data;
       mshr_entry->pf_metadata = packet->pf_metadata;
       mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
+      mshr_entry->hit_where = packet->hit_where;
 
       // for(auto entry: MSHR)
       // {
