@@ -11,6 +11,13 @@
 class MemoryRequestProducer;
 class LSQ_ENTRY;
 
+enum State
+{
+  PTW_FILL,
+  PSC_Search,
+  State_end
+};
+
 // message packet
 class PACKET
 {
@@ -34,6 +41,7 @@ public:
   bool ttp = false;
 
   int thread_id=-1;
+  State state = State::State_end;
 };
 
 template <>
