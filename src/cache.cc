@@ -686,21 +686,26 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
           if(KNOB_EXTEND_VICTIMA)
           {
+            // make space in hash_cache, sends invalid packet to L2 via add_rq()
             adjust_hashcache();
 
+            // hence check again if RQ has space avail
             if(l2cache->get_occupancy(2,0) == l2cache->get_size(2,0))
             {
               return false;
             }
 
+            // check if cluster is avail to be written at L2
             if(use_cluster(&writeback_packet))
             {
               l2cache->add_wq(&writeback_packet);
             }
+            // if no cluster avail and PTEContiner is full for offset, then write it as normal victima packet to L2
             else if(add_to_cluster(&writeback_packet) == -1)
             {
               l2cache->add_wq(&writeback_packet);
             }
+            // if packet added to cluster then write will be done when proper cluster is formed later in the process
             else
             {
               
