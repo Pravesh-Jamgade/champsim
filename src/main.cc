@@ -23,6 +23,7 @@
 
 map<uint64_t, PTWC> ptw_pred;
 map<uint32_t, uint32_t> l2_pte_map;
+list<pair<string, uint64_t>> hash_cache;
 
 uint8_t warmup_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
@@ -48,7 +49,7 @@ extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
-extern int KNOB_VICTIMA;
+extern int KNOB_VICTIMA, KNOB_EXTEND_VICTIMA, KNOB_HASH_CACHE_MAX_LIMIT;
 extern int KNOB_SMT_ENABLE;
 
 std::vector<tracereader*> traces;
@@ -442,7 +443,10 @@ int main(int argc, char** argv)
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_VICTIMA", 0);
+  KNOB_EXTEND_VICTIMA = iniReader->GetInteger("VICTIMA", "EXTEND_VICTIMA", 0);
+  KNOB_HASH_CACHE_MAX_LIMIT = iniReader->GetInteger("VICTIMA", "HASH_CACHE_MAX_LIMIT", 64);
   KNOB_SMT_ENABLE = iniReader->GetInteger("SMT", "ENABLE_SMT", 0);
+  
 
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';

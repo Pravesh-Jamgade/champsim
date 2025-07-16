@@ -18,10 +18,11 @@
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
-extern int KNOB_VICTIMA;
+extern int KNOB_VICTIMA, KNOB_EXTEND_VICTIMA, KNOB_HASH_CACHE_MAX_LIMIT;
 
 // illusiong of stored cache line by 8byte granularity
 extern map<uint32_t, uint32_t> l2_pte_map;
+extern list<pair<string, uint64_t>> hash_cache;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -682,19 +683,35 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           writeback_packet.type = WRITEBACK;
           writeback_packet.vflag[VF::victima] = true;
           writeback_packet.thread_id = handle_pkt.thread_id;
-          l2cache->add_wq(&writeback_packet);
-          victima_counters[VC::STLB_EVICT]++;
 
-          // // zeroing page offset bits
-          // uint32_t vp_addr = fill_block.address & ~(PAGE_SIZE-1);
-          // auto find_page = l2_pte_map.find(vp_addr);
-          // // successfully stored vp-pp mapping
-          // if(find_page == l2_pte_map.end())
-          // {
-          //   // zeroing page offset bits
-          //   uint32_t pp_addr = fill_block.data & ~(PAGE_SIZE-1);
-          //   l2_pte_map.insert({vp_addr, pp_addr});
-          // }
+          if(KNOB_EXTEND_VICTIMA)
+          {
+            adjust_hashcache();
+
+            if(l2cache->get_occupancy(2,0) == l2cache->get_size(2,0))
+            {
+              return false;
+            }
+
+            if(use_cluster(&writeback_packet))
+            {
+              l2cache->add_wq(&writeback_packet);
+            }
+            else if(add_to_cluster(&writeback_packet) == -1)
+            {
+              l2cache->add_wq(&writeback_packet);
+            }
+            else
+            {
+              
+            }
+          }
+          else
+          {
+            l2cache->add_wq(&writeback_packet);
+          }
+          
+          victima_counters[VC::STLB_EVICT]++;
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
@@ -1015,14 +1032,6 @@ int CACHE::add_wq(PACKET* packet)
 
     cacheDataModel->wr_queue[Basic::REJECTED]++;
     return -2;
-  }
-
-  // right before to adding to WQ
-  if(cache_is[IS_L2] && KNOB_VICTIMA && packet->vflag[VF::victima])
-  {
-    // collect 8 entries
-    uint64_t offset = (packet->address >> LOG2_PAGE_SIZE) & 0x7f;
-    collect_pte[offset].push_back(PTE(packet->address, packet->data, packet->thread_id));
   }
 
   // if there is no duplicate, add it to the write queue
@@ -1427,4 +1436,70 @@ bool CACHE::peek_singleline(PACKET handle_pkt)
   }
 
   return hit;
+}
+
+void CACHE::adjust_hashcache()
+{
+  // cluster-8 available
+  // test occupancy in hash_cache
+  if(hash_cache.size() == KNOB_HASH_CACHE_MAX_LIMIT)
+  {
+    //*** test: L2 rq occupancy alredy done before ***//
+    // invalid entry is in the L2
+    pair<string, uint64_t> hash_entry = hash_cache.front();
+
+    // prepare packet to invalidate entry in L2 if it exists
+    PACKET invpacket;
+    invpacket.address = hash_entry.second;
+    invpacket.vflag[VF::INVALIDATE_PACKET] = 1;
+
+    // packet sent to L2
+    l2cache->add_rq(&invpacket);
+
+    // remove entry from hash_cache
+    hash_cache.pop_front();
+  }
+}
+
+// Proposed IDEA @STLB
+// true: write as ext-victima packet
+int CACHE::use_cluster(PACKET* packet)
+{
+  // test if cluster-8 available to be able to written in L2
+  pair<bool, PTEContainer> ret = collect_pte[packet->thread_id].test();
+  if(ret.first)
+  {
+    // generate hash for cluster-8
+    string hash_str= "";
+    for(auto entry: ret.second.collection)
+      hash_str += to_string(entry.vaddr) + "_";
+    hash_cache.push_back(make_pair(hash_str, ret.second.collection.front().vaddr));
+
+    // store this buffer of 8 PTE in L2 cache block using current packet
+    packet->vflag[VF::EXT_VICTIMA_PACKET] = 1;
+    packet->pte_container = ret.second;
+    return true;
+  }
+  return false;
+}
+
+// Proposed IDEA @STLB
+// -1: write as victima packet
+// -2: write later collect now
+int CACHE::add_to_cluster(PACKET* packet)
+{
+  uint64_t offset = (packet->address >> LOG2_PAGE_SIZE) & 0x7f;
+  uint64_t vp = (packet->address & ~(PAGE_SIZE-1));
+  uint64_t pp = (packet->data & ~(PAGE_SIZE-1));
+
+  // test occupancy in PTEContainer specific to this offset
+  if(collect_pte[packet->thread_id].isSpaceAvail(offset))
+  {
+    // insert in PTEContainer --> insertion done
+    collect_pte[packet->thread_id].insert(offset, PTE(vp, pp, packet->thread_id));
+
+    // since space is avail, we dont need to write it yet
+    return -2;
+  }
+  return -1;
 }

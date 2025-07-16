@@ -28,8 +28,11 @@ class CACHE : public champsim::operable, public MemoryRequestConsumer, public Me
 {
 public:
 
-  // collect 8 PTE
-  vector<PTE> collect_pte[8];
+  // 16 threads
+  // 8 possible offsets
+  // corresponding PTE
+  ThreadBucket collect_pte[16];
+  // std::mt19937 rng(42);
 
   bool is_tlb =false;
 
@@ -154,6 +157,10 @@ public:
     return found != ptw_pred.end();
   }
 
+  int add_to_cluster(PACKET* packet);
+  void adjust_hashcache();
+  int use_cluster(PACKET* packet);
+
   void print_logs()
   {
     string prefix = NAME + " ";
@@ -247,9 +254,9 @@ public:
         repl_type(repl), pref_type(pref)
   {
 
-    for(int i=0; i< 8; i++)
+    for(int i=0; i< 16; i++)
     {
-      collect_pte[i] = vector<PTE>();
+      collect_pte[i] = vector<vector<PTE>>(8, vector<PTE>());
     }
 
     prefetch_hit_histo = (int**)malloc(sizeof(int*) * NUM_WAY * NUM_SET);
