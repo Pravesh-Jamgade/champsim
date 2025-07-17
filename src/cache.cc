@@ -1138,7 +1138,7 @@ int CACHE::add_pq(PACKET* packet)
 
 void CACHE::return_data(PACKET* packet)
 {
-  cout << "readhit: " << NAME <<", " << current_cycle << ", th, " << packet->thread_id << ", addr, " <<std::hex<<packet->address<<std::dec<<", type, " << (int)packet->type << ", ptw, " << packet->vflag[VF::ptw_copy] << ", dummy, " << packet->vflag[VF::PACKET_DP_RECV] << ", ins, " << packet->instr_id << '\n';
+  cout << "return: " << NAME <<", " << current_cycle << ", th, " << packet->thread_id << ", addr, " <<std::hex<<packet->address<<std::dec<<", type, " << (int)packet->type << ", ptw, " << packet->vflag[VF::ptw_copy] << ", dummy, " << packet->vflag[VF::PACKET_DP_RECV] << ", ins, " << packet->instr_id << '\n';
 
   // check MSHR information
   bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
