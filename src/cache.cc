@@ -36,12 +36,7 @@ void CACHE::handle_fill()
       return;
     }
 
-    if(cache_is[CACHE_ID::IS_L2] && 97655 == fill_mshr->instr_id)
-    {
-      cout << "FILL" << NAME << ", " << fill_mshr->instr_id << ", " <<std::hex<< fill_mshr->address <<std::dec<< '\n';
-      for (auto ret : fill_mshr->to_return)
-        cout << fill_mshr->instr_id << ", " << ((CACHE*)ret->getObject())->NAME << '\n';
-    }
+    cout << "FILL" << NAME << ", " << fill_mshr->instr_id << ", " <<std::hex<< fill_mshr->address <<std::dec<< '\n';
     
     // find victim
     uint32_t set = get_set(fill_mshr->address);
@@ -99,11 +94,6 @@ void CACHE::handle_writeback()
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
-
-    if(23076482 == handle_pkt.instr_id)
-    {
-      cout <<"read:"<< current_cycle << ", " << NAME << '\n';
-    }
     
     BLOCK& fill_block = block[set * NUM_WAY + way];
     bool hit = way < NUM_WAY;
@@ -258,8 +248,6 @@ void CACHE::handle_read()
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
     assert(handle_pkt.thread_id!=-1);
-
-    cout << "read: " << NAME << ", " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << ", V, " << handle_pkt.vflag[VF::victima] <<", " << handle_pkt.vflag[VF::victima_acutal_packet_miss] <<", H, " << handle_pkt.hit_where << '\n';
 
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
