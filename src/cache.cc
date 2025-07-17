@@ -252,7 +252,7 @@ void CACHE::handle_read()
     PACKET& handle_pkt = RQ.front();
     assert(handle_pkt.thread_id!=-1);
 
-    cout << "read: " << NAME << ", " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << '\n';
+    cout << "read: " << NAME << ", " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << ", V, " << handle_pkt.vflag[VF::victima] <<", " << handle_pkt.vflag[VF::victima_acutal_packet_miss] <<", H, " << handle_pkt.hit_where << '\n';
 
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
@@ -346,7 +346,7 @@ void CACHE::handle_prefetch()
 void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
 
-  cout << "readhit: " << NAME <<", " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << '\n';
+  cout << "readhit: " << NAME <<", " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << ", V, " << handle_pkt.vflag[VF::victima] <<", " << handle_pkt.vflag[VF::victima_acutal_packet_miss] <<", H, " << handle_pkt.hit_where << '\n';
 
   DP(if (warmup_complete[handle_pkt.cpu]) {
     std::cout << "[" << NAME << "] " << __func__ << " hit";
@@ -399,7 +399,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
-  cout << "readmiss: "<< NAME <<", " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << '\n';
+  cout << "readmiss: "<< NAME <<", " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << ", V, " << handle_pkt.vflag[VF::victima] <<", " << handle_pkt.vflag[VF::victima_acutal_packet_miss] <<", H, " << handle_pkt.hit_where << '\n';
 
   if(KNOB_VICTIMA)
   {
@@ -1144,7 +1144,7 @@ int CACHE::add_pq(PACKET* packet)
 
 void CACHE::return_data(PACKET* packet)
 {
-  cout << "return: " << NAME <<", " << current_cycle << ", th, " << packet->thread_id << ", addr, " <<std::hex<<packet->address<<std::dec<<", type, " << (int)packet->type << ", ptw, " << packet->vflag[VF::ptw_copy] << ", dummy, " << packet->vflag[VF::PACKET_DP_RECV] << ", ins, " << packet->instr_id << '\n';
+  cout << "return: " << NAME <<", " << current_cycle << ", th, " << packet->thread_id << ", addr, " <<std::hex<<packet->address<<std::dec<<", type, " << (int)packet->type << ", ptw, " << packet->vflag[VF::ptw_copy] << ", dummy, " << packet->vflag[VF::PACKET_DP_RECV] << ", ins, " << packet->instr_id << ", V, " << packet->vflag[VF::victima] <<", " << packet->vflag[VF::victima_acutal_packet_miss] <<", H, " << packet->hit_where << '\n';
 
   // check MSHR information
   bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
