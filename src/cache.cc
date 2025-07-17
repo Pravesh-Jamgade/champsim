@@ -1298,6 +1298,18 @@ void CACHE::print_deadlock()
   } else {
     std::cout << NAME << " MSHR empty" << std::endl;
   }
+
+  if(!empty(RQ))
+  {
+    for(auto entry: RQ)
+      cout <<"RQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
+  }
+
+  if(!empty(WQ))
+  {
+    for(auto entry: WQ)
+      cout <<"RQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
+  }
 }
 
 bool CACHE::peek_singleline(PACKET handle_pkt)
