@@ -36,9 +36,9 @@ void CACHE::handle_fill()
       return;
     }
 
-    if(104796 == fill_mshr->instr_id)
+    if(cache_is[CACHE_ID::IS_L2] && 97655 == fill_mshr->instr_id)
     {
-      cout << NAME << ", " << fill_mshr->instr_id << ", " <<std::hex<< fill_mshr->address <<std::dec<< '\n';
+      cout << "FILL" << NAME << ", " << fill_mshr->instr_id << ", " <<std::hex<< fill_mshr->address <<std::dec<< '\n';
       for (auto ret : fill_mshr->to_return)
         cout << fill_mshr->instr_id << ", " << ((CACHE*)ret->getObject())->NAME << '\n';
     }
