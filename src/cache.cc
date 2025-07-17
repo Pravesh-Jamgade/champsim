@@ -35,6 +35,13 @@ void CACHE::handle_fill()
       cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
       return;
     }
+
+    if(104796 == fill_mshr->instr_id)
+    {
+      cout << NAME << ", " << fill_mshr->instr_id << ", " <<std::hex<< fill_mshr->address <<std::dec<< '\n';
+      for (auto ret : fill_mshr->to_return)
+        cout << fill_mshr->instr_id << ", " << ((CACHE*)ret->getObject())->NAME << '\n';
+    }
     
     // find victim
     uint32_t set = get_set(fill_mshr->address);
