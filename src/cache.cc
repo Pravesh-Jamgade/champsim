@@ -528,6 +528,12 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       else
         handle_pkt.to_return.clear();
     }
+
+    if(56188 == handle_pkt.instr_id)
+    {
+      for(auto ret: handle_pkt.to_return)
+        cout <<  ", ins, " << handle_pkt.instr_id <<", "<<NAME << "-->" << ((CACHE*)ret->getObject())->NAME << '\n';
+    }
     
 
     if (!is_read)
