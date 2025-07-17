@@ -255,11 +255,6 @@ void CACHE::handle_read()
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
 
-    if(23076482 == handle_pkt.instr_id || 23076131 == handle_pkt.instr_id)
-    {
-      cout <<"req: "<< current_cycle << ", " << NAME <<std::hex<< ", addr, " << handle_pkt.address <<std::dec<<", th, " << handle_pkt.thread_id <<", ins, "<< handle_pkt.instr_id << ", vic, " << handle_pkt.vflag[VF::victima] <<", dummy, "<< handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] <<'\n';
-    }
-
     bool hit = way < NUM_WAY;
 
     uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));
@@ -352,11 +347,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     std::cout << " cycle: " << current_cycle << std::endl;
   });
 
-  if(23076482 == handle_pkt.instr_id || 23076131 == handle_pkt.instr_id)
-  {
-    cout <<"readmiss: "<< current_cycle << ", " << NAME <<std::hex<< ", addr, " << handle_pkt.address <<std::dec<<", th, " << handle_pkt.thread_id <<", ins, "<< handle_pkt.instr_id << ", vic, " << handle_pkt.vflag[VF::victima] <<", dummy, "<< handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] <<'\n';
-  }
-
   BLOCK& hit_block = block[set * NUM_WAY + way];
 
   handle_pkt.data = hit_block.data;
@@ -368,9 +358,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     auto found = l2_pte_map.find(vp_addr);
     if(found != l2_pte_map.end())
       handle_pkt.data = found->second;
-
-    
-    cout <<"victima_readhit:"<< current_cycle << ", " << NAME << ", addr, " << handle_pkt.address << ", instr, " << std::dec << handle_pkt.instr_id << '\n';
   }
 
   // update prefetcher on load instruction
@@ -402,12 +389,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
-
-  if(23076482 == handle_pkt.instr_id || 23076131 == handle_pkt.instr_id)
-  {
-    cout <<"readmiss: "<< current_cycle << ", " << NAME <<std::hex<< ", addr, " << handle_pkt.address <<std::dec<<", th, " << handle_pkt.thread_id <<", ins, "<< handle_pkt.instr_id << ", vic, " << handle_pkt.vflag[VF::victima] <<", dummy, "<< handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] <<'\n';
-  }
-
   if(KNOB_VICTIMA)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
@@ -534,7 +515,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       if(KNOB_VICTIMA && cache_is[IS_STLB])
       {
         int status = l2cache->add_rq(&newPacket);
-        cout << "Miss Rec: " << current_cycle << ", addr, " <<std::hex<< newPacket.address <<std::dec<<", th, " << newPacket.thread_id<< ", dumy, " << newPacket.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << newPacket.vflag[VF::ptw_copy] << ", vic, " << newPacket.vflag[VF::victima] << ", ins, " << newPacket.instr_id << ", rq, " << status << '\n';
       }
     }
 
@@ -551,14 +531,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       lower_level->add_pq(&handle_pkt);
     else
     {
-      // // at L2 only, packet could be dummy = True
-      // if(!handle_pkt.vflag[VF::victima_dumy])
-
-      if(KNOB_VICTIMA && cache_is[IS_STLB])
-      {
-        cout << "PTW " << current_cycle << ", addr, " <<std::hex<< handle_pkt.address <<std::dec<<", th, " << handle_pkt.thread_id<< ", dumy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << handle_pkt.vflag[VF::ptw_copy] << ", vic, " << handle_pkt.vflag[VF::victima] << ", ins, " << handle_pkt.instr_id << '\n';
-      }
-        lower_level->add_rq(&handle_pkt);
+      lower_level->add_rq(&handle_pkt);
     }
       
   }
@@ -681,17 +654,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           writeback_packet.thread_id = handle_pkt.thread_id;
           l2cache->add_wq(&writeback_packet);
           victima_counters[VC::STLB_EVICT]++;
-
-          // // zeroing page offset bits
-          // uint32_t vp_addr = fill_block.address & ~(PAGE_SIZE-1);
-          // auto find_page = l2_pte_map.find(vp_addr);
-          // // successfully stored vp-pp mapping
-          // if(find_page == l2_pte_map.end())
-          // {
-          //   // zeroing page offset bits
-          //   uint32_t pp_addr = fill_block.data & ~(PAGE_SIZE-1);
-          //   l2_pte_map.insert({vp_addr, pp_addr});
-          // }
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
@@ -837,7 +799,7 @@ uint32_t CACHE::get_way(uint64_t address, uint32_t set, int th, bool victima)
   
   auto begin = std::next(block.begin(), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
-  return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, offset, th, is_tlb)));
+  return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, offset, th, (is_tlb || (cache_is[IS_L2]&&victima)) )));
 }
 
 uint32_t CACHE::get_offset(uint64_t address)
@@ -1175,59 +1137,6 @@ void CACHE::return_data(PACKET* packet)
   auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb));
   auto first_unreturned = std::find_if(MSHR.begin(), MSHR.end(), [](auto x) { return x.event_cycle == std::numeric_limits<uint64_t>::max(); });
 
-  // if(KNOB_VICTIMA && cache_is[IS_STLB])
-  // {
-  //   if(packet->vflag[VF::victima_dumy])
-  //   {
-  //     if(packet->victima) victima_counters[STLB_DUMY_VICTIMA]++;
-  //     else victima_counters[STLB_DUMY_PTW]++;
-  //     return;
-  //   }
-
-  //   if(packet->data == 0)
-  //   {
-  //     if(packet->victima) victima_counters[STLB_ZERO_DROP_VICTIMA]++;
-  //     else victima_counters[STLB_ZERO_DROP_PTW]++;
-  //     return;
-  //   }
-
-  //   if(mshr_entry == MSHR.end())
-  //   {
-  //     if(packet->victima) victima_counters[STLB_MSHRMISS_DROP_VICTIMA]++;
-  //     else victima_counters[STLB_MSHRMISS_DROP_PTW]++;
-  //     // cout << "MSHR_not_here:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-  //     return;
-  //   }
-
-  //   if(mshr_entry->.vflag[VF::recv_victima])
-  //   {
-  //     if(packet->victima) victima_counters[STLB_MSHRRECV_DROP_VICTIMA]++;
-  //     else victima_counters[STLB_MSHRRECV_DROP_PTW]++;
-
-  //     if(mshr_entry->data != packet->data)
-  //     {
-  //       cout << "F: " << mshr_entry->data << ", S: " << packet->data << '\n';  
-  //     }
-  //     cout << "Second:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-  //     return;
-  //   }
-
-  //   mshr_entry->.vflag[VF::recv_victima] = true;
-  //   mshr_entry->data = packet->data;
-
-  //   if(packet->victima)
-  //     victima_counters[VC::STLB_VICTIMA_HIT]++;
-  //   else
-  //     victima_counters[VC::STLB_PTW_HIT]++;
-  //   // cout << "First:" << ", victima_issue, " << mshr_entry->vitima_copy_sent << ", " << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-  // }
-
-  if(23076482 == packet->instr_id || 23076131 == packet->instr_id)
-  {
-    cout <<"return:"<< current_cycle << ", " << NAME << ", addr, " <<std::hex<< packet->address<<std::dec<< ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", actual, " << packet->vflag[VF::PACKET_AP_RECV] << ", ins, " << packet->instr_id << ", hw, " << packet->hit_where  << '\n';
-  }
-
-
   if(KNOB_VICTIMA && cache_is[IS_STLB])
   {
     // count:
@@ -1244,22 +1153,10 @@ void CACHE::return_data(PACKET* packet)
     // Case 3: DP/L2 AP/PTW --> Wait for AP
     // Case 4: DP/PTW AP/L2 --> AP/L2 missed used value from DP/PTW 
 
-    bool print = false;
-    if(23075325 == packet->instr_id)
-      print = true;
-
-    if(print)
-    cout <<current_cycle<<", th, "<< packet->thread_id <<std::hex << ", addr, " << packet->address <<std::dec<< ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", actual, " << packet->vflag[VF::PACKET_AP_RECV] << ", dupli, " << packet->vflag[VF::PACKET_DP_RECV] << ", dummy, " << packet->vflag[VF::victima_dumy]<< ", ptwcopy, " << packet->vflag[VF::ptw_copy] << ", hw, " << packet->hit_where << ", type, " << (int)packet->type << "\n";
-
     if(mshr_entry == MSHR.end())
     {
-      if(print)
-      cout << "not found\n";
       return;
     }
-
-    if(print)
-    cout <<current_cycle<<", th, "<< mshr_entry->thread_id <<", addr, "<<std::hex<< mshr_entry->address <<std::dec << ", recv, " << mshr_entry->vflag[VF::recv_victima] << ", mshr_state, " << mshr_entry->mshr_state << ", type, " << (int)mshr_entry->type << '\n';
 
     bool release = false;
 
@@ -1273,8 +1170,6 @@ void CACHE::return_data(PACKET* packet)
     }
     else if(mshr_entry->vflag[VF::recv_victima])
     {
-      if(print)
-      cout << "revc stall\n";
       return;
     }
     else if(packet->vflag[VF::PACKET_AP_RECV])
@@ -1286,8 +1181,6 @@ void CACHE::return_data(PACKET* packet)
         if(packet->vflag[VF::victima_acutal_packet_miss])
         {
           mshr_entry->mshr_state = VF::MSHR_WAIT_DP;
-          if(print)
-          cout << "MSHR_WAIT_DP stall\n";
           return;
         }
         // all good: release
@@ -1307,17 +1200,12 @@ void CACHE::return_data(PACKET* packet)
       //case3
       if(packet->vflag[VF::victima])
       {
-        // mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
-        if(print)
-        cout << "victima stall\n";
         return;
       }
       else //case4
       {
         mshr_entry->data = packet->data;
         mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
-        if(print)
-        cout << "MSHR_WAIT_AP stall\n";
         return;
       }
     }
@@ -1331,14 +1219,6 @@ void CACHE::return_data(PACKET* packet)
       mshr_entry->pf_metadata = packet->pf_metadata;
       mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
       mshr_entry->hit_where = packet->hit_where;
-
-      // for(auto entry: MSHR)
-      // {
-      //   cout << current_cycle<<std::hex  << ", addr, " << entry.address <<std::dec << ", th, " << entry.thread_id << ", recv, " << entry.vflag[VF::recv_victima] << ", state, " << entry.mshr_state << '\n';
-      // }
-
-      if(packet->vflag[VF::victima])
-      cout << "release: " <<current_cycle<<", addr, "<<std::hex<< packet->address <<std::dec << ", th, " << packet->thread_id << ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", mshr_state, " << mshr_entry->mshr_state<< ", mshr_recv, " << mshr_entry->vflag[VF::recv_victima] << ", type, " << (int)packet->type << '\n';
     }
   }
   else
@@ -1437,7 +1317,6 @@ bool CACHE::peek_singleline(PACKET handle_pkt)
     if(hit)
     {
       BLOCK* hit_block = &block[set * NUM_WAY + way];
-      // cout << "hit," << hit << ", vic_block," << (hit_block->victima_block) << ", pkt_thread," << (handle_pkt.thread_id) << ", block_thread," << (hit_block->thread_id) << ", " << (hit_block->came_from_request) << '\n';
       hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
     }
   }
