@@ -60,14 +60,15 @@ void CACHE::handle_fill()
       // update processed packets
       fill_mshr->data = block[set * NUM_WAY + way].data;
 
-      if(104796 == fill_mshr->instr_id)
-      {
-        for (auto ret : fill_mshr->to_return)
-          cout << fill_mshr->instr_id << ", " << ((CACHE*)ret->getObject())->NAME << '\n';
-      }
       for (auto ret : fill_mshr->to_return)
         ret->return_data(&(*fill_mshr));
     }
+
+    string list_trace = "";
+    for (auto ret : fill_mshr->to_return)
+      list_trace += ((CACHE*)ret->getObject())->NAME + "_";
+
+    cout << "FILL " << std::hex << fill_mshr->address << ", " <<std::dec<< fill_mshr->instr_id << ", trace, " << list_trace << '\n';
 
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
