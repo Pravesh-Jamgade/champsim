@@ -58,6 +58,11 @@ void CACHE::handle_fill()
       // update processed packets
       fill_mshr->data = block[set * NUM_WAY + way].data;
 
+      if(104796 == fill_mshr->instr_id)
+      {
+        for (auto ret : fill_mshr->to_return)
+          cout << fill_mshr->instr_id << ", " << ((CACHE*)ret->getObject())->NAME << '\n';
+      }
       for (auto ret : fill_mshr->to_return)
         ret->return_data(&(*fill_mshr));
     }
@@ -422,7 +427,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   });
 
   // check mshr
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS, handle_pkt.thread_id, is_tlb));
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]);
+  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS, handle_pkt.thread_id, is_tlb||check_thread_id));
   bool mshr_full = (MSHR.size() == MSHR_SIZE);
 
   // usercode
@@ -1247,6 +1253,7 @@ void CACHE::return_data(PACKET* packet)
     mshr_entry->data = packet->data;
     mshr_entry->pf_metadata = packet->pf_metadata;
     mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
+    mshr_entry->hit_where = packet->hit_where;
 
   }
   
@@ -1310,14 +1317,16 @@ void CACHE::print_deadlock()
 
   if(!empty(RQ))
   {
+    cout << NAME << " RQ " << '\n';
     for(auto entry: RQ)
       cout <<"RQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<(int)entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
   }
 
   if(!empty(WQ))
   {
+    cout << NAME << " WQ " << '\n';
     for(auto entry: WQ)
-      cout <<"RQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<(int)entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
+      cout <<"WQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<(int)entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
   }
 }
 
