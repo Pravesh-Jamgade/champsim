@@ -35,8 +35,6 @@ void CACHE::handle_fill()
       cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
       return;
     }
-
-    cout << "FILL" << NAME << ", " << fill_mshr->instr_id << ", " <<std::hex<< fill_mshr->address <<std::dec<< '\n';
     
     // find victim
     uint32_t set = get_set(fill_mshr->address);
@@ -63,13 +61,7 @@ void CACHE::handle_fill()
       for (auto ret : fill_mshr->to_return)
         ret->return_data(&(*fill_mshr));
     }
-
-    string list_trace = "";
-    for (auto ret : fill_mshr->to_return)
-      list_trace += ((CACHE*)ret->getObject())->NAME + "_";
-
-    cout << "FILL " << std::hex << fill_mshr->address << ", " <<std::dec<< fill_mshr->instr_id << ", trace, " << list_trace << '\n';
-
+    
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
     
