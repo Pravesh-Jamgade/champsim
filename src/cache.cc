@@ -247,6 +247,8 @@ void CACHE::handle_read()
     PACKET& handle_pkt = RQ.front();
     assert(handle_pkt.thread_id!=-1);
 
+    cout << "read: " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << '\n';
+
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
@@ -338,6 +340,9 @@ void CACHE::handle_prefetch()
 
 void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
+
+  cout << "readhit: " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << '\n';
+
   DP(if (warmup_complete[handle_pkt.cpu]) {
     std::cout << "[" << NAME << "] " << __func__ << " hit";
     std::cout << " instr_id: " << handle_pkt.instr_id << " address: " << std::hex << (handle_pkt.address >> OFFSET_BITS);
@@ -389,6 +394,8 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
+  cout << "readmiss: " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << '\n';
+
   if(KNOB_VICTIMA)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
@@ -879,7 +886,7 @@ int CACHE::add_rq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
-  bool check_thread_id = NAME.find("PTW") != string::npos || KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima];
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
 
   // check for the latest writebacks in the write queue
   champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
@@ -899,14 +906,8 @@ int CACHE::add_rq(PACKET* packet)
   }
 
   // check for duplicates in the read queue
-  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb || (cache_is[CACHE_ID::IS_L2] && packet->vflag[VF::victima]) ));
+  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
   if (found_rq != RQ.end()) {
-
-    if(23076482 == packet->instr_id || 23076131 == packet->instr_id)
-    {
-      cout << "merge, " << std::hex<<found_rq->address<<std::dec<<", ins, "<<found_rq->instr_id<<", dummy, "<<found_rq->vflag[VF::PACKET_DP_RECV]<<", vic, "<<found_rq->vflag[VF::victima] <<", vic_dummy, "<<found_rq->vflag[VF::victima_dumy]<<", ptwcopy, "<<found_rq->vflag[VF::ptw_copy] << '\n';
-      cout << "add_rq, " <<std::hex<<packet->address<<std::dec<<", ins, "<<packet->instr_id<<", dummy, "<<packet->vflag[VF::PACKET_DP_RECV]<<", vic, "<<packet->vflag[VF::victima] <<", vic_dummy, "<<packet->vflag[VF::victima_dumy]<<", ptwcopy, "<<packet->vflag[VF::ptw_copy] << '\n';
-    }
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
 
     packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
@@ -956,8 +957,10 @@ int CACHE::add_wq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
+
   // check for duplicates in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
 
   if (found_wq != WQ.end()) {
 
@@ -1074,8 +1077,10 @@ int CACHE::add_pq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
+
   // check for the latest wirtebacks in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb||check_thread_id) );
 
   if (found_wq != WQ.end()) {
 
@@ -1133,8 +1138,12 @@ int CACHE::add_pq(PACKET* packet)
 
 void CACHE::return_data(PACKET* packet)
 {
+  cout << "readhit: " << current_cycle << ", th, " << packet->thread_id << ", addr, " <<std::hex<<packet->address<<std::dec<<", type, " << (int)packet->type << ", ptw, " << packet->vflag[VF::ptw_copy] << ", dummy, " << packet->vflag[VF::PACKET_DP_RECV] << ", ins, " << packet->instr_id << '\n';
+
   // check MSHR information
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb));
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
+
+  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
   auto first_unreturned = std::find_if(MSHR.begin(), MSHR.end(), [](auto x) { return x.event_cycle == std::numeric_limits<uint64_t>::max(); });
 
   if(KNOB_VICTIMA && cache_is[IS_STLB])
@@ -1302,13 +1311,13 @@ void CACHE::print_deadlock()
   if(!empty(RQ))
   {
     for(auto entry: RQ)
-      cout <<"RQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
+      cout <<"RQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<(int)entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
   }
 
   if(!empty(WQ))
   {
     for(auto entry: WQ)
-      cout <<"RQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
+      cout <<"RQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<(int)entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
   }
 }
 
