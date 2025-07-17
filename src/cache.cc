@@ -517,6 +517,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       {
         int status = l2cache->add_rq(&newPacket);
       }
+
+      cout << "rec, " << current_cycle << ", addr, "<<std::hex<<newPacket.address<<std::dec<<", ins, " << newPacket.instr_id << '\n';
     }
 
     if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
