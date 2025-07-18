@@ -20,6 +20,7 @@ uint32_t CACHE::find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const
 
   int ktimes = maxRRPV+1;
 
+  uint32_t way = 0;
   while (ktimes) {
 
     for (auto it = begin; it != end; ++it)
@@ -30,17 +31,32 @@ uint32_t CACHE::find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const
     {
       if(!victim->victima_block)
       {
-        uint32_t way1 = std::distance(begin, backup_way);
-        return way1;
+        uint32_t way1 = std::distance(begin, victim);
+        uint32_t way2 = std::distance(begin, backup_way);
+        if(way1 == NUM_WAY && way2 == NUM_WAY)
+        {
+
+        }
+        else if(way1 != NUM_WAY)
+        {
+          way = way1;
+          break;
+        }
+        else if(way2 != NUM_WAY)
+        {
+          way = way2;
+          break;
+        }
+
       }
       else backup_way = victim;
     }
     ktimes--;
   }
 
-  uint32_t way2 = std::distance(begin, backup_way);
+  
 
-  return way2;
+  return way;
 }
 
 // called on every cache hit and cache fill

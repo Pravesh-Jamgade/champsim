@@ -262,7 +262,6 @@ void CACHE::handle_read()
       if(hit)
       {
         BLOCK* hit_block = &block[set * NUM_WAY + way];
-        // cout << "hit," << hit << ", vic_block," << (hit_block->victima_block) << ", pkt_thread," << (handle_pkt.thread_id) << ", block_thread," << (hit_block->thread_id) << ", " << (hit_block->came_from_request) << '\n';
         hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
       }
     }
@@ -333,9 +332,6 @@ void CACHE::handle_prefetch()
 
 void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
-
-  cout << "readhit: " << NAME <<", " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << ", V, " << handle_pkt.vflag[VF::victima] <<", " << handle_pkt.vflag[VF::victima_acutal_packet_miss] <<", H, " << handle_pkt.hit_where << '\n';
-
   DP(if (warmup_complete[handle_pkt.cpu]) {
     std::cout << "[" << NAME << "] " << __func__ << " hit";
     std::cout << " instr_id: " << handle_pkt.instr_id << " address: " << std::hex << (handle_pkt.address >> OFFSET_BITS);
@@ -387,8 +383,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
-  cout << "readmiss: "<< NAME <<", " << current_cycle << ", th, " << handle_pkt.thread_id << ", addr, " <<std::hex<<handle_pkt.address<<std::dec<<", type, " << (int)handle_pkt.type << ", ptw, " << handle_pkt.vflag[VF::ptw_copy] << ", dummy, " << handle_pkt.vflag[VF::PACKET_DP_RECV] << ", ins, " << handle_pkt.instr_id << ", V, " << handle_pkt.vflag[VF::victima] <<", " << handle_pkt.vflag[VF::victima_acutal_packet_miss] <<", H, " << handle_pkt.hit_where << '\n';
-
   if(KNOB_VICTIMA)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
@@ -517,8 +511,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       {
         int status = l2cache->add_rq(&newPacket);
       }
-
-      cout << "rec, " << current_cycle << ", addr, "<<std::hex<<newPacket.address<<std::dec<<", ins, " << newPacket.instr_id << '\n';
     }
 
     if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
@@ -528,13 +520,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       else
         handle_pkt.to_return.clear();
     }
-
-    if(97655 == handle_pkt.instr_id)
-    {
-      for(auto ret: handle_pkt.to_return)
-        cout <<  ", ins, " << handle_pkt.instr_id <<", "<<NAME << "-->" << ((CACHE*)ret->getObject())->NAME << '\n';
-    }
-    
 
     if (!is_read)
       lower_level->add_pq(&handle_pkt);
@@ -1140,8 +1125,6 @@ int CACHE::add_pq(PACKET* packet)
 
 void CACHE::return_data(PACKET* packet)
 {
-  cout << "return: " << NAME <<", " << current_cycle << ", th, " << packet->thread_id << ", addr, " <<std::hex<<packet->address<<std::dec<<", type, " << (int)packet->type << ", ptw, " << packet->vflag[VF::ptw_copy] << ", dummy, " << packet->vflag[VF::PACKET_DP_RECV] << ", ins, " << packet->instr_id << ", V, " << packet->vflag[VF::victima] <<", " << packet->vflag[VF::victima_acutal_packet_miss] <<", H, " << packet->hit_where<<", toret_size, "<< packet->to_return.size() << '\n';
-
   // check MSHR information
   bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
 
