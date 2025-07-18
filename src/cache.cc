@@ -174,6 +174,7 @@ void CACHE::handle_writeback()
     writes_available_this_cycle--;
     WQ.pop_front();
     cacheDataModel->wr_queue[Basic::ACCESS]++;
+    global_access_count++;
   }
 }
 
@@ -289,6 +290,7 @@ void CACHE::handle_read()
     RQ.pop_front();
     reads_available_this_cycle--;
     cacheDataModel->rd_queue[Basic::ACCESS]++;
+    global_access_count++;
   }
 }
 
@@ -327,6 +329,7 @@ void CACHE::handle_prefetch()
     PQ.pop_front();
     reads_available_this_cycle--;
     cacheDataModel->pf_queue[Basic::ACCESS]++;
+    global_access_count++;
   }
 }
 
@@ -536,7 +539,31 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
     handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 0, handle_pkt.type, handle_pkt.pf_metadata);
   }
-    
+  
+  //check if reuse_history has tracked this miss
+  uint32_t set = get_set(handle_pkt.address);
+  uint32_t way = get_way(handle_pkt.address, set);
+  uint64_t target_addr = handle_pkt.address;
+  auto it = std::find_if(reuse_history[set].begin(), reuse_history[set].end(), eq_addr<BLOCK>(target_addr, OFFSET_BITS));
+  if(it!=reuse_history[set].end())
+  {
+    int dist = std::distance(reuse_history[set].begin(), it);
+    cacheDataModel->hist_reuse_distance[dist]++;
+  }
+
+  uint64_t tag = target_addr & ~((1 << (LOG2_BLOCK_SIZE + lg2(NUM_SET))) - 1);
+  if(is_tlb)
+    tag = target_addr & ~(PAGE_SIZE-1);
+  
+  auto g_it = global_reuse.find(tag);
+  if(global_reuse.end() != g_it)
+  {
+    uint64_t last_global_access = global_reuse[tag];
+    int distance = global_access_count > last_global_access? (global_access_count - last_global_access): 0;
+    cacheDataModel->global_hist_reuse_distance[distance]++;
+  }
+  global_reuse[tag] = global_access_count;
+ 
   return true;
 }
 
