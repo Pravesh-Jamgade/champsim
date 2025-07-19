@@ -115,7 +115,7 @@ public:
   void reset_datamodel()
   {
     delete cacheDataModel;
-    cacheDataModel = new CacheDataModel(NAME, cpu);
+    cacheDataModel = new CacheDataModel(NAME, cpu, NUM_WAY);
   }
 
   void print_logs()
@@ -189,7 +189,7 @@ public:
       }
     }  
 
-    cacheDataModel = new CacheDataModel(NAME, cpu);
+    cacheDataModel = new CacheDataModel(NAME, cpu, NUM_WAY);
     
     WRITE_LANTENCY = hit_lat;
 
