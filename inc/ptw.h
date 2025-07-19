@@ -95,11 +95,8 @@ public:
   void print_deadlock() override;
 
   void* getObject(){return this;}
-<<<<<<< HEAD
-=======
   void victima_update(uint64_t addr, int cost_or_freq);
   void _overwrite();
->>>>>>> a1d8dfc (added re-adjustable page table levels)
 
 };
 
