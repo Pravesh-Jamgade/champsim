@@ -61,6 +61,7 @@ void CACHE::handle_fill()
     
     cacheDataModel->mshr_queue[Basic::ACCESS]++;
     func_track_workingset(fill_mshr->address);
+    global_access_count++;
   }
 }
 
@@ -138,7 +139,6 @@ void CACHE::handle_writeback()
     writes_available_this_cycle--;
     WQ.pop_front();
     cacheDataModel->wr_queue[Basic::ACCESS]++;
-    global_access_count++;
   }
 }
 
@@ -232,7 +232,6 @@ void CACHE::handle_read()
     RQ.pop_front();
     reads_available_this_cycle--;
     cacheDataModel->rd_queue[Basic::ACCESS]++;
-    global_access_count++;
   }
 }
 
@@ -271,7 +270,6 @@ void CACHE::handle_prefetch()
     PQ.pop_front();
     reads_available_this_cycle--;
     cacheDataModel->pf_queue[Basic::ACCESS]++;
-    global_access_count++;
   }
 }
 
