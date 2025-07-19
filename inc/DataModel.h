@@ -122,6 +122,12 @@ class CacheDataModel
     uint64_t cache_stat[CacheStat::CacheStat_End] = {0};    
 
     int* category_of_misses;
+<<<<<<< HEAD
+=======
+    map<uint64_t,uint64_t> hist_set_conflict_events;  
+    map<int,int> hist_reuse_distance;
+    map<int,int> global_hist_reuse_distance;
+>>>>>>> a197613 (testing)
 
     void print_stats()
     {
@@ -194,6 +200,34 @@ class CacheDataModel
         cout << tag << "Capacity miss, " << category_of_misses[MISS::CAP] << '\n';
         cout << tag << "Compulsory miss, " << category_of_misses[MISS::COM] << '\n';
         cout << tag << "Conflict miss, " << category_of_misses[MISS::CONF] << '\n';
+<<<<<<< HEAD
+=======
+   
+        cout << tag << "set conflict stats (evictions and number of such sets)\n";
+        
+        // tracking frequency from corresponding sets
+        map<uint64_t, uint64_t> hist_data;
+        uint64_t no_of_nonconflict_sets = 0;
+
+        for(auto entry: hist_set_conflict_events)
+        {
+            hist_data[entry.second]++;
+            if(entry.second == 0)
+                no_of_nonconflict_sets++;
+        }
+
+        for(auto entry: hist_data)
+            cout << entry.first << ", " << setw(5) << entry.second << '\n';
+        
+        cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
+
+        cout << tag << "reuse distance (reuse and frequency)\n";
+        for(auto entry: global_hist_reuse_distance)
+        {
+            cout << entry.first << ", " << setw(5) << entry.second << '\n';
+        }
+        
+>>>>>>> a197613 (testing)
         cout << '\n';
 
     }

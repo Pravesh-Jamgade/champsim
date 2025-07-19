@@ -26,6 +26,12 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+  //usercode
+  bool is_tlb = false;
+  CacheDataModel* cacheDataModel;
+  list<BLOCK>* reuse_history;
+  unordered_map<uint64_t, uint64_t> global_reuse;
+  uint64_t global_access_count = 0;
 
   bool is_tlb =false;
 
