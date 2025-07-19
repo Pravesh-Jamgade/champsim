@@ -66,6 +66,7 @@ void CACHE::handle_fill()
     writes_available_this_cycle--;
     
     cacheDataModel->mshr_queue[Basic::ACCESS]++;
+    func_track_workingset(fill_mshr->address);
   }
 }
 
@@ -645,7 +646,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
     }
 
-    // check for compulsory miss
+    bool track_reuse = false;
+    
+    // count Compulsory miss
     if(!fill_block.valid)
     {  
       cacheDataModel->category_of_misses[MISS::COM]++;
@@ -687,18 +690,37 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       // counting the number of times set has seen conflict and as a result a dirty block is sent-back
       // it needs infinit FA cache to keep history
       // cacheDataModel->category_of_misses[MISS::CAP]++;
+      // count Capacity misses
+      uint64_t page = handle_pkt.address & ~(PAGE_SIZE-1);
+      auto page_it = page_to_block.find(page);
+      if(page_it!=page_to_block.end())
+      {
+        if(is_tlb)
+        {
+          cacheDataModel->category_of_misses[MISS::CAP]++;
+        }
+        else
+        {
+          uint64_t cache_block_index = (handle_pkt.address > 6) & 0x3f;
+          page_it->second.test(cache_block_index);
+          cacheDataModel->category_of_misses[MISS::CAP]++;
+        }
+      }
 
-      // checking for CONFLICT miss only can be tracked.
+      // count Conflict misses
       {
         auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, OFFSET_BITS));
         if(it!=fa_array.end())
         {
           cacheDataModel->category_of_misses[MISS::CONF]++;
         }
+      }
 
-        // track evicted/overwritten block
+
+      // track evicted/overwritten block
+      {
         if(fa_array.size() >= FA_SIZE)
-          fa_array.pop_back();
+        fa_array.pop_back();
         
         auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address,  match_offset_bits ? 0 : OFFSET_BITS));
         if(found_out==fa_array.end())
@@ -706,6 +728,19 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           fa_array.push_back(block[set*NUM_WAY + way]);
         }
       }
+
+      // counting the number of times set has seen conflict and as a result a clean block is overwritten
+      cacheDataModel->hist_set_conflict_events[set]++;
+
+      track_reuse = true;
+    }
+
+    if(track_reuse)
+    {
+      if(reuse_history[set].size() >= 4*NUM_WAY)
+        reuse_history[set].pop_front();
+      else 
+        reuse_history[set].push_back(block[set*NUM_WAY + way]);
     }
 
     if (ever_seen_data)
@@ -1358,4 +1393,19 @@ bool CACHE::peek_singleline(PACKET handle_pkt)
   }
 
   return hit;
+}
+
+void CACHE::func_track_workingset(uint64_t addr)
+{
+  uint64_t page = addr & ~(PAGE_SIZE-1);
+  
+  auto page_it = page_to_block.find(page);
+  if(page_it == page_to_block.end())
+    page_to_block[page] = bitset<64>(0);
+  
+  if(!is_tlb)
+  {
+    uint64_t cache_block_index = (addr > 6) & 0x3f;
+    page_to_block[page].set(cache_block_index, 1);
+  }
 }
