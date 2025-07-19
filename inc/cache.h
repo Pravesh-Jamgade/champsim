@@ -14,6 +14,7 @@
 #include <map>
 #include "DataModel.h"
 #include "victima.h"
+#include <bitset>
 
 extern map<uint64_t, PTWC> ptw_pred;
 extern map<uint32_t, uint32_t> l2_pte_map;
@@ -32,8 +33,6 @@ public:
   list<BLOCK>* reuse_history;
   unordered_map<uint64_t, uint64_t> global_reuse;
   uint64_t global_access_count = 0;
-
-  bool is_tlb =false;
 
   enum VC
   {
@@ -60,6 +59,9 @@ public:
 
   MemoryRequestConsumer* l2cache;
   CacheDataModel* cacheDataModel;
+  // track working set for counting capacity misses
+  unordered_map<uint64_t, bitset<64>> page_to_block;
+
   bool cache_is[CACHE_ID_END] = {false};
   CACHE_ID cache_id = CACHE_ID::CACHE_ID_END;
   list<BLOCK> fa_array;
@@ -68,7 +70,7 @@ public:
   uint32_t cpu;
   const std::string NAME;
   const uint32_t NUM_SET, NUM_WAY, WQ_SIZE, RQ_SIZE, PQ_SIZE, MSHR_SIZE;
-   uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS, WRITE_LANTENCY;
+  uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS, WRITE_LANTENCY;
   std::vector<BLOCK> block{NUM_SET * NUM_WAY};
   const uint32_t MAX_READ, MAX_WRITE;
   uint32_t reads_available_this_cycle, writes_available_this_cycle;
@@ -141,6 +143,7 @@ public:
   uint32_t get_offset(uint64_t address);
 
   bool peek_singleline(PACKET handle_pkt);
+  void func_track_workingset(uint64_t addr);
 
   void reset_datamodel()
   {
