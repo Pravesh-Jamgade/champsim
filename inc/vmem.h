@@ -20,7 +20,7 @@ private:
 
 public:
   const uint64_t minor_fault_penalty;
-  const uint32_t pt_levels;
+  uint32_t pt_levels;
   const uint32_t page_size; // Size of a PTE page
   std::deque<uint64_t> ppage_free_list;
 
