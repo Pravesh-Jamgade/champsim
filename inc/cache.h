@@ -13,6 +13,7 @@
 #include "operable.h"
 
 #include "DataModel.h"
+#include <bitset>
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -28,6 +29,9 @@ public:
   list<BLOCK>* reuse_history;
   unordered_map<uint64_t, uint64_t> global_reuse;
   uint64_t global_access_count = 0;
+
+  // track working set for counting capacity misses
+  unordered_map<uint64_t, bitset<64>> page_to_block;
 
   bool cache_is[CACHE_ID_END] = {false};
   list<BLOCK> fa_array;
@@ -105,6 +109,8 @@ public:
   void print_deadlock() override;
 
   void* getObject(){return this;}
+
+  void func_track_workingset(uint64_t addr);
 
   void reset_datamodel()
   {
