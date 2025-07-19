@@ -10,6 +10,7 @@
 // Extra configguration
 extern int KNOB_TTP;
 extern int KNOB_SMT_ENABLE;
+extern int KNOB_PSCL_ROOT_LEVEL;
 
 extern map<uint64_t, PTWC> ptw_pred;
 
@@ -18,7 +19,7 @@ extern uint8_t warmup_complete[NUM_CPUS];
 
 PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, uint32_t v2, uint32_t v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7,
                                  uint32_t v8, uint32_t v9, uint32_t v10, uint32_t v11, uint32_t v12, uint32_t v13, unsigned latency, MemoryRequestConsumer* ll, CACHE* llc)
-    : champsim::operable(1), MemoryRequestConsumer(fill_level), MemoryRequestProducer(ll), NAME(v1), cpu(cpu), MSHR_SIZE(v11), MAX_READ(v12),
+    : champsim::operable(1, v1), MemoryRequestConsumer(fill_level), MemoryRequestProducer(ll), NAME(v1), cpu(cpu), MSHR_SIZE(v11), MAX_READ(v12),
       MAX_FILL(v13), RQ{v10, latency}, PSCL5{"PSCL5", 4, v2, v3}, // Translation from L5->L4
       PSCL4{"PSCL4", 3, v4, v5},                                  // Translation from L5->L3
       PSCL3{"PSCL3", 2, v6, v7},                                  // Translation from L5->L2
@@ -26,6 +27,46 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       llcObject(llc)
 {
   ptw_datamodel = new PTWDataModel(cpu);
+  
+  // if(KNOB_PSCL_ROOT_LEVEL != (vmem.pt_levels-1))
+  // {
+  //   cout << "Overwrite Setting, PTW-levels=" <<KNOB_PSCL_ROOT_LEVEL<<'\n';
+  //   vmem.pt_levels = KNOB_PSCL_ROOT_LEVEL;
+  // }
+
+  // pscl_array.push_back(&PSCL2);
+  // pscl_array.push_back(&PSCL3);
+  // pscl_array.push_back(&PSCL4);
+  // pscl_array.push_back(&PSCL5);
+
+  // while(pscl_array.back()->level != KNOB_PSCL_ROOT_LEVEL)
+  // {
+  //   pscl_array.pop_back();
+  // }
+
+  // // supporting 16 threads
+  // for(int i=0; i< 16; i++)
+  //   CR3_addr.push_back(vmem.get_pte_pa(i, 0, vmem.pt_levels).first);
+
+}
+
+void PageTableWalker::_overwrite()
+{
+  if(KNOB_PSCL_ROOT_LEVEL != (vmem.pt_levels-1))
+  {
+    cout << "Overwrite Setting, "<< NAME <<", PTW-levels= " <<KNOB_PSCL_ROOT_LEVEL<<'\n';
+    vmem.pt_levels = KNOB_PSCL_ROOT_LEVEL;
+  }
+
+  pscl_array.push_back(&PSCL2);
+  pscl_array.push_back(&PSCL3);
+  pscl_array.push_back(&PSCL4);
+  pscl_array.push_back(&PSCL5);
+
+  while(pscl_array.back()->level != KNOB_PSCL_ROOT_LEVEL)
+  {
+    pscl_array.pop_back();
+  }
 
   // supporting 16 threads
   for(int i=0; i< 16; i++)
@@ -60,7 +101,7 @@ void PageTableWalker::handle_read()
       if(0)
       {
         // optimized
-        for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+        for (auto pscl : pscl_array) {
           if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) {
             next_pt_addr = check_addr.value();
             ptw_level = pscl->level - 1; 
@@ -71,7 +112,7 @@ void PageTableWalker::handle_read()
       {
         //detailed
         // look for this levels PSC, if corresponding entry found then we can skip the memory access for this level
-        for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) {
+        for (auto pscl : pscl_array) {
           if(ptw_level != pscl->level)
             continue;
           if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) 
@@ -260,7 +301,7 @@ void PageTableWalker::handle_fill()
           // use next 9bits with base addr of next level page table
           uint64_t next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
           // lookup this levels PSC, if found in PSC then update next_pt_addr, ptw_level and continue search
-          for (auto pscl : {&PSCL5, &PSCL4, &PSCL3, &PSCL2}) 
+          for (auto pscl : pscl_array) 
           {
             if(ptw_level != pscl->level)
               continue;

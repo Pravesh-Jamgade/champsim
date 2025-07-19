@@ -50,6 +50,7 @@ extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
 extern int KNOB_VICTIMA;
 extern int KNOB_SMT_ENABLE;
+extern int KNOB_PSCL_ROOT_LEVEL;
 
 std::vector<tracereader*> traces;
 
@@ -350,6 +351,14 @@ void overwrite_cache()
     CACHE* l2 = get_cache_by_name("L2");
     stlb->l2cache = l2;
   }
+
+  for(auto op: operables)
+  {
+    if(op->NAME.find("PTW") != string::npos)
+    {
+      op->_overwrite();
+    }
+  }
 }
 
 void signal_handler(int signal)
@@ -443,7 +452,8 @@ int main(int argc, char** argv)
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_VICTIMA", 0);
   KNOB_SMT_ENABLE = iniReader->GetInteger("SMT", "ENABLE_SMT", 0);
-
+  KNOB_PSCL_ROOT_LEVEL = iniReader->GetInteger("PageTable", "ROOT_PT_LEVEL", 4);
+  
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
   std::cout << "TTP="<<KNOB_TTP<<'\n';
@@ -451,6 +461,7 @@ int main(int argc, char** argv)
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << "VICTIMA="<<KNOB_VICTIMA<<'\n';
   std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
+  std::cout << "PT Levels="<<KNOB_PSCL_ROOT_LEVEL<<'\n';
   std::cout << '\n';
   
   int total_cores = KNOB_SMT_ENABLE >0 ? NUM_CPUS * KNOB_SMT_ENABLE:  NUM_CPUS;

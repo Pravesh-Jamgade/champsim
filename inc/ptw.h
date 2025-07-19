@@ -64,6 +64,7 @@ public:
 
   vector<uint64_t> CR3_addr;
   std::map<std::pair<uint64_t, std::size_t>, uint64_t> page_table;
+  list<PagingStructureCache*> pscl_array;
 
   // usercode
   PTWDataModel* ptw_datamodel;
@@ -95,6 +96,7 @@ public:
 
   void* getObject(){return this;}
   void victima_update(uint64_t addr, int cost_or_freq);
+  void _overwrite();
 
 };
 

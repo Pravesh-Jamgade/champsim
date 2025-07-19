@@ -14,4 +14,6 @@ int KNOB_VICTIMA = 0;
 
 int KNOB_SMT_ENABLE = 0;
 
+int KNOB_PSCL_ROOT_LEVEL = 0;
+
 #endif
