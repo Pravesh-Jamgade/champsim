@@ -540,8 +540,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   }
   
   //check if reuse_history has tracked this miss
-  uint32_t set = get_set(handle_pkt.address);
-  uint32_t way = get_way(handle_pkt.address, set);
+  uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
+  uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
   uint64_t target_addr = handle_pkt.address;
   auto it = std::find_if(reuse_history[set].begin(), reuse_history[set].end(), eq_addr<BLOCK>(target_addr, OFFSET_BITS));
   if(it!=reuse_history[set].end())
@@ -645,7 +645,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     }
 
     bool track_reuse = false;
-    
+
     // count Compulsory miss
     if(!fill_block.valid)
     {  

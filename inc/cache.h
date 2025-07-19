@@ -29,7 +29,6 @@ class CACHE : public champsim::operable, public MemoryRequestConsumer, public Me
 public:
   //usercode
   bool is_tlb = false;
-  CacheDataModel* cacheDataModel;
   list<BLOCK>* reuse_history;
   unordered_map<uint64_t, uint64_t> global_reuse;
   uint64_t global_access_count = 0;
@@ -252,6 +251,10 @@ public:
         repl_type(repl), pref_type(pref)
   {
 
+    reuse_history = new list<BLOCK>[NUM_SET];
+    for(int i=0; i< NUM_SET; i++)
+      reuse_history[i] = list<BLOCK>();
+      
     prefetch_hit_histo = (int**)malloc(sizeof(int*) * NUM_WAY * NUM_SET);
     for(int i=0; i< NUM_WAY*NUM_SET; i++)
     {
