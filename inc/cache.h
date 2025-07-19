@@ -26,6 +26,8 @@ public:
   bool is_tlb = false;
   CacheDataModel* cacheDataModel;
   list<BLOCK>* reuse_history;
+  unordered_map<uint64_t, uint64_t> global_reuse;
+  uint64_t global_access_count = 0;
 
   bool cache_is[CACHE_ID_END] = {false};
   list<BLOCK> fa_array;

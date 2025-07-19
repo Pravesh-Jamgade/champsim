@@ -127,6 +127,7 @@ class CacheDataModel
     int* category_of_misses;
     map<uint64_t,uint64_t> hist_set_conflict_events;  
     map<int,int> hist_reuse_distance;
+    map<int,int> global_hist_reuse_distance;
 
     void print_stats()
     {
@@ -192,7 +193,7 @@ class CacheDataModel
         cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
 
         cout << tag << "reuse distance (reuse and frequency)\n";
-        for(auto entry: hist_reuse_distance)
+        for(auto entry: global_hist_reuse_distance)
         {
             cout << entry.first << ", " << setw(5) << entry.second << '\n';
         }
