@@ -11,12 +11,15 @@ protected:
   std::string cmd_fmtstr;
   std::string decomp_program;
   std::string trace_string;
+  shared_buffer *buf;
 
 public:
   tracereader(const tracereader& other) = delete;
   tracereader(uint8_t cpu, std::string _ts);
   ~tracereader();
-  void open(std::string trace_string);
+  // void open(std::string trace_string);
+  void trace_open(std::string trace_string);
+  void trace_open(std::string trace_string, int app);
   void close();
 
   template <typename T>

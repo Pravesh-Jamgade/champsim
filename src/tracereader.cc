@@ -38,7 +38,7 @@ tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(
     assert(0);
   }
 
-  open(trace_string);
+  trace_open(trace_string, 1);
 }
 
 tracereader::~tracereader() { close(); }
@@ -62,7 +62,27 @@ ooo_model_instr tracereader::read_single_instr()
   return retval;
 }
 
-void tracereader::open(std::string trace_string)
+void tracereader::trace_open(std::string trace_string, int app)
+{
+
+  int fd = open("/tmp/trace_shm.xz", O_RDWR, 0666);
+  buf = (shared_buffer*) mmap(NULL, sizeof(shared_buffer),
+                                            PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (buf == MAP_FAILED) {
+      perror("mmap failed");
+      return;
+  }
+
+  // char gunzip_command[4096];
+  // sprintf(gunzip_command, cmd_fmtstr.c_str(), decomp_program.c_str(), trace_string.c_str());
+  // trace_file = popen(gunzip_command, "r");
+  // if (trace_file == NULL) {
+  //   std::cerr << std::endl << "*** CANNOT OPEN TRACE FILE: " << trace_string << " ***" << std::endl;
+  //   assert(0);
+  // }
+}
+
+void tracereader::trace_open(std::string trace_string)
 {
   char gunzip_command[4096];
   sprintf(gunzip_command, cmd_fmtstr.c_str(), decomp_program.c_str(), trace_string.c_str());
