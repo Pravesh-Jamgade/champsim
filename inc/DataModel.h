@@ -95,7 +95,7 @@ class CacheDataModel
         }
     }
 
-    CacheDataModel(string name, uint32_t cpu):name(name), cpu(cpu)
+    CacheDataModel(string name, uint32_t cpu, uint32_t NUM_WAY):name(name), cpu(cpu)
     {
         for(int i=0; i< REJECTED; i++)
         {
@@ -105,6 +105,15 @@ class CacheDataModel
         category_of_misses = (int*)malloc(sizeof(int*) *  4);
         for(int i=0; i< 5; i++)
             category_of_misses[i] = 0;
+
+        hits_bounds.push_back({0,0});
+        hits_bounds.push_back({1,5});
+        hits_bounds.push_back({6,10});
+        hits_bounds.push_back({11, 20});
+        hits_bounds.push_back({21, 0x7fffffff});
+        hits_bounds.push_back({NUM_WAY+1, 0x7fffffff});
+        hits_bounds.push_back({1, NUM_WAY});
+        hist_distance.resize(hits_bounds.size(), 0);
     }
 
     string name;
@@ -124,8 +133,14 @@ class CacheDataModel
 
     int* category_of_misses;
     map<uint64_t,uint64_t> hist_set_conflict_events;  
-    map<int,int> hist_reuse_distance;
+    map<int, int> hist_reuse_distance;
+
+    // data and frequency
     map<int,int> global_hist_reuse_distance;
+    // bucket bounds
+    vector<pair<int,int>> hits_bounds;
+    // count bucket_bound frequncy
+    vector<int> hist_distance;
 
     void print_stats()
     {
@@ -202,26 +217,45 @@ class CacheDataModel
         cout << tag << "set conflict stats (evictions and number of such sets)\n";
         
         // tracking frequency from corresponding sets
-        map<uint64_t, uint64_t> hist_data;
+        map<uint64_t, uint64_t> hist_set_conflict_data;
         uint64_t no_of_nonconflict_sets = 0;
 
         for(auto entry: hist_set_conflict_events)
         {
-            hist_data[entry.second]++;
+            hist_set_conflict_data[entry.second]++;
             if(entry.second == 0)
                 no_of_nonconflict_sets++;
         }
-
-        for(auto entry: hist_data)
+        for(auto entry: hist_set_conflict_data)
             cout << entry.first << ", " << setw(5) << entry.second << '\n';
-        
         cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
 
+
         cout << tag << "reuse distance (reuse and frequency)\n";
-        for(auto entry: global_hist_reuse_distance)
+        // data is reuse_distance and its corresponding frequecny
+        for(auto data: global_hist_reuse_distance)
         {
-            cout << entry.first << ", " << setw(5) << entry.second << '\n';
+            // look for bounds to which this reuse distance belongs to
+            for(int i=0; i< hits_bounds.size(); i++)
+            {
+                pair<int,int> bound = hits_bounds[i];
+
+                // if data is within bucket_boundry, sumup its frequcny in final histogram
+                if(bound.first <= data.first && data.first <= bound.second)
+                {
+                    // i'th bucket of histogram
+                    hist_distance[i] += data.second;
+                }
+            }
         }
+        // print histogram
+        cout << "Reuse distance BucketBounds and Frequency\n";
+        for(int i=0; i< hits_bounds.size(); i++)
+        {
+            pair<int,int> bound = hits_bounds[i];
+            cout << bound.first << " - " << bound.second << ", " <<  hist_distance[i] << '\n';
+        }
+
         
         cout << '\n';
 

@@ -147,7 +147,7 @@ public:
   void reset_datamodel()
   {
     delete cacheDataModel;
-    cacheDataModel = new CacheDataModel(NAME, cpu);
+    cacheDataModel = new CacheDataModel(NAME, cpu, NUM_WAY);
   }
 
   bool victima_lookup(uint64_t addr)
@@ -254,7 +254,7 @@ public:
     reuse_history = new list<BLOCK>[NUM_SET];
     for(int i=0; i< NUM_SET; i++)
       reuse_history[i] = list<BLOCK>();
-      
+
     prefetch_hit_histo = (int**)malloc(sizeof(int*) * NUM_WAY * NUM_SET);
     for(int i=0; i< NUM_WAY*NUM_SET; i++)
     {
@@ -265,7 +265,7 @@ public:
       }
     }  
 
-    cacheDataModel = new CacheDataModel(NAME, cpu);
+    cacheDataModel = new CacheDataModel(NAME, cpu, NUM_WAY);
     
     WRITE_LANTENCY = hit_lat;
 
