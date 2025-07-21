@@ -141,7 +141,7 @@ public:
 
   uint32_t get_offset(uint64_t address);
 
-  bool peek_singleline(PACKET handle_pkt);
+  pair<bool, uint64_t> peek_singleline(PACKET handle_pkt);
   void func_track_workingset(uint64_t addr);
 
   void reset_datamodel()

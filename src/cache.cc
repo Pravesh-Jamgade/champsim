@@ -18,7 +18,7 @@
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
-extern int KNOB_VICTIMA;
+extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA;
 
 // illusiong of stored cache line by 8byte granularity
 extern map<uint32_t, uint32_t> l2_pte_map;
@@ -265,6 +265,8 @@ void CACHE::handle_read()
       {
         BLOCK* hit_block = &block[set * NUM_WAY + way];
         hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
+
+        // cout << "HitTest: " << std::hex << ", req, " << handle_pkt.address << ", block, " << hit_block->address <<", data, "<< hit_block->data<< std::dec << ", th, " << hit_block->thread_id << '\n';
       }
     }
 
@@ -443,6 +445,25 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   } 
   else 
   {
+    if(KNOB_IDEAL_VICTIMA && KNOB_VICTIMA && cache_is[IS_STLB])
+    {
+      PACKET newPacket = handle_pkt;
+      newPacket.address = handle_pkt.address;
+      newPacket.v_address = handle_pkt.v_address;
+      newPacket.to_return = {this};
+      newPacket.vflag[VF::victima] = true;
+      newPacket.thread_id = handle_pkt.thread_id;
+      // soft lookup
+      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->peek_singleline(newPacket);
+      if(found_peek.first)
+      {
+        handle_pkt.data = found_peek.second;
+        for(auto ret: handle_pkt.to_return)
+          ret->return_data(&handle_pkt);
+        return true;
+      }
+    }
+
     if (mshr_full)  // not enough MSHR resource
     {
       cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL]++;
@@ -475,11 +496,11 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       newPacket.thread_id = handle_pkt.thread_id;
 
       // soft lookup
-      bool found = ((CACHE*)l2cache->getObject())->peek_singleline(newPacket);
+      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->peek_singleline(newPacket);
 
       // to fix difference in returned physical address ex. F: 346681344, S: 4641652728
       // do softlookup, if not in cache then set dumy status to simulate traffic and dont use its results.
-      if(found)
+      if(found_peek.first)
       {
         newPacket.vflag[VF::victima_dumy] = false;
         newPacket.vflag[VF::PACKET_AP_RECV] = true;
@@ -1369,8 +1390,9 @@ void CACHE::print_deadlock()
   }
 }
 
-bool CACHE::peek_singleline(PACKET handle_pkt)
+pair<bool, uint64_t> CACHE::peek_singleline(PACKET handle_pkt)
 {
+  pair<bool, uint64_t> ret{false, 0};
   // found in cache
   uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
   uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
@@ -1387,10 +1409,11 @@ bool CACHE::peek_singleline(PACKET handle_pkt)
     {
       BLOCK* hit_block = &block[set * NUM_WAY + way];
       hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
+      ret = {hit, hit_block->data};
     }
   }
 
-  return hit;
+  return ret;
 }
 
 void CACHE::func_track_workingset(uint64_t addr)

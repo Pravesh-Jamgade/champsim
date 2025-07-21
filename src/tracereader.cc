@@ -76,15 +76,16 @@ ooo_model_instr tracereader::read_single_instr()
     while (buf->tail == buf->head) {
       usleep(10); // buffer empty
     }
-
     input_instr* te = (input_instr*)&buf->buffer[buf->tail];
-    // std::cout << std::hex << "IP=" << te->ip << '\n';
+    // std::cout <<"print: " <<std::dec<< instr_count << std::hex << ", " << te->ip << '\n';
     __sync_synchronize(); // memory barrier
     buf->tail = (buf->tail + 1) % TRACE_BUF_CAP;
     // copy the instruction into the performance model's instruction format
     ooo_model_instr retval(cpu, *te);
+    instr_count++;
     return retval;
   }
+
 }
 
 void tracereader::trace_open(std::string trace_string, int app)

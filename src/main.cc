@@ -48,7 +48,7 @@ extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
-extern int KNOB_VICTIMA;
+extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_LIVE_INPUT;
@@ -453,6 +453,7 @@ int main(int argc, char** argv)
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_VICTIMA", 0);
+  KNOB_IDEAL_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_IDEAL_VICTIMA", 0);
   KNOB_SMT_ENABLE = iniReader->GetInteger("SMT", "ENABLE_SMT", 0);
   KNOB_PSCL_ROOT_LEVEL = iniReader->GetInteger("PageTable", "ROOT_PT_LEVEL", 4);
   
@@ -461,7 +462,8 @@ int main(int argc, char** argv)
   std::cout << "TTP="<<KNOB_TTP<<'\n';
   std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
-  std::cout << "VICTIMA="<<KNOB_VICTIMA<<'\n';
+  std::cout << "VICTIMA\n-ENABLE_VICTIMA="<<KNOB_VICTIMA<<'\n';
+  std::cout << "-ENABLE_IDEAL_VICTIMA="<<KNOB_IDEAL_VICTIMA<<'\n';
   std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
   std::cout << "PT Levels="<<KNOB_PSCL_ROOT_LEVEL<<'\n';
   std::cout << '\n';

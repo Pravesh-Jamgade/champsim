@@ -13,6 +13,7 @@ protected:
   std::string decomp_program;
   std::string trace_string;
   shared_buffer* buf;
+  uint64_t instr_count = 0;
 public:
   tracereader(const tracereader& other) = delete;
   tracereader(uint8_t cpu, std::string _ts);
