@@ -51,6 +51,7 @@ extern int KNOB_STTMRAM_STLB;
 extern int KNOB_VICTIMA;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
+extern int KNOB_LIVE_INPUT;
 
 std::vector<tracereader*> traces;
 
@@ -446,6 +447,7 @@ int main(int argc, char** argv)
 
   INIReader* iniReader = new INIReader(string("./config.ini"));
 
+  KNOB_LIVE_INPUT = iniReader->GetInteger("LIVE_INPUT", "ENABLE_LIVE_INPUT", 0);
   KNOB_TRANSLATION_QUEUE = iniReader->GetInteger("KNOB", "TQ", 0);
   KNOB_TTP = iniReader->GetInteger("KNOB", "TTP", 0);
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
