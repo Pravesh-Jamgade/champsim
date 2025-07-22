@@ -6,6 +6,8 @@
 
 using namespace std;
 
+static string hit_where_str[CACHE_ID_END+1] = {"LLC", "L2", "L1D", "L1I", "STLB", "DTLB", "ITLB", "WQ", "x"};
+
 enum Basic
 {
     REQUESTED=0,
@@ -84,6 +86,68 @@ enum MISS
     MISS_END
 };
 
+class Hist
+{
+    public:
+    // data and frequency
+    map<int,int> data_freq;
+    // bucket bounds
+    vector<pair<int,int>> hits_bounds;
+    // count bucket_bound frequncy
+    vector<int> hist_distance;
+
+    Hist(){}
+    Hist(int start, int width, int count, vector<pair<int,int>>& exceptional_boundries)
+    {
+        for(int i=0; i< count; i++)
+        {
+            hits_bounds.push_back({start, start+width});
+            start += width+1;
+        }
+
+        for(auto entry: exceptional_boundries)
+            hits_bounds.push_back(entry);
+        
+        hist_distance.resize(hits_bounds.size(), 0);
+    }
+
+    void add_data_freq(int data, int freq){
+        data_freq[data] += freq;
+    }
+
+    void custom_add_hist_bounds(vector<pair<int,int>>& bounds){
+        hits_bounds = bounds;
+        hist_distance.resize(hits_bounds.size(), 0);
+    }
+
+    void print_histogram(string tag)
+    {
+        // data is reuse_distance and its corresponding frequecny
+        for(auto data: data_freq)
+        {
+            // look for bounds to which this reuse distance belongs to
+            for(int i=0; i< hits_bounds.size(); i++)
+            {
+                pair<int,int> bound = hits_bounds[i];
+
+                // if data is within bucket_boundry, sumup its frequcny in final histogram
+                if(bound.first <= data.first && data.first <= bound.second)
+                {
+                    // i'th bucket of histogram
+                    hist_distance[i] += data.second;
+                }
+            }
+        }
+        // print histogram
+        for(int i=0; i< hits_bounds.size(); i++)
+        {
+            pair<int,int> bound = hits_bounds[i];
+            cout << bound.first << " - " << bound.second << ", " <<  hist_distance[i] << '\n';
+        }
+        cout << '\n';
+    }
+};
+
 class CacheDataModel
 {
     public:
@@ -106,14 +170,31 @@ class CacheDataModel
         for(int i=0; i< 5; i++)
             category_of_misses[i] = 0;
 
-        hits_bounds.push_back({0,0});
-        hits_bounds.push_back({1,5});
-        hits_bounds.push_back({6,10});
-        hits_bounds.push_back({11, 20});
-        hits_bounds.push_back({21, 0x7fffffff});
-        hits_bounds.push_back({NUM_WAY+1, 0x7fffffff});
-        hits_bounds.push_back({1, NUM_WAY});
-        hist_distance.resize(hits_bounds.size(), 0);
+
+        // initalize histogram for access latency
+        {
+            vector<pair<int,int>> exception_bounds;
+            exception_bounds.push_back({50, 100});
+            exception_bounds.push_back({101, 150});
+            exception_bounds.push_back({151, 200});
+            exception_bounds.push_back({200, 0x7fffffff});
+            hit_access_latency = new Hist(1,5,8,exception_bounds);
+            miss_access_latency = new Hist(1,5,8,exception_bounds);
+        }
+
+        // initalize histogram for reuse distance
+        {
+            reuse_distance = new Hist();
+            vector<pair<int,int>> hist_bounds;
+            hist_bounds.push_back({0,0});
+            hist_bounds.push_back({1,5});
+            hist_bounds.push_back({6,10});
+            hist_bounds.push_back({11, 20});
+            hist_bounds.push_back({21, 0x7fffffff});
+            hist_bounds.push_back({NUM_WAY+1, 0x7fffffff});
+            hist_bounds.push_back({1, NUM_WAY});
+            reuse_distance->custom_add_hist_bounds(hist_bounds);
+        }
     }
 
     string name;
@@ -135,12 +216,14 @@ class CacheDataModel
     map<uint64_t,uint64_t> hist_set_conflict_events;  
     map<int, int> hist_reuse_distance;
 
-    // data and frequency
-    map<int,int> global_hist_reuse_distance;
-    // bucket bounds
-    vector<pair<int,int>> hits_bounds;
-    // count bucket_bound frequncy
-    vector<int> hist_distance;
+    map<CACHE_ID, int> readmiss_hitwhere;
+
+    // reuse distance hitogram object
+    Hist* reuse_distance;
+    // req miss access latency histogram object
+    Hist* miss_access_latency;
+    // req hit access latency histogram object
+    Hist* hit_access_latency;
 
     void print_stats()
     {
@@ -230,34 +313,20 @@ class CacheDataModel
             cout << entry.first << ", " << setw(5) << entry.second << '\n';
         cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
 
-
-        cout << tag << "reuse distance (reuse and frequency)\n";
-        // data is reuse_distance and its corresponding frequecny
-        for(auto data: global_hist_reuse_distance)
-        {
-            // look for bounds to which this reuse distance belongs to
-            for(int i=0; i< hits_bounds.size(); i++)
-            {
-                pair<int,int> bound = hits_bounds[i];
-
-                // if data is within bucket_boundry, sumup its frequcny in final histogram
-                if(bound.first <= data.first && data.first <= bound.second)
-                {
-                    // i'th bucket of histogram
-                    hist_distance[i] += data.second;
-                }
-            }
-        }
-        // print histogram
         cout << "Reuse distance BucketBounds and Frequency\n";
-        for(int i=0; i< hits_bounds.size(); i++)
-        {
-            pair<int,int> bound = hits_bounds[i];
-            cout << bound.first << " - " << bound.second << ", " <<  hist_distance[i] << '\n';
-        }
+        reuse_distance->print_histogram(tag);
 
-        
-        cout << '\n';
+        cout << "Miss access latency BucketBounds and Frequency\n";
+        miss_access_latency->print_histogram(tag);
+
+        cout << "Hit access latency BucketBounds and Frequency\n";
+        hit_access_latency->print_histogram(tag);
+
+        cout <<"\n"<<tag<< " readmiss hit where \n";
+        for(auto entry: readmiss_hitwhere)
+        {
+            cout << hit_where_str[entry.first] << ", " << entry.second << '\n';
+        }
 
     }
 };
@@ -314,6 +383,8 @@ class PTWDataModel
     // page-faults at each level of radix tree (psc level)
     uint64_t page_fault[PSCL_END] = {0};
 
+    map<CACHE_ID, int> readmiss_hitwhere;
+
     uint32_t cpu =0;
 
     void print_stats()
@@ -345,6 +416,13 @@ class PTWDataModel
         }
 
         cout << tag << "avg miss latency, " << ((double)packet_processed_total_miss_latency/packet_processed) << '\n';
+
+        cout <<"\n"<<tag<< " readmiss hit where \n";
+        for(auto entry: readmiss_hitwhere)
+        {
+            cout << hit_where_str[entry.first] << ", " << entry.second << '\n';
+        }
+        cout << '\n';
     }
 
 };

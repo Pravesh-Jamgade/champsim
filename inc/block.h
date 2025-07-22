@@ -41,6 +41,13 @@ enum State
   State_end
 };
 
+enum CYCLE_ENQ
+{
+  MSHR,
+  WORK_QUEUE,
+  CYCLE_ENQ_END
+};
+
 // message packet
 class PACKET
 {
@@ -61,6 +68,7 @@ public:
   uint8_t translation_level = 0, init_translation_level = 0;
 
   uint64_t uv_cycle_enqueue = 0;
+  uint64_t type_cycle_enqueued[CYCLE_ENQ::CYCLE_ENQ_END] = {0};
   bool ttp = false;
 
   

@@ -30,6 +30,7 @@ public:
   //usercode
   bool is_tlb = false;
   list<BLOCK>* reuse_history;
+  // storing tag and last global access count
   unordered_map<uint64_t, uint64_t> global_reuse;
   uint64_t global_access_count = 0;
 
@@ -142,7 +143,14 @@ public:
   uint32_t get_offset(uint64_t address);
 
   pair<bool, uint64_t> peek_singleline(PACKET handle_pkt);
+
+  // track accessed page and its blocks for tracking capacity misses
   void func_track_workingset(uint64_t addr);
+
+  // track miss access latency 
+  void func_track_miss_access_latency(uint64_t enq_cycle);
+  // track hit access latency 
+  void func_track_hit_access_latency(uint64_t enq_cycle);
 
   void reset_datamodel()
   {

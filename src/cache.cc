@@ -68,6 +68,7 @@ void CACHE::handle_fill()
     cacheDataModel->mshr_queue[Basic::ACCESS]++;
     func_track_workingset(fill_mshr->address);
     global_access_count++;
+    func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::MSHR]);
   }
 }
 
@@ -383,6 +384,8 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   if(hit_block.came_from_request == PREFETCH)
     prefetch_hit_histo[set*NUM_WAY+way][READ_HIT]++;
+
+  func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::WORK_QUEUE]);
 }
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
@@ -460,6 +463,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
         handle_pkt.data = found_peek.second;
         for(auto ret: handle_pkt.to_return)
           ret->return_data(&handle_pkt);
+        
+        func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::WORK_QUEUE]);
         return true;
       }
     }
@@ -525,6 +530,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       auto it = MSHR.insert(std::end(MSHR), handle_pkt);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
+      it->type_cycle_enqueued[CYCLE_ENQ::MSHR] = current_cycle;
 
       cacheDataModel->mshr_queue[Basic::ADDED]++;
 
@@ -578,9 +584,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   auto g_it = global_reuse.find(tag);
   if(global_reuse.end() != g_it)
   {
-    uint64_t last_global_access = global_reuse[tag];
+    uint64_t last_global_access = g_it->second;
     int distance = global_access_count > last_global_access? (global_access_count - last_global_access): 0;
-    cacheDataModel->global_hist_reuse_distance[distance]++;
+    cacheDataModel->reuse_distance->add_data_freq(distance, 1);
   }
   global_reuse[tag] = global_access_count;
  
@@ -999,6 +1005,9 @@ int CACHE::add_rq(PACKET* packet)
     return -2; // cannot handle this request
   }
 
+  // track cycle stamp
+  packet->type_cycle_enqueued[CYCLE_ENQ::WORK_QUEUE] = current_cycle;
+
   // if there is no duplicate, add it to RQ
   if (warmup_complete[cpu])
     RQ.push_back(*packet);
@@ -1189,6 +1198,9 @@ int CACHE::add_pq(PACKET* packet)
     return -2; // cannot handle this request
   }
 
+  // track cycle stamp
+  packet->type_cycle_enqueued[CYCLE_ENQ::WORK_QUEUE] = current_cycle;
+
   // if there is no duplicate, add it to PQ
   if (warmup_complete[cpu])
     PQ.push_back(*packet);
@@ -1328,6 +1340,9 @@ void CACHE::return_data(PACKET* packet)
   // Order this entry after previously-returned entries, but before non-returned
   // entries
   std::iter_swap(mshr_entry, first_unreturned);
+
+  // track hit where for each at these structure
+  cacheDataModel->readmiss_hitwhere[mshr_entry->hit_where]++;
 }
 
 uint32_t CACHE::get_occupancy(uint8_t queue_type, uint64_t address)
@@ -1416,6 +1431,7 @@ pair<bool, uint64_t> CACHE::peek_singleline(PACKET handle_pkt)
   return ret;
 }
 
+// track accessed page and its blocks for tracking capacity misses
 void CACHE::func_track_workingset(uint64_t addr)
 {
   uint64_t page = addr & ~(PAGE_SIZE-1);
@@ -1429,4 +1445,18 @@ void CACHE::func_track_workingset(uint64_t addr)
     uint64_t cache_block_index = (addr > 6) & 0x3f;
     page_to_block[page].set(cache_block_index, 1);
   }
+}
+
+// tracking data access latency: miss  
+void CACHE::func_track_miss_access_latency(uint64_t eq_cycle)
+{
+  int diff = current_cycle - eq_cycle + 1;
+  cacheDataModel->miss_access_latency->add_data_freq(diff, 1);
+}
+
+// tracking data access latency: hit 
+void CACHE::func_track_hit_access_latency(uint64_t eq_cycle)
+{
+  int diff = current_cycle - eq_cycle + 1;
+  cacheDataModel->hit_access_latency->add_data_freq(diff, 1);
 }
