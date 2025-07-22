@@ -15,40 +15,45 @@ extern int KNOB_LIVE_INPUT;
 
 tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(_ts)
 {
-  std::string last_dot = trace_string.substr(trace_string.find_last_of("."));
+  if(!KNOB_LIVE_INPUT)
+  {
+    std::string last_dot = trace_string.substr(trace_string.find_last_of("."));
 
-  if (trace_string.substr(0, 4) == "http") {
-    // Check file exists
-    char testfile_command[4096];
-    sprintf(testfile_command, "wget -q --spider %s", trace_string.c_str());
-    FILE* testfile = popen(testfile_command, "r");
-    if (pclose(testfile)) {
-      std::cerr << "TRACE FILE NOT FOUND" << std::endl;
+    if (trace_string.substr(0, 4) == "http") {
+      // Check file exists
+      char testfile_command[4096];
+      sprintf(testfile_command, "wget -q --spider %s", trace_string.c_str());
+      FILE* testfile = popen(testfile_command, "r");
+      if (pclose(testfile)) {
+        std::cerr << "TRACE FILE NOT FOUND" << std::endl;
+        assert(0);
+      }
+      cmd_fmtstr = "wget -qO- -o /dev/null %2$s | %1$s -dc";
+    } else {
+      std::ifstream testfile(trace_string);
+      if (!testfile.good()) {
+        std::cerr << "TRACE FILE NOT FOUND" << std::endl;
+        assert(0);
+      }
+      cmd_fmtstr = "%1$s -dc %2$s";
+    }
+
+    if (last_dot[1] == 'g') // gzip format
+      decomp_program = "gzip";
+    else if (last_dot[1] == 'x') // xz
+      decomp_program = "xz";
+    else {
+      std::cout << "ChampSim does not support traces other than gz or xz compression!" << std::endl;
       assert(0);
     }
-    cmd_fmtstr = "wget -qO- -o /dev/null %2$s | %1$s -dc";
-  } else {
-    std::ifstream testfile(trace_string);
-    if (!testfile.good()) {
-      std::cerr << "TRACE FILE NOT FOUND" << std::endl;
-      assert(0);
-    }
-    cmd_fmtstr = "%1$s -dc %2$s";
-  }
 
-  if (last_dot[1] == 'g') // gzip format
-    decomp_program = "gzip";
-  else if (last_dot[1] == 'x') // xz
-    decomp_program = "xz";
-  else {
-    std::cout << "ChampSim does not support traces other than gz or xz compression!" << std::endl;
-    assert(0);
-  }
-
-  if(KNOB_LIVE_INPUT)
-    trace_open(trace_string, 1);
-  else 
     trace_open(trace_string);
+  }
+  else
+  {
+    trace_open(trace_string, 1);
+  }
+   
 }
 
 tracereader::~tracereader() { close(); }
@@ -91,7 +96,7 @@ ooo_model_instr tracereader::read_single_instr()
 void tracereader::trace_open(std::string trace_string, int app)
 {
 
-  int fd = open("/tmp/trace_shm.xz", O_RDWR, 0666);
+  int fd = open(trace_string.c_str(), O_RDWR, 0666);
   buf = (shared_buffer*) mmap(NULL, sizeof(shared_buffer),
                                             PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (buf == MAP_FAILED) {

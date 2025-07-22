@@ -392,6 +392,7 @@ int main(int argc, char** argv)
                                          {0, 0, 0, 0}};
 
   string output_file = "default";
+  string trace_shared_buff = "/tmp/";
   int c;
   while ((c = getopt_long_only(argc, argv, "w:i:o:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
@@ -418,6 +419,7 @@ int main(int argc, char** argv)
     }
   }
 
+  trace_shared_buff += output_file;
   output_file += ".log";
   // std::ofstream out(output_file.c_str());
   // std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
@@ -466,6 +468,7 @@ int main(int argc, char** argv)
   std::cout << "-ENABLE_IDEAL_VICTIMA="<<KNOB_IDEAL_VICTIMA<<'\n';
   std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
   std::cout << "PT Levels="<<KNOB_PSCL_ROOT_LEVEL<<'\n';
+  std::cout << "Output file="<<output_file<<'\n';
   std::cout << '\n';
   
   int total_cores = KNOB_SMT_ENABLE >0 ? NUM_CPUS * KNOB_SMT_ENABLE:  NUM_CPUS;
@@ -473,8 +476,16 @@ int main(int argc, char** argv)
 
   for (int i = optind; i < argc; i++) {
     std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
-
-    traces.push_back(get_tracereader(argv[i], traces.size(), knob_cloudsuite));
+    
+    if(KNOB_LIVE_INPUT)
+    {
+      std::cout << "Trace shared buffer="<<trace_shared_buff<<'\n';
+      traces.push_back(get_tracereader(trace_shared_buff, traces.size(), knob_cloudsuite));
+    }
+    else
+    {
+      traces.push_back(get_tracereader(argv[i], traces.size(), knob_cloudsuite));
+    }
 
     if(KNOB_SMT_ENABLE>0)
     {
