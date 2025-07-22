@@ -2,7 +2,7 @@
 #include <string>
 
 #include "instruction.h"
-#include "../tracer/pin/shared_buff.h"
+#include "shared_buff.h"
 
 class tracereader
 {
