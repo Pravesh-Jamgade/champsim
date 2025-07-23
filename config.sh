@@ -713,7 +713,7 @@ with open('Makefile', 'wt') as wfp:
     wfp.write('CPPFLAGS := ' + config_file.get('CPPFLAGS', '') + ' -Iinc -MMD -MP\n')
     wfp.write('LDFLAGS := ' + config_file.get('LDFLAGS', '') + '\n')
     # wfp.write('LDLIBS := ' + config_file.get('LDLIBS', '') + '\n')
-    wfp.write('LDLIBS := ' + config_file.get('LDLIBS', '-L/home/pravesh/Documents/code/dramsim3 -ldramsim3') + '\n')
+    wfp.write('LDLIBS := ' + config_file.get('LDLIBS', '-L/home/pravesh/dramsim3 -ldramsim3') + '\n')
     wfp.write('\n')
     wfp.write('.phony: all clean\n\n')
     wfp.write('all: ' + config_file['executable_name'] + '$(TAG) \n\n')
