@@ -419,7 +419,7 @@ int main(int argc, char** argv)
     }
   }
 
-  trace_shared_buff += output_file;
+  trace_shared_buff += "/tmp/"+ output_file;
   output_file += ".log";
   // std::ofstream out(output_file.c_str());
   // std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
