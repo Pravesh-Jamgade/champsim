@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-#include "../tracer/pin/shared_buff.h"
+#include "../inc/shared_buff.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
