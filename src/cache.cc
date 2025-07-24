@@ -1316,6 +1316,8 @@ void CACHE::return_data(PACKET* packet)
 
     // sanity check
     if (mshr_entry == MSHR.end()) {
+
+      print_deadlock();
       std::cerr << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << packet->instr_id << " cannot find a matching entry!";
       std::cerr << " address: " << std::hex << packet->address;
       std::cerr << " v_address: " << packet->v_address;
