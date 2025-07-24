@@ -62,13 +62,16 @@ void CACHE::handle_fill()
         ret->return_data(&(*fill_mshr));
     }
     
+
+    func_track_workingset(fill_mshr->address);
+    func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::MSHR]);
+    
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
     
     cacheDataModel->mshr_queue[Basic::ACCESS]++;
-    func_track_workingset(fill_mshr->address);
     global_access_count++;
-    func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::MSHR]);
+    
   }
 }
 

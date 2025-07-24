@@ -16,7 +16,7 @@
 #include "operable.h"
 #include "tracereader.h"
 #include "vmem.h"
-
+#include "trace_instruction.h"
 #include "dramsim3_wrapper.hpp"
 #include "INIReader.h"
 #include "victima.h"
@@ -392,7 +392,7 @@ int main(int argc, char** argv)
                                          {0, 0, 0, 0}};
 
   string output_file = "default";
-  string trace_shared_buff = "/tmp/";
+  string trace_shared_buff = "";
   int c;
   while ((c = getopt_long_only(argc, argv, "w:i:o:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
@@ -476,16 +476,11 @@ int main(int argc, char** argv)
 
   for (int i = optind; i < argc; i++) {
     std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
-    
+
     if(KNOB_LIVE_INPUT)
-    {
-      std::cout << "Trace shared buffer="<<trace_shared_buff<<'\n';
-      traces.push_back(get_tracereader(trace_shared_buff, traces.size(), knob_cloudsuite));
-    }
+      traces.push_back(get_tracereader<context_instr>(trace_shared_buff, traces.size(), knob_cloudsuite));
     else
-    {
-      traces.push_back(get_tracereader(argv[i], traces.size(), knob_cloudsuite));
-    }
+      traces.push_back(get_tracereader<input_instr>(argv[i], traces.size(), knob_cloudsuite));
 
     if(KNOB_SMT_ENABLE>0)
     {
