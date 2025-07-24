@@ -68,13 +68,14 @@ ooo_model_instr tracereader::read_single_instr()
     while (!fread(&trace_read_instr, sizeof(T), 1, trace_file)) {
       // reached end of file for this trace
       std::cout << "*** Reached end of trace: " << trace_string << std::endl;
-  
+
       // close the trace file and re-open it
       close();
       trace_open(trace_string);
-      ooo_model_instr retval(cpu, trace_read_instr);
-      return retval;
+      
     }
+    ooo_model_instr retval(cpu, trace_read_instr);
+    return retval;
   }
   else
   {
@@ -82,7 +83,6 @@ ooo_model_instr tracereader::read_single_instr()
       usleep(10); // buffer empty
     }
     input_instr* te = (input_instr*)&buf->buffer[buf->tail];
-    // std::cout <<"print: " <<std::dec<< instr_count << std::hex << ", " << te->ip << '\n';
     __sync_synchronize(); // memory barrier
     buf->tail = (buf->tail + 1) % TRACE_BUF_CAP;
     // copy the instruction into the performance model's instruction format
@@ -90,12 +90,39 @@ ooo_model_instr tracereader::read_single_instr()
     instr_count++;
     return retval;
   }
+  
+  // if(!KNOB_LIVE_INPUT)
+  // {
+  //   while (!fread(&trace_read_instr, sizeof(T), 1, trace_file)) {
+  //     // reached end of file for this trace
+  //     std::cout << "*** Reached end of trace: " << trace_string << std::endl;
+  
+  //     // close the trace file and re-open it
+  //     close();
+  //     trace_open(trace_string);
+  //     ooo_model_instr retval(cpu, trace_read_instr);
+  //     return retval;
+  //   }
+  // }
+  // else
+  // {
+  //   while (buf->tail == buf->head) {
+  //     usleep(10); // buffer empty
+  //   }
+  //   input_instr* te = (input_instr*)&buf->buffer[buf->tail];
+  //   __sync_synchronize(); // memory barrier
+  //   buf->tail = (buf->tail + 1) % TRACE_BUF_CAP;
+  //   // copy the instruction into the performance model's instruction format
+  //   ooo_model_instr retval(cpu, *te);
+  //   instr_count++;
+  //   return retval;
+  // }
 
 }
 
 void tracereader::trace_open(std::string trace_string, int app)
 {
-
+  std::cout << "XXXXXXXXXXXXXXXx FILE NAME " << trace_string << '\n';
   int fd = open(trace_string.c_str(), O_RDWR, 0666);
   buf = (shared_buffer*) mmap(NULL, sizeof(shared_buffer),
                                             PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -156,6 +183,7 @@ public:
   }
 };
 
+template <typename T>
 class input_tracereader : public tracereader
 {
   ooo_model_instr last_instr;
@@ -164,9 +192,10 @@ class input_tracereader : public tracereader
 public:
   input_tracereader(uint8_t cpu, std::string _tn) : tracereader(cpu, _tn) {}
 
+  
   ooo_model_instr get()
   {
-    ooo_model_instr trace_read_instr = read_single_instr<input_instr>();
+    ooo_model_instr trace_read_instr = read_single_instr<T>();
 
     if (!initialized) {
       last_instr = trace_read_instr;
@@ -181,11 +210,15 @@ public:
   }
 };
 
+template<typename T>
 tracereader* get_tracereader(std::string fname, uint8_t cpu, bool is_cloudsuite)
 {
   if (is_cloudsuite) {
     return new cloudsuite_tracereader(cpu, fname);
   } else {
-    return new input_tracereader(cpu, fname);
+    return new input_tracereader<T>(cpu, fname);
   }
 }
+
+template tracereader* get_tracereader<context_instr>(std::string fname, uint8_t cpu, bool is_cloudsuite);
+template tracereader* get_tracereader<input_instr>(std::string fname, uint8_t cpu, bool is_cloudsuite);

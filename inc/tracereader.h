@@ -29,4 +29,6 @@ public:
   virtual ooo_model_instr get() = 0;
 };
 
+template<typename T>
 tracereader* get_tracereader(std::string fname, uint8_t cpu, bool is_cloudsuite);
+
