@@ -478,7 +478,7 @@ int main(int argc, char** argv)
     std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
 
     if(KNOB_LIVE_INPUT)
-      traces.push_back(get_tracereader<context_instr>(trace_shared_buff, traces.size(), knob_cloudsuite));
+      traces.push_back(get_tracereader<input_instr>(trace_shared_buff, traces.size(), knob_cloudsuite));
     else
       traces.push_back(get_tracereader<input_instr>(argv[i], traces.size(), knob_cloudsuite));
 

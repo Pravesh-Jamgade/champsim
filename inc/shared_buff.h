@@ -31,7 +31,7 @@ class Trace
 typedef struct  {
     size_t head; // writer index
     size_t tail; // reader index
-    Trace buffer[TRACE_BUF_CAP];
+    input_instr  buffer[TRACE_BUF_CAP];
 } shared_buffer;
 
 // shared_buffer* buf;

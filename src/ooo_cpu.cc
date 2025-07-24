@@ -486,13 +486,6 @@ void O3_CPU::dispatch_instruction()
     available_dispatch_bandwidth--;
   }
 
-  {
-    for(auto r: ROB)
-    {
-      cout <<std::dec<<current_cycle<<", "<<std::hex<< r.ip << ", " << r.instruction_pa << '\n';
-    }
-  }
-
   // check for deadlock
   if (!std::empty(DISPATCH_BUFFER) && (DISPATCH_BUFFER.front().event_cycle + DEADLOCK_CYCLE) <= current_cycle)
     throw champsim::deadlock{cpu};
