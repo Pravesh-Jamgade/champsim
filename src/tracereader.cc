@@ -67,9 +67,10 @@ ooo_model_instr tracereader::read_single_instr()
       // close the trace file and re-open it
       close();
       trace_open(trace_string);
-      ooo_model_instr retval(cpu, trace_read_instr);
-      return retval;
     }
+    
+    ooo_model_instr retval(cpu, trace_read_instr);
+    return retval;
   }
   else
   {
