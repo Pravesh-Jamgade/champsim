@@ -38,6 +38,7 @@ tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(
       cmd_fmtstr = "%1$s -dc %2$s";
     }
 
+    std::cout << "last dot " << last_dot << '\n';
     if (last_dot[1] == 'g') // gzip format
       decomp_program = "gzip";
     else if (last_dot[1] == 'x') // xz
