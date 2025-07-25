@@ -122,6 +122,7 @@ void PageTableWalker::handle_read()
           continue;
         if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) 
         {
+          miss_at_root = false;
           ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
           // hit at psc
           // get the next pt addr
