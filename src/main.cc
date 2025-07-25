@@ -478,29 +478,44 @@ int main(int argc, char** argv)
   int total_cores = KNOB_SMT_ENABLE >0 ? NUM_CPUS * KNOB_SMT_ENABLE:  NUM_CPUS;
   simulation_complete.resize(total_cores, 0);
 
-  for (int i = optind; i < argc; i++) {
-    std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
-
-    if(KNOB_LIVE_INPUT)
-      traces.push_back(get_tracereader<input_instr>(trace_shared_buff, traces.size(), knob_cloudsuite));
-    else
-      traces.push_back(get_tracereader<input_instr>(argv[i], traces.size(), knob_cloudsuite));
-
-    if(KNOB_SMT_ENABLE>0)
+  if(KNOB_LIVE_INPUT)
+  {
+    traces.push_back(get_tracereader<input_instr>(trace_shared_buff, traces.size(), knob_cloudsuite, true));
+    cout << "[Log]Trace Reading, " << trace_shared_buff << '\n';
+    // reading memoryhog trace
+    // one trace already read via live input from pintool, hence KNOB_SMT_ENABLE-1
+    int get_trace_index = optind;
+    for(int trace_id=1; trace_id < KNOB_SMT_ENABLE; trace_id++)
     {
-      if(traces.size() > total_cores)
+      traces.push_back(get_tracereader<input_instr>(argv[get_trace_index], traces.size(), knob_cloudsuite));
+      cout << "[Log]Trace Reading, " << argv[get_trace_index] << '\n';
+
+      get_trace_index++;
+    }
+  }
+  else
+  {
+    for (int i = optind; i < argc; i++) 
+    {
+      cout << "[Log]Trace Reading, " << argv[i] << '\n';
+      traces.push_back(get_tracereader<input_instr>(argv[i], traces.size(), knob_cloudsuite));
+      if(KNOB_SMT_ENABLE>0)
       {
-        cout << "Missmatch!!!\n";
-        cout << "Number of traces, " << traces.size() << '\n';
-        cout << "Number of cores, " << total_cores << '\n';
+        if(traces.size() > total_cores)
+        {
+          cout << "Missmatch!!!\n";
+          cout << "Number of traces, " << traces.size() << '\n';
+          cout << "Number of cores, " << total_cores << '\n';
+          assert(0);
+        }
+      }
+      else if (traces.size() > NUM_CPUS) {
+        printf("\n*** Too many traces for the configured number of cores ***\n\n");
         assert(0);
       }
     }
-    else if (traces.size() > NUM_CPUS) {
-      printf("\n*** Too many traces for the configured number of cores ***\n\n");
-      assert(0);
-    }
   }
+  
 
   if (traces.size() != total_cores) {
     printf("\n*** Not enough traces for the configured number of cores ***\n\n");
