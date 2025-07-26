@@ -1466,8 +1466,14 @@ void CACHE::func_track_miss_access_latency(uint64_t eq_cycle)
 }
 
 // tracking data access latency: hit 
-void CACHE::func_track_hit_access_latency(uint64_t eq_cycle)
+void CACHE::func_track_hit_access_latency(uint64_t eq_cycle, int metadata)
 {
   int diff = current_cycle - eq_cycle + 1;
   cacheDataModel->hit_access_latency->add_data_freq(diff, 1);
+
+  // track victima packet access latency
+  if(metadata)
+  {
+    cacheDataModel->victima_access_latency_at_l2->add_data_freq(diff, 1);
+  }
 }

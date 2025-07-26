@@ -179,6 +179,7 @@ class CacheDataModel
             exception_bounds.push_back({151, 200});
             exception_bounds.push_back({200, 0x7fffffff});
             hit_access_latency = new Hist(1,5,8,exception_bounds);
+            victima_access_latency_at_l2 = new Hist(1,5,8,exception_bounds);
             miss_access_latency = new Hist(1,5,8,exception_bounds);
         }
 
@@ -224,6 +225,8 @@ class CacheDataModel
     Hist* miss_access_latency;
     // req hit access latency histogram object
     Hist* hit_access_latency;
+    // req hit access latency histogram for victima read packet
+    Hist* victima_access_latency_at_l2;
 
     void print_stats()
     {
@@ -321,6 +324,12 @@ class CacheDataModel
 
         cout << "Hit access latency BucketBounds and Frequency\n";
         hit_access_latency->print_histogram(tag);
+        
+        if(tag.find("L2")!=string::npos)
+        {
+            cout << "Victima Hit access latency BucketBounds and Frequency\n";
+            victima_access_latency_at_l2->print_histogram(tag);
+        }
 
         cout <<"\n"<<tag<< " readmiss hit where \n";
         for(auto entry: readmiss_hitwhere)
