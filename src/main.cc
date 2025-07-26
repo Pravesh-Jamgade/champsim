@@ -52,6 +52,7 @@ extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_LIVE_INPUT;
+extern int KNOB_ENABLE_LOG;
 
 std::vector<tracereader*> traces;
 
@@ -449,7 +450,7 @@ int main(int argc, char** argv)
 
   INIReader* iniReader = new INIReader(string("./config.ini"));
 
-  KNOB_LIVE_INPUT = iniReader->GetInteger("LIVE_INPUT", "ENABLE_LIVE_INPUT", 0);
+  KNOB_LIVE_INPUT = iniReader->GetInteger("SIMULATOR", "ENABLE_LIVE_INPUT", 0);
   KNOB_TRANSLATION_QUEUE = iniReader->GetInteger("KNOB", "TQ", 0);
   KNOB_TTP = iniReader->GetInteger("KNOB", "TTP", 0);
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
@@ -458,6 +459,7 @@ int main(int argc, char** argv)
   KNOB_IDEAL_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_IDEAL_VICTIMA", 0);
   KNOB_SMT_ENABLE = iniReader->GetInteger("SMT", "ENABLE_SMT", 0);
   KNOB_PSCL_ROOT_LEVEL = iniReader->GetInteger("PageTable", "ROOT_PT_LEVEL", 4);
+  KNOB_ENABLE_LOG = iniReader->GetInteger("SIMULATOR", "ENABLE_LOG", 0);
   
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
@@ -468,35 +470,52 @@ int main(int argc, char** argv)
   std::cout << "-ENABLE_IDEAL_VICTIMA="<<KNOB_IDEAL_VICTIMA<<'\n';
   std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
   std::cout << "PT Levels="<<KNOB_PSCL_ROOT_LEVEL<<'\n';
+  std::cout << "Live Input="<<KNOB_LIVE_INPUT<<'\n';
+  std::cout << "Debug Log="<<KNOB_ENABLE_LOG<<'\n';
   std::cout << "Output file="<<output_file<<'\n';
   std::cout << '\n';
   
   int total_cores = KNOB_SMT_ENABLE >0 ? NUM_CPUS * KNOB_SMT_ENABLE:  NUM_CPUS;
   simulation_complete.resize(total_cores, 0);
 
-  for (int i = optind; i < argc; i++) {
-    std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
-
-    if(KNOB_LIVE_INPUT)
-      traces.push_back(get_tracereader<input_instr>(trace_shared_buff, traces.size(), knob_cloudsuite));
-    else
-      traces.push_back(get_tracereader<input_instr>(argv[i], traces.size(), knob_cloudsuite));
-
-    if(KNOB_SMT_ENABLE>0)
+  if(KNOB_LIVE_INPUT)
+  {
+    traces.push_back(get_tracereader<input_instr>(trace_shared_buff, traces.size(), knob_cloudsuite, true));
+    cout << "[Log]Trace Reading, " << trace_shared_buff << '\n';
+    // reading memoryhog trace
+    // one trace already read via live input from pintool, hence KNOB_SMT_ENABLE-1
+    int get_trace_index = optind;
+    for(int trace_id=1; trace_id < KNOB_SMT_ENABLE; trace_id++)
     {
-      if(traces.size() > total_cores)
+      traces.push_back(get_tracereader<input_instr>(argv[get_trace_index], traces.size(), knob_cloudsuite));
+      cout << "[Log]Trace Reading, " << argv[get_trace_index] << '\n';
+
+      get_trace_index++;
+    }
+  }
+  else
+  {
+    for (int i = optind; i < argc; i++) 
+    {
+      cout << "[Log]Trace Reading, " << argv[i] << '\n';
+      traces.push_back(get_tracereader<input_instr>(argv[i], traces.size(), knob_cloudsuite));
+      if(KNOB_SMT_ENABLE>0)
       {
-        cout << "Missmatch!!!\n";
-        cout << "Number of traces, " << traces.size() << '\n';
-        cout << "Number of cores, " << total_cores << '\n';
+        if(traces.size() > total_cores)
+        {
+          cout << "Missmatch!!!\n";
+          cout << "Number of traces, " << traces.size() << '\n';
+          cout << "Number of cores, " << total_cores << '\n';
+          assert(0);
+        }
+      }
+      else if (traces.size() > NUM_CPUS) {
+        printf("\n*** Too many traces for the configured number of cores ***\n\n");
         assert(0);
       }
     }
-    else if (traces.size() > NUM_CPUS) {
-      printf("\n*** Too many traces for the configured number of cores ***\n\n");
-      assert(0);
-    }
   }
+  
 
   if (traces.size() != total_cores) {
     printf("\n*** Not enough traces for the configured number of cores ***\n\n");

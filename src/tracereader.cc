@@ -13,9 +13,9 @@
 
 extern int KNOB_LIVE_INPUT;
 
-tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(_ts)
+tracereader::tracereader(uint8_t cpu, std::string _ts, bool live_trace) : cpu(cpu), trace_string(_ts), live_trace(live_trace)
 {
-  if(!KNOB_LIVE_INPUT)
+  if(!live_trace)
   {
     std::string last_dot = trace_string.substr(trace_string.find_last_of("."));
 
@@ -38,6 +38,7 @@ tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(
       cmd_fmtstr = "%1$s -dc %2$s";
     }
 
+    std::cout << "last dot " << last_dot << '\n';
     if (last_dot[1] == 'g') // gzip format
       decomp_program = "gzip";
     else if (last_dot[1] == 'x') // xz
@@ -53,7 +54,7 @@ tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(
   {
     trace_open(trace_string, 1);
   }
-   
+  
 }
 
 tracereader::~tracereader() { close(); }
@@ -62,13 +63,12 @@ template <typename T>
 ooo_model_instr tracereader::read_single_instr()
 {
   T trace_read_instr;
-
-  if(!KNOB_LIVE_INPUT)
+  if(!live_trace)
   {
     while (!fread(&trace_read_instr, sizeof(T), 1, trace_file)) {
       // reached end of file for this trace
       std::cout << "*** Reached end of trace: " << trace_string << std::endl;
-
+  
       // close the trace file and re-open it
       close();
       trace_open(trace_string);
@@ -90,34 +90,6 @@ ooo_model_instr tracereader::read_single_instr()
     instr_count++;
     return retval;
   }
-  
-  // if(!KNOB_LIVE_INPUT)
-  // {
-  //   while (!fread(&trace_read_instr, sizeof(T), 1, trace_file)) {
-  //     // reached end of file for this trace
-  //     std::cout << "*** Reached end of trace: " << trace_string << std::endl;
-  
-  //     // close the trace file and re-open it
-  //     close();
-  //     trace_open(trace_string);
-  //     ooo_model_instr retval(cpu, trace_read_instr);
-  //     return retval;
-  //   }
-  // }
-  // else
-  // {
-  //   while (buf->tail == buf->head) {
-  //     usleep(10); // buffer empty
-  //   }
-  //   input_instr* te = (input_instr*)&buf->buffer[buf->tail];
-  //   __sync_synchronize(); // memory barrier
-  //   buf->tail = (buf->tail + 1) % TRACE_BUF_CAP;
-  //   // copy the instruction into the performance model's instruction format
-  //   ooo_model_instr retval(cpu, *te);
-  //   instr_count++;
-  //   return retval;
-  // }
-
 }
 
 void tracereader::trace_open(std::string trace_string, int app)
@@ -190,7 +162,7 @@ class input_tracereader : public tracereader
   bool initialized = false;
 
 public:
-  input_tracereader(uint8_t cpu, std::string _tn) : tracereader(cpu, _tn) {}
+  input_tracereader(uint8_t cpu, std::string _tn, bool live_traces) : tracereader(cpu, _tn, live_traces) {}
 
   
   ooo_model_instr get()
@@ -211,14 +183,14 @@ public:
 };
 
 template<typename T>
-tracereader* get_tracereader(std::string fname, uint8_t cpu, bool is_cloudsuite)
+tracereader* get_tracereader(std::string fname, uint8_t cpu, bool is_cloudsuite, bool live_traces)
 {
   if (is_cloudsuite) {
     return new cloudsuite_tracereader(cpu, fname);
   } else {
-    return new input_tracereader<T>(cpu, fname);
+    return new input_tracereader<T>(cpu, fname, live_traces);
   }
 }
 
-template tracereader* get_tracereader<context_instr>(std::string fname, uint8_t cpu, bool is_cloudsuite);
-template tracereader* get_tracereader<input_instr>(std::string fname, uint8_t cpu, bool is_cloudsuite);
+template tracereader* get_tracereader<context_instr>(std::string fname, uint8_t cpu, bool is_cloudsuite, bool live_traces=false);
+template tracereader* get_tracereader<input_instr>(std::string fname, uint8_t cpu, bool is_cloudsuite, bool live_traces=false);

@@ -349,6 +349,8 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     std::cout << " cycle: " << current_cycle << std::endl;
   });
 
+  dlog.log("hit", NAME, handle_pkt.address, handle_pkt.v_address,"instr", handle_pkt.instr_id,"data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, "cycle", current_cycle,'\n');
+
   BLOCK& hit_block = block[set * NUM_WAY + way];
 
   handle_pkt.data = hit_block.data;
@@ -393,6 +395,8 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
+  dlog.log("miss", NAME, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
+
   if(KNOB_VICTIMA)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
@@ -1221,6 +1225,9 @@ int CACHE::add_pq(PACKET* packet)
 
 void CACHE::return_data(PACKET* packet)
 {
+  PACKET handle_pkt = *packet;
+  dlog.log("return", NAME, "hw", handle_pkt.hit_where, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data",handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
+
   // check MSHR information
   bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
 
@@ -1317,7 +1324,6 @@ void CACHE::return_data(PACKET* packet)
     // sanity check
     if (mshr_entry == MSHR.end()) {
 
-      print_deadlock();
       std::cerr << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << packet->instr_id << " cannot find a matching entry!";
       std::cerr << " address: " << std::hex << packet->address;
       std::cerr << " v_address: " << packet->v_address;
@@ -1460,8 +1466,14 @@ void CACHE::func_track_miss_access_latency(uint64_t eq_cycle)
 }
 
 // tracking data access latency: hit 
-void CACHE::func_track_hit_access_latency(uint64_t eq_cycle)
+void CACHE::func_track_hit_access_latency(uint64_t eq_cycle, int metadata)
 {
   int diff = current_cycle - eq_cycle + 1;
   cacheDataModel->hit_access_latency->add_data_freq(diff, 1);
+
+  // track victima packet access latency
+  if(metadata)
+  {
+    cacheDataModel->victima_access_latency_at_l2->add_data_freq(diff, 1);
+  }
 }

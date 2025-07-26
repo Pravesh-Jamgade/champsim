@@ -14,7 +14,10 @@
 #include <map>
 #include "DataModel.h"
 #include "victima.h"
+#include"logger.h"
 #include <bitset>
+
+extern int KNOB_ENABLE_LOG;
 
 extern map<uint64_t, PTWC> ptw_pred;
 extern map<uint32_t, uint32_t> l2_pte_map;
@@ -27,6 +30,9 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+
+  logger dlog;
+
   //usercode
   bool is_tlb = false;
   list<BLOCK>* reuse_history;
@@ -150,7 +156,7 @@ public:
   // track miss access latency 
   void func_track_miss_access_latency(uint64_t enq_cycle);
   // track hit access latency 
-  void func_track_hit_access_latency(uint64_t enq_cycle);
+  void func_track_hit_access_latency(uint64_t enq_cycle, int metadata=0);
 
   void reset_datamodel()
   {
@@ -258,6 +264,8 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+
+    dlog = logger();
 
     reuse_history = new list<BLOCK>[NUM_SET];
     for(int i=0; i< NUM_SET; i++)
