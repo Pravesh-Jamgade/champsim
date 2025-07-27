@@ -36,6 +36,7 @@ public:
   virtual void operate() = 0;
   virtual void print_deadlock() {}
   virtual void _overwrite() {}
+  virtual void _context_switch() {}
 };
 
 class by_next_operate
