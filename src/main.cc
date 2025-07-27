@@ -54,6 +54,7 @@ extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_LIVE_INPUT;
 extern int KNOB_ENABLE_LOG;
 extern int KNOB_ENABLE_MFOE_V2;
+extern int KNOB_ENABLE_CTX;
 
 std::vector<tracereader*> traces;
 
@@ -382,6 +383,7 @@ int main(int argc, char** argv)
   
   // initialize knobs
   uint8_t show_heartbeat = 1;
+  uint32_t context_switch_counter = 0;
 
   // check to see if knobs changed using getopt_long()
   int traces_encountered = 0;
@@ -462,6 +464,7 @@ int main(int argc, char** argv)
   KNOB_PSCL_ROOT_LEVEL = iniReader->GetInteger("PageTable", "ROOT_PT_LEVEL", 4);
   KNOB_ENABLE_LOG = iniReader->GetInteger("SIMULATOR", "ENABLE_LOG", 0);
   KNOB_ENABLE_MFOE_V2 = iniReader->GetInteger("MFOEv2", "ENABLE_MFOE_V2", 0);
+  KNOB_ENABLE_CTX = iniReader->GetInteger("SIMULATOR", "ENABLE_CTX_SWITCH", 0);
   
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
@@ -612,6 +615,16 @@ int main(int argc, char** argv)
           useful_bw--;
         }
 
+        if(KNOB_ENABLE_CTX && ooo_cpu[i]->num_retired[th] >= ooo_cpu[i]->next_ctx_instruction)
+        {
+          ooo_cpu[i]->next_ctx_instruction += 20000000;
+          CACHE* stlb = get_cache_by_name("STLB");
+          CACHE* dtlb = get_cache_by_name("DTLB");
+          stlb->func_ctx_switch(th);
+          dtlb->func_ctx_switch(th);
+          context_switch_counter++;
+        }
+        
         // heartbeat information
         if (show_heartbeat && (ooo_cpu[i]->num_retired[th] >= ooo_cpu[i]->next_print_instruction)) {
           float cumulative_ipc;
@@ -625,7 +638,7 @@ int main(int argc, char** argv)
           cout << " heartbeat IPC: " << heartbeat_ipc << " cumulative IPC: " << cumulative_ipc;
           cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
           ooo_cpu[i]->next_print_instruction += STAT_PRINTING_PERIOD;
-
+          
           ooo_cpu[i]->last_sim_instr = ooo_cpu[i]->num_retired[th];
           ooo_cpu[i]->last_sim_cycle = ooo_cpu[i]->current_cycle;
         }
@@ -689,6 +702,7 @@ int main(int argc, char** argv)
       cout << "Stats cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
     }
   }
+  cout << "Stats overall context switch, " << context_switch_counter << '\n';
 
   cout << endl << "ChampSim completed all CPUs" << endl;
   if (NUM_CPUS > 1) {

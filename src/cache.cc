@@ -1476,3 +1476,15 @@ void CACHE::func_track_hit_access_latency(uint64_t eq_cycle, int metadata)
     cacheDataModel->victima_access_latency_at_l2->add_data_freq(diff, 1);
   }
 }
+
+void CACHE::func_ctx_switch(int thread_id)
+{
+  if(is_tlb)
+  {
+    for(auto& cb: block)
+    {
+      if(cb.thread_id == thread_id)
+        cb.valid = false;
+    }
+  }
+}
