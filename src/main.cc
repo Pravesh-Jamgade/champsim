@@ -618,11 +618,12 @@ int main(int argc, char** argv)
         if(KNOB_ENABLE_CTX && ooo_cpu[i]->num_retired[th] >= ooo_cpu[i]->next_ctx_instruction)
         {
           ooo_cpu[i]->next_ctx_instruction += 20000000;
-          CACHE* stlb = get_cache_by_name("STLB");
-          CACHE* dtlb = get_cache_by_name("DTLB");
-          stlb->func_ctx_switch(th);
-          dtlb->func_ctx_switch(th);
           context_switch_counter++;
+
+          for(auto obj: operables)
+          {
+            obj->_context_switch();
+          }
         }
         
         // heartbeat information

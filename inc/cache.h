@@ -158,7 +158,17 @@ public:
   // track hit access latency 
   void func_track_hit_access_latency(uint64_t enq_cycle, int metadata=0);
 
-  void func_ctx_switch(int thread_id = 0);
+  void _context_switch(int thread_id) 
+  {
+    if(is_tlb)
+    {
+      for(auto& cb: block)
+      {
+        if(cb.thread_id == thread_id)
+          cb.valid = false;
+      }
+    }
+  }
 
   void reset_datamodel()
   {

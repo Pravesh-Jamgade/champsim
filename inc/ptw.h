@@ -33,6 +33,15 @@ public:
 
   std::optional<uint64_t> check_hit(uint64_t address, int thread_id);
   void fill_cache(uint64_t next_level_paddr, uint64_t vaddr, int thread_id);
+
+  void invalidate(int thread_id)
+  {
+    for(auto &cb: block)
+    {
+      if(thread_id == cb.thread_id)
+        cb.valid = 0;
+    }
+  }
 };
 
 typedef struct Track
@@ -97,6 +106,13 @@ public:
   void* getObject(){return this;}
   void victima_update(uint64_t addr, int cost_or_freq);
   void _overwrite();
+  void _context_switch(int thread_id) 
+  {
+    for(auto pscl: pscl_array)
+    {
+      pscl->invalidate(thread_id);
+    }
+  }
 
 };
 
