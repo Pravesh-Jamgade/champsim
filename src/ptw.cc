@@ -11,6 +11,7 @@
 extern int KNOB_TTP;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
+extern int KNOB_ENABLE_MFOE_V2;
 
 extern map<uint64_t, PTWC> ptw_pred;
 
@@ -277,7 +278,7 @@ void PageTableWalker::handle_fill()
 
       if (warmup_complete[cpu] && fault) 
       {
-        fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
+        fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? 1:vmem.minor_fault_penalty);
         MSHR.sort(ord_event_cycle<PACKET>{});
 
         ptw_datamodel->page_fault[fill_mshr->translation_level]++;

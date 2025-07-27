@@ -53,6 +53,7 @@ extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_LIVE_INPUT;
 extern int KNOB_ENABLE_LOG;
+extern int KNOB_ENABLE_MFOE_V2;
 
 std::vector<tracereader*> traces;
 
@@ -460,6 +461,7 @@ int main(int argc, char** argv)
   KNOB_SMT_ENABLE = iniReader->GetInteger("SMT", "ENABLE_SMT", 0);
   KNOB_PSCL_ROOT_LEVEL = iniReader->GetInteger("PageTable", "ROOT_PT_LEVEL", 4);
   KNOB_ENABLE_LOG = iniReader->GetInteger("SIMULATOR", "ENABLE_LOG", 0);
+  KNOB_ENABLE_MFOE_V2 = iniReader->GetInteger("MFOEv2", "ENABLE_MFOE_V2", 0);
   
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';

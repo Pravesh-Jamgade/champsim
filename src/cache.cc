@@ -162,12 +162,11 @@ void CACHE::handle_writeback()
 
     if(write_true)
     {
-      uint32_t offset = handle_pkt.address >> LOG2_PAGE_SIZE & 0x7;
-      fill_block.updateUsage(offset);
-
       // writing stlb PTE to L2
       if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
       {
+        uint32_t offset = (handle_pkt.address >> LOG2_PAGE_SIZE) & 0x7;
+        fill_block.updateUsage(offset);
         auto find_page = l2_pte_map.find(vp);
         if(find_page == l2_pte_map.end())
         {
@@ -390,7 +389,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   if(hit_block.came_from_request == PREFETCH)
     prefetch_hit_histo[set*NUM_WAY+way][READ_HIT]++;
 
-  func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::WORK_QUEUE]);
+  func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::WORK_QUEUE], handle_pkt.vflag[VF::victima]);
 }
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
