@@ -20,4 +20,6 @@ int KNOB_LIVE_INPUT = 0;
 
 int KNOB_ENABLE_LOG = 0;
 
+int KNOB_ENABLE_MFOE_V2 = 0;
+
 #endif
