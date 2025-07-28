@@ -177,7 +177,7 @@ class CacheDataModel
             exception_bounds.push_back({50, 100});
             exception_bounds.push_back({101, 150});
             exception_bounds.push_back({151, 200});
-            exception_bounds.push_back({200, 0x7fffffff});
+            exception_bounds.push_back({201, 0x7fffffff});
             hit_access_latency = new Hist(1,5,8,exception_bounds);
             victima_access_latency_at_l2 = new Hist(1,5,8,exception_bounds);
             miss_access_latency = new Hist(1,5,8,exception_bounds);
@@ -185,16 +185,13 @@ class CacheDataModel
 
         // initalize histogram for reuse distance
         {
-            reuse_distance = new Hist();
-            vector<pair<int,int>> hist_bounds;
-            hist_bounds.push_back({0,0});
-            hist_bounds.push_back({1,5});
-            hist_bounds.push_back({6,10});
-            hist_bounds.push_back({11, 20});
-            hist_bounds.push_back({21, 0x7fffffff});
-            hist_bounds.push_back({NUM_WAY+1, 0x7fffffff});
-            hist_bounds.push_back({1, NUM_WAY});
-            reuse_distance->custom_add_hist_bounds(hist_bounds);
+            vector<pair<int,int>> exception_bounds;
+            exception_bounds.push_back({0, 0});
+            exception_bounds.push_back({50, 100});
+            exception_bounds.push_back({101, 150});
+            exception_bounds.push_back({151, 200});
+            exception_bounds.push_back({201, 0x7fffffff});
+            reuse_distance = new Hist(1,5,8,exception_bounds);
         }
     }
 
