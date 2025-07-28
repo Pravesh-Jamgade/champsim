@@ -473,11 +473,13 @@ int main(int argc, char** argv)
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << "VICTIMA\n-ENABLE_VICTIMA="<<KNOB_VICTIMA<<'\n';
   std::cout << "-ENABLE_IDEAL_VICTIMA="<<KNOB_IDEAL_VICTIMA<<'\n';
+  std::cout << "ENABLE MFOEv2=" << KNOB_ENABLE_MFOE_V2 << '\n'; 
   std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
   std::cout << "PT Levels="<<KNOB_PSCL_ROOT_LEVEL<<'\n';
   std::cout << "Live Input="<<KNOB_LIVE_INPUT<<'\n';
   std::cout << "Debug Log="<<KNOB_ENABLE_LOG<<'\n';
   std::cout << "Output file="<<output_file<<'\n';
+  std::cout << "Enable Context Switch="<<KNOB_ENABLE_CTX<<'\n';
   std::cout << '\n';
   
   int total_cores = KNOB_SMT_ENABLE >0 ? NUM_CPUS * KNOB_SMT_ENABLE:  NUM_CPUS;
@@ -617,7 +619,7 @@ int main(int argc, char** argv)
 
         if(KNOB_ENABLE_CTX && ooo_cpu[i]->num_retired[th] >= ooo_cpu[i]->next_ctx_instruction)
         {
-          ooo_cpu[i]->next_ctx_instruction += 20000000;
+          ooo_cpu[i]->next_ctx_instruction += 1000;
           context_switch_counter++;
 
           for(auto obj: operables)

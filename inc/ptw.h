@@ -39,7 +39,11 @@ public:
     for(auto &cb: block)
     {
       if(thread_id == cb.thread_id)
+      {
+        cb.address = 0;
+        cb.data = 0;
         cb.valid = 0;
+      }
     }
   }
 };

@@ -40,7 +40,7 @@ public:
   uint32_t inflight_reg_executions = 0, inflight_mem_executions = 0;
 
 
-  uint64_t next_ctx_instruction = 20000000;
+  uint64_t next_ctx_instruction = 1000;
   vector<uint64_t> num_retired;
 
   struct dib_entry_t {

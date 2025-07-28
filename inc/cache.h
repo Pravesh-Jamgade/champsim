@@ -165,7 +165,11 @@ public:
       for(auto& cb: block)
       {
         if(cb.thread_id == thread_id)
-          cb.valid = false;
+        {
+          cb.address = 0;
+          cb.data = 0;
+          cb.valid = 0;
+        }
       }
     }
   }
