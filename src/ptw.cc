@@ -129,7 +129,10 @@ void PageTableWalker::handle_read()
           // get the next pt addr
           next_pt_addr = check_addr.value();
           // update to next level
-          ptw_level = ptw_level-1; 
+          ptw_level = ptw_level-1;
+          
+          handle_pkt.event_cycle = current_cycle + PSC_READ_LATENCY;
+          RQ.sort(ord_event_cycle<PACKET>{});
 
           if(ptw_level > 0)
           {

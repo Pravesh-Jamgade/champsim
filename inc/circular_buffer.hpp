@@ -134,6 +134,11 @@ protected:
 public:
   explicit circular_buffer(std::size_t N) : sz_(N), entry_(N + 1) {}
 
+  void sort()
+  {
+    std::sort(begin(), end(), [](const T& a, const T& b) { return a.event_cycle < b.event_cycle; });
+  }
+
   constexpr size_type size() const noexcept { return sz_; }
   size_type occupancy() const noexcept { return std::distance(begin(), end()); };
   bool empty() const noexcept { return occupancy() == 0; }
