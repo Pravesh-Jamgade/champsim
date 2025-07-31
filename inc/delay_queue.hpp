@@ -70,9 +70,10 @@ public:
   bool has_ready() const noexcept { return begin() != end_ready(); }
   constexpr size_type max_size() const noexcept { return _buf.max_size(); }
 
-  void sort()
+  template <typename Compare>
+  void sort(Compare comp)
   {
-    _buf.sort();
+    std::sort(begin(), end(),comp);
   }
 
   /***
