@@ -68,6 +68,7 @@ public:
   const uint32_t MSHR_SIZE, MAX_READ, MAX_FILL;
 
   champsim::delay_queue<PACKET> RQ;
+  // champsim::list<PACKET> RQ;
 
   std::list<PACKET> MSHR;
 

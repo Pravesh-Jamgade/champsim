@@ -12,6 +12,7 @@ extern int KNOB_TTP;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_ENABLE_MFOE_V2;
+#define PSC_READ_LATENCY 2
 
 extern map<uint64_t, PTWC> ptw_pred;
 
@@ -129,7 +130,10 @@ void PageTableWalker::handle_read()
           // get the next pt addr
           next_pt_addr = check_addr.value();
           // update to next level
-          ptw_level = ptw_level-1; 
+          ptw_level = ptw_level-1;
+          
+          handle_pkt.event_cycle = current_cycle + PSC_READ_LATENCY;
+          RQ.sort(ord_event_cycle<PACKET>{});
 
           if(ptw_level > 0)
           {
@@ -337,7 +341,7 @@ void PageTableWalker::handle_fill()
               next_pt_addr = check_addr.value();
               
               // to count PSC search time of 1 cycle
-              fill_mshr->event_cycle = current_cycle + 1;
+              fill_mshr->event_cycle = current_cycle + PSC_READ_LATENCY;
               MSHR.sort(ord_event_cycle<PACKET>{});
               break;
             }
