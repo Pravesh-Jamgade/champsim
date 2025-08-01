@@ -368,6 +368,53 @@ void overwrite_cache()
 void signal_handler(int signal)
 {
   cout << "Caught signal: " << signal << endl;
+
+  for(int i=0; i< NUM_CPUS; i++)
+  {
+    // simulation complete
+    for(int j=0; j< KNOB_SMT_ENABLE; j++)
+    {
+      // summation across threads
+      uint64_t finish_sim_instr = ooo_cpu[i]->num_retired[j] - ooo_cpu[i]->begin_sim_instr;
+      uint64_t finish_sim_cycle = ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
+
+      cout << "Stats CPU " << i << " Thread " << j << " instructions: " << finish_sim_instr << " cycles: " <<finish_sim_cycle << '\n';
+      // cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
+      // cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
+      // cout << "cpu" << i << " IPC, " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
+
+      uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time), elapsed_minute = elapsed_second / 60, elapsed_hour = elapsed_minute / 60;
+      elapsed_minute -= elapsed_hour * 60;
+      elapsed_second -= (elapsed_hour * 3600 + elapsed_minute * 60);
+
+      cout << "Stats cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
+      cout << "Stats cpu" << i << ", thread" << j << ", ipc, " << ((double)finish_sim_instr/finish_sim_cycle) << '\n'; 
+    }
+  }
+
+  cout << endl << "Region of Interest Statistics" << endl;
+  for (uint32_t i = 0; i < NUM_CPUS; i++) 
+  {
+    cout << endl << "IPC " << i << ", " <<  ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
+  }
+
+  for (uint32_t i = 0; i < NUM_CPUS; i++) 
+  {
+    cout << endl << "CPU " << i << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
+    cout << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle << endl;
+
+    for (auto it = caches.rbegin(); it != caches.rend(); ++it)
+      print_roi_stats(i, *it);
+  }
+
+  
+  for (auto it = caches.rbegin(); it != caches.rend(); ++it)
+    (*it)->impl_prefetcher_final_stats();
+
+  for (auto it = caches.rbegin(); it != caches.rend(); ++it)
+    (*it)->impl_replacement_final_stats();
+
+
   exit(1);
 }
 
