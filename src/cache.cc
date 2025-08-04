@@ -696,6 +696,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             return false;
           }
 
+          // tracking
+          func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
           PACKET writeback_packet;
 
           writeback_packet.fill_level = l2cache->fill_level;
@@ -1477,3 +1479,56 @@ void CACHE::func_track_hit_access_latency(uint64_t eq_cycle, int metadata)
   }
 }
 
+
+void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
+{
+  if(eviction_history_pte.size() >= LIMIT_HITORY_LEN_EVICTED_PTE)
+  {
+    // track offset variation
+    vector<int> seen_offset(8,0);
+    vector<int> vpages_cluster(8,0);
+    vector<int> ppages_cluster(8,0);
+
+    // track offeset variation
+    for(auto it1: eviction_history_pte)
+    {
+      //track offset
+      int page1 = it1.first & ~(PAGE_SIZE-1);
+      int phy_page1 = it1.second & ~(PAGE_SIZE-1);
+      int offset1 = page1 & 0x7;
+      seen_offset[offset1]++;
+
+      // track contigious address cluster
+      for(auto it2: eviction_history_pte)
+      {
+        if(it1 == it2)
+          continue;
+
+        int page2 = it2.first & ~(PAGE_SIZE-1);
+        int offset2 = page2 & 0x7;
+        
+        int dist = abs(page1 - page2);
+        if(dist <= 8)
+        {
+          vpages_cluster[dist]++;
+        }
+
+        
+        int phy_page2 = it2.second & ~(PAGE_SIZE-1);
+        dist = abs(phy_page1 - phy_page2);
+        if(dist <= 8)
+        {
+          ppages_cluster[dist]++; 
+        }
+      }
+    }
+
+    for(int i=0; i< seen_offset.size(); i++)
+    {
+      transition_hitmap_for_offset[i][seen_offset[i]]++;
+    }
+
+    eviction_history_pte.clear();
+  }
+  eviction_history_pte.insert({v_address, data});
+}

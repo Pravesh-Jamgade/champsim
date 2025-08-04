@@ -31,6 +31,13 @@ class CACHE : public champsim::operable, public MemoryRequestConsumer, public Me
 {
 public:
 
+  // record evcited PTE
+  const int LIMIT_HITORY_LEN_EVICTED_PTE = 64;
+  map<uint64_t, uint64_t> eviction_history_pte;
+
+  // number of times this offset seen VS offset
+  vector<vector<int>> transition_hitmap_for_offset;
+
   logger dlog;
 
   //usercode
@@ -150,6 +157,9 @@ public:
 
   pair<bool, uint64_t> peek_singleline(PACKET handle_pkt);
 
+  // tracking pte
+  void func_track_evicted_pte(uint64_t v_addr, uint64_t p_addr);
+
   // track accessed page and its blocks for tracking capacity misses
   void func_track_workingset(uint64_t addr);
 
@@ -263,6 +273,27 @@ public:
       cout << "victima stlb mshr_recv_already-drop victima, " << victima_counters[STLB_MSHRRECV_DROP_VICTIMA] << '\n';
       cout << "victima stlb dumy victima, " << victima_counters[STLB_DUMY_VICTIMA] << '\n';
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
+
+      cout << "Transition hitmap for offset counter over windows:  Offset V/s frequency_of_offset_in_window  \n";
+      string header_str = "";
+      string header_line = "";
+      for(int i=0; i<= transition_hitmap_for_offset[0].size(); i++)
+      {
+        header_str = std::to_string(i) + " ";
+        header_line = "- ";
+      }
+
+      cout << header_str << '\n';
+      cout << header_line << '\n';
+      for(int i=0; i< transition_hitmap_for_offset.size(); i++)
+      {
+        string output = std::to_string(i) + "|";
+        for(int j=0; j< transition_hitmap_for_offset[i].size(); j++)
+        {
+          output += std::to_string(transition_hitmap_for_offset[i][j]) + "  ";
+        }
+        cout << output << '\n';
+      }
     }
   }
 
@@ -282,6 +313,8 @@ public:
   {
 
     dlog = logger();
+
+    transition_hitmap_for_offset = vector<vector<int>>(8, vector<int>(64, 0));
 
     reuse_history = new list<BLOCK>[NUM_SET];
     for(int i=0; i< NUM_SET; i++)
