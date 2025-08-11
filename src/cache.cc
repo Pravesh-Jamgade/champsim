@@ -396,6 +396,31 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
   dlog.log("miss", NAME, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
 
+  if(cache_is[IS_STLB])
+  {
+    translation_pollution->countPollution(get_set(handle_pkt.address), 
+                    PollutionEntry
+                    (
+                      handle_pkt.address>>(match_offset_bits?0:OFFSET_BITS), 
+                      make_pair(PollutionTracker::TranslationPollutionTracker, EvictCause::INVALID_CAUSE), 
+                      handle_pkt.thread_id
+                    )
+                );
+  }
+ else 
+  if(cache_is[IS_L2])
+  {
+    victima_pollution->countPollution(get_set(handle_pkt.address), 
+                    PollutionEntry
+                    (
+                      handle_pkt.address>>(match_offset_bits?0:OFFSET_BITS), 
+                      make_pair(PollutionTracker::VictimaPollutionTracker, EvictCause::INVALID_CAUSE), 
+                      handle_pkt.thread_id
+                    )
+                );
+  }
+  
+
   if(KNOB_VICTIMA)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
@@ -663,28 +688,17 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       cacheDataModel->cache_stat[CacheStat::Total_Writeback]++;
 
     }
-    else // clean 
-    {
-      if(handle_pkt.type == LOAD)
-        cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
-      else if(handle_pkt.type == TRANSLATION)
-        cacheDataModel->cache_stat[CacheStat::Translation_Drop]++;
-      else if(handle_pkt.type == RFO)
-        cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
-      else if(handle_pkt.type == PREFETCH)
-        cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
-      
-      cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
-    }
-
+   
     bool track_reuse = false;
 
+    // invalid block
     // count Compulsory miss
     if(!fill_block.valid)
     {  
       cacheDataModel->category_of_misses[MISS::COM]++;
     }
     // check for conflict misses && capacity misses
+    // valid blocks (may be dirty or clean)
     else
     {
       if(KNOB_VICTIMA)
@@ -718,7 +732,37 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           victima_block_usage[usage]++;
           victima_counters[VC::L2_EVICT]++;
         }
+
+        // track pollution for victima
+        if(cache_is[IS_L2])
+        {
+          uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : OFFSET_BITS);
+          EvictCause evict_cause = (handle_pkt.type == WRITEBACK && handle_pkt.vflag[VF::victima] && fill_block.came_from_request != TRANSLATION) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
+          victima_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::VictimaPollutionTracker, evict_cause), fill_block.thread_id));
+        }
       }
+
+      // track pollution
+      {
+        // @ data cache
+        if(cache_is[IS_STLB])
+        {
+          uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : OFFSET_BITS);
+          EvictCause evict_cause = (handle_pkt.type == TRANSLATION && fill_block.came_from_request != TRANSLATION) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
+          translation_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::TranslationPollutionTracker, evict_cause), fill_block.thread_id));
+        }
+      }
+
+      // tracking type of cache block being dropped
+      if(handle_pkt.type == LOAD)
+        cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
+      else if(handle_pkt.type == TRANSLATION)
+        cacheDataModel->cache_stat[CacheStat::Translation_Drop]++;
+      else if(handle_pkt.type == RFO)
+        cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
+      else if(handle_pkt.type == PREFETCH)
+        cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
+      cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
 
       // counting the number of times set has seen conflict and as a result a dirty block is sent-back
       // it needs infinit FA cache to keep history
@@ -1484,10 +1528,14 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
 {
   if(eviction_history_pte.size() >= LIMIT_HITORY_LEN_EVICTED_PTE)
   {
+    // track similar page so that counting doesnt happen twice
+    list<int> skip_list;
+
     // track offset variation
     vector<int> seen_offset(8,0);
-    vector<int> vpages_cluster(8,0);
-    vector<int> ppages_cluster(8,0);
+    // track distance
+    vector<int> vpages_cluster(9,0);
+    vector<int> ppages_cluster(9,0);
 
     // track offeset variation
     for(auto it1: eviction_history_pte)
@@ -1497,6 +1545,12 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
       int phy_page1 = it1.second & ~(PAGE_SIZE-1);
       int offset1 = page1 & 0x7;
       seen_offset[offset1]++;
+
+      // since similar page is in the list, skip track data for this. This pair is already counted. avoid twice counting.
+      if(find(skip_list.begin(), skip_list.end(), page1) != skip_list.end())
+      {
+        continue;
+      }
 
       // track contigious address cluster
       for(auto it2: eviction_history_pte)
@@ -1513,12 +1567,16 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
           vpages_cluster[dist]++;
         }
 
-        
         int phy_page2 = it2.second & ~(PAGE_SIZE-1);
         dist = abs(phy_page1 - phy_page2);
         if(dist <= 8)
         {
           ppages_cluster[dist]++; 
+        }
+
+        if(page1 == page2)
+        {
+          skip_list.push_back(page1);
         }
       }
     }
@@ -1528,6 +1586,12 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
       transition_hitmap_for_offset[i][seen_offset[i]]++;
     }
 
+    for(int i=0; i< vpages_cluster.size(); i++)
+    {
+      transition_hitmap_for_vp_page[i][vpages_cluster[i]]++;
+    }
+
+    skip_list.clear();
     eviction_history_pte.clear();
   }
   eviction_history_pte.insert({v_address, data});
