@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 static UINT64 instruction_count = 0;
-static UINT64 interval_size = 100000000; // 100M instructions per interval
+static UINT64 interval_size = 50000000; // 100M instructions per interval
 static UINT64 current_interval = 0;
 static std::ofstream bbv_out("bbv.out");
 static std::ofstream map_out("bb_map.txt");
@@ -54,9 +54,9 @@ VOID Trace(TRACE trace, VOID *v) {
 
 VOID Fini(INT32 code, VOID *v) {
     if (!bbv.empty()) {
-        bbv_out << "T" << current_interval << "BBV:";
+        bbv_out << "T" << current_interval;
         for (const auto &entry : bbv) {
-            bbv_out << " " << entry.first << " " << entry.second;
+            bbv_out << ":" << entry.first << ":" << entry.second << " ";
         }
         bbv_out << "\n";
     }
