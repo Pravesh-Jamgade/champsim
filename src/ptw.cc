@@ -100,7 +100,8 @@ void PageTableWalker::handle_read()
     // initalizing ptw from root
     uint32_t ptw_level = vmem.pt_levels;
     // first pa to start page table walk
-    uint64_t next_pt_addr = splice_bits(CR3_addr[handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+    // shift amount is 27 for 4-th-level. How ? --> 9 * (4-1) = 27 --> i.e [9 * (curr_level-1)]
+    uint64_t next_pt_addr = splice_bits(CR3_addr[handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, ptw_level-1) * PTE_BYTES, LOG2_PAGE_SIZE);
 
     bool miss_at_root = true;
 
@@ -138,7 +139,7 @@ void PageTableWalker::handle_read()
           if(ptw_level > 0)
           {
             // mix to lookup next level
-            next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(handle_pkt.address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+            next_pt_addr = splice_bits(next_pt_addr, vmem.get_offset(handle_pkt.address, ptw_level-1) * PTE_BYTES, LOG2_PAGE_SIZE);
           }
           else if(ptw_level == 0)
           {
@@ -317,6 +318,7 @@ void PageTableWalker::handle_fill()
           fill_mshr->state = State::PSC_Search;
           // baseaddress of next_level_pt
           fill_mshr->address = addr;
+          fill_mshr->translation_level = fill_mshr->translation_level - 1;
 
           //TODO: add search cost
           fill_mshr->event_cycle = current_cycle + 1;
@@ -326,9 +328,9 @@ void PageTableWalker::handle_fill()
         {
           bool miss_in_psc = false;
           // search next level page table
-          uint8_t ptw_level = fill_mshr->translation_level - 1;
+          uint8_t ptw_level = fill_mshr->translation_level;
           // use next 9bits with base addr of next level page table
-          uint64_t next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level) * PTE_BYTES, LOG2_PAGE_SIZE);
+          uint64_t next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level-1) * PTE_BYTES, LOG2_PAGE_SIZE);
           // lookup this levels PSC, if found in PSC then update next_pt_addr, ptw_level and continue search
           for (auto pscl : pscl_array) 
           {
