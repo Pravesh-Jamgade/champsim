@@ -16,6 +16,7 @@
 #include "victima.h"
 #include"logger.h"
 #include <bitset>
+#include "pollution.h"
 
 extern int KNOB_ENABLE_LOG;
 
@@ -30,6 +31,22 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+
+  vector<vector<PollutionEntry>> global_set_history;
+
+  // translation pollution
+  TranslationPollution* translation_pollution;
+  VictimaPollution* victima_pollution;
+
+  // record evcited PTE
+  const int LIMIT_HITORY_LEN_EVICTED_PTE = 64;
+  map<uint64_t, uint64_t> eviction_history_pte;
+
+  // offset VS number of times this offset seen 
+  vector<vector<int>> transition_hitmap_for_offset;
+
+  // distance VS number of times this offset seen 
+  vector<vector<int>> transition_hitmap_for_vp_page;
 
   logger dlog;
 
@@ -150,6 +167,9 @@ public:
 
   pair<bool, uint64_t> peek_singleline(PACKET handle_pkt);
 
+  // tracking pte
+  void func_track_evicted_pte(uint64_t v_addr, uint64_t p_addr);
+
   // track accessed page and its blocks for tracking capacity misses
   void func_track_workingset(uint64_t addr);
 
@@ -263,6 +283,63 @@ public:
       cout << "victima stlb mshr_recv_already-drop victima, " << victima_counters[STLB_MSHRRECV_DROP_VICTIMA] << '\n';
       cout << "victima stlb dumy victima, " << victima_counters[STLB_DUMY_VICTIMA] << '\n';
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
+
+      cout << "Transition hitmap for offset counter over windows:\n";
+      cout << "Offset V/s frequency_of_offset_in_window\n\n";
+
+      // Print column headers
+      cout << setw(6) << " " << "|";
+      for (int i = 0; i < transition_hitmap_for_offset[0].size(); ++i) {
+          cout << setw(4) << i;
+      }
+      cout << '\n';
+
+      // Print separator line
+      cout << string(6, '-') << "+";
+      for (int i = 0; i < transition_hitmap_for_offset[0].size(); ++i) {
+          cout << string(4, '-');
+      }
+      cout << '\n';
+
+      // Print each row
+      for (int i = 0; i < transition_hitmap_for_offset.size(); ++i) {
+          cout << setw(6) << i << "|";
+          for (int j = 0; j < transition_hitmap_for_offset[i].size(); ++j) {
+              cout << setw(4) << transition_hitmap_for_offset[i][j];
+          }
+          cout << '\n';
+      }
+
+
+      cout << "Transition hitmap for distance between evicted page over window:\n";
+      cout << "Offset V/s frequency_of_offset_in_window\n\n";
+
+      // Print column headers
+      cout << setw(6) << " " << "|";
+      for (int i = 0; i < transition_hitmap_for_vp_page[0].size(); ++i) {
+          cout << setw(4) << i;
+      }
+      cout << '\n';
+
+      // Print separator line
+      cout << string(6, '-') << "+";
+      for (int i = 0; i < transition_hitmap_for_vp_page[0].size(); ++i) {
+          cout << string(4, '-');
+      }
+      cout << '\n';
+
+      // Print each row
+      for (int i = 0; i < transition_hitmap_for_vp_page.size(); ++i) {
+          cout << setw(6) << i << "|";
+          for (int j = 0; j < transition_hitmap_for_vp_page[i].size(); ++j) {
+              cout << setw(4) << transition_hitmap_for_vp_page[i][j];
+          }
+          cout << '\n';
+      }
+
+      // print pollution
+      translation_pollution->print(NAME);
+      victima_pollution->print(NAME);
     }
   }
 
@@ -282,6 +359,14 @@ public:
   {
 
     dlog = logger();
+
+    global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
+
+    translation_pollution = new TranslationPollution(NUM_SET, NUM_WAY, &global_set_history);
+    victima_pollution = new VictimaPollution(NUM_SET, NUM_WAY, &global_set_history);
+
+    transition_hitmap_for_vp_page = vector<vector<int>>(9, vector<int>(64, 0));
+    transition_hitmap_for_offset = vector<vector<int>>(8, vector<int>(64, 0));
 
     reuse_history = new list<BLOCK>[NUM_SET];
     for(int i=0; i< NUM_SET; i++)

@@ -86,6 +86,7 @@ enum MISS
     MISS_END
 };
 
+
 class Hist
 {
     public:

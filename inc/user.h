@@ -1,5 +1,8 @@
 #ifndef USER_H
 #define USER_H
+#include "operable.h"
+
+using namespace std;
 enum CACHE_ID{
     IS_LLC=0, 
     IS_L2, 
@@ -11,6 +14,5 @@ enum CACHE_ID{
     WQ,
     CACHE_ID_END
 };
-
 
 #endif
