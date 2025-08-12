@@ -28,6 +28,8 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       PSCL2{"PSCL2", 1, v8, v9},                                  // Translation from L5->L1
       llcObject(llc)
 {
+
+  dlog = logger();
   ptw_datamodel = new PTWDataModel(cpu);
   
   // if(KNOB_PSCL_ROOT_LEVEL != (vmem.pt_levels-1))
@@ -125,6 +127,8 @@ void PageTableWalker::handle_read()
           continue;
         if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) 
         {
+          dlog.log("pscl_hit", NAME, handle_pkt.address, handle_pkt.v_address,"instr", handle_pkt.instr_id,"data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, "cycle", current_cycle,'\n');
+
           miss_at_root = false;
           ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
           // hit at psc
@@ -154,6 +158,8 @@ void PageTableWalker::handle_read()
         }
         else
         {
+          dlog.log("pscl_miss", NAME, handle_pkt.address, handle_pkt.v_address,"instr", handle_pkt.instr_id,"data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, "cycle", current_cycle,'\n');
+
           ptw_datamodel->queue_psc_miss_metric[ptw_level]++;
           miss_at_root = true;
           break;
@@ -214,6 +220,8 @@ void PageTableWalker::handle_fill()
     // Translation complete now remove MSHR entry, when translation level is 0
     if (fill_mshr->translation_level == 0) // If translation complete
     {
+      dlog.log("pscl_fill0", NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
+
       // Return the translated physical address to STLB. Does not contain last
       // 12 bits
       auto [addr, fault] = vmem.va_to_pa(cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id, fill_mshr->v_address);
@@ -306,6 +314,8 @@ void PageTableWalker::handle_fill()
 
         if(fill_mshr->state == State::PTW_FILL)
         {
+          dlog.log("pscl_fill"+to_string((int)fill_mshr->translation_level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
+
           if (fill_mshr->translation_level == PSCL5.level)
             PSCL5.fill_cache(addr, fill_mshr->v_address, fill_mshr->thread_id);
           if (fill_mshr->translation_level == PSCL4.level)
@@ -318,6 +328,7 @@ void PageTableWalker::handle_fill()
           fill_mshr->state = State::PSC_Search;
           // baseaddress of next_level_pt
           fill_mshr->address = addr;
+          // order of line imp: level=1 becomes level=0 and hence it will notify end of PTW and allocate data_page (minor-fault) if not exists
           fill_mshr->translation_level = fill_mshr->translation_level - 1;
 
           //TODO: add search cost
@@ -339,9 +350,15 @@ void PageTableWalker::handle_fill()
             
             if (auto check_addr = pscl->check_hit(next_pt_addr, fill_mshr->thread_id); check_addr.has_value()) 
             {
+              dlog.log("pscl_hit"+to_string(fill_mshr->translation_level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
+
               ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
               next_pt_addr = check_addr.value();
-              
+
+              // order important example: PTW_FILL for level=3 , it becomes level=2, if hit in level=2, we need to search level=1 next
+              // exmplae (conti.): if it is miss-here then we use level=2 and send a memory request
+              ptw_level = ptw_level - 1;
+
               // to count PSC search time of 1 cycle
               fill_mshr->event_cycle = current_cycle + PSC_READ_LATENCY;
               MSHR.sort(ord_event_cycle<PACKET>{});
@@ -349,6 +366,8 @@ void PageTableWalker::handle_fill()
             }
             else
             {
+              dlog.log("pscl_miss"+to_string(fill_mshr->translation_level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
+
               miss_in_psc = true;
               ptw_datamodel->queue_psc_miss_metric[ptw_level]++;
               break;
@@ -434,6 +453,7 @@ void PageTableWalker::return_data(PACKET* packet)
       mshr_entry.state = State::PTW_FILL;
       mshr_entry.hit_where = packet->hit_where;
 
+      
       DP(if (warmup_complete[cpu]) {
         std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry.instr_id;
         std::cout << " address: " << std::hex << mshr_entry.address;

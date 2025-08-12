@@ -12,6 +12,7 @@
 
 #include "DataModel.h"
 #include "cache.h"
+#include "logger.h"
 
 class PagingStructureCache
 {
@@ -59,6 +60,7 @@ class PageTableWalker : public champsim::operable, public MemoryRequestConsumer,
 {
 public:
 
+  logger dlog;
   Track track;
 
   CACHE* llcObject;
