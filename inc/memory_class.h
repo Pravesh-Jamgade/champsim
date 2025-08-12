@@ -43,6 +43,8 @@ public:
 
   std::map<uint64_t, uint64_t> vp_2_pp_map;
 
+  DataType dtype = DataType::INVALID;
+
   // for tlb block, each PTE is 8Byte, so we have 8 entries in 64B block
   void updateUsage(uint32_t offset){
     uint32_t mask = offset;

@@ -226,6 +226,10 @@ class CacheDataModel
     // req hit access latency histogram for victima read packet
     Hist* victima_access_latency_at_l2;
 
+    // type of cache blocks
+    int block_type_counters[DataType::DataType_end] = {0};
+    string data_type_str[DataType::DataType_end] = {"Data", "PTE", "PMD", "PUD", "PGD", "VICTIMA", "INV"};
+
     void print_stats()
     {
         string tag = name + " ";
@@ -335,6 +339,11 @@ class CacheDataModel
             cout << hit_where_str[entry.first] << ", " << entry.second << '\n';
         }
 
+        cout << "\n" << tag << " block type\n";
+        for(int i=0; i< DataType::DataType_end; i++)
+        {
+            cout << data_type_str[i] << ", " << block_type_counters[i] << '\n';
+        }
     }
 };
 

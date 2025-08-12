@@ -138,7 +138,26 @@ void PageTableWalker::handle_read()
           ptw_level = ptw_level-1;
           
           handle_pkt.event_cycle = current_cycle + PSC_READ_LATENCY;
+          // if(get_occupancy(1,0)  > 3)
+          // {
+          //   for(auto e: RQ)
+          //   {
+          //     cout <<"before:"<< e.address << ", " << e.event_cycle << ", " << current_cycle << ", size, " <<get_occupancy(1,0) << '\n';
+          //   }
+          // }
+
           RQ.sort(ord_event_cycle<PACKET>{});
+
+          // if(get_occupancy(1,0)  > 3)
+          // {
+          //   for(auto e: RQ)
+          //   {
+          //     cout <<"after: "<< e.address << ", " << e.event_cycle << ", " << current_cycle << '\n';
+          //   }
+          //   exit(0);
+          // }
+          
+          
 
           if(ptw_level > 0)
           {
@@ -332,7 +351,7 @@ void PageTableWalker::handle_fill()
           fill_mshr->translation_level = fill_mshr->translation_level - 1;
 
           //TODO: add search cost
-          fill_mshr->event_cycle = current_cycle + 1;
+          fill_mshr->event_cycle = current_cycle + PSC_READ_LATENCY;
           MSHR.sort(ord_event_cycle<PACKET>{});
         }
         else if(fill_mshr->state == State::PSC_Search)

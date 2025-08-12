@@ -15,4 +15,16 @@ enum CACHE_ID{
     CACHE_ID_END
 };
 
+enum DataType
+{
+    DATA=0,
+    PTE,
+    PMD,
+    PUD,
+    PGD,
+    VIC,
+    INVALID,
+    DataType_end
+};
+
 #endif
