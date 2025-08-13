@@ -81,6 +81,8 @@ public:
   CACHE_ID hit_where = CACHE_ID::CACHE_ID_END;
   
   State state = State::State_end;
+
+  DataType dtype = DataType::INVALID;
 };
 
 template <>

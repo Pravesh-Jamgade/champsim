@@ -21,7 +21,7 @@ extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA;
 
 // illusiong of stored cache line by 8byte granularity
-extern map<uint32_t, uint32_t> l2_pte_map;
+extern map<uint64_t, uint64_t> l2_pte_map;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -311,6 +311,8 @@ void CACHE::handle_prefetch()
     // handle the oldest entry
     PACKET& handle_pkt = PQ.front();
 
+    handle_pkt.dtype = DataType::PRE;
+
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
 
@@ -396,31 +398,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
   dlog.log("miss", NAME, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
 
-  if(cache_is[IS_STLB])
-  {
-    translation_pollution->countPollution(get_set(handle_pkt.address), 
-                    PollutionEntry
-                    (
-                      handle_pkt.address>>(match_offset_bits?0:OFFSET_BITS), 
-                      make_pair(PollutionTracker::TranslationPollutionTracker, EvictCause::INVALID_CAUSE), 
-                      handle_pkt.thread_id
-                    )
-                );
-  }
- else 
-  if(cache_is[IS_L2])
-  {
-    victima_pollution->countPollution(get_set(handle_pkt.address), 
-                    PollutionEntry
-                    (
-                      handle_pkt.address>>(match_offset_bits?0:OFFSET_BITS), 
-                      make_pair(PollutionTracker::VictimaPollutionTracker, EvictCause::INVALID_CAUSE), 
-                      handle_pkt.thread_id
-                    )
-                );
-  }
-  
-
+  // position matters
   if(KNOB_VICTIMA)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
@@ -433,6 +411,27 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       }
       return true;
     }
+  }
+
+  if(cache_is[IS_L2])
+  {
+    translation_pollution->countPollution(get_set(handle_pkt.address), 
+                    PollutionEntry
+                    (
+                      handle_pkt.address>>(match_offset_bits?0:OFFSET_BITS), 
+                      make_pair(PollutionTracker::TranslationPollutionTracker, EvictCause::INVALID_CAUSE), 
+                      handle_pkt.thread_id
+                    )
+                );
+ 
+    victima_pollution->countPollution(get_set(handle_pkt.address), 
+                    PollutionEntry
+                    (
+                      handle_pkt.address>>(match_offset_bits?0:OFFSET_BITS), 
+                      make_pair(PollutionTracker::VictimaPollutionTracker, EvictCause::INVALID_CAUSE), 
+                      handle_pkt.thread_id
+                    )
+                );
   }
 
   cacheDataModel->mshr_queue[Basic::REQUESTED]++;
@@ -722,6 +721,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           writeback_packet.ip = 0;
           writeback_packet.type = WRITEBACK;
           writeback_packet.vflag[VF::victima] = true;
+          writeback_packet.dtype = DataType::VIC;
           writeback_packet.thread_id = handle_pkt.thread_id;
           l2cache->add_wq(&writeback_packet);
           victima_counters[VC::STLB_EVICT]++;
@@ -737,7 +737,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         if(cache_is[IS_L2])
         {
           uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : OFFSET_BITS);
-          EvictCause evict_cause = (handle_pkt.type == WRITEBACK && handle_pkt.vflag[VF::victima] && fill_block.came_from_request != TRANSLATION) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
+          EvictCause evict_cause = (handle_pkt.type == WRITEBACK && handle_pkt.vflag[VF::victima] && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
           victima_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::VictimaPollutionTracker, evict_cause), fill_block.thread_id));
         }
       }
@@ -745,10 +745,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       // track pollution
       {
         // @ data cache
-        if(cache_is[IS_STLB])
+        if(cache_is[IS_L2])
         {
           uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : OFFSET_BITS);
-          EvictCause evict_cause = (handle_pkt.type == TRANSLATION && fill_block.came_from_request != TRANSLATION) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
+          EvictCause evict_cause = (handle_pkt.type == TRANSLATION && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
           translation_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::TranslationPollutionTracker, evict_cause), fill_block.thread_id));
         }
       }
@@ -844,6 +844,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.m_used = handle_pkt.type==WRITEBACK ? 0: fill_block.m_used;
     fill_block.victima_block = handle_pkt.vflag[VF::victima];
     fill_block.thread_id = handle_pkt.thread_id;
+    fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
   }
 
@@ -873,6 +874,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     cacheDataModel->cache_stat[CacheStat::Prefetch_Write]++;
   
   cacheDataModel->cache_stat[CacheStat::Total_Write]++;
+
+  if(!is_tlb)
+    cacheDataModel->block_type_counters[fill_block.dtype]++;
 
   return true;
 }
@@ -1279,6 +1283,27 @@ void CACHE::return_data(PACKET* packet)
   auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
   auto first_unreturned = std::find_if(MSHR.begin(), MSHR.end(), [](auto x) { return x.event_cycle == std::numeric_limits<uint64_t>::max(); });
 
+  DataType foundDtype = DataType::INVALID;
+  if(handle_pkt.type != TRANSLATION)
+  {
+    foundDtype = DataType::DATA;
+  }
+  else
+  {
+    int dist = current_cycle - mshr_entry->type_cycle_enqueued[CYCLE_ENQ::MSHR];
+    if(dist < 7 && cache_is[IS_STLB])
+    {
+      cout << "stlb, " << dist << ", " << packet->hit_where << '\n';
+    }
+    if(handle_pkt.translation_level == 1) foundDtype = DataType::PTE;      
+    else if(handle_pkt.translation_level == 2) foundDtype = DataType::PMD;      
+    else if(handle_pkt.translation_level == 3) foundDtype = DataType::PUD;      
+    else if(handle_pkt.translation_level == 4) foundDtype = DataType::PGD;      
+  }
+
+  // assign data type for this block
+  mshr_entry->dtype = foundDtype;
+
   if(KNOB_VICTIMA && cache_is[IS_STLB])
   {
     // count:
@@ -1526,6 +1551,7 @@ void CACHE::func_track_hit_access_latency(uint64_t eq_cycle, int metadata)
 
 void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
 {
+  // cout << "eivct: " << v_address << ", data: " << data << '\n';
   if(eviction_history_pte.size() >= LIMIT_HITORY_LEN_EVICTED_PTE)
   {
     // track similar page so that counting doesnt happen twice
@@ -1534,15 +1560,15 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
     // track offset variation
     vector<int> seen_offset(8,0);
     // track distance
-    vector<int> vpages_cluster(9,0);
-    vector<int> ppages_cluster(9,0);
+    vector<int> vpages_cluster(8,0);
+    vector<int> ppages_cluster(8,0);
 
     // track offeset variation
     for(auto it1: eviction_history_pte)
     {
       //track offset
-      int page1 = it1.first & ~(PAGE_SIZE-1);
-      int phy_page1 = it1.second & ~(PAGE_SIZE-1);
+      int page1 = it1.first >> LOG2_PAGE_SIZE;
+      int phy_page1 = it1.second >> LOG2_PAGE_SIZE;
       int offset1 = page1 & 0x7;
       seen_offset[offset1]++;
 
@@ -1558,7 +1584,7 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
         if(it1 == it2)
           continue;
 
-        int page2 = it2.first & ~(PAGE_SIZE-1);
+        int page2 = it2.first >> LOG2_PAGE_SIZE;
         int offset2 = page2 & 0x7;
         
         int dist = abs(page1 - page2);
@@ -1567,7 +1593,7 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
           vpages_cluster[dist]++;
         }
 
-        int phy_page2 = it2.second & ~(PAGE_SIZE-1);
+        int phy_page2 = it2.second >> LOG2_PAGE_SIZE;
         dist = abs(phy_page1 - phy_page2);
         if(dist <= 8)
         {
@@ -1581,10 +1607,13 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
       }
     }
 
+    string off_string = "";
     for(int i=0; i< seen_offset.size(); i++)
     {
+      off_string += to_string(seen_offset[i]) + ", ";
       transition_hitmap_for_offset[i][seen_offset[i]]++;
     }
+    cout << current_cycle << ": " << off_string << '\n';
 
     for(int i=0; i< vpages_cluster.size(); i++)
     {

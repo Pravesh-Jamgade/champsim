@@ -11,8 +11,22 @@ enum CACHE_ID{
     IS_STLB, 
     IS_DTLB, 
     IS_ITLB,
+    IS_DRAM,
     WQ,
     CACHE_ID_END
+};
+
+enum DataType
+{
+    DATA=0,
+    PTE,
+    PMD,
+    PUD,
+    PGD,
+    VIC,
+    PRE,
+    INVALID,
+    DataType_end
 };
 
 #endif
