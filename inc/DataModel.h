@@ -231,7 +231,7 @@ class CacheDataModel
 
     // type of cache blocks
     int block_type_counters[DataType::DataType_end] = {0};
-    string data_type_str[DataType::DataType_end] = {"Data", "PTE", "PMD", "PUD", "PGD", "VICTIMA", "INV"};
+    string data_type_str[DataType::DataType_end] = {"Data", "PTE", "PMD", "PUD", "PGD", "VICTIMA", "PRE", "INV"};
 
     void print_stats()
     {
