@@ -221,7 +221,7 @@ void PageTableWalker::handle_read()
 
       it->uv_cycle_enqueue = current_cycle;
 
-      victima_update(packet.v_address, 0);
+      victima_update(packet.v_address, PageFeature::PTW_Freq);
     }
     
     RQ.pop_front();
@@ -257,7 +257,7 @@ void PageTableWalker::handle_fill()
         MSHR.sort(ord_event_cycle<PACKET>{});
 
         ptw_datamodel->page_fault[fill_mshr->translation_level]++;
-        victima_update(fill_mshr->v_address, 1);
+        victima_update(fill_mshr->v_address, PageFeature::PTW_Cost, fill_mshr->hit_where);
       } 
       // Translation finally complete
       else 
@@ -314,7 +314,7 @@ void PageTableWalker::handle_fill()
         MSHR.sort(ord_event_cycle<PACKET>{});
 
         ptw_datamodel->page_fault[fill_mshr->translation_level]++;
-        victima_update(fill_mshr->v_address, 1);
+        victima_update(fill_mshr->v_address, PageFeature::PTW_Cost, fill_mshr->hit_where);
       } 
       else 
       {
@@ -417,7 +417,7 @@ void PageTableWalker::handle_fill()
               ptw_datamodel->psc_level_packet_processed[packet.translation_level]++;
               fill_mshr->uv_cycle_enqueue = current_cycle;
   
-              victima_update(fill_mshr->v_address, 0);
+              victima_update(fill_mshr->v_address, PageFeature::PTW_Freq);
             }
           }
         }
@@ -555,58 +555,62 @@ void PageTableWalker::print_deadlock()
   }
 }
 
-void PageTableWalker::victima_update(uint64_t addr, int freq_or_cost)
+void PageTableWalker::victima_update(uint64_t addr, int signal, int hit_where)
 {
   uint64_t page = addr & ~(PAGE_SIZE-1);
   auto found = ptw_pred.find(page);
 
-  // page already there
-  if(found != ptw_pred.end())
+  if(found == ptw_pred.end())
   {
-    // udpdate lru
-    for(auto& entry: ptw_pred)
-    {
-      if(entry.second.lru < ptw_pred[page].lru)
-      entry.second.lru++;
-    }
-    // move to mru
-    ptw_pred[page].lru = 0;
-  }
-  else  
-  {
-    // replacement
-    if(ptw_pred.size() == 16)
-    {
-      auto it = find_if(ptw_pred.begin(), ptw_pred.end(), [](const auto& a){ return a.second.lru == 15;});
-      if (it != ptw_pred.end()) {
-        ptw_pred.erase(it);
-      }
-      else
-      {
-        cout << "PTW_PRED lru not found !\n";
-        exit(0);
-      }
-    }
-
-    // udpdate lru
-    for(auto &entry: ptw_pred)
-    {
-      entry.second.lru++;
-    }
-    
-    // default to mru
-    ptw_pred[page] = {0, 0, 0};
+    ptw_pred[page] = {0,0,0};
   }
 
-  // update counters
-  // freq
-  if(freq_or_cost == 0)
+  // freq: how many times PTW is initiated ?
+  if(signal == PageFeature::PTW_Freq)
   {
     ptw_pred[page].freq+=1;
   }
-  // cost
-  else
+  // cost: how many times PTW has accessed DRAM
+  else if(signal == PageFeature::PTW_Cost && hit_where == 8)
   {
-    ptw_pred[page].cost+=1;
+    ptw_pred[page].cost+=
   }
+
+  // // page already there
+  // if(found != ptw_pred.end())
+  // {
+  //   // udpdate lru
+  //   for(auto& entry: ptw_pred)
+  //   {
+  //     if(entry.second.lru < ptw_pred[page].lru)
+  //     entry.second.lru++;
+  //   }
+  //   // move to mru
+  //   ptw_pred[page].lru = 0;
+  // }
+  // else  
+  // {
+  //   // replacement
+  //   if(ptw_pred.size() == 16)
+  //   {
+  //     auto it = find_if(ptw_pred.begin(), ptw_pred.end(), [](const auto& a){ return a.second.lru == 15;});
+  //     if (it != ptw_pred.end()) {
+  //       ptw_pred.erase(it);
+  //     }
+  //     else
+  //     {
+  //       cout << "PTW_PRED lru not found !\n";
+  //       exit(0);
+  //     }
+  //   }
+
+  //   // udpdate lru
+  //   for(auto &entry: ptw_pred)
+  //   {
+  //     entry.second.lru++;
+  //   }
+    
+  //   // default to mru
+  //   ptw_pred[page] = {0, 0, 0};
+  // }
 }

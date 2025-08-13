@@ -60,6 +60,13 @@ class PageTableWalker : public champsim::operable, public MemoryRequestConsumer,
 {
 public:
 
+  enum PageFeature
+  {
+    PTW_Freq=0,
+    PTW_Cost,
+    PageFeature_end
+  };
+
   logger dlog;
   Track track;
 
@@ -111,7 +118,7 @@ public:
   void print_deadlock() override;
 
   void* getObject(){return this;}
-  void victima_update(uint64_t addr, int cost_or_freq);
+  void victima_update(uint64_t addr, int signal, int hit_where=-1);
   void _overwrite();
   void _context_switch(int thread_id) 
   {
