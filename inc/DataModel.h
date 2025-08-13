@@ -182,6 +182,7 @@ class CacheDataModel
             hit_access_latency = new Hist(1,5,8,exception_bounds);
             victima_access_latency_at_l2 = new Hist(1,5,8,exception_bounds);
             miss_access_latency = new Hist(1,5,8,exception_bounds);
+            victima_miss_latency_at_stlb = new Hist(1,5,10,exception_bounds);
         }
 
         // initalize histogram for reuse distance
@@ -225,6 +226,8 @@ class CacheDataModel
     Hist* hit_access_latency;
     // req hit access latency histogram for victima read packet
     Hist* victima_access_latency_at_l2;
+    // req miss victima latency
+    Hist* victima_miss_latency_at_stlb;
 
     // type of cache blocks
     int block_type_counters[DataType::DataType_end] = {0};
@@ -329,8 +332,13 @@ class CacheDataModel
         
         if(tag.find("L2")!=string::npos)
         {
-            cout << "Victima Hit access latency BucketBounds and Frequency\n";
+            cout << "L2 Victima Hit access latency BucketBounds and Frequency\n";
             victima_access_latency_at_l2->print_histogram(tag);
+        }
+        else if(tag.find("STLB")!=string::npos)
+        {
+            cout << "STLB Victima miss access latency BucketBounds and Frequency\n";
+            victima_miss_latency_at_stlb->print_histogram(tag);
         }
 
         cout <<"\n"<<tag<< " readmiss hit where \n";

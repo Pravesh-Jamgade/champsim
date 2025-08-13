@@ -23,6 +23,7 @@ enum DataType
     PUD,
     PGD,
     VIC,
+    PRE,
     INVALID,
     DataType_end
 };

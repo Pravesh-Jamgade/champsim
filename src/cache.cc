@@ -21,7 +21,7 @@ extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA;
 
 // illusiong of stored cache line by 8byte granularity
-extern map<uint32_t, uint32_t> l2_pte_map;
+extern map<uint64_t, uint64_t> l2_pte_map;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -311,6 +311,8 @@ void CACHE::handle_prefetch()
     // handle the oldest entry
     PACKET& handle_pkt = PQ.front();
 
+    handle_pkt.dtype = DataType::PRE;
+
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
     uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
 
@@ -396,6 +398,21 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
   dlog.log("miss", NAME, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
 
+  // position matters
+  if(KNOB_VICTIMA)
+  {
+    if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
+    {
+      // its a miss and not DP (dummy packet) hence set, AP miss
+      handle_pkt.vflag[victima_acutal_packet_miss] = 1;
+      for(auto ret: handle_pkt.to_return)
+      {
+        ret->return_data(&handle_pkt);
+      }
+      return true;
+    }
+  }
+
   if(cache_is[IS_L2])
   {
     translation_pollution->countPollution(get_set(handle_pkt.address), 
@@ -415,21 +432,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
                       handle_pkt.thread_id
                     )
                 );
-  }
-  
-
-  if(KNOB_VICTIMA)
-  {
-    if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
-    {
-      // its a miss and not DP (dummy packet) hence set, AP miss
-      handle_pkt.vflag[victima_acutal_packet_miss] = 1;
-      for(auto ret: handle_pkt.to_return)
-      {
-        ret->return_data(&handle_pkt);
-      }
-      return true;
-    }
   }
 
   cacheDataModel->mshr_queue[Basic::REQUESTED]++;
@@ -1288,6 +1290,11 @@ void CACHE::return_data(PACKET* packet)
   }
   else
   {
+    int dist = current_cycle - mshr_entry->type_cycle_enqueued[CYCLE_ENQ::MSHR];
+    if(dist < 7 && cache_is[IS_STLB])
+    {
+      cout << "stlb, " << dist << ", " << packet->hit_where << '\n';
+    }
     if(handle_pkt.translation_level == 1) foundDtype = DataType::PTE;      
     else if(handle_pkt.translation_level == 2) foundDtype = DataType::PMD;      
     else if(handle_pkt.translation_level == 3) foundDtype = DataType::PUD;      

@@ -21,7 +21,7 @@
 extern int KNOB_ENABLE_LOG;
 
 extern map<uint64_t, PTWC> ptw_pred;
-extern map<uint32_t, uint32_t> l2_pte_map;
+extern map<uint64_t, uint64_t> l2_pte_map;
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
