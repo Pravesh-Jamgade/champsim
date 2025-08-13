@@ -11,6 +11,7 @@ enum CACHE_ID{
     IS_STLB, 
     IS_DTLB, 
     IS_ITLB,
+    IS_DRAM,
     WQ,
     CACHE_ID_END
 };

@@ -39,6 +39,7 @@ public:
     int add_rq(PACKET* packet) override 
     {
         if (all_warmup_complete <= NUM_CPUS) {
+            packet->hit_where = CACHE_ID::IS_DRAM;
             for (auto ret : packet->to_return)
                 ret->return_data(packet);
 
@@ -186,6 +187,7 @@ public:
         auto rq_pkt = std::find_if(std::begin(RQ), std::end(RQ), 
                                     eq_addr<PACKET>(addr, LOG2_BLOCK_SIZE));
         if (rq_pkt != std::end(RQ)) {
+            rq_pkt->hit_where = CACHE_ID::IS_DRAM;
             for (auto ret : rq_pkt->to_return) 
                 ret->return_data(&(*rq_pkt));
             *rq_pkt = {};

@@ -416,8 +416,6 @@ void PageTableWalker::handle_fill()
               // usercode
               ptw_datamodel->psc_level_packet_processed[packet.translation_level]++;
               fill_mshr->uv_cycle_enqueue = current_cycle;
-  
-              victima_update(fill_mshr->v_address, PageFeature::PTW_Freq);
             }
           }
         }
@@ -570,10 +568,10 @@ void PageTableWalker::victima_update(uint64_t addr, int signal, int hit_where)
   {
     ptw_pred[page].freq+=1;
   }
-  // cost: how many times PTW has accessed DRAM
-  else if(signal == PageFeature::PTW_Cost && hit_where == 8)
+  // cost: how many times PTW has accessed DRAM ?
+  else if(signal == PageFeature::PTW_Cost && hit_where == CACHE_ID::IS_DRAM)
   {
-    ptw_pred[page].cost+=
+    ptw_pred[page].cost+= 1;
   }
 
   // // page already there
