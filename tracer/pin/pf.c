@@ -44,11 +44,11 @@ int main() {
                 *addr = 1; // Trigger page fault
             }
 
-            uint8_t *end_addr  = region +  PUD_SIZE * i + PMD_SIZE * j + PTE_SIZE * ((1<<20)-1);
-            if(madvise(base, end_addr-base, MADV_FREE)!=0)
-            {
-                perror("madvise");
-            }
+            // uint8_t *end_addr  = region +  PUD_SIZE * i + PMD_SIZE * j + PTE_SIZE * ((1<<20)-1);
+            // if(madvise(base, end_addr-base, MADV_FREE)!=0)
+            // {
+            //     perror("madvise");
+            // }
         }
     }
 
