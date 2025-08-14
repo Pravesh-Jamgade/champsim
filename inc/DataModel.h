@@ -6,7 +6,7 @@
 
 using namespace std;
 
-static string hit_where_str[CACHE_ID_END+1] = {"LLC", "L2", "L1D", "L1I", "STLB", "DTLB", "ITLB", "WQ", "x"};
+static string hit_where_str[CACHE_ID_END+1] = {"LLC", "L2", "L1D", "L1I", "STLB", "DTLB", "ITLB",  "DRAM", "WQ", "x"};
 
 enum Basic
 {
