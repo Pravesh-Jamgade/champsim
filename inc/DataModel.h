@@ -179,9 +179,11 @@ class CacheDataModel
             exception_bounds.push_back({101, 150});
             exception_bounds.push_back({151, 200});
             exception_bounds.push_back({201, 0x7fffffff});
+
             hit_access_latency = new Hist(1,5,8,exception_bounds);
             victima_access_latency_at_l2 = new Hist(1,5,8,exception_bounds);
             miss_access_latency = new Hist(1,5,8,exception_bounds);
+            miss_fulfilled_latency = new Hist(1,5,8,exception_bounds);
             victima_miss_latency_at_stlb = new Hist(1,5,10,exception_bounds);
         }
 
@@ -220,6 +222,9 @@ class CacheDataModel
 
     // reuse distance hitogram object
     Hist* reuse_distance;
+
+    // miss recorded to fulfill mshr
+    Hist* miss_fulfilled_latency;
     // req miss access latency histogram object
     Hist* miss_access_latency;
     // req hit access latency histogram object
@@ -321,14 +326,17 @@ class CacheDataModel
             cout << entry.first << ", " << setw(5) << entry.second << '\n';
         cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
 
-        cout << "Reuse distance BucketBounds and Frequency\n";
+        cout << tag << "Reuse distance BucketBounds and Frequency\n";
         reuse_distance->print_histogram(tag);
 
-        cout << "Miss access latency BucketBounds and Frequency\n";
+        cout << tag << "RQ-Hit latency BucketBounds and Frequency\n";
+        hit_access_latency->print_histogram(tag);
+
+        cout << tag << "RQ-Miss-Fill latency BucketBounds and Frequency\n";
         miss_access_latency->print_histogram(tag);
 
-        cout << "Hit access latency BucketBounds and Frequency\n";
-        hit_access_latency->print_histogram(tag);
+        cout << tag << "Waiting Period MSHR-ResolveMSHR latency BucketBounds and Frequency\n";
+        miss_fulfilled_latency->print_histogram(tag);
         
         if(tag.find("L2")!=string::npos)
         {
@@ -346,12 +354,14 @@ class CacheDataModel
         {
             cout << hit_where_str[entry.first] << ", " << entry.second << '\n';
         }
+        cout << '\n';
 
         cout << "\n" << tag << " block type\n";
         for(int i=0; i< DataType::DataType_end; i++)
         {
             cout << data_type_str[i] << ", " << block_type_counters[i] << '\n';
         }
+        cout << '\n';
     }
 };
 
