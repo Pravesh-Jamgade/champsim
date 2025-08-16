@@ -43,10 +43,10 @@ public:
   map<uint64_t, uint64_t> eviction_history_pte;
 
   // offset VS number of times this offset seen 
-  vector<int> transition_hitmap_for_offset[8];
+  vector<vector<int>> transition_hitmap_for_offset;
 
   // distance VS number of times this offset seen 
-  vector<int>transition_hitmap_for_vp_page[8];
+  vector<vector<int>> transition_hitmap_for_vp_page;
 
   logger dlog;
 
@@ -173,6 +173,8 @@ public:
   // track accessed page and its blocks for tracking capacity misses
   void func_track_workingset(uint64_t addr);
 
+  // track mshr waiting period for packet
+  void func_track_missfulfill_access_latency(uint64_t enq_cycle);
   // track miss access latency 
   void func_track_miss_access_latency(uint64_t enq_cycle);
   // track hit access latency 
@@ -364,11 +366,13 @@ public:
     translation_pollution = new TranslationPollution(NUM_SET, NUM_WAY, &global_set_history);
     victima_pollution = new VictimaPollution(NUM_SET, NUM_WAY, &global_set_history);
 
+    transition_hitmap_for_vp_page = vector<vector<int>>(8);
     for(int i=0; i< 8; i++)
-      transition_hitmap_for_vp_page[i] = vector<int>(32, 0);
+      transition_hitmap_for_vp_page[i] = vector<int>(9, 0);
 
+    transition_hitmap_for_offset = vector<vector<int>>(8);
     for(int i=0; i< 8; i++)
-      transition_hitmap_for_offset[i] = vector<int>(32, 0);
+      transition_hitmap_for_offset[i] = vector<int>(LIMIT_HITORY_LEN_EVICTED_PTE+1, 0);
 
     reuse_history = new list<BLOCK>[NUM_SET];
     for(int i=0; i< NUM_SET; i++)

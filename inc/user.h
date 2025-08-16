@@ -13,7 +13,7 @@ enum CACHE_ID{
     IS_ITLB,
     IS_DRAM,
     WQ,
-    CACHE_ID_END
+    CACHE_ID_END// hit here means: page-fault only. Can we assume that ?
 };
 
 enum DataType

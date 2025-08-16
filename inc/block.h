@@ -43,8 +43,8 @@ enum State
 
 enum CYCLE_ENQ
 {
-  MSHR,
-  WORK_QUEUE,
+  TS_ADD_QUEUE,
+  TS_ADD_MSHR,
   CYCLE_ENQ_END
 };
 
