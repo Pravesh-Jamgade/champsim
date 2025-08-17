@@ -182,15 +182,21 @@ public:
 
   void _context_switch(int thread_id) 
   {
+    
     if(is_tlb)
     {
+      cout << "clearing " << NAME << '\n';
       for(auto& cb: block)
       {
         if(cb.thread_id == thread_id)
         {
+          cout <<"before:"<< cb.address << ", " << cb.data << ", " << cb.valid << '\n';
+
           cb.address = 0;
           cb.data = 0;
           cb.valid = 0;
+
+          cout <<"after:"<< cb.address << ", " << cb.data << ", " << cb.valid << '\n';
         }
       }
     }
