@@ -1621,7 +1621,7 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
       off_string += to_string(seen_offset[i]) + ", ";
       transition_hitmap_for_offset[i][seen_offset[i]]++;
     }
-    cout << current_cycle << ": " << off_string << '\n';
+    // cout << current_cycle << ": " << off_string << '\n';
 
     for(int i=0; i< vpages_cluster.size(); i++)
     {
