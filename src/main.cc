@@ -666,7 +666,6 @@ int main(int argc, char** argv)
 
         if(KNOB_ENABLE_CTX && ooo_cpu[i]->num_retired[th] >= ooo_cpu[i]->next_ctx_instruction)
         {
-          std::cout << "cycle, " << ooo_cpu[i]->current_cycle << ", ctx@, " << ooo_cpu[i]->num_retired[th] << '\n';
           ooo_cpu[i]->next_ctx_instruction += 1000;
           context_switch_counter++;
 
