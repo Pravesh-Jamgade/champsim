@@ -8,7 +8,7 @@ using namespace std;
 class logger
 {
     public:
-        logger(){this->flag=false;}
+        logger(){this->flag=true;}
         logger(bool tap);
         virtual ~logger(){
 

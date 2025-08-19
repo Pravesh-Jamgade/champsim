@@ -80,7 +80,7 @@ public:
   int victima_counters[VC_END] = {0};
   int victima_block_usage[9] = {0};
 
-  MemoryRequestConsumer* l2cache;
+  MemoryRequestConsumer *l2cache, *l1cache;
   CacheDataModel* cacheDataModel;
   // track working set for counting capacity misses
   unordered_map<uint64_t, bitset<64>> page_to_block;

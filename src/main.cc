@@ -48,7 +48,7 @@ extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
-extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA;
+extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_LIVE_INPUT;
@@ -349,11 +349,16 @@ void overwrite_cache()
     stlb->WRITE_LANTENCY = 3 * stlb->HIT_LATENCY;
     stlb->FILL_LATENCY = 3 * stlb->HIT_LATENCY;
   }
-  if(KNOB_VICTIMA)
+  
+  if(KNOB_VICTIMA || KNOB_POMTLB)
   {
     CACHE* stlb = get_cache_by_name("STLB");
+
     CACHE* l2 = get_cache_by_name("L2");
     stlb->l2cache = l2;
+
+    CACHE* l1 = get_cache_by_name("L1D");
+    stlb->l1cache = l1;
   }
 
   for(auto op: operables)
@@ -512,6 +517,7 @@ int main(int argc, char** argv)
   KNOB_ENABLE_LOG = iniReader->GetInteger("SIMULATOR", "ENABLE_LOG", 0);
   KNOB_ENABLE_MFOE_V2 = iniReader->GetInteger("MFOEv2", "ENABLE_MFOE_V2", 0);
   KNOB_ENABLE_CTX = iniReader->GetInteger("SIMULATOR", "ENABLE_CTX_SWITCH", 0);
+  KNOB_POMTLB = iniReader->GetInteger("POMTLB", "ENABLE_POMTLB", 0);
   
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
