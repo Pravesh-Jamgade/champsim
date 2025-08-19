@@ -38,6 +38,7 @@ void CACHE::handle_fill()
       return;
     }
 
+    // order matters
     // No write - hence No tracking of PTE
     // But want to track access
     if(KNOB_POMTLB && cache_is[IS_STLB])
@@ -64,8 +65,18 @@ void CACHE::handle_fill()
         cacheDataModel->mshr_queue[Basic::ACCESS]++;
         global_access_count++;
         cacheDataModel->mshr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
-        return;
+        continue;
       }
+    }
+    // order matters
+    if(KNOB_POMTLB && !is_tlb && fill_mshr->pomflag[POM_MISS])
+    {
+      func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
+      func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
+      MSHR.erase(fill_mshr);
+      // writes_available_this_cycle--;
+      cacheDataModel->mshr_queue[Basic::ACCESS]++;
+      continue;
     }
     
     // find victim
@@ -599,6 +610,13 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       {
         return false;
       }
+
+      PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
+      auto[ppn, fault] = ptw->get_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
+
+      if(fault)
+        handle_pkt.pomflag[POM::POM_MISS] = false;
+
       handle_pkt.pomflag[POM::POM] = true;
     }
 
