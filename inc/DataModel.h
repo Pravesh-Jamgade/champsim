@@ -309,8 +309,6 @@ class CacheDataModel
         cout << tag << "Capacity miss, " << category_of_misses[MISS::CAP] << '\n';
         cout << tag << "Compulsory miss, " << category_of_misses[MISS::COM] << '\n';
         cout << tag << "Conflict miss, " << category_of_misses[MISS::CONF] << '\n';
-   
-        cout << tag << "set conflict stats (evictions and number of such sets)\n";
         
         // tracking frequency from corresponding sets
         map<uint64_t, uint64_t> hist_set_conflict_data;
@@ -322,8 +320,11 @@ class CacheDataModel
             if(entry.second == 0)
                 no_of_nonconflict_sets++;
         }
-        for(auto entry: hist_set_conflict_data)
-            cout << entry.first << ", " << setw(5) << entry.second << '\n';
+
+        // cout << tag << "set conflict stats (evictions and number of such sets)\n";
+        // for(auto entry: hist_set_conflict_data)
+        //     cout << entry.first << ", " << setw(5) << entry.second << '\n';
+
         cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
 
         cout << tag << "Reuse distance BucketBounds and Frequency\n";
