@@ -23,6 +23,7 @@ struct context_instr {
 
   unsigned long long destination_memory[NUM_INSTR_DESTINATIONS] = {}; // output memory
   unsigned long long source_memory[NUM_INSTR_SOURCES] = {};           // input memory
+  char context = '0';
 };
 
 struct input_instr {
