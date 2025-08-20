@@ -14,10 +14,14 @@
 #include <map>
 #include "DataModel.h"
 #include "victima.h"
+#include"logger.h"
 #include <bitset>
+#include "pollution.h"
+
+extern int KNOB_ENABLE_LOG;
 
 extern map<uint64_t, PTWC> ptw_pred;
-extern map<uint32_t, uint32_t> l2_pte_map;
+extern map<uint64_t, uint64_t> l2_pte_map;
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -27,6 +31,25 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+
+  vector<vector<PollutionEntry>> global_set_history;
+
+  // translation pollution
+  TranslationPollution* translation_pollution;
+  VictimaPollution* victima_pollution;
+
+  // record evcited PTE
+  const int LIMIT_HITORY_LEN_EVICTED_PTE = 64;
+  map<uint64_t, uint64_t> eviction_history_pte;
+
+  // offset VS number of times this offset seen 
+  vector<vector<int>> transition_hitmap_for_offset;
+
+  // distance VS number of times this offset seen 
+  vector<vector<int>> transition_hitmap_for_vp_page;
+
+  logger dlog;
+
   //usercode
   bool is_tlb = false;
   list<BLOCK>* reuse_history;
@@ -57,7 +80,7 @@ public:
   int victima_counters[VC_END] = {0};
   int victima_block_usage[9] = {0};
 
-  MemoryRequestConsumer* l2cache;
+  MemoryRequestConsumer *l2cache, *l1cache;
   CacheDataModel* cacheDataModel;
   // track working set for counting capacity misses
   unordered_map<uint64_t, bitset<64>> page_to_block;
@@ -144,13 +167,35 @@ public:
 
   pair<bool, uint64_t> peek_singleline(PACKET handle_pkt);
 
+  // tracking pte
+  void func_track_evicted_pte(uint64_t v_addr, uint64_t p_addr);
+
   // track accessed page and its blocks for tracking capacity misses
   void func_track_workingset(uint64_t addr);
 
+  // track mshr waiting period for packet
+  void func_track_missfulfill_access_latency(uint64_t enq_cycle);
   // track miss access latency 
   void func_track_miss_access_latency(uint64_t enq_cycle);
   // track hit access latency 
-  void func_track_hit_access_latency(uint64_t enq_cycle);
+  void func_track_hit_access_latency(uint64_t enq_cycle, int metadata=0);
+
+  void _context_switch(int thread_id) 
+  {
+    
+    if(is_tlb)
+    {
+      for(auto& cb: block)
+      {
+        if(cb.thread_id == thread_id)
+        {
+          cb.address = 0;
+          cb.data = 0;
+          cb.valid = 0;
+        }
+      }
+    }
+  }
 
   void reset_datamodel()
   {
@@ -222,6 +267,9 @@ public:
       //   cout << "victima_pte " << entry.first << ", " << entry.second << '\n';
       
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
+      // print pollution
+      translation_pollution->print(NAME);
+      victima_pollution->print(NAME);
     }
     if(cache_is[IS_STLB])
     {
@@ -241,6 +289,59 @@ public:
       cout << "victima stlb mshr_recv_already-drop victima, " << victima_counters[STLB_MSHRRECV_DROP_VICTIMA] << '\n';
       cout << "victima stlb dumy victima, " << victima_counters[STLB_DUMY_VICTIMA] << '\n';
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
+
+      cout << "Transition hitmap for offset counter over windows:\n";
+      cout << "Offset V/s frequency_of_offset\n\n";
+
+      // Print column headers
+      cout << setw(6) << " " << "|";
+      for (int i = 0; i < transition_hitmap_for_offset[0].size(); ++i) {
+          cout << setw(4) << i;
+      }
+      cout << '\n';
+
+      // Print separator line
+      cout << string(6, '-') << "+";
+      for (int i = 0; i < transition_hitmap_for_offset[0].size(); ++i) {
+          cout << string(4, '-');
+      }
+      cout << '\n';
+
+      // Print each row
+      for (int i = 0; i < 8; ++i) {
+          cout << setw(6) << i << "|";
+          for (int j = 0; j < transition_hitmap_for_offset[i].size(); ++j) {
+              cout << setw(4) << transition_hitmap_for_offset[i][j];
+          }
+          cout << '\n';
+      }
+
+
+      cout << "Transition hitmap for distance between evicted page over window:\n";
+      cout << "Distance V/s frequency_of_distance\n\n";
+
+      // Print column headers
+      cout << setw(6) << " " << "|";
+      for (int i = 0; i < transition_hitmap_for_vp_page[0].size(); ++i) {
+          cout << setw(4) << i;
+      }
+      cout << '\n';
+
+      // Print separator line
+      cout << string(6, '-') << "+";
+      for (int i = 0; i < transition_hitmap_for_vp_page[0].size(); ++i) {
+          cout << string(4, '-');
+      }
+      cout << '\n';
+
+      // Print each row
+      for (int i = 0; i < 8; ++i) {
+          cout << setw(6) << i << "|";
+          for (int j = 0; j < transition_hitmap_for_vp_page[i].size(); ++j) {
+              cout << setw(4) << transition_hitmap_for_vp_page[i][j];
+          }
+          cout << '\n';
+      }
     }
   }
 
@@ -258,6 +359,21 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+
+    dlog = logger();
+
+    global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
+
+    translation_pollution = new TranslationPollution(NUM_SET, NUM_WAY, &global_set_history);
+    victima_pollution = new VictimaPollution(NUM_SET, NUM_WAY, &global_set_history);
+
+    transition_hitmap_for_vp_page = vector<vector<int>>(8);
+    for(int i=0; i< 8; i++)
+      transition_hitmap_for_vp_page[i] = vector<int>(9, 0);
+
+    transition_hitmap_for_offset = vector<vector<int>>(8);
+    for(int i=0; i< 8; i++)
+      transition_hitmap_for_offset[i] = vector<int>(LIMIT_HITORY_LEN_EVICTED_PTE+1, 0);
 
     reuse_history = new list<BLOCK>[NUM_SET];
     for(int i=0; i< NUM_SET; i++)

@@ -16,13 +16,13 @@
 #include "operable.h"
 #include "tracereader.h"
 #include "vmem.h"
-
+#include "trace_instruction.h"
 #include "dramsim3_wrapper.hpp"
 #include "INIReader.h"
 #include "victima.h"
 
 map<uint64_t, PTWC> ptw_pred;
-map<uint32_t, uint32_t> l2_pte_map;
+map<uint64_t, uint64_t> l2_pte_map;
 
 uint8_t warmup_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
@@ -48,10 +48,13 @@ extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
-extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA;
+extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_LIVE_INPUT;
+extern int KNOB_ENABLE_LOG;
+extern int KNOB_ENABLE_MFOE_V2;
+extern int KNOB_ENABLE_CTX;
 
 std::vector<tracereader*> traces;
 
@@ -346,11 +349,16 @@ void overwrite_cache()
     stlb->WRITE_LANTENCY = 3 * stlb->HIT_LATENCY;
     stlb->FILL_LATENCY = 3 * stlb->HIT_LATENCY;
   }
-  if(KNOB_VICTIMA)
+  
+  if(KNOB_VICTIMA || KNOB_POMTLB)
   {
     CACHE* stlb = get_cache_by_name("STLB");
+
     CACHE* l2 = get_cache_by_name("L2");
     stlb->l2cache = l2;
+
+    CACHE* l1 = get_cache_by_name("L1D");
+    stlb->l1cache = l1;
   }
 
   for(auto op: operables)
@@ -365,6 +373,53 @@ void overwrite_cache()
 void signal_handler(int signal)
 {
   cout << "Caught signal: " << signal << endl;
+
+  for(int i=0; i< NUM_CPUS; i++)
+  {
+    // simulation complete
+    for(int j=0; j< KNOB_SMT_ENABLE; j++)
+    {
+      // summation across threads
+      uint64_t finish_sim_instr = ooo_cpu[i]->num_retired[j] - ooo_cpu[i]->begin_sim_instr;
+      uint64_t finish_sim_cycle = ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
+
+      cout << "Stats CPU " << i << " Thread " << j << " instructions: " << finish_sim_instr << " cycles: " <<finish_sim_cycle << '\n';
+      // cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
+      // cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
+      // cout << "cpu" << i << " IPC, " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
+
+      uint64_t elapsed_second = (uint64_t)(time(NULL) - start_time), elapsed_minute = elapsed_second / 60, elapsed_hour = elapsed_minute / 60;
+      elapsed_minute -= elapsed_hour * 60;
+      elapsed_second -= (elapsed_hour * 3600 + elapsed_minute * 60);
+
+      cout << "Stats cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
+      cout << "Stats cpu" << i << ", thread" << j << ", ipc, " << ((double)finish_sim_instr/finish_sim_cycle) << '\n'; 
+    }
+  }
+
+  cout << endl << "Region of Interest Statistics" << endl;
+  for (uint32_t i = 0; i < NUM_CPUS; i++) 
+  {
+    cout << endl << "IPC " << i << ", " <<  ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle) << '\n';
+  }
+
+  for (uint32_t i = 0; i < NUM_CPUS; i++) 
+  {
+    cout << endl << "CPU " << i << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
+    cout << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle << endl;
+
+    for (auto it = caches.rbegin(); it != caches.rend(); ++it)
+      print_roi_stats(i, *it);
+  }
+
+  
+  for (auto it = caches.rbegin(); it != caches.rend(); ++it)
+    (*it)->impl_prefetcher_final_stats();
+
+  for (auto it = caches.rbegin(); it != caches.rend(); ++it)
+    (*it)->impl_replacement_final_stats();
+
+
   exit(1);
 }
 
@@ -380,6 +435,7 @@ int main(int argc, char** argv)
   
   // initialize knobs
   uint8_t show_heartbeat = 1;
+  uint32_t context_switch_counter = 0;
 
   // check to see if knobs changed using getopt_long()
   int traces_encountered = 0;
@@ -392,6 +448,7 @@ int main(int argc, char** argv)
                                          {0, 0, 0, 0}};
 
   string output_file = "default";
+  string trace_shared_buff = "";
   int c;
   while ((c = getopt_long_only(argc, argv, "w:i:o:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
@@ -418,6 +475,7 @@ int main(int argc, char** argv)
     }
   }
 
+  trace_shared_buff += "/tmp/"+ output_file;
   output_file += ".log";
   // std::ofstream out(output_file.c_str());
   // std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
@@ -447,7 +505,7 @@ int main(int argc, char** argv)
 
   INIReader* iniReader = new INIReader(string("./config.ini"));
 
-  KNOB_LIVE_INPUT = iniReader->GetInteger("LIVE_INPUT", "ENABLE_LIVE_INPUT", 0);
+  KNOB_LIVE_INPUT = iniReader->GetInteger("SIMULATOR", "ENABLE_LIVE_INPUT", 0);
   KNOB_TRANSLATION_QUEUE = iniReader->GetInteger("KNOB", "TQ", 0);
   KNOB_TTP = iniReader->GetInteger("KNOB", "TTP", 0);
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
@@ -456,6 +514,10 @@ int main(int argc, char** argv)
   KNOB_IDEAL_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_IDEAL_VICTIMA", 0);
   KNOB_SMT_ENABLE = iniReader->GetInteger("SMT", "ENABLE_SMT", 0);
   KNOB_PSCL_ROOT_LEVEL = iniReader->GetInteger("PageTable", "ROOT_PT_LEVEL", 4);
+  KNOB_ENABLE_LOG = iniReader->GetInteger("SIMULATOR", "ENABLE_LOG", 0);
+  KNOB_ENABLE_MFOE_V2 = iniReader->GetInteger("MFOEv2", "ENABLE_MFOE_V2", 0);
+  KNOB_ENABLE_CTX = iniReader->GetInteger("SIMULATOR", "ENABLE_CTX_SWITCH", 0);
+  KNOB_POMTLB = iniReader->GetInteger("POMTLB", "ENABLE_POMTLB", 0);
   
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
@@ -464,33 +526,56 @@ int main(int argc, char** argv)
   std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
   std::cout << "VICTIMA\n-ENABLE_VICTIMA="<<KNOB_VICTIMA<<'\n';
   std::cout << "-ENABLE_IDEAL_VICTIMA="<<KNOB_IDEAL_VICTIMA<<'\n';
+  std::cout << "ENABLE MFOEv2=" << KNOB_ENABLE_MFOE_V2 << '\n'; 
   std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
   std::cout << "PT Levels="<<KNOB_PSCL_ROOT_LEVEL<<'\n';
+  std::cout << "Live Input="<<KNOB_LIVE_INPUT<<'\n';
+  std::cout << "Debug Log="<<KNOB_ENABLE_LOG<<'\n';
+  std::cout << "Output file="<<output_file<<'\n';
+  std::cout << "Enable Context Switch="<<KNOB_ENABLE_CTX<<'\n';
   std::cout << '\n';
   
   int total_cores = KNOB_SMT_ENABLE >0 ? NUM_CPUS * KNOB_SMT_ENABLE:  NUM_CPUS;
   simulation_complete.resize(total_cores, 0);
 
-  for (int i = optind; i < argc; i++) {
-    std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
-
-    traces.push_back(get_tracereader(argv[i], traces.size(), knob_cloudsuite));
-
-    if(KNOB_SMT_ENABLE>0)
+  if(KNOB_LIVE_INPUT)
+  {
+    traces.push_back(get_tracereader<input_instr>(trace_shared_buff, traces.size(), knob_cloudsuite, true));
+    cout << "[Log]Trace Reading, " << trace_shared_buff << '\n';
+    // reading memoryhog trace
+    // one trace already read via live input from pintool, hence KNOB_SMT_ENABLE-1
+    int get_trace_index = optind;
+    for(int trace_id=1; trace_id < KNOB_SMT_ENABLE; trace_id++)
     {
-      if(traces.size() > total_cores)
+      traces.push_back(get_tracereader<input_instr>(argv[get_trace_index], traces.size(), knob_cloudsuite));
+      cout << "[Log]Trace Reading, " << argv[get_trace_index] << '\n';
+
+      get_trace_index++;
+    }
+  }
+  else
+  {
+    for (int i = optind; i < argc; i++) 
+    {
+      cout << "[Log]Trace Reading, " << argv[i] << '\n';
+      traces.push_back(get_tracereader<input_instr>(argv[i], traces.size(), knob_cloudsuite));
+      if(KNOB_SMT_ENABLE>0)
       {
-        cout << "Missmatch!!!\n";
-        cout << "Number of traces, " << traces.size() << '\n';
-        cout << "Number of cores, " << total_cores << '\n';
+        if(traces.size() > total_cores)
+        {
+          cout << "Missmatch!!!\n";
+          cout << "Number of traces, " << traces.size() << '\n';
+          cout << "Number of cores, " << total_cores << '\n';
+          assert(0);
+        }
+      }
+      else if (traces.size() > NUM_CPUS) {
+        printf("\n*** Too many traces for the configured number of cores ***\n\n");
         assert(0);
       }
     }
-    else if (traces.size() > NUM_CPUS) {
-      printf("\n*** Too many traces for the configured number of cores ***\n\n");
-      assert(0);
-    }
   }
+  
 
   if (traces.size() != total_cores) {
     printf("\n*** Not enough traces for the configured number of cores ***\n\n");
@@ -585,6 +670,17 @@ int main(int argc, char** argv)
           useful_bw--;
         }
 
+        if(KNOB_ENABLE_CTX && ooo_cpu[i]->num_retired[th] >= ooo_cpu[i]->next_ctx_instruction)
+        {
+          ooo_cpu[i]->next_ctx_instruction += 1000;
+          context_switch_counter++;
+
+          for(auto obj: operables)
+          {
+            obj->_context_switch(th);
+          }
+        }
+        
         // heartbeat information
         if (show_heartbeat && (ooo_cpu[i]->num_retired[th] >= ooo_cpu[i]->next_print_instruction)) {
           float cumulative_ipc;
@@ -598,7 +694,7 @@ int main(int argc, char** argv)
           cout << " heartbeat IPC: " << heartbeat_ipc << " cumulative IPC: " << cumulative_ipc;
           cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
           ooo_cpu[i]->next_print_instruction += STAT_PRINTING_PERIOD;
-
+          
           ooo_cpu[i]->last_sim_instr = ooo_cpu[i]->num_retired[th];
           ooo_cpu[i]->last_sim_cycle = ooo_cpu[i]->current_cycle;
         }
@@ -662,6 +758,7 @@ int main(int argc, char** argv)
       cout << "Stats cpu" << i << " simtime, " << elapsed_hour << ":" << elapsed_minute << ":" << elapsed_minute << '\n';
     }
   }
+  cout << "Stats overall context switch, " << context_switch_counter << '\n';
 
   cout << endl << "ChampSim completed all CPUs" << endl;
   if (NUM_CPUS > 1) {

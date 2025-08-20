@@ -1,5 +1,5 @@
-#ifndef VIC
-#define VIC
+#ifndef VICTIMA
+#define VICTIMA
 #include <bits/stdc++.h>
 using namespace std;
 class PTWC

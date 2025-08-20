@@ -34,6 +34,14 @@ enum VF
   VF_END
 };
 
+enum POM
+{
+  POM = 0,
+  POM_MISS,
+  POM_To_PTW,
+  POM_END
+};
+
 enum State
 {
   PTW_FILL,
@@ -43,8 +51,8 @@ enum State
 
 enum CYCLE_ENQ
 {
-  MSHR,
-  WORK_QUEUE,
+  TS_ADD_QUEUE,
+  TS_ADD_MSHR,
   CYCLE_ENQ_END
 };
 
@@ -71,9 +79,9 @@ public:
   uint64_t type_cycle_enqueued[CYCLE_ENQ::CYCLE_ENQ_END] = {0};
   bool ttp = false;
 
-  
-
   bool vflag[VF::VF_END] = {0};
+  bool pomflag[POM::POM_END] = {0};
+
   // default: wait for Actual Packet
   VF mshr_state = VF::VF_END;
   int thread_id=-1;
@@ -81,6 +89,8 @@ public:
   CACHE_ID hit_where = CACHE_ID::CACHE_ID_END;
   
   State state = State::State_end;
+
+  DataType dtype = DataType::INVALID;
 };
 
 template <>

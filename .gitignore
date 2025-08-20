@@ -28,3 +28,5 @@ Makefile
 *.ini
 
 *.py
+
+config.sh

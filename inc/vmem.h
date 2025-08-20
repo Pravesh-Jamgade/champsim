@@ -31,6 +31,7 @@ public:
   uint64_t get_offset(uint64_t vaddr, uint32_t level) const;
   std::pair<uint64_t, bool> va_to_pa(uint32_t cpu_num, uint64_t vaddr);
   std::pair<uint64_t, bool> get_pte_pa(uint32_t cpu_num, uint64_t vaddr, uint32_t level);
+  std::pair<uint64_t, bool> get_vp_to_pp(uint32_t cpu_num, uint64_t vaddr);
 };
 
 #endif

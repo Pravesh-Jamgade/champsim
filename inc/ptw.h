@@ -12,6 +12,7 @@
 
 #include "DataModel.h"
 #include "cache.h"
+#include "logger.h"
 
 class PagingStructureCache
 {
@@ -33,6 +34,19 @@ public:
 
   std::optional<uint64_t> check_hit(uint64_t address, int thread_id);
   void fill_cache(uint64_t next_level_paddr, uint64_t vaddr, int thread_id);
+
+  void invalidate(int thread_id)
+  {
+    for(auto &cb: block)
+    {
+      if(thread_id == cb.thread_id)
+      {
+        cb.address = 0;
+        cb.data = 0;
+        cb.valid = 0;
+      }
+    }
+  }
 };
 
 typedef struct Track
@@ -46,6 +60,14 @@ class PageTableWalker : public champsim::operable, public MemoryRequestConsumer,
 {
 public:
 
+  enum PageFeature
+  {
+    PTW_Freq=0,
+    PTW_Cost,
+    PageFeature_end
+  };
+
+  logger dlog;
   Track track;
 
   CACHE* llcObject;
@@ -55,6 +77,7 @@ public:
   const uint32_t MSHR_SIZE, MAX_READ, MAX_FILL;
 
   champsim::delay_queue<PACKET> RQ;
+  // champsim::list<PACKET> RQ;
 
   std::list<PACKET> MSHR;
 
@@ -92,11 +115,20 @@ public:
 
   uint64_t get_shamt(uint8_t pt_level);
 
+  std::pair<uint64_t, bool> get_va_to_pa(uint32_t cpu_num, uint64_t vaddr);
+
   void print_deadlock() override;
 
   void* getObject(){return this;}
-  void victima_update(uint64_t addr, int cost_or_freq);
+  void victima_update(uint64_t addr, int signal, int hit_where=-1);
   void _overwrite();
+  void _context_switch(int thread_id) 
+  {
+    for(auto pscl: pscl_array)
+    {
+      pscl->invalidate(thread_id);
+    }
+  }
 
 };
 

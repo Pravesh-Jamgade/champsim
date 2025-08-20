@@ -31,6 +31,13 @@ uint64_t VirtualMemory::shamt(uint32_t level) const { return LOG2_PAGE_SIZE + lg
 
 uint64_t VirtualMemory::get_offset(uint64_t vaddr, uint32_t level) const { return (vaddr >> shamt(level)) & bitmask(lg2(page_size / PTE_BYTES)); }
 
+// get existing mapping (fault=false)
+std::pair<uint64_t, bool> VirtualMemory::get_vp_to_pp(uint32_t cpu_num, uint64_t vaddr)
+{
+  auto [ppage, fault] = vpage_to_ppage_map.insert({{cpu_num, vaddr >> LOG2_PAGE_SIZE}, ppage_free_list.front()});
+  return {splice_bits(ppage->second, vaddr, LOG2_PAGE_SIZE), fault};
+}
+
 std::pair<uint64_t, bool> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t vaddr)
 {
   auto [ppage, fault] = vpage_to_ppage_map.insert({{cpu_num, vaddr >> LOG2_PAGE_SIZE}, ppage_free_list.front()});
