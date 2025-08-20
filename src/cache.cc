@@ -8,6 +8,7 @@
 #include "util.h"
 #include "vmem.h"
 #include "user.h"
+#include "ptw.h"
 
 #ifndef SANITY_CHECK
 #define NDEBUG
@@ -21,8 +22,11 @@ extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_VICTIMA, KNOB_EXTEND_VICTIMA, KNOB_HASH_CACHE_MAX_LIMIT;
 
 // illusiong of stored cache line by 8byte granularity
-extern map<uint32_t, uint32_t> l2_pte_map;
 extern list<pair<string, uint64_t>> hash_cache;
+extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
+
+// illusiong of stored cache line by 8byte granularity
+extern map<uint64_t, uint64_t> l2_pte_map;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -31,10 +35,52 @@ void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
     auto fill_mshr = MSHR.begin();
+
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
     {
       cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
       return;
+    }
+
+    // order matters
+    // No write - hence No tracking of PTE
+    // But want to track access
+    if(KNOB_POMTLB && cache_is[IS_STLB])
+    {
+      if(fill_mshr->pomflag[POM::POM_To_PTW])
+      {
+        if(get_occupancy(1,0) == get_size(1,0))
+        {
+          cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
+          return;
+        }
+
+        // request again
+        fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
+        fill_mshr->dtype = DataType::INVALID;
+        fill_mshr->hit_where = CACHE_ID_END;
+        PACKET newPacket = *fill_mshr;
+        add_rq(&newPacket);
+        
+        func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
+        func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
+        MSHR.erase(fill_mshr);
+        writes_available_this_cycle--;
+        cacheDataModel->mshr_queue[Basic::ACCESS]++;
+        global_access_count++;
+        cacheDataModel->mshr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
+        continue;
+      }
+    }
+    // order matters
+    if(KNOB_POMTLB && !is_tlb && fill_mshr->pomflag[POM_MISS])
+    {
+      func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
+      func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
+      MSHR.erase(fill_mshr);
+      // writes_available_this_cycle--;
+      cacheDataModel->mshr_queue[Basic::ACCESS]++;
+      continue;
     }
     
     // find victim
@@ -62,11 +108,18 @@ void CACHE::handle_fill()
       for (auto ret : fill_mshr->to_return)
         ret->return_data(&(*fill_mshr));
     }
+    
 
+    func_track_workingset(fill_mshr->address);
+    func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
+    func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
+    
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
     
     cacheDataModel->mshr_queue[Basic::ACCESS]++;
+    global_access_count++;
+    
   }
 }
 
@@ -86,9 +139,9 @@ void CACHE::handle_writeback()
 
     // access cache
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
-
+    
     BLOCK& fill_block = block[set * NUM_WAY + way];
     bool hit = way < NUM_WAY;
 
@@ -157,12 +210,11 @@ void CACHE::handle_writeback()
 
     if(write_true)
     {
-      uint32_t offset = handle_pkt.address >> LOG2_PAGE_SIZE & 0x7;
-      fill_block.updateUsage(offset);
-
       // writing stlb PTE to L2
       if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
       {
+        uint32_t offset = (handle_pkt.address >> LOG2_PAGE_SIZE) & 0x7;
+        fill_block.updateUsage(offset);
         auto find_page = l2_pte_map.find(vp);
         if(find_page == l2_pte_map.end())
         {
@@ -248,7 +300,7 @@ void CACHE::handle_read()
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
 
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
     uint32_t off = get_offset(handle_pkt.address);
 
     bool hit = way < NUM_WAY;
@@ -263,8 +315,9 @@ void CACHE::handle_read()
       if(hit)
       {
         BLOCK* hit_block = &block[set * NUM_WAY + way];
-        // cout << "hit," << hit << ", vic_block," << (hit_block->victima_block) << ", pkt_thread," << (handle_pkt.thread_id) << ", block_thread," << (hit_block->thread_id) << ", " << (hit_block->came_from_request) << '\n';
         hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
+
+        // cout << "HitTest: " << std::hex << ", req, " << handle_pkt.address << ", block, " << hit_block->address <<", data, "<< hit_block->data<< std::dec << ", th, " << hit_block->thread_id << '\n';
       }
     }
 
@@ -306,8 +359,10 @@ void CACHE::handle_prefetch()
     // handle the oldest entry
     PACKET& handle_pkt = PQ.front();
 
+    handle_pkt.dtype = DataType::PRE;
+
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
-    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
+    uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
 
     bool hit = way < NUM_WAY;
 
@@ -343,6 +398,8 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     std::cout << " cycle: " << current_cycle << std::endl;
   });
 
+  dlog.log("hit", NAME, handle_pkt.address, handle_pkt.v_address,"instr", handle_pkt.instr_id,"data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, "cycle", current_cycle,'\n');
+
   BLOCK& hit_block = block[set * NUM_WAY + way];
 
   handle_pkt.data = hit_block.data;
@@ -354,23 +411,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     auto found = l2_pte_map.find(vp_addr);
     if(found != l2_pte_map.end())
       handle_pkt.data = found->second;
-
-    // // writing stlb PTE to L2
-    // // zeroing page offset bits
-    // uint32_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
-    // auto find_page = l2_pte_map.find(vp_addr);
-    // // successfully stored vp-pp mapping
-    // if(find_page != l2_pte_map.end())
-    // {
-    //   handle_pkt.data = find_page->second;
-    // }
-    // else
-    // {
-    //   cout << std::hex << hit_block.address << ", " << handle_pkt.address << '\n';
-    //   cout << NAME << ", vitima_block, " << hit_block.victima_block << ", " << hit_block.getUsage() << ", " << hit_block.came_from_request << '\n';
-    //   cout << "PTE not found in L2\n";
-    //   exit(-1);
-    // }
   }
 
   // update prefetcher on load instruction
@@ -390,14 +430,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   for (auto ret : handle_pkt.to_return)
     ret->return_data(&handle_pkt);
 
-  // if(handle_pkt.type == LOAD || handle_pkt.type == TRANSLATION)
-  //   cacheDataModel->rd_queue[Basic::HIT]++;
-  // else if(handle_pkt.type == RFO)
-  //   cacheDataModel->wr_queue[Basic::HIT]++;
-  // else if(handle_pkt.type == PREFETCH)
-  //   cacheDataModel->pf_queue[Basic::HIT]++;
-    
-
   // update prefetch stats and reset prefetch bit
   if (hit_block.prefetch) {
     pf_useful++;
@@ -406,18 +438,19 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   if(hit_block.came_from_request == PREFETCH)
     prefetch_hit_histo[set*NUM_WAY+way][READ_HIT]++;
+
+  func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE], handle_pkt.vflag[VF::victima]);
 }
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
+  dlog.log("miss", NAME, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
+
+  // position matters
   if(KNOB_VICTIMA)
   {
     if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
     {
-      if(23075325 == handle_pkt.instr_id)
-      {
-        cout << "read misss \n";
-      }
       // its a miss and not DP (dummy packet) hence set, AP miss
       handle_pkt.vflag[victima_acutal_packet_miss] = 1;
       for(auto ret: handle_pkt.to_return)
@@ -426,6 +459,27 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       }
       return true;
     }
+  }
+
+  if(cache_is[IS_L2])
+  {
+    translation_pollution->countPollution(get_set(handle_pkt.address), 
+                    PollutionEntry
+                    (
+                      handle_pkt.address>>(match_offset_bits?0:OFFSET_BITS), 
+                      make_pair(PollutionTracker::TranslationPollutionTracker, EvictCause::INVALID_CAUSE), 
+                      handle_pkt.thread_id
+                    )
+                );
+ 
+    victima_pollution->countPollution(get_set(handle_pkt.address), 
+                    PollutionEntry
+                    (
+                      handle_pkt.address>>(match_offset_bits?0:OFFSET_BITS), 
+                      make_pair(PollutionTracker::VictimaPollutionTracker, EvictCause::INVALID_CAUSE), 
+                      handle_pkt.thread_id
+                    )
+                );
   }
 
   cacheDataModel->mshr_queue[Basic::REQUESTED]++;
@@ -440,7 +494,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   });
 
   // check mshr
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS, handle_pkt.thread_id, is_tlb));
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]);
+  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS, handle_pkt.thread_id, is_tlb||check_thread_id));
   bool mshr_full = (MSHR.size() == MSHR_SIZE);
 
   // usercode
@@ -471,6 +526,27 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   } 
   else 
   {
+    if(KNOB_IDEAL_VICTIMA && KNOB_VICTIMA && cache_is[IS_STLB])
+    {
+      PACKET newPacket = handle_pkt;
+      newPacket.address = handle_pkt.address;
+      newPacket.v_address = handle_pkt.v_address;
+      newPacket.to_return = {this};
+      newPacket.vflag[VF::victima] = true;
+      newPacket.thread_id = handle_pkt.thread_id;
+      // soft lookup
+      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->peek_singleline(newPacket);
+      if(found_peek.first)
+      {
+        handle_pkt.data = found_peek.second;
+        for(auto ret: handle_pkt.to_return)
+          ret->return_data(&handle_pkt);
+        
+        func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
+        return true;
+      }
+    }
+
     if (mshr_full)  // not enough MSHR resource
     {
       cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL]++;
@@ -478,6 +554,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       return false; // TODO should we allow prefetches anyway if they will not
                     // be filled to this level?
     }
+
     bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
 
     // check to make sure the lower level queue has room for this read miss
@@ -487,10 +564,16 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
       return false;
     }
-
+    
+    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB];
     PACKET newPacket = handle_pkt;
-    if(KNOB_VICTIMA && cache_is[IS_STLB])
+    if(sendVictimaPacket)
     {
+      if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
+      {
+        return false;
+      }
+
       newPacket.address = handle_pkt.address;
       newPacket.v_address = handle_pkt.v_address;
       newPacket.to_return = {this};
@@ -498,11 +581,11 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       newPacket.thread_id = handle_pkt.thread_id;
 
       // soft lookup
-      bool found = ((CACHE*)l2cache->getObject())->peek_singleline(newPacket);
+      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->peek_singleline(newPacket);
 
       // to fix difference in returned physical address ex. F: 346681344, S: 4641652728
       // do softlookup, if not in cache then set dumy status to simulate traffic and dont use its results.
-      if(found)
+      if(found_peek.first)
       {
         newPacket.vflag[VF::victima_dumy] = false;
         newPacket.vflag[VF::PACKET_AP_RECV] = true;
@@ -514,23 +597,31 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
         newPacket.vflag[VF::PACKET_AP_RECV] = false;
         newPacket.vflag[VF::PACKET_DP_RECV] = true;
       }
-      
-
-      if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
-      {
-        return false;
-      }
 
       // if victima_block @L2 has PTE then send dumy to PTW
       handle_pkt.vflag[VF::victima_dumy] = !newPacket.vflag[VF::victima_dumy];
       handle_pkt.vflag[VF::PACKET_AP_RECV] = !newPacket.vflag[VF::PACKET_AP_RECV];
       handle_pkt.vflag[VF::PACKET_DP_RECV] = !newPacket.vflag[VF::PACKET_DP_RECV];
       handle_pkt.vflag[VF::ptw_copy] = true;
+    }
 
-      if(23075325 == handle_pkt.instr_id)
+    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_To_PTW];
+
+    // test RQ occupancy in L1
+    if(sendPomPacket)
+    {
+      if(l1cache->get_occupancy(1,0) == l1cache->get_size(1,0))
       {
-        cout << "Sending PTW\n";
+        return false;
       }
+
+      PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
+      auto[ppn, fault] = ptw->get_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
+
+      if(fault)
+        handle_pkt.pomflag[POM::POM_MISS] = false;
+
+      handle_pkt.pomflag[POM::POM] = true;
     }
 
     // Allocate an MSHR
@@ -538,13 +629,16 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       auto it = MSHR.insert(std::end(MSHR), handle_pkt);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
+      it->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR] = current_cycle;
 
       cacheDataModel->mshr_queue[Basic::ADDED]++;
 
       // placed here making sure MSHR entry is first inserted. The reason is it might receive hit in WQ of L2, that time it will
       // try to return data to STLB and wont find MSHR hence to prevent such situtation
-      if(KNOB_VICTIMA && cache_is[IS_STLB])
-        l2cache->add_rq(&newPacket);
+      if(sendVictimaPacket)
+      {
+        int status = l2cache->add_rq(&newPacket);
+      }
     }
 
     if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
@@ -554,15 +648,24 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       else
         handle_pkt.to_return.clear();
     }
-    
 
-    if (!is_read)
+    //POMTLB: record miss, send to cache-hierarchy + No PTW requests, PTW start upon POM return.
+    if(sendPomPacket)
+    {
+      dlog.log(current_cycle, ", Send POM, ", handle_pkt.address, '\n');
+      l1cache->add_rq(&handle_pkt);
+    }
+    else if (!is_read)
+    {
       lower_level->add_pq(&handle_pkt);
+    }
     else
     {
-      // // at L2 only, packet could be dummy = True
-      // if(!handle_pkt.vflag[VF::victima_dumy])
-        lower_level->add_rq(&handle_pkt);
+      if(handle_pkt.pomflag[POM::POM_To_PTW])
+      {
+        dlog.log(current_cycle, ", PTW POM, ", handle_pkt.address, '\n');
+      }
+      lower_level->add_rq(&handle_pkt);
     }
       
   }
@@ -573,12 +676,59 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     uint64_t pf_base_addr = (virtual_prefetch ? handle_pkt.v_address : handle_pkt.address) & ~bitmask(match_offset_bits ? 0 : OFFSET_BITS);
     handle_pkt.pf_metadata = impl_prefetcher_cache_operate(pf_base_addr, handle_pkt.ip, 0, handle_pkt.type, handle_pkt.pf_metadata);
   }
-    
+  
+  //check if reuse_history has tracked this miss
+  uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
+  uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
+  uint64_t target_addr = handle_pkt.address;
+  auto it = std::find_if(reuse_history[set].begin(), reuse_history[set].end(), eq_addr<BLOCK>(target_addr, OFFSET_BITS));
+  if(it!=reuse_history[set].end())
+  {
+    int dist = std::distance(reuse_history[set].begin(), it);
+    cacheDataModel->hist_reuse_distance[dist]++;
+  }
+
+  uint64_t tag = target_addr & ~((1 << (LOG2_BLOCK_SIZE + lg2(NUM_SET))) - 1);
+  if(is_tlb)
+    tag = target_addr & ~(PAGE_SIZE-1);
+  
+  auto g_it = global_reuse.find(tag);
+  if(global_reuse.end() != g_it)
+  {
+    uint64_t last_global_access = g_it->second;
+    int distance = global_access_count > last_global_access? (global_access_count - last_global_access): 0;
+    cacheDataModel->reuse_distance->add_data_freq(distance, 1);
+  }
+  global_reuse[tag] = global_access_count;
+ 
   return true;
 }
 
 bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
+  // Position matters
+  // POM packet return mem trip. Test if it was hit in POM-TLB. If so, return data (from handle_fill)
+  // If not hit, then discard this fill request, initiate PTW
+  if(KNOB_POMTLB && cache_is[IS_STLB] && handle_pkt.pomflag[POM::POM])
+  {
+    // reset packet type flag
+    handle_pkt.pomflag[POM::POM] = false;
+
+    // test if mapping already been used before
+    PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
+    auto[ppn, fault] = ptw->get_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
+    if(!fault)
+    {
+      handle_pkt.data = ppn;
+    }
+    // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
+    else
+    {
+      handle_pkt.pomflag[POM::POM_To_PTW] = true;
+      return false;
+    }
+  }
+
   DP(if (warmup_complete[handle_pkt.cpu]) {
     std::cout << "[" << NAME << "] " << __func__ << " miss";
     std::cout << " instr_id: " << handle_pkt.instr_id << " address: " << std::hex << (handle_pkt.address >> OFFSET_BITS);
@@ -641,26 +791,17 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       cacheDataModel->cache_stat[CacheStat::Total_Writeback]++;
 
     }
-    else // clean 
-    {
-      if(handle_pkt.type == LOAD)
-        cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
-      else if(handle_pkt.type == TRANSLATION)
-        cacheDataModel->cache_stat[CacheStat::Translation_Drop]++;
-      else if(handle_pkt.type == RFO)
-        cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
-      else if(handle_pkt.type == PREFETCH)
-        cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
-      
-      cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
-    }
+   
+    bool track_reuse = false;
 
-    // check for compulsory miss
+    // invalid block
+    // count Compulsory miss
     if(!fill_block.valid)
     {  
       cacheDataModel->category_of_misses[MISS::COM]++;
     }
     // check for conflict misses && capacity misses
+    // valid blocks (may be dirty or clean)
     else
     {
       if(KNOB_VICTIMA)
@@ -672,6 +813,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             return false;
           }
 
+          // tracking
+          func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
           PACKET writeback_packet;
 
           writeback_packet.fill_level = l2cache->fill_level;
@@ -682,6 +825,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           writeback_packet.ip = 0;
           writeback_packet.type = WRITEBACK;
           writeback_packet.vflag[VF::victima] = true;
+          writeback_packet.dtype = DataType::VIC;
           writeback_packet.thread_id = handle_pkt.thread_id;
 
           if(KNOB_EXTEND_VICTIMA)
@@ -716,6 +860,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             l2cache->add_wq(&writeback_packet);
           }
           
+          l2cache->add_wq(&writeback_packet);
           victima_counters[VC::STLB_EVICT]++;
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
@@ -724,22 +869,72 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           victima_block_usage[usage]++;
           victima_counters[VC::L2_EVICT]++;
         }
+
+        // track pollution for victima
+        if(cache_is[IS_L2])
+        {
+          uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : OFFSET_BITS);
+          EvictCause evict_cause = (handle_pkt.type == WRITEBACK && handle_pkt.vflag[VF::victima] && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
+          victima_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::VictimaPollutionTracker, evict_cause), fill_block.thread_id));
+        }
       }
 
-      // counting the number of times set has seen conflict and as a result a dirty block is sent-back
-      cacheDataModel->category_of_misses[MISS::CONF]++;
+      // track pollution
+      {
+        // @ data cache
+        if(cache_is[IS_L2])
+        {
+          uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : OFFSET_BITS);
+          EvictCause evict_cause = (handle_pkt.type == TRANSLATION && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
+          translation_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::TranslationPollutionTracker, evict_cause), fill_block.thread_id));
+        }
+      }
 
-      // checking for capacity miss
+      // tracking type of cache block being dropped
+      if(handle_pkt.type == LOAD)
+        cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
+      else if(handle_pkt.type == TRANSLATION)
+        cacheDataModel->cache_stat[CacheStat::Translation_Drop]++;
+      else if(handle_pkt.type == RFO)
+        cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
+      else if(handle_pkt.type == PREFETCH)
+        cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
+      cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
+
+      // counting the number of times set has seen conflict and as a result a dirty block is sent-back
+      // it needs infinit FA cache to keep history
+      // cacheDataModel->category_of_misses[MISS::CAP]++;
+      // count Capacity misses
+      uint64_t page = handle_pkt.address & ~(PAGE_SIZE-1);
+      auto page_it = page_to_block.find(page);
+      if(page_it!=page_to_block.end())
+      {
+        if(is_tlb)
+        {
+          cacheDataModel->category_of_misses[MISS::CAP]++;
+        }
+        else
+        {
+          uint64_t cache_block_index = (handle_pkt.address > 6) & 0x3f;
+          page_it->second.test(cache_block_index);
+          cacheDataModel->category_of_misses[MISS::CAP]++;
+        }
+      }
+
+      // count Conflict misses
       {
         auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, OFFSET_BITS));
         if(it!=fa_array.end())
         {
-          cacheDataModel->category_of_misses[MISS::CAP]++;
+          cacheDataModel->category_of_misses[MISS::CONF]++;
         }
+      }
 
-        // track evicted/overwritten block
+
+      // track evicted/overwritten block
+      {
         if(fa_array.size() >= FA_SIZE)
-          fa_array.pop_back();
+        fa_array.pop_back();
         
         auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address,  match_offset_bits ? 0 : OFFSET_BITS));
         if(found_out==fa_array.end())
@@ -747,6 +942,19 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           fa_array.push_back(block[set*NUM_WAY + way]);
         }
       }
+
+      // counting the number of times set has seen conflict and as a result a clean block is overwritten
+      cacheDataModel->hist_set_conflict_events[set]++;
+
+      track_reuse = true;
+    }
+
+    if(track_reuse)
+    {
+      if(reuse_history[set].size() >= 4*NUM_WAY)
+        reuse_history[set].pop_front();
+      else 
+        reuse_history[set].push_back(block[set*NUM_WAY + way]);
     }
 
     if (ever_seen_data)
@@ -773,6 +981,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.m_used = handle_pkt.type==WRITEBACK ? 0: fill_block.m_used;
     fill_block.victima_block = handle_pkt.vflag[VF::victima];
     fill_block.thread_id = handle_pkt.thread_id;
+    fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
   }
 
@@ -802,6 +1011,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     cacheDataModel->cache_stat[CacheStat::Prefetch_Write]++;
   
   cacheDataModel->cache_stat[CacheStat::Total_Write]++;
+
+  if(!is_tlb)
+    cacheDataModel->block_type_counters[fill_block.dtype]++;
 
   return true;
 }
@@ -850,7 +1062,7 @@ uint32_t CACHE::get_set(uint64_t address, bool victima)
 
 //  |----- TAG/Page Number --------|
 //  |------EXTRA------|---PTEO(3b)---|----SET----|---BO(3b)---|
-uint32_t CACHE::get_way(uint64_t address, uint32_t set, bool victima)
+uint32_t CACHE::get_way(uint64_t address, uint32_t set, int th, bool victima)
 {
   int offset = OFFSET_BITS;
   if(KNOB_VICTIMA && victima && cache_is[IS_L2])
@@ -861,7 +1073,7 @@ uint32_t CACHE::get_way(uint64_t address, uint32_t set, bool victima)
   
   auto begin = std::next(block.begin(), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
-  return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, offset)));
+  return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, offset, th, (is_tlb || (cache_is[IS_L2]&&victima)) )));
 }
 
 uint32_t CACHE::get_offset(uint64_t address)
@@ -873,7 +1085,7 @@ uint32_t CACHE::get_offset(uint64_t address)
 int CACHE::invalidate_entry(uint64_t inval_addr)
 {
   uint32_t set = get_set(inval_addr);
-  uint32_t way = get_way(inval_addr, set);
+  uint32_t way = get_way(inval_addr, set, -1);
 
   if (way < NUM_WAY)
     block[set * NUM_WAY + way].valid = 0;
@@ -929,10 +1141,13 @@ int CACHE::add_rq(PACKET* packet)
     return TQ.occupancy();
   }
 
-
   cacheDataModel->rd_queue[Basic::REQUESTED]++;
-
-  assert(packet->address != 0);
+  // assert(packet->address != 0);
+  if(packet->address == 0)
+  {
+    cout << "Stop\n";
+    exit(0);
+  }
   RQ_ACCESS++;
 
   DP(if (warmup_complete[packet->cpu]) {
@@ -941,13 +1156,10 @@ int CACHE::add_rq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
-  // TAG: Victima
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
+
   // check for the latest writebacks in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
-  if(KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima])
-  {
-    found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE+3));
-  }
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
   
   if (found_wq != WQ.end()) {
 
@@ -964,9 +1176,8 @@ int CACHE::add_rq(PACKET* packet)
   }
 
   // check for duplicates in the read queue
-  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb));
+  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
   if (found_rq != RQ.end()) {
-
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
 
     packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
@@ -989,6 +1200,9 @@ int CACHE::add_rq(PACKET* packet)
     cacheDataModel->rd_queue[Basic::REJECTED]++;
     return -2; // cannot handle this request
   }
+
+  // track cycle stamp
+  packet->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE] = current_cycle;
 
   // if there is no duplicate, add it to RQ
   if (warmup_complete[cpu])
@@ -1016,8 +1230,10 @@ int CACHE::add_wq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
+
   // check for duplicates in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
 
   if (found_wq != WQ.end()) {
 
@@ -1134,8 +1350,10 @@ int CACHE::add_pq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
+
   // check for the latest wirtebacks in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb));
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb||check_thread_id) );
 
   if (found_wq != WQ.end()) {
 
@@ -1176,6 +1394,9 @@ int CACHE::add_pq(PACKET* packet)
     return -2; // cannot handle this request
   }
 
+  // track cycle stamp
+  packet->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE] = current_cycle;
+
   // if there is no duplicate, add it to PQ
   if (warmup_complete[cpu])
     PQ.push_back(*packet);
@@ -1193,56 +1414,39 @@ int CACHE::add_pq(PACKET* packet)
 
 void CACHE::return_data(PACKET* packet)
 {
+  PACKET handle_pkt = *packet;
+
+  if(packet->pomflag[POM::POM])
+    dlog.log(NAME, ", Ret POM, ", packet->address,'\n');
+
+  dlog.log("return", NAME, "hw", handle_pkt.hit_where, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data",handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
+
   // check MSHR information
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb));
+  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
+
+  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
   auto first_unreturned = std::find_if(MSHR.begin(), MSHR.end(), [](auto x) { return x.event_cycle == std::numeric_limits<uint64_t>::max(); });
 
-  // if(KNOB_VICTIMA && cache_is[IS_STLB])
-  // {
-  //   if(packet->vflag[VF::victima_dumy])
-  //   {
-  //     if(packet->victima) victima_counters[STLB_DUMY_VICTIMA]++;
-  //     else victima_counters[STLB_DUMY_PTW]++;
-  //     return;
-  //   }
+  DataType foundDtype = DataType::INVALID;
+  if(handle_pkt.type != TRANSLATION)
+  {
+    foundDtype = DataType::DATA;
+  }
+  else
+  {
+    int dist = current_cycle - mshr_entry->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR];
+    if(dist < 7 && cache_is[IS_STLB])
+    {
+      cout << "stlb, " << dist << ", " << packet->hit_where << '\n';
+    }
+    if(handle_pkt.translation_level == 1) foundDtype = DataType::PTE;      
+    else if(handle_pkt.translation_level == 2) foundDtype = DataType::PMD;      
+    else if(handle_pkt.translation_level == 3) foundDtype = DataType::PUD;      
+    else if(handle_pkt.translation_level == 4) foundDtype = DataType::PGD;      
+  }
 
-  //   if(packet->data == 0)
-  //   {
-  //     if(packet->victima) victima_counters[STLB_ZERO_DROP_VICTIMA]++;
-  //     else victima_counters[STLB_ZERO_DROP_PTW]++;
-  //     return;
-  //   }
-
-  //   if(mshr_entry == MSHR.end())
-  //   {
-  //     if(packet->victima) victima_counters[STLB_MSHRMISS_DROP_VICTIMA]++;
-  //     else victima_counters[STLB_MSHRMISS_DROP_PTW]++;
-  //     // cout << "MSHR_not_here:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-  //     return;
-  //   }
-
-  //   if(mshr_entry->.vflag[VF::recv_victima])
-  //   {
-  //     if(packet->victima) victima_counters[STLB_MSHRRECV_DROP_VICTIMA]++;
-  //     else victima_counters[STLB_MSHRRECV_DROP_PTW]++;
-
-  //     if(mshr_entry->data != packet->data)
-  //     {
-  //       cout << "F: " << mshr_entry->data << ", S: " << packet->data << '\n';  
-  //     }
-  //     cout << "Second:" << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-  //     return;
-  //   }
-
-  //   mshr_entry->.vflag[VF::recv_victima] = true;
-  //   mshr_entry->data = packet->data;
-
-  //   if(packet->victima)
-  //     victima_counters[VC::STLB_VICTIMA_HIT]++;
-  //   else
-  //     victima_counters[VC::STLB_PTW_HIT]++;
-  //   // cout << "First:" << ", victima_issue, " << mshr_entry->vitima_copy_sent << ", " << NAME <<", cycle, " << current_cycle << ", victima, " << packet->victima << ", inst, " << packet->instr_id << ", addr, " << packet->address << ", v_addr, " << packet->v_address << ", data, " << packet->data << '\n'; 
-  // }
+  // assign data type for this block
+  mshr_entry->dtype = foundDtype;
 
   if(KNOB_VICTIMA && cache_is[IS_STLB])
   {
@@ -1260,15 +1464,10 @@ void CACHE::return_data(PACKET* packet)
     // Case 3: DP/L2 AP/PTW --> Wait for AP
     // Case 4: DP/PTW AP/L2 --> AP/L2 missed used value from DP/PTW 
 
-    cout <<current_cycle<<", th, "<< packet->thread_id <<std::hex << ", addr, " << packet->address <<std::dec<< ", victima, " << packet->vflag[VF::victima] << ", victima_miss, " << packet->vflag[VF::victima_acutal_packet_miss] << ", actual, " << packet->vflag[VF::PACKET_AP_RECV] << ", dupli, " << packet->vflag[VF::PACKET_DP_RECV] << ", dummy, " << packet->vflag[VF::victima_dumy]<< ", ptwcopy, " << packet->vflag[VF::ptw_copy] << ", hw, " << packet->hit_where << ", type, " << (int)packet->type << "\n";
-
     if(mshr_entry == MSHR.end())
     {
-      cout << "not found\n";
       return;
     }
-
-    cout <<current_cycle<<", th, "<< mshr_entry->thread_id <<", addr, "<<std::hex<< mshr_entry->address <<std::dec << ", recv, " << mshr_entry->vflag[VF::recv_victima] << ", mshr_state, " << mshr_entry->mshr_state << ", type, " << (int)mshr_entry->type << '\n';
 
     bool release = false;
 
@@ -1282,7 +1481,6 @@ void CACHE::return_data(PACKET* packet)
     }
     else if(mshr_entry->vflag[VF::recv_victima])
     {
-      cout << "revc stall\n";
       return;
     }
     else if(packet->vflag[VF::PACKET_AP_RECV])
@@ -1294,7 +1492,6 @@ void CACHE::return_data(PACKET* packet)
         if(packet->vflag[VF::victima_acutal_packet_miss])
         {
           mshr_entry->mshr_state = VF::MSHR_WAIT_DP;
-          cout << "MSHR_WAIT_DP stall\n";
           return;
         }
         // all good: release
@@ -1314,15 +1511,12 @@ void CACHE::return_data(PACKET* packet)
       //case3
       if(packet->vflag[VF::victima])
       {
-        // mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
-        cout << "victima stall\n";
         return;
       }
       else //case4
       {
         mshr_entry->data = packet->data;
         mshr_entry->mshr_state = VF::MSHR_WAIT_AP;
-        cout << "MSHR_WAIT_AP stall\n";
         return;
       }
     }
@@ -1335,8 +1529,7 @@ void CACHE::return_data(PACKET* packet)
       mshr_entry->data = packet->data;
       mshr_entry->pf_metadata = packet->pf_metadata;
       mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
-
-      cout << "release: " <<current_cycle<<", addr, "<<std::hex<< mshr_entry->address <<std::dec << ", recv, " << mshr_entry->vflag[VF::recv_victima] << ", mshr_state, " << mshr_entry->mshr_state << ", type, " << (int)mshr_entry->type << '\n';
+      mshr_entry->hit_where = packet->hit_where;
     }
   }
   else
@@ -1344,6 +1537,7 @@ void CACHE::return_data(PACKET* packet)
 
     // sanity check
     if (mshr_entry == MSHR.end()) {
+
       std::cerr << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << packet->instr_id << " cannot find a matching entry!";
       std::cerr << " address: " << std::hex << packet->address;
       std::cerr << " v_address: " << packet->v_address;
@@ -1356,6 +1550,7 @@ void CACHE::return_data(PACKET* packet)
     mshr_entry->data = packet->data;
     mshr_entry->pf_metadata = packet->pf_metadata;
     mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
+    mshr_entry->hit_where = packet->hit_where;
 
   }
   
@@ -1370,6 +1565,9 @@ void CACHE::return_data(PACKET* packet)
   // Order this entry after previously-returned entries, but before non-returned
   // entries
   std::iter_swap(mshr_entry, first_unreturned);
+
+  // track hit where for each at these structure
+  cacheDataModel->readmiss_hitwhere[mshr_entry->hit_where]++;
 }
 
 uint32_t CACHE::get_occupancy(uint8_t queue_type, uint64_t address)
@@ -1416,13 +1614,28 @@ void CACHE::print_deadlock()
   } else {
     std::cout << NAME << " MSHR empty" << std::endl;
   }
+
+  if(!empty(RQ))
+  {
+    cout << NAME << " RQ " << '\n';
+    for(auto entry: RQ)
+      cout <<"RQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<(int)entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
+  }
+
+  if(!empty(WQ))
+  {
+    cout << NAME << " WQ " << '\n';
+    for(auto entry: WQ)
+      cout <<"WQ, "<< NAME << ", addr, " <<std::hex<<entry.address<<std::dec<<", ins, "<<entry.instr_id<<", type, "<<(int)entry.type<<", th, "<<entry.thread_id<<", victima, " << entry.vflag[VF::victima] << ", dummy, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptwcopy, " << entry.vflag[VF::ptw_copy] << '\n'; 
+  }
 }
 
-bool CACHE::peek_singleline(PACKET handle_pkt)
+pair<bool, uint64_t> CACHE::peek_singleline(PACKET handle_pkt)
 {
+  pair<bool, uint64_t> ret{false, 0};
   // found in cache
   uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
-  uint32_t way = get_way(handle_pkt.address, set, handle_pkt.vflag[VF::victima]);
+  uint32_t way = get_way(handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
   bool hit = way < NUM_WAY;
 
   uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));
@@ -1435,12 +1648,127 @@ bool CACHE::peek_singleline(PACKET handle_pkt)
     if(hit)
     {
       BLOCK* hit_block = &block[set * NUM_WAY + way];
-      // cout << "hit," << hit << ", vic_block," << (hit_block->victima_block) << ", pkt_thread," << (handle_pkt.thread_id) << ", block_thread," << (hit_block->thread_id) << ", " << (hit_block->came_from_request) << '\n';
       hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
+      ret = {hit, hit_block->data};
     }
   }
 
-  return hit;
+  return ret;
+}
+
+// track accessed page and its blocks for tracking capacity misses
+void CACHE::func_track_workingset(uint64_t addr)
+{
+  uint64_t page = addr & ~(PAGE_SIZE-1);
+  
+  auto page_it = page_to_block.find(page);
+  if(page_it == page_to_block.end())
+    page_to_block[page] = bitset<64>(0);
+  
+  if(!is_tlb)
+  {
+    uint64_t cache_block_index = (addr > 6) & 0x3f;
+    page_to_block[page].set(cache_block_index, 1);
+  }
+}
+
+// tracking data access latency: miss  
+void CACHE::func_track_missfulfill_access_latency(uint64_t eq_cycle)
+{
+  int diff = current_cycle - eq_cycle + 1;
+  cacheDataModel->miss_fulfilled_latency->add_data_freq(diff, 1);
+}
+
+// tracking data access latency: miss  
+void CACHE::func_track_miss_access_latency(uint64_t eq_cycle)
+{
+  int diff = current_cycle - eq_cycle + 1;
+  cacheDataModel->miss_access_latency->add_data_freq(diff, 1);
+}
+
+// tracking data access latency: hit 
+void CACHE::func_track_hit_access_latency(uint64_t eq_cycle, int metadata)
+{
+  int diff = current_cycle - eq_cycle + 1;
+  cacheDataModel->hit_access_latency->add_data_freq(diff, 1);
+
+  // track victima packet access latency
+  if(metadata)
+  {
+    cacheDataModel->victima_access_latency_at_l2->add_data_freq(diff, 1);
+  }
+}
+
+
+void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
+{
+    // Only process when we have enough history
+    if (eviction_history_pte.size() >= LIMIT_HITORY_LEN_EVICTED_PTE)
+    {
+        constexpr size_t K = 8; // we care about distances [0..7]
+        std::vector<uint64_t> vpages; vpages.reserve(eviction_history_pte.size());
+        std::vector<uint64_t> ppages; ppages.reserve(eviction_history_pte.size());
+
+        // 1) Build unique-by-virtual-page lists (dedupe)
+        //    If multiple entries share the same vpage, we keep the first physical seen.
+        std::unordered_set<uint64_t> seen_vpages;
+        vpages.clear(); ppages.clear();
+        vpages.reserve(eviction_history_pte.size());
+        ppages.reserve(eviction_history_pte.size());
+
+        for (const auto &kv : eviction_history_pte) {
+            uint64_t vpage = kv.first  >> LOG2_PAGE_SIZE;
+            if (seen_vpages.insert(vpage).second) {
+                vpages.push_back(vpage);
+                ppages.push_back(kv.second >> LOG2_PAGE_SIZE);
+            }
+        }
+
+        // 2) Track offset variation (lowest 3 bits of the vpage index)
+        std::vector<uint64_t> seen_offset(K, 0);
+        for (uint64_t vp : vpages) {
+            size_t off = static_cast<size_t>(vp & (K - 1)); // vp % 8
+            seen_offset[off]++;
+        }
+
+        // 3) Pairwise distance histograms (virtual and physical)
+        std::vector<uint64_t> vpages_cluster(K, 0);
+        std::vector<uint64_t> ppages_cluster(K, 0);
+
+        // Count unordered pairs once (i < j)
+        for (size_t i = 0; i < vpages.size(); ++i) {
+            for (size_t j = i + 1; j < vpages.size(); ++j) {
+                uint64_t vdist = (vpages[i] > vpages[j]) ? (vpages[i] - vpages[j]) : (vpages[j] - vpages[i]);
+                if (vdist < K) vpages_cluster[vdist]++;
+
+                uint64_t pdist = (ppages[i] > ppages[j]) ? (ppages[i] - ppages[j]) : (ppages[j] - ppages[i]);
+                if (pdist < K) ppages_cluster[pdist]++;
+            }
+        }
+
+        // 4) Write into your hitmaps (cap the second dimension as you intended)
+        // NOTE: Ensure transition_hitmap_* second dimension is large enough.
+        for (size_t i = 0; i < K; ++i) {
+            // offset map: bucket by count, capped at K (or whatever max you support)
+            size_t off_bucket = static_cast<size_t>(seen_offset[i] > K ? K : seen_offset[i]);
+            transition_hitmap_for_offset[i][off_bucket]++;
+
+            // virtual page cluster: bucket by count, capped
+            size_t vp_bucket  = static_cast<size_t>(vpages_cluster[i] > K ? K : vpages_cluster[i]);
+            transition_hitmap_for_vp_page[i][vp_bucket]++;
+
+            // physical page cluster (if you maintain it similarly)
+            size_t pp_bucket  = static_cast<size_t>(ppages_cluster[i] > K ? K : ppages_cluster[i]);
+            transition_hitmap_for_vp_page[i][pp_bucket]++;
+        }
+
+        // Reset history window
+        eviction_history_pte.clear();
+    }
+
+    // Append newest eviction
+    // eviction_history_pte is assumed to be a map<va, pa> (or unordered_map)
+    eviction_history_pte.insert({v_address, data});
 }
 
 void CACHE::adjust_hashcache()
@@ -1501,7 +1829,7 @@ int CACHE::add_to_cluster(PACKET* packet)
   if(collect_pte[packet->thread_id].isSpaceAvail(offset))
   {
     // insert in PTEContainer --> insertion done
-    collect_pte[packet->thread_id].insert(offset, PTE(vp, pp, packet->thread_id));
+    collect_pte[packet->thread_id].insert(offset, PTEclass(vp, pp, packet->thread_id));
 
     // since space is avail, we dont need to write it yet
     return -2;

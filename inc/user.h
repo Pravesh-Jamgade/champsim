@@ -1,5 +1,9 @@
 #ifndef USER_H
 #define USER_H
+#include "operable.h"
+#include <list>
+
+using namespace std;
 enum CACHE_ID{
     IS_LLC=0, 
     IS_L2, 
@@ -8,18 +12,19 @@ enum CACHE_ID{
     IS_STLB, 
     IS_DTLB, 
     IS_ITLB,
+    IS_DRAM,
     WQ,
-    CACHE_ID_END
+    CACHE_ID_END// hit here means: page-fault only. Can we assume that ?
 };
 
-class PTE
+class PTEclass
 {
     public:
     uint64_t vaddr, paddr;
     int thread_id;
     
-    PTE(){}
-    PTE(uint64_t vaddr, uint64_t paddr, int thread_id)
+    PTEclass(){}
+    PTEclass(uint64_t vaddr, uint64_t paddr, int thread_id)
     {
         this->vaddr = vaddr;
         this->paddr = paddr;
@@ -31,16 +36,16 @@ class PTE
 class PTEContainer
 {
     public:
-    list<PTE> collection;
+    std::list<PTEclass> collection;
     PTEContainer(){}
-    void push(PTE pte)
+    void push(PTEclass pte)
     {
         collection.push_back(pte);
     }
 
     int size(){return collection.size();}
     bool full(){return collection.size() == 8;}
-    PTE front(){return collection.front();}
+    PTEclass front(){return collection.front();}
     void pop_front(){collection.pop_front();}
 };
 
@@ -56,7 +61,7 @@ class ThreadBucket
     }
 
     // if no space to insert the PTE then false
-    void insert(int off, PTE pte)
+    void insert(int off, PTEclass pte)
     {
         pte_container[off].push(pte);
     }
@@ -96,4 +101,17 @@ class ThreadBucket
         return make_pair(count == 8, buffer);
     }
 };
+enum DataType
+{
+    DATA=0,
+    PTE,
+    PMD,
+    PUD,
+    PGD,
+    VIC,
+    PRE,
+    INVALID,
+    DataType_end
+};
+
 #endif

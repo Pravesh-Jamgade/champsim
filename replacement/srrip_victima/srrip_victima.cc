@@ -18,26 +18,45 @@ uint32_t CACHE::find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const
   auto victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV; }); // hijack the lru field
   auto backup_way = victim; // hijack the lru field
 
-  int ktimes = maxRRPV;
-  while (victim == end && ktimes) {
+  int ktimes = maxRRPV+1;
+
+  uint32_t way = 0;
+  while (ktimes) {
+
     for (auto it = begin; it != end; ++it)
       it->lru++;
-
+    
     victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV; });
-
-    // if block is victima, try to find retry to find candidate which is not victima_block
-    if(victim->victima_block)
+    if(victim != end)
     {
-      victim = end;
-      ktimes--;
+      if(!victim->victima_block)
+      {
+        uint32_t way1 = std::distance(begin, victim);
+        uint32_t way2 = std::distance(begin, backup_way);
+        if(way1 == NUM_WAY && way2 == NUM_WAY)
+        {
+
+        }
+        else if(way1 != NUM_WAY)
+        {
+          way = way1;
+          break;
+        }
+        else if(way2 != NUM_WAY)
+        {
+          way = way2;
+          break;
+        }
+
+      }
+      else backup_way = victim;
     }
-    else backup_way = victim;
+    ktimes--;
   }
 
-  uint32_t way1 = std::distance(begin, victim);
-  uint32_t way2 = std::distance(begin, backup_way);
+  
 
-  return way1==NUM_WAY ? way2 : way1;
+  return way;
 }
 
 // called on every cache hit and cache fill

@@ -15,9 +15,14 @@
 #include "DataModel.h"
 #include "victima.h"
 #include "user.h"
+#include"logger.h"
+#include <bitset>
+#include "pollution.h"
+
+extern int KNOB_ENABLE_LOG;
 
 extern map<uint64_t, PTWC> ptw_pred;
-extern map<uint32_t, uint32_t> l2_pte_map;
+extern map<uint64_t, uint64_t> l2_pte_map;
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -34,7 +39,30 @@ public:
   ThreadBucket collect_pte[16];
   // std::mt19937 rng(42);
 
-  bool is_tlb =false;
+  vector<vector<PollutionEntry>> global_set_history;
+
+  // translation pollution
+  TranslationPollution* translation_pollution;
+  VictimaPollution* victima_pollution;
+
+  // record evcited PTE
+  const int LIMIT_HITORY_LEN_EVICTED_PTE = 64;
+  map<uint64_t, uint64_t> eviction_history_pte;
+
+  // offset VS number of times this offset seen 
+  vector<vector<int>> transition_hitmap_for_offset;
+
+  // distance VS number of times this offset seen 
+  vector<vector<int>> transition_hitmap_for_vp_page;
+
+  logger dlog;
+
+  //usercode
+  bool is_tlb = false;
+  list<BLOCK>* reuse_history;
+  // storing tag and last global access count
+  unordered_map<uint64_t, uint64_t> global_reuse;
+  uint64_t global_access_count = 0;
 
   enum VC
   {
@@ -59,8 +87,11 @@ public:
   int victima_counters[VC_END] = {0};
   int victima_block_usage[9] = {0};
 
-  MemoryRequestConsumer* l2cache;
+  MemoryRequestConsumer *l2cache, *l1cache;
   CacheDataModel* cacheDataModel;
+  // track working set for counting capacity misses
+  unordered_map<uint64_t, bitset<64>> page_to_block;
+
   bool cache_is[CACHE_ID_END] = {false};
   CACHE_ID cache_id = CACHE_ID::CACHE_ID_END;
   list<BLOCK> fa_array;
@@ -69,7 +100,7 @@ public:
   uint32_t cpu;
   const std::string NAME;
   const uint32_t NUM_SET, NUM_WAY, WQ_SIZE, RQ_SIZE, PQ_SIZE, MSHR_SIZE;
-   uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS, WRITE_LANTENCY;
+  uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS, WRITE_LANTENCY;
   std::vector<BLOCK> block{NUM_SET * NUM_WAY};
   const uint32_t MAX_READ, MAX_WRITE;
   uint32_t reads_available_this_cycle, writes_available_this_cycle;
@@ -115,7 +146,7 @@ public:
   uint32_t get_size(uint8_t queue_type, uint64_t address) override;
 
   uint32_t get_set(uint64_t address, bool victima=false);
-  uint32_t get_way(uint64_t address, uint32_t set, bool victima=false);
+  uint32_t get_way(uint64_t address, uint32_t set, int thread_id, bool victima=false);
 
   int invalidate_entry(uint64_t inval_addr);
   int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata);
@@ -141,12 +172,42 @@ public:
 
   uint32_t get_offset(uint64_t address);
 
-  bool peek_singleline(PACKET handle_pkt);
+  pair<bool, uint64_t> peek_singleline(PACKET handle_pkt);
+
+  // tracking pte
+  void func_track_evicted_pte(uint64_t v_addr, uint64_t p_addr);
+
+  // track accessed page and its blocks for tracking capacity misses
+  void func_track_workingset(uint64_t addr);
+
+  // track mshr waiting period for packet
+  void func_track_missfulfill_access_latency(uint64_t enq_cycle);
+  // track miss access latency 
+  void func_track_miss_access_latency(uint64_t enq_cycle);
+  // track hit access latency 
+  void func_track_hit_access_latency(uint64_t enq_cycle, int metadata=0);
+
+  void _context_switch(int thread_id) 
+  {
+    
+    if(is_tlb)
+    {
+      for(auto& cb: block)
+      {
+        if(cb.thread_id == thread_id)
+        {
+          cb.address = 0;
+          cb.data = 0;
+          cb.valid = 0;
+        }
+      }
+    }
+  }
 
   void reset_datamodel()
   {
     delete cacheDataModel;
-    cacheDataModel = new CacheDataModel(NAME, cpu);
+    cacheDataModel = new CacheDataModel(NAME, cpu, NUM_WAY);
   }
 
   bool victima_lookup(uint64_t addr)
@@ -217,6 +278,9 @@ public:
       //   cout << "victima_pte " << entry.first << ", " << entry.second << '\n';
       
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
+      // print pollution
+      translation_pollution->print(NAME);
+      victima_pollution->print(NAME);
     }
     if(cache_is[IS_STLB])
     {
@@ -236,6 +300,59 @@ public:
       cout << "victima stlb mshr_recv_already-drop victima, " << victima_counters[STLB_MSHRRECV_DROP_VICTIMA] << '\n';
       cout << "victima stlb dumy victima, " << victima_counters[STLB_DUMY_VICTIMA] << '\n';
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
+
+      cout << "Transition hitmap for offset counter over windows:\n";
+      cout << "Offset V/s frequency_of_offset\n\n";
+
+      // Print column headers
+      cout << setw(6) << " " << "|";
+      for (int i = 0; i < transition_hitmap_for_offset[0].size(); ++i) {
+          cout << setw(4) << i;
+      }
+      cout << '\n';
+
+      // Print separator line
+      cout << string(6, '-') << "+";
+      for (int i = 0; i < transition_hitmap_for_offset[0].size(); ++i) {
+          cout << string(4, '-');
+      }
+      cout << '\n';
+
+      // Print each row
+      for (int i = 0; i < 8; ++i) {
+          cout << setw(6) << i << "|";
+          for (int j = 0; j < transition_hitmap_for_offset[i].size(); ++j) {
+              cout << setw(4) << transition_hitmap_for_offset[i][j];
+          }
+          cout << '\n';
+      }
+
+
+      cout << "Transition hitmap for distance between evicted page over window:\n";
+      cout << "Distance V/s frequency_of_distance\n\n";
+
+      // Print column headers
+      cout << setw(6) << " " << "|";
+      for (int i = 0; i < transition_hitmap_for_vp_page[0].size(); ++i) {
+          cout << setw(4) << i;
+      }
+      cout << '\n';
+
+      // Print separator line
+      cout << string(6, '-') << "+";
+      for (int i = 0; i < transition_hitmap_for_vp_page[0].size(); ++i) {
+          cout << string(4, '-');
+      }
+      cout << '\n';
+
+      // Print each row
+      for (int i = 0; i < 8; ++i) {
+          cout << setw(6) << i << "|";
+          for (int j = 0; j < transition_hitmap_for_vp_page[i].size(); ++j) {
+              cout << setw(4) << transition_hitmap_for_vp_page[i][j];
+          }
+          cout << '\n';
+      }
     }
   }
 
@@ -256,8 +373,26 @@ public:
 
     for(int i=0; i< 16; i++)
     {
-      collect_pte[i] = vector<vector<PTE>>(8, vector<PTE>());
+      collect_pte[i] = ThreadBucket();
     }
+    dlog = logger();
+
+    global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
+
+    translation_pollution = new TranslationPollution(NUM_SET, NUM_WAY, &global_set_history);
+    victima_pollution = new VictimaPollution(NUM_SET, NUM_WAY, &global_set_history);
+
+    transition_hitmap_for_vp_page = vector<vector<int>>(8);
+    for(int i=0; i< 8; i++)
+      transition_hitmap_for_vp_page[i] = vector<int>(9, 0);
+
+    transition_hitmap_for_offset = vector<vector<int>>(8);
+    for(int i=0; i< 8; i++)
+      transition_hitmap_for_offset[i] = vector<int>(LIMIT_HITORY_LEN_EVICTED_PTE+1, 0);
+
+    reuse_history = new list<BLOCK>[NUM_SET];
+    for(int i=0; i< NUM_SET; i++)
+      reuse_history[i] = list<BLOCK>();
 
     prefetch_hit_histo = (int**)malloc(sizeof(int*) * NUM_WAY * NUM_SET);
     for(int i=0; i< NUM_WAY*NUM_SET; i++)
@@ -269,7 +404,7 @@ public:
       }
     }  
 
-    cacheDataModel = new CacheDataModel(NAME, cpu);
+    cacheDataModel = new CacheDataModel(NAME, cpu, NUM_WAY);
     
     WRITE_LANTENCY = hit_lat;
 

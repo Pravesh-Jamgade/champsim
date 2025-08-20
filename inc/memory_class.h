@@ -38,14 +38,16 @@ public:
 
   int came_from_request = NUM_TYPES; // default: invalid block
 
-  uint8_t m_used = 0; // 8 entries of 8B each
+  uint32_t m_used = 0; // 8 entries of 8B each
   bool victima_block = 0;
 
   std::map<uint64_t, uint64_t> vp_2_pp_map;
 
+  DataType dtype = DataType::INVALID;
+
   // for tlb block, each PTE is 8Byte, so we have 8 entries in 64B block
   void updateUsage(uint32_t offset){
-    uint8_t mask = offset;
+    uint32_t mask = offset;
     m_used |= 1 << mask;
   }
 

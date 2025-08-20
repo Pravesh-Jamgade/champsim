@@ -70,6 +70,12 @@ public:
   bool has_ready() const noexcept { return begin() != end_ready(); }
   constexpr size_type max_size() const noexcept { return _buf.max_size(); }
 
+  template <typename Compare>
+  void sort(Compare comp)
+  {
+    std::sort(begin(), end(),comp);
+  }
+
   /***
    * Note: there is no guarantee that either the front or back element is ready.
    ***/
