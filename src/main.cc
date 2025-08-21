@@ -442,15 +442,17 @@ int main(int argc, char** argv)
   static struct option long_options[] = {{"warmup_instructions", required_argument, 0, 'w'},
                                          {"simulation_instructions", required_argument, 0, 'i'},
                                          {"output", required_argument, 0, 'o'},
+                                         {"config", no_argument, 0, 'x'},
                                          {"hide_heartbeat", no_argument, 0, 'h'},
                                          {"cloudsuite", no_argument, 0, 'c'},
                                          {"traces", no_argument, &traces_encountered, 1},
                                          {0, 0, 0, 0}};
 
+  string configini_path = string("./config.ini");
   string output_file = "default";
   string trace_shared_buff = "";
   int c;
-  while ((c = getopt_long_only(argc, argv, "w:i:o:hc", long_options, NULL)) != -1 && !traces_encountered) {
+  while ((c = getopt_long_only(argc, argv, "w:i:o:x:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
     case 'w':
       warmup_instructions = atol(optarg);
@@ -463,6 +465,9 @@ int main(int argc, char** argv)
       break;
     case 'o':
       output_file = string(optarg);
+      break;
+    case 'x':
+      configini_path = string(optarg);
       break;
     case 'c':
       knob_cloudsuite = 1;
@@ -483,7 +488,7 @@ int main(int argc, char** argv)
   freopen(output_file.c_str(),"w",stdout);
 
   cout << endl << "*** ChampSim Multicore Out-of-Order Simulator ***" << endl << endl;
-
+  cout << "Config Path: " << configini_path << '\n';
   cout << "Warmup Instructions: " << warmup_instructions << endl;
   cout << "Simulation Instructions: " << simulation_instructions << endl;
   cout << "Number of CPUs: " << NUM_CPUS << endl;
@@ -503,7 +508,7 @@ int main(int argc, char** argv)
 
   std::cout << std::endl;
 
-  INIReader* iniReader = new INIReader(string("./config.ini"));
+  INIReader* iniReader = new INIReader(configini_path);
 
   KNOB_LIVE_INPUT = iniReader->GetInteger("SIMULATOR", "ENABLE_LIVE_INPUT", 0);
   KNOB_TRANSLATION_QUEUE = iniReader->GetInteger("KNOB", "TQ", 0);
