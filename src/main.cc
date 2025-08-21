@@ -48,7 +48,7 @@ extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
-extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA;
+extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_LIVE_INPUT;
@@ -349,11 +349,16 @@ void overwrite_cache()
     stlb->WRITE_LANTENCY = 3 * stlb->HIT_LATENCY;
     stlb->FILL_LATENCY = 3 * stlb->HIT_LATENCY;
   }
-  if(KNOB_VICTIMA)
+  
+  if(KNOB_VICTIMA || KNOB_POMTLB)
   {
     CACHE* stlb = get_cache_by_name("STLB");
+
     CACHE* l2 = get_cache_by_name("L2");
     stlb->l2cache = l2;
+
+    CACHE* l1 = get_cache_by_name("L1D");
+    stlb->l1cache = l1;
   }
 
   for(auto op: operables)
@@ -437,15 +442,17 @@ int main(int argc, char** argv)
   static struct option long_options[] = {{"warmup_instructions", required_argument, 0, 'w'},
                                          {"simulation_instructions", required_argument, 0, 'i'},
                                          {"output", required_argument, 0, 'o'},
+                                         {"config", no_argument, 0, 'x'},
                                          {"hide_heartbeat", no_argument, 0, 'h'},
                                          {"cloudsuite", no_argument, 0, 'c'},
                                          {"traces", no_argument, &traces_encountered, 1},
                                          {0, 0, 0, 0}};
 
+  string configini_path = string("./config.ini");
   string output_file = "default";
   string trace_shared_buff = "";
   int c;
-  while ((c = getopt_long_only(argc, argv, "w:i:o:hc", long_options, NULL)) != -1 && !traces_encountered) {
+  while ((c = getopt_long_only(argc, argv, "w:i:o:x:hc", long_options, NULL)) != -1 && !traces_encountered) {
     switch (c) {
     case 'w':
       warmup_instructions = atol(optarg);
@@ -458,6 +465,9 @@ int main(int argc, char** argv)
       break;
     case 'o':
       output_file = string(optarg);
+      break;
+    case 'x':
+      configini_path = string(optarg);
       break;
     case 'c':
       knob_cloudsuite = 1;
@@ -478,7 +488,7 @@ int main(int argc, char** argv)
   freopen(output_file.c_str(),"w",stdout);
 
   cout << endl << "*** ChampSim Multicore Out-of-Order Simulator ***" << endl << endl;
-
+  cout << "Config Path: " << configini_path << '\n';
   cout << "Warmup Instructions: " << warmup_instructions << endl;
   cout << "Simulation Instructions: " << simulation_instructions << endl;
   cout << "Number of CPUs: " << NUM_CPUS << endl;
@@ -498,7 +508,7 @@ int main(int argc, char** argv)
 
   std::cout << std::endl;
 
-  INIReader* iniReader = new INIReader(string("./config.ini"));
+  INIReader* iniReader = new INIReader(configini_path);
 
   KNOB_LIVE_INPUT = iniReader->GetInteger("SIMULATOR", "ENABLE_LIVE_INPUT", 0);
   KNOB_TRANSLATION_QUEUE = iniReader->GetInteger("KNOB", "TQ", 0);
@@ -512,6 +522,7 @@ int main(int argc, char** argv)
   KNOB_ENABLE_LOG = iniReader->GetInteger("SIMULATOR", "ENABLE_LOG", 0);
   KNOB_ENABLE_MFOE_V2 = iniReader->GetInteger("MFOEv2", "ENABLE_MFOE_V2", 0);
   KNOB_ENABLE_CTX = iniReader->GetInteger("SIMULATOR", "ENABLE_CTX_SWITCH", 0);
+  KNOB_POMTLB = iniReader->GetInteger("POMTLB", "ENABLE_POMTLB", 0);
   
   std::cout << "Extra settings:\n";
   std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';

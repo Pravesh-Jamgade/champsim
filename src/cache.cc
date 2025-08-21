@@ -8,6 +8,7 @@
 #include "util.h"
 #include "vmem.h"
 #include "user.h"
+#include "ptw.h"
 
 #ifndef SANITY_CHECK
 #define NDEBUG
@@ -18,7 +19,7 @@
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
-extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA;
+extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 
 // illusiong of stored cache line by 8byte granularity
 extern map<uint64_t, uint64_t> l2_pte_map;
@@ -30,10 +31,52 @@ void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
     auto fill_mshr = MSHR.begin();
+
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
     {
       cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
       return;
+    }
+
+    // order matters
+    // No write - hence No tracking of PTE
+    // But want to track access
+    if(KNOB_POMTLB && cache_is[IS_STLB])
+    {
+      if(fill_mshr->pomflag[POM::POM_To_PTW])
+      {
+        if(get_occupancy(1,0) == get_size(1,0))
+        {
+          cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
+          return;
+        }
+
+        // request again
+        fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
+        fill_mshr->dtype = DataType::INVALID;
+        fill_mshr->hit_where = CACHE_ID_END;
+        PACKET newPacket = *fill_mshr;
+        add_rq(&newPacket);
+        
+        func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
+        func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
+        MSHR.erase(fill_mshr);
+        writes_available_this_cycle--;
+        cacheDataModel->mshr_queue[Basic::ACCESS]++;
+        global_access_count++;
+        cacheDataModel->mshr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
+        continue;
+      }
+    }
+    // order matters
+    if(KNOB_POMTLB && !is_tlb && fill_mshr->pomflag[POM_MISS])
+    {
+      func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
+      func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
+      MSHR.erase(fill_mshr);
+      // writes_available_this_cycle--;
+      cacheDataModel->mshr_queue[Basic::ACCESS]++;
+      continue;
     }
     
     // find victim
@@ -507,6 +550,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       return false; // TODO should we allow prefetches anyway if they will not
                     // be filled to this level?
     }
+
     bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
 
     // check to make sure the lower level queue has room for this read miss
@@ -516,9 +560,10 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
       return false;
     }
-
+    
+    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB];
     PACKET newPacket = handle_pkt;
-    if(KNOB_VICTIMA && cache_is[IS_STLB])
+    if(sendVictimaPacket)
     {
       if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
       {
@@ -556,6 +601,25 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       handle_pkt.vflag[VF::ptw_copy] = true;
     }
 
+    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_To_PTW];
+
+    // test RQ occupancy in L1
+    if(sendPomPacket)
+    {
+      if(l1cache->get_occupancy(1,0) == l1cache->get_size(1,0))
+      {
+        return false;
+      }
+
+      PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
+      auto[ppn, fault] = ptw->get_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
+
+      if(fault)
+        handle_pkt.pomflag[POM::POM_MISS] = false;
+
+      handle_pkt.pomflag[POM::POM] = true;
+    }
+
     // Allocate an MSHR
     if (handle_pkt.fill_level <= fill_level  && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) {
       auto it = MSHR.insert(std::end(MSHR), handle_pkt);
@@ -567,7 +631,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
       // placed here making sure MSHR entry is first inserted. The reason is it might receive hit in WQ of L2, that time it will
       // try to return data to STLB and wont find MSHR hence to prevent such situtation
-      if(KNOB_VICTIMA && cache_is[IS_STLB])
+      if(sendVictimaPacket)
       {
         int status = l2cache->add_rq(&newPacket);
       }
@@ -581,10 +645,22 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
         handle_pkt.to_return.clear();
     }
 
-    if (!is_read)
+    //POMTLB: record miss, send to cache-hierarchy + No PTW requests, PTW start upon POM return.
+    if(sendPomPacket)
+    {
+      dlog.log(current_cycle, ", Send POM, ", handle_pkt.address, '\n');
+      l1cache->add_rq(&handle_pkt);
+    }
+    else if (!is_read)
+    {
       lower_level->add_pq(&handle_pkt);
+    }
     else
     {
+      if(handle_pkt.pomflag[POM::POM_To_PTW])
+      {
+        dlog.log(current_cycle, ", PTW POM, ", handle_pkt.address, '\n');
+      }
       lower_level->add_rq(&handle_pkt);
     }
       
@@ -626,6 +702,29 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
 bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
+  // Position matters
+  // POM packet return mem trip. Test if it was hit in POM-TLB. If so, return data (from handle_fill)
+  // If not hit, then discard this fill request, initiate PTW
+  if(KNOB_POMTLB && cache_is[IS_STLB] && handle_pkt.pomflag[POM::POM])
+  {
+    // reset packet type flag
+    handle_pkt.pomflag[POM::POM] = false;
+
+    // test if mapping already been used before
+    PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
+    auto[ppn, fault] = ptw->get_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
+    if(!fault)
+    {
+      handle_pkt.data = ppn;
+    }
+    // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
+    else
+    {
+      handle_pkt.pomflag[POM::POM_To_PTW] = true;
+      return false;
+    }
+  }
+
   DP(if (warmup_complete[handle_pkt.cpu]) {
     std::cout << "[" << NAME << "] " << __func__ << " miss";
     std::cout << " instr_id: " << handle_pkt.instr_id << " address: " << std::hex << (handle_pkt.address >> OFFSET_BITS);
@@ -1005,10 +1104,13 @@ int CACHE::add_rq(PACKET* packet)
     return TQ.occupancy();
   }
 
-
   cacheDataModel->rd_queue[Basic::REQUESTED]++;
-
-  assert(packet->address != 0);
+  // assert(packet->address != 0);
+  if(packet->address == 0)
+  {
+    cout << "Stop\n";
+    exit(0);
+  }
   RQ_ACCESS++;
 
   DP(if (warmup_complete[packet->cpu]) {
@@ -1276,6 +1378,10 @@ int CACHE::add_pq(PACKET* packet)
 void CACHE::return_data(PACKET* packet)
 {
   PACKET handle_pkt = *packet;
+
+  if(packet->pomflag[POM::POM])
+    dlog.log(NAME, ", Ret POM, ", packet->address,'\n');
+
   dlog.log("return", NAME, "hw", handle_pkt.hit_where, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data",handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
 
   // check MSHR information
@@ -1559,78 +1665,71 @@ void CACHE::func_track_hit_access_latency(uint64_t eq_cycle, int metadata)
 
 void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
 {
-  // cout << "eivct: " << v_address << ", data: " << data << '\n';
-  if(eviction_history_pte.size() >= LIMIT_HITORY_LEN_EVICTED_PTE)
-  {
-    // track similar page so that counting doesnt happen twice
-    list<int> skip_list;
-
-    // track offset variation
-    vector<int> seen_offset(8,0);
-    // track distance
-    vector<int> vpages_cluster(8,0);
-    vector<int> ppages_cluster(8,0);
-
-    // track offeset variation
-    for(auto it1: eviction_history_pte)
+    // Only process when we have enough history
+    if (eviction_history_pte.size() >= LIMIT_HITORY_LEN_EVICTED_PTE)
     {
-      //track offset
-      int page1 = it1.first >> LOG2_PAGE_SIZE;
-      int phy_page1 = it1.second >> LOG2_PAGE_SIZE;
-      int offset1 = page1 & 0x7;
-      seen_offset[offset1]++;
+        constexpr size_t K = 8; // we care about distances [0..7]
+        std::vector<uint64_t> vpages; vpages.reserve(eviction_history_pte.size());
+        std::vector<uint64_t> ppages; ppages.reserve(eviction_history_pte.size());
 
-      // since similar page is in the list, skip track data for this. This pair is already counted. avoid twice counting.
-      if(find(skip_list.begin(), skip_list.end(), page1) != skip_list.end())
-      {
-        continue;
-      }
+        // 1) Build unique-by-virtual-page lists (dedupe)
+        //    If multiple entries share the same vpage, we keep the first physical seen.
+        std::unordered_set<uint64_t> seen_vpages;
+        vpages.clear(); ppages.clear();
+        vpages.reserve(eviction_history_pte.size());
+        ppages.reserve(eviction_history_pte.size());
 
-      // track contigious address cluster
-      for(auto it2: eviction_history_pte)
-      {
-        if(it1 == it2)
-          continue;
-
-        int page2 = it2.first >> LOG2_PAGE_SIZE;
-        int offset2 = page2 & 0x7;
-        
-        int dist = abs(page1 - page2);
-        if(dist < 8)
-        {
-          vpages_cluster[dist]++;
+        for (const auto &kv : eviction_history_pte) {
+            uint64_t vpage = kv.first  >> LOG2_PAGE_SIZE;
+            if (seen_vpages.insert(vpage).second) {
+                vpages.push_back(vpage);
+                ppages.push_back(kv.second >> LOG2_PAGE_SIZE);
+            }
         }
 
-        int phy_page2 = it2.second >> LOG2_PAGE_SIZE;
-        dist = abs(phy_page1 - phy_page2);
-        if(dist < 8)
-        {
-          ppages_cluster[dist]++; 
+        // 2) Track offset variation (lowest 3 bits of the vpage index)
+        std::vector<uint64_t> seen_offset(K, 0);
+        for (uint64_t vp : vpages) {
+            size_t off = static_cast<size_t>(vp & (K - 1)); // vp % 8
+            seen_offset[off]++;
         }
 
-        if(page1 == page2)
-        {
-          skip_list.push_back(page1);
+        // 3) Pairwise distance histograms (virtual and physical)
+        std::vector<uint64_t> vpages_cluster(K, 0);
+        std::vector<uint64_t> ppages_cluster(K, 0);
+
+        // Count unordered pairs once (i < j)
+        for (size_t i = 0; i < vpages.size(); ++i) {
+            for (size_t j = i + 1; j < vpages.size(); ++j) {
+                uint64_t vdist = (vpages[i] > vpages[j]) ? (vpages[i] - vpages[j]) : (vpages[j] - vpages[i]);
+                if (vdist < K) vpages_cluster[vdist]++;
+
+                uint64_t pdist = (ppages[i] > ppages[j]) ? (ppages[i] - ppages[j]) : (ppages[j] - ppages[i]);
+                if (pdist < K) ppages_cluster[pdist]++;
+            }
         }
-      }
+
+        // 4) Write into your hitmaps (cap the second dimension as you intended)
+        // NOTE: Ensure transition_hitmap_* second dimension is large enough.
+        for (size_t i = 0; i < K; ++i) {
+            // offset map: bucket by count, capped at K (or whatever max you support)
+            size_t off_bucket = static_cast<size_t>(seen_offset[i] > K ? K : seen_offset[i]);
+            transition_hitmap_for_offset[i][off_bucket]++;
+
+            // virtual page cluster: bucket by count, capped
+            size_t vp_bucket  = static_cast<size_t>(vpages_cluster[i] > K ? K : vpages_cluster[i]);
+            transition_hitmap_for_vp_page[i][vp_bucket]++;
+
+            // physical page cluster (if you maintain it similarly)
+            size_t pp_bucket  = static_cast<size_t>(ppages_cluster[i] > K ? K : ppages_cluster[i]);
+            transition_hitmap_for_vp_page[i][pp_bucket]++;
+        }
+
+        // Reset history window
+        eviction_history_pte.clear();
     }
 
-    string off_string = "";
-    for(int i=0; i< seen_offset.size(); i++)
-    {
-      off_string += to_string(seen_offset[i]) + ", ";
-      transition_hitmap_for_offset[i][seen_offset[i]]++;
-    }
-    // cout << current_cycle << ": " << off_string << '\n';
-
-    for(int i=0; i< vpages_cluster.size(); i++)
-    {
-      int index = vpages_cluster[i] > 8 ? 8:vpages_cluster[i];
-      transition_hitmap_for_vp_page[i][index]++;
-    }
-
-    skip_list.clear();
-    eviction_history_pte.clear();
-  }
-  eviction_history_pte.insert({v_address, data});
+    // Append newest eviction
+    // eviction_history_pte is assumed to be a map<va, pa> (or unordered_map)
+    eviction_history_pte.insert({v_address, data});
 }

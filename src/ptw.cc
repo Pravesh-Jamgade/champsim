@@ -612,3 +612,10 @@ void PageTableWalker::victima_update(uint64_t addr, int signal, int hit_where)
   //   ptw_pred[page] = {0, 0, 0};
   // }
 }
+
+
+std::pair<uint64_t, bool> PageTableWalker::get_va_to_pa(uint32_t cpu_num, uint64_t vaddr)
+{
+  auto [ppn, fault] = vmem.get_vp_to_pp(cpu_num, vaddr);
+  return make_pair(ppn, fault);
+}
