@@ -46,7 +46,7 @@ public:
   vector<vector<int>> transition_hitmap_for_offset;
 
   // distance VS number of times this offset seen 
-  vector<vector<int>> transition_hitmap_for_vp_page;
+  vector<vector<int>> transition_hitmap_for_vp_page, transition_hitmap_for_pp_page;
 
   logger dlog;
 
@@ -317,8 +317,8 @@ public:
       }
 
 
-      cout << "Transition hitmap for distance between evicted page over window:\n";
-      cout << "Distance V/s frequency_of_distance\n\n";
+      cout << "(Virtual Page) Transition hitmap for distance between evicted page over window:\n";
+      cout << "Virtual Page: Distance V/s frequency_of_distance\n\n";
 
       // Print column headers
       cout << setw(6) << " " << "|";
@@ -339,6 +339,32 @@ public:
           cout << setw(6) << i << "|";
           for (int j = 0; j < transition_hitmap_for_vp_page[i].size(); ++j) {
               cout << setw(4) << transition_hitmap_for_vp_page[i][j];
+          }
+          cout << '\n';
+      }
+
+      cout << "(Physical Page) Transition hitmap for distance between evicted page over window:\n";
+      cout << "Physical Page: Distance V/s frequency_of_distance\n\n";
+
+      // Print column headers
+      cout << setw(6) << " " << "|";
+      for (int i = 0; i < transition_hitmap_for_pp_page[0].size(); ++i) {
+          cout << setw(4) << i;
+      }
+      cout << '\n';
+
+      // Print separator line
+      cout << string(6, '-') << "+";
+      for (int i = 0; i < transition_hitmap_for_pp_page[0].size(); ++i) {
+          cout << string(4, '-');
+      }
+      cout << '\n';
+
+      // Print each row
+      for (int i = 0; i < 8; ++i) {
+          cout << setw(6) << i << "|";
+          for (int j = 0; j < transition_hitmap_for_pp_page[i].size(); ++j) {
+              cout << setw(4) << transition_hitmap_for_pp_page[i][j];
           }
           cout << '\n';
       }
@@ -370,6 +396,10 @@ public:
     transition_hitmap_for_vp_page = vector<vector<int>>(8);
     for(int i=0; i< 8; i++)
       transition_hitmap_for_vp_page[i] = vector<int>(9, 0);
+
+    transition_hitmap_for_pp_page = vector<vector<int>>(8);
+    for(int i=0; i< 8; i++)
+      transition_hitmap_for_pp_page[i] = vector<int>(9, 0);
 
     transition_hitmap_for_offset = vector<vector<int>>(8);
     for(int i=0; i< 8; i++)
