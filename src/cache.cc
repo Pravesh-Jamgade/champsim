@@ -1722,7 +1722,7 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
 
             // physical page cluster (if you maintain it similarly)
             size_t pp_bucket  = static_cast<size_t>(ppages_cluster[i] > K ? K : ppages_cluster[i]);
-            transition_hitmap_for_vp_page[i][pp_bucket]++;
+            transition_hitmap_for_pp_page[i][pp_bucket]++;
         }
 
         // Reset history window

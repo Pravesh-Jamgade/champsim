@@ -20,6 +20,7 @@
 #include "dramsim3_wrapper.hpp"
 #include "INIReader.h"
 #include "victima.h"
+#include "hist.h"
 
 map<uint64_t, PTWC> ptw_pred;
 map<uint64_t, uint64_t> l2_pte_map;
@@ -57,6 +58,8 @@ extern int KNOB_ENABLE_MFOE_V2;
 extern int KNOB_ENABLE_CTX;
 
 std::vector<tracereader*> traces;
+
+void print_ptw_freq_and_cost();
 
 uint64_t champsim::deprecated_clock_cycle::operator[](std::size_t cpu_idx)
 {
@@ -812,96 +815,72 @@ int main(int argc, char** argv)
 #endif
 
 DRAM.PrintStats();
-//usercode: Make sure to add new stats here whenever a new stat is added to Cache/Memory
-vector<string> colStats;
-colStats.push_back("Metric");
-
-// LOAD
-for(int i=0; i< Basic::BASIC_END; i++)
-  colStats.push_back("LOAD QUEUE "+Basic_str[i]);
-for(int i=0; i< Stall::STALL_END; i++)
-  colStats.push_back("LOAD QUEUE "+Stall_str[i]);
-
-// STORE
-for(int i=0; i< Basic::BASIC_END; i++)
-  colStats.push_back("STORE QUEUE "+Basic_str[i]);
-for(int i=0; i< Stall::STALL_END; i++)
-  colStats.push_back("STORE QUEUE "+Stall_str[i]);
-
-// PREFETCH
-for(int i=0; i< Basic::BASIC_END; i++)
-  colStats.push_back("PREFETCH QUEUE "+Basic_str[i]);
-for(int i=0; i< Stall::STALL_END; i++)
-  colStats.push_back("PREFETCH QUEUE "+Stall_str[i]);
-
-// MSHR
-for(int i=0; i< Basic::BASIC_END; i++)
-  colStats.push_back("MSHR QUEUE "+Basic_str[i]);
-for(int i=0; i< Stall::STALL_END; i++)
-  colStats.push_back("MSHR QUEUE "+Stall_str[i]);
-
-//ADV
-for(int i=0; i< AdvStat::ADVSTAT_END; i++)
-  colStats.push_back(AdvStat_str[i]);
-
-// collect values: BEAWARE of order
-vector<vector<string>> allRowVal;
-allRowVal.push_back(colStats);
-
-for(auto c: caches)
-{
-  vector<string> rowVal;
-
-  rowVal.push_back(c->NAME);
-
-  // LOAD
-  for(int i=0; i< Basic::BASIC_END; i++)
-    rowVal.push_back(to_string(c->cacheDataModel->rd_queue[i]));
-  for(int i=0; i< Stall::STALL_END; i++)
-    rowVal.push_back(to_string(c->cacheDataModel->rd_queue_stalls[i]));
-
-  // STORE
-  for(int i=0; i< Basic::BASIC_END; i++)
-    rowVal.push_back(to_string(c->cacheDataModel->wr_queue[i]));
-  for(int i=0; i< Stall::STALL_END; i++)
-    rowVal.push_back(to_string(c->cacheDataModel->wr_queue_stalls[i]));
-
-  // PREFETCH
-  for(int i=0; i< Basic::BASIC_END; i++)
-    rowVal.push_back(to_string(c->cacheDataModel->pf_queue[i]));
-  for(int i=0; i< Stall::STALL_END; i++)
-    rowVal.push_back(to_string(c->cacheDataModel->pf_queue_stalls[i]));
-
-  // MSHR
-  for(int i=0; i< Basic::BASIC_END; i++)
-    rowVal.push_back(to_string(c->cacheDataModel->mshr_queue[i]));
-  for(int i=0; i< Stall::STALL_END; i++)
-    rowVal.push_back(to_string(c->cacheDataModel->mshr_queue_stalls[i]));
-
-  //ADV
-  for(int i=0; i< AdvStat::ADVSTAT_END; i++)
-    rowVal.push_back(to_string(c->cacheDataModel->adv_stats[i]));
-
-  allRowVal.push_back(rowVal);
-}
-
-for(int i=0; i< allRowVal.size(); i++)
-{
-  string output ="";
-  for(auto v: allRowVal[i])
-  {
-    output += v + ", ";
-  }
-  cout << output << '\n';
-}
 
 for(auto cache: caches)
 {
   cache->print_logs();
 }
 
+print_ptw_freq_and_cost();
 
 cout << "\nDone!\n";
 
   return 0;
+}
+
+
+void print_ptw_freq_and_cost()
+{
+  cout << '\n';
+  cout << "A page has done PTW x-times (x-axis) and it has reached to DRAM y-times (y-axis) (out of x): [x][y] = event_count \n";
+  cout << "PTW frequency VS cost\n";
+  vector<vector<int>> ptw_freq_cost(10, vector<int>(10, 0));
+  for(auto entry: ptw_pred)
+  {
+    int freq = entry.second.freq;
+    int cost = entry.second.cost;
+
+    int modfreq = freq % ptw_freq_cost.size();
+    int modcost = cost % ptw_freq_cost[0].size();
+    if(modfreq == freq && modcost == cost)
+    {
+      ptw_freq_cost[freq][cost]++;
+    }
+    else if(modfreq == freq && modcost != cost)
+    {
+      ptw_freq_cost[freq][9]++;
+    }
+    else if(modfreq != freq && modcost == cost)
+    {
+      ptw_freq_cost[9][cost]++;
+    }
+    else
+    {
+      ptw_freq_cost[9][9]++;
+    }
+  }
+
+  // Print column headers
+  cout << setw(6) << " " << "|";
+  for (int i = 0; i < ptw_freq_cost[0].size(); ++i) {
+      cout << setw(4) << i;
+  }
+  cout << '\n';
+
+  // Print separator line
+  cout << string(6, '-') << "+";
+  for (int i = 0; i < ptw_freq_cost[0].size(); ++i) {
+      cout << string(4, '-');
+  }
+  cout << '\n';
+
+  for(int i=0; i< ptw_freq_cost.size(); i++)
+  {
+    cout << setw(6) << i << "|";
+    for(int j=0; j< ptw_freq_cost[0].size(); j++)
+    {
+      cout<<setw(4)<<ptw_freq_cost[i][j];
+    }
+    cout<<'\n';
+  }
 }
