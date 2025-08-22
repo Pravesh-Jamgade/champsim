@@ -20,6 +20,7 @@
 #include "dramsim3_wrapper.hpp"
 #include "INIReader.h"
 #include "victima.h"
+#include "hist.h"
 
 map<uint64_t, PTWC> ptw_pred;
 map<uint64_t, uint64_t> l2_pte_map;
@@ -57,6 +58,8 @@ extern int KNOB_ENABLE_MFOE_V2;
 extern int KNOB_ENABLE_CTX;
 
 std::vector<tracereader*> traces;
+
+void print_ptw_freq_and_cost();
 
 uint64_t champsim::deprecated_clock_cycle::operator[](std::size_t cpu_idx)
 {
@@ -818,7 +821,66 @@ for(auto cache: caches)
   cache->print_logs();
 }
 
+print_ptw_freq_and_cost();
+
 cout << "\nDone!\n";
 
   return 0;
+}
+
+
+void print_ptw_freq_and_cost()
+{
+  cout << '\n';
+  cout << "A page has done PTW x-times (x-axis) and it has reached to DRAM y-times (y-axis) (out of x): [x][y] = event_count \n";
+  cout << "PTW frequency VS cost\n";
+  vector<vector<int>> ptw_freq_cost(10, vector<int>(10, 0));
+  for(auto entry: ptw_pred)
+  {
+    int freq = entry.second.freq;
+    int cost = entry.second.cost;
+
+    int modfreq = freq % ptw_freq_cost.size();
+    int modcost = cost % ptw_freq_cost[0].size();
+    if(modfreq == freq && modcost == cost)
+    {
+      ptw_freq_cost[freq][cost]++;
+    }
+    else if(modfreq == freq && modcost != cost)
+    {
+      ptw_freq_cost[freq][9]++;
+    }
+    else if(modfreq != freq && modcost == cost)
+    {
+      ptw_freq_cost[9][cost]++;
+    }
+    else
+    {
+      ptw_freq_cost[9][9]++;
+    }
+  }
+
+  // Print column headers
+  cout << setw(6) << " " << "|";
+  for (int i = 0; i < ptw_freq_cost[0].size(); ++i) {
+      cout << setw(4) << i;
+  }
+  cout << '\n';
+
+  // Print separator line
+  cout << string(6, '-') << "+";
+  for (int i = 0; i < ptw_freq_cost[0].size(); ++i) {
+      cout << string(4, '-');
+  }
+  cout << '\n';
+
+  for(int i=0; i< ptw_freq_cost.size(); i++)
+  {
+    cout << setw(6) << i << "|";
+    for(int j=0; j< ptw_freq_cost[0].size(); j++)
+    {
+      cout<<setw(4)<<ptw_freq_cost[i][j];
+    }
+    cout<<'\n';
+  }
 }
