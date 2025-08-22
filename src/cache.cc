@@ -813,8 +813,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             return false;
           }
 
-          // tracking
-          func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
           PACKET writeback_packet;
 
           writeback_packet.fill_level = l2cache->fill_level;
@@ -830,13 +828,20 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
           if(KNOB_EXTEND_VICTIMA)
           {
-            // make space in hash_cache, sends invalid packet to L2 via add_rq()
-            adjust_hashcache();
-
-            // hence check again if RQ has space avail
-            if(l2cache->get_occupancy(2,0) == l2cache->get_size(2,0))
+            // order matters
             {
-              return false;
+              // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full 
+              if(hash_cache.size() >= KNOB_HASH_CACHE_MAX_LIMIT)
+              {
+                // test L2 read queue occupancy: if full we cannot send invalidation packet
+                if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
+                {
+                  return false;
+                }
+
+                // make space in hash_cache, sends invalid packet to L2 via add_rq()
+                adjust_hashcache();
+              }
             }
 
             // check if cluster is avail to be written at L2
@@ -844,10 +849,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             {
               l2cache->add_wq(&writeback_packet);
             }
-            // if no cluster avail and PTEContiner is full for offset, then write it as normal victima packet to L2
-            else if(add_to_cluster(&writeback_packet) == -1)
+            
+            // add packet to relevant cluster if space is available; otherwise just write it as normal victima or leave it?
+            if(add_to_cluster(&writeback_packet) == -1)
             {
-              l2cache->add_wq(&writeback_packet);
+
             }
             // if packet added to cluster then write will be done when proper cluster is formed later in the process
             else
@@ -859,8 +865,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           {
             l2cache->add_wq(&writeback_packet);
           }
-          
-          l2cache->add_wq(&writeback_packet);
+
+          // tracking
+          func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
           victima_counters[VC::STLB_EVICT]++;
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
@@ -1771,27 +1778,25 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
     eviction_history_pte.insert({v_address, data});
 }
 
+// check if we are above limit
+// remove entry is hash_cache reached to its limit
+// invalidation packet for same entry sent to L2
 void CACHE::adjust_hashcache()
 {
-  // cluster-8 available
-  // test occupancy in hash_cache
-  if(hash_cache.size() == KNOB_HASH_CACHE_MAX_LIMIT)
-  {
-    //*** test: L2 rq occupancy alredy done before ***//
-    // invalid entry is in the L2
-    pair<string, uint64_t> hash_entry = hash_cache.front();
+  //*** test: L2 rq occupancy alredy done before ***//
+  // invalidate corresponding entry is in the L2, since we are removing hash_entry
+  pair<string, uint64_t> hash_entry = hash_cache.front();
 
-    // prepare packet to invalidate entry in L2 if it exists
-    PACKET invpacket;
-    invpacket.address = hash_entry.second;
-    invpacket.vflag[VF::INVALIDATE_PACKET] = 1;
+  // prepare packet to invalidate entry in L2 if it exists
+  PACKET invpacket;
+  invpacket.address = hash_entry.second;
+  invpacket.vflag[VF::INVALIDATE_PACKET] = 1;
 
-    // packet sent to L2
-    l2cache->add_rq(&invpacket);
+  // packet sent to L2
+  l2cache->add_rq(&invpacket);
 
-    // remove entry from hash_cache
-    hash_cache.pop_front();
-  }
+  // remove entry from hash_cache
+  hash_cache.pop_front();
 }
 
 // Proposed IDEA @STLB
@@ -1817,11 +1822,11 @@ int CACHE::use_cluster(PACKET* packet)
 }
 
 // Proposed IDEA @STLB
-// -1: write as victima packet
-// -2: write later collect now
+// -1: cannot be inserted. write as victima packet
+// -2: insert done. write later collect now
 int CACHE::add_to_cluster(PACKET* packet)
 {
-  uint64_t offset = (packet->address >> LOG2_PAGE_SIZE) & 0x7f;
+  uint64_t offset = (packet->address >> LOG2_PAGE_SIZE) & 0x7;
   uint64_t vp = (packet->address & ~(PAGE_SIZE-1));
   uint64_t pp = (packet->data & ~(PAGE_SIZE-1));
 
