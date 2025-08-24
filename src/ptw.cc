@@ -88,6 +88,9 @@ void PageTableWalker::handle_read()
   {
     PACKET& handle_pkt = RQ.front();
 
+    // #times page-table-walk is requested
+    victima_update(handle_pkt.v_address, PageFeature::PTW_Freq);
+
     DP(if (warmup_complete[packet->cpu]) {
       std::cout << "[" << NAME << "] " << __func__ << " instr_id: " << handle_pkt.instr_id;
       std::cout << " address: " << std::hex << (handle_pkt.address >> LOG2_PAGE_SIZE) << " full_addr: " << handle_pkt.address;
@@ -220,8 +223,6 @@ void PageTableWalker::handle_read()
       it->event_cycle = std::numeric_limits<uint64_t>::max();
 
       it->uv_cycle_enqueue = current_cycle;
-
-      victima_update(packet.v_address, PageFeature::PTW_Freq);
     }
     
     RQ.pop_front();
