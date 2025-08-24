@@ -15,15 +15,20 @@
 // keep resident memory bounded per window (tweak to your RAM)
 #define WINDOW_BYTES  (32ULL << 30) // 32 GB
 
+static size_t passes = 10; // number of passes to run
+
 int main(void) {
-    uint8_t *region = (uint8_t*)mmap(NULL, REGION_SIZE, PROT_READ|PROT_WRITE,
-                           MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE, -1, 0);
-    if (region == MAP_FAILED) { perror("mmap"); return 1; }
+    
+    while(passes--){
 
-    // OPTIONAL: disable THP manually before running to avoid PMD-huge mappings:
-    //   echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
+        uint8_t *region = (uint8_t*)mmap(NULL, REGION_SIZE, PROT_READ|PROT_WRITE,
+            MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE, -1, 0);
+        if (region == MAP_FAILED) { perror("mmap"); return 1; }
 
-    for (uint64_t pgd_off = 0; pgd_off < REGION_SIZE; pgd_off += PGD_STEP) {
+        // OPTIONAL: disable THP manually before running to avoid PMD-huge mappings:
+        //   echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
+
+        for (uint64_t pgd_off = 0; pgd_off < REGION_SIZE; pgd_off += PGD_STEP) {
 
         // Process this PGD-sized chunk in windows to cap RSS
         for (uint64_t win_base = pgd_off; win_base < pgd_off + PGD_STEP; ) {
@@ -33,25 +38,25 @@ int main(void) {
             // Iterate PUD entries (1 GB) within this window
             for (uint64_t pud_off = win_base; pud_off < win_base + win; pud_off += PUD_STEP) {
 
-                // Iterate PMD entries (2 MB) in this PUD
-                for (uint64_t pmd_off = pud_off; pmd_off < pud_off + PUD_STEP; pmd_off += PMD_STEP) {
-                    // Touch ONE 4KB in this PMD to:
-                    //  - allocate PUD (first time in this 1GB),
-                    //  - allocate PMD (first time in this 2MB),
-                    //  - allocate PTE page (L1),
-                    //  - allocate a single data page (4KB)
-                    volatile uint8_t *addr = region + pmd_off; // k = 0 → first PTE in the PMD
-                    *addr = 1;
-                }
+            // Iterate PMD entries (2 MB) in this PUD
+            for (uint64_t pmd_off = pud_off; pmd_off < pud_off + PUD_STEP; pmd_off += PMD_STEP) {
+                // Touch ONE 4KB in this PMD to:
+                //  - allocate PUD (first time in this 1GB),
+                //  - allocate PMD (first time in this 2MB),
+                //  - allocate PTE page (L1),
+                //  - allocate a single data page (4KB)
+                volatile uint8_t *addr = region + pmd_off; // k = 0 → first PTE in the PMD
+                *addr = 1;
+            }
             }
 
             // Reclaim the window to keep RSS bounded
             if (madvise(region + win_base, win, MADV_DONTNEED) != 0) perror("madvise");
 
             win_base += win;
+            }
         }
+        munmap(region, REGION_SIZE);
     }
-
-    munmap(region, REGION_SIZE);
     return 0;
 }

@@ -119,6 +119,10 @@ void WriteCurrentInstruction()
   // std::memcpy(buf, &curr_instr, sizeof(trace_instr_format_t));
   // outfile.write(buf, sizeof(trace_instr_format_t));
 
+  // typename decltype(outfile)::char_type temp[sizeof(trace_instr_format_t)];
+  // std::memcpy(temp, &curr_instr, sizeof(trace_instr_format_t));
+  // outfile.write(temp, sizeof(trace_instr_format_t));
+
   size_t next_head = 0;
   next_head = (buf->head + 1) % TRACE_BUF_CAP;
   while(next_head == buf->tail)
