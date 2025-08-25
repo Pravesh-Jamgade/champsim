@@ -7,6 +7,7 @@
 
 #include "cache.h"
 #include "victima.h"
+#include "pagetable.h"
 // Extra configguration
 extern int KNOB_TTP;
 extern int KNOB_SMT_ENABLE;
@@ -15,6 +16,7 @@ extern int KNOB_ENABLE_MFOE_V2;
 #define PSC_READ_LATENCY 2
 
 extern map<uint64_t, PTWC> ptw_pred;
+extern PageTable* pageTable;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -198,6 +200,7 @@ void PageTableWalker::handle_read()
       packet.translation_level = packet.init_translation_level;
       packet.to_return = {this};
       packet.thread_id = handle_pkt.thread_id;
+      packet.vflag[VF::victima_l2_insert] = (ptw_level==1 && handle_pkt.vflag[VF::victima_l2_insert] && ptw_level==1 && handle_pkt.vflag[VF::victima]);//only lead PTE needs this flag 
 
       int rq_index = lower_level->add_rq(&packet);
       if (rq_index == -2)
@@ -253,6 +256,7 @@ void PageTableWalker::handle_fill()
       // We dont have free frame availbale, hence minor fault.
       if (warmup_complete[cpu] && fault) 
       {
+        // we are using existing mapping and beliving it to be true 
         fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
         MSHR.sort(ord_event_cycle<PACKET>{});
 
@@ -405,6 +409,7 @@ void PageTableWalker::handle_fill()
             packet.to_return = {this};
             packet.translation_level = ptw_level;
             packet.thread_id = fill_mshr->thread_id;
+            packet.vflag[VF::victima_l2_insert] = (ptw_level==1 && fill_mshr->vflag[VF::victima_l2_insert] && fill_mshr->vflag[VF::victima]);// if level=1 then only translation cache-block to tlb-block at L2
   
             int rq_index = lower_level->add_rq(&packet);
             if (rq_index != -2) 

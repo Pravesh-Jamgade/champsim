@@ -31,6 +31,8 @@ enum VF
   PACKET_AP_RECV,
   MSHR_WAIT_AP,
   MSHR_WAIT_DP,
+
+  victima_l2_insert,
   VF_END
 };
 

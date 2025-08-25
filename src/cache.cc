@@ -51,7 +51,7 @@ void CACHE::handle_fill()
           return;
         }
 
-        // request again
+        // POM failed, now request for PTW
         fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
         fill_mshr->dtype = DataType::INVALID;
         fill_mshr->hit_where = CACHE_ID_END;
@@ -81,6 +81,12 @@ void CACHE::handle_fill()
     
     // find victim
     uint32_t set = get_set(fill_mshr->address);
+
+    // transform CacheBlock to TLBBlock: change indexing to use VA and ASID
+    if(KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima] && fill_mshr->vflag[VF::victima_l2_insert])
+    {
+      set = get_set(fill_mshr->v_address);
+    }
 
     auto set_begin = std::next(std::begin(block), set * NUM_WAY);
     auto set_end = std::next(set_begin, NUM_WAY);
@@ -802,29 +808,39 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     {
       if(KNOB_VICTIMA)
       {
-        if(cache_is[CACHE_ID::IS_STLB] && victima_lookup(handle_pkt.v_address))
+        if(cache_is[CACHE_ID::IS_STLB])// && victima_lookup(handle_pkt.v_address))
         {
-          if(l2cache->get_occupancy(2,0) == l2cache->get_size(2,0))
+          CACHE* cache = (CACHE*)l2cache->getObject();
+          pair<bool, size_t> response = cache->peek_singleline(handle_pkt);
+
+          // TLB block is absent at L2
+          if(!response.first)
           {
-            return false;
+            // // initiate PTW when RQ has occupancy & TLB block is absent
+            if(lower_level->get_occupancy(1,0) == lower_level->get_size(1,0))
+            {
+              return false;
+            }
+
+            // Sending evicted packet for PTW
+            // // tracking
+            func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
+
+            PACKET ptwpacket;
+            ptwpacket.to_return = {};
+            ptwpacket.cpu = handle_pkt.cpu;
+            ptwpacket.address = fill_block.address;
+            ptwpacket.data = fill_block.data;
+            ptwpacket.instr_id = handle_pkt.instr_id;
+            ptwpacket.ip = 0;
+            ptwpacket.type = TRANSLATION;
+            ptwpacket.vflag[VF::victima] = true;
+            ptwpacket.vflag[VF::victima_l2_insert] = true;//storing result of leaf-pte to L2 and transforming it to TLBblock or victimablock
+            ptwpacket.thread_id = handle_pkt.thread_id;
+            victima_counters[VC::STLB_EVICT]++;
+
+            lower_level->add_rq(&ptwpacket);
           }
-
-          // tracking
-          func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
-          PACKET writeback_packet;
-
-          writeback_packet.fill_level = l2cache->fill_level;
-          writeback_packet.cpu = handle_pkt.cpu;
-          writeback_packet.address = fill_block.address;
-          writeback_packet.data = fill_block.data;
-          writeback_packet.instr_id = handle_pkt.instr_id;
-          writeback_packet.ip = 0;
-          writeback_packet.type = WRITEBACK;
-          writeback_packet.vflag[VF::victima] = true;
-          writeback_packet.dtype = DataType::VIC;
-          writeback_packet.thread_id = handle_pkt.thread_id;
-          l2cache->add_wq(&writeback_packet);
-          victima_counters[VC::STLB_EVICT]++;
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
@@ -837,7 +853,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         if(cache_is[IS_L2])
         {
           uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : OFFSET_BITS);
-          EvictCause evict_cause = (handle_pkt.type == WRITEBACK && handle_pkt.vflag[VF::victima] && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
+          EvictCause evict_cause = (handle_pkt.vflag[VF::victima] && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
           victima_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::VictimaPollutionTracker, evict_cause), fill_block.thread_id));
         }
       }
@@ -879,8 +895,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         else
         {
           uint64_t cache_block_index = (handle_pkt.address > 6) & 0x3f;
-          page_it->second.test(cache_block_index);
-          cacheDataModel->category_of_misses[MISS::CAP]++;
+          if(page_it->second.test(cache_block_index))
+            cacheDataModel->category_of_misses[MISS::CAP]++;
         }
       }
 

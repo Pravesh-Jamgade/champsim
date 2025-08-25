@@ -21,7 +21,9 @@
 #include "INIReader.h"
 #include "victima.h"
 #include "hist.h"
+#include "pagetable.h"
 
+PageTable* pageTable;
 map<uint64_t, PTWC> ptw_pred;
 map<uint64_t, uint64_t> l2_pte_map;
 
@@ -592,6 +594,7 @@ int main(int argc, char** argv)
 
   // overwrite relevant to extra settings
   overwrite_cache();
+  pageTable = new PageTable();
 
   printf("Simulator Configuration\n%s", instantiation_code);
 
