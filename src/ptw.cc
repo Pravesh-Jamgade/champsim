@@ -16,7 +16,7 @@ extern int KNOB_ENABLE_MFOE_V2;
 #define PSC_READ_LATENCY 2
 
 extern map<uint64_t, PTWC> ptw_pred;
-extern PageTable* pageTable;
+extern vector<PageTable*> ptt; // page-table-tracker
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -33,6 +33,7 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
 
   dlog = logger();
   ptw_datamodel = new PTWDataModel(cpu);
+  fill_counters.resize(5);
   
   // if(KNOB_PSCL_ROOT_LEVEL != (vmem.pt_levels-1))
   // {
@@ -78,8 +79,11 @@ void PageTableWalker::_overwrite()
 
   pscl_array.reverse();
   // supporting 16 threads
-  for(int i=0; i< 16; i++)
-    CR3_addr.push_back(vmem.get_pte_pa(i, 0, vmem.pt_levels).first);
+  // for(int i=0; i< 16; i++)
+  //   CR3_addr.push_back(vmem.get_pte_pa(i, 0, vmem.pt_levels).first);
+  CR3_addr.reserve(16);
+
+  vmem.print_stat();
 }
 
 void PageTableWalker::handle_read()
@@ -89,6 +93,8 @@ void PageTableWalker::handle_read()
   while (reads_this_cycle > 0 && RQ.has_ready() && std::size(MSHR) != MSHR_SIZE) 
   {
     PACKET& handle_pkt = RQ.front();
+
+    CR3_addr.push_back(vmem.get_pte_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, 0, vmem.pt_levels).first);
 
     DP(if (warmup_complete[packet->cpu]) {
       std::cout << "[" << NAME << "] " << __func__ << " instr_id: " << handle_pkt.instr_id;
@@ -105,7 +111,7 @@ void PageTableWalker::handle_read()
     uint32_t ptw_level = vmem.pt_levels;
     // first pa to start page table walk
     // shift amount is 27 for 4-th-level. How ? --> 9 * (4-1) = 27 --> i.e [9 * (curr_level-1)]
-    uint64_t next_pt_addr = splice_bits(CR3_addr[handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, ptw_level-1) * PTE_BYTES, LOG2_PAGE_SIZE);
+    uint64_t next_pt_addr = splice_bits(CR3_addr[cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, ptw_level-1) * PTE_BYTES, LOG2_PAGE_SIZE);
 
     bool miss_at_root = true;
 
@@ -113,7 +119,7 @@ void PageTableWalker::handle_read()
     {
       // optimized
       for (auto pscl : pscl_array) {
-        if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) {
+        if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.v_address, handle_pkt.thread_id); check_addr.has_value()) {
           next_pt_addr = check_addr.value();
           ptw_level = pscl->level - 1; 
         }
@@ -127,7 +133,7 @@ void PageTableWalker::handle_read()
       {
         if(ptw_level != pscl->level)
           continue;
-        if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.thread_id); check_addr.has_value()) 
+        if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.v_address, handle_pkt.thread_id); check_addr.has_value()) 
         {
           dlog.log("pscl_hit", NAME, handle_pkt.address, handle_pkt.v_address,"instr", handle_pkt.instr_id,"data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, "cycle", current_cycle,'\n');
 
@@ -191,6 +197,7 @@ void PageTableWalker::handle_read()
     if(miss_at_root)
     {
       PACKET packet = handle_pkt;
+      packet.page_table_base_address = CR3_addr[cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id];
       packet.fill_level = lower_level->fill_level; // This packet will be sent from L1 to PTW.
       packet.address = next_pt_addr;
       packet.v_address = handle_pkt.address;
@@ -256,7 +263,10 @@ void PageTableWalker::handle_fill()
       // We dont have free frame availbale, hence minor fault.
       if (warmup_complete[cpu] && fault) 
       {
-        // we are using existing mapping and beliving it to be true 
+        // we are using existing mapping (va_to_pa) and beliving it to be true when it says fault
+        // we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
+        ptt[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
+
         fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
         MSHR.sort(ord_event_cycle<PACKET>{});
 
@@ -314,6 +324,10 @@ void PageTableWalker::handle_fill()
 
       if (warmup_complete[cpu] && fault) 
       {
+        // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
+        ptt[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
+        // cout << std::hex << fill_mshr->page_table_base_address << ", " << fill_mshr->address << ", " << addr << '\n';
+
         fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? 1:vmem.minor_fault_penalty);
         MSHR.sort(ord_event_cycle<PACKET>{});
 
@@ -339,6 +353,7 @@ void PageTableWalker::handle_fill()
         {
           dlog.log("pscl_fill"+to_string((int)fill_mshr->translation_level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
 
+          fill_counters[fill_mshr->translation_level]++;
           if (fill_mshr->translation_level == PSCL5.level)
             PSCL5.fill_cache(addr, fill_mshr->v_address, fill_mshr->thread_id);
           if (fill_mshr->translation_level == PSCL4.level)
@@ -371,7 +386,7 @@ void PageTableWalker::handle_fill()
             if(ptw_level != pscl->level)
               continue;
             
-            if (auto check_addr = pscl->check_hit(next_pt_addr, fill_mshr->thread_id); check_addr.has_value()) 
+            if (auto check_addr = pscl->check_hit(next_pt_addr, fill_mshr->v_address, fill_mshr->thread_id); check_addr.has_value()) 
             {
               dlog.log("pscl_hit"+to_string(fill_mshr->translation_level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
 
@@ -415,7 +430,8 @@ void PageTableWalker::handle_fill()
             if (rq_index != -2) 
             {
               fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
-  
+              
+              fill_mshr->page_table_base_address = addr;
               MSHR.splice(std::end(MSHR), MSHR, fill_mshr);
   
               // usercode
@@ -514,8 +530,13 @@ uint32_t PageTableWalker::get_size(uint8_t queue_type, uint64_t address)
 
 void PagingStructureCache::fill_cache(uint64_t next_level_paddr, uint64_t vaddr, int thread_id)
 {
-  assert(thread_id != -1);
-  auto set_idx = (vaddr >> vmem.shamt(level + 1)) & bitmask(lg2(NUM_SET));
+  // assert(thread_id != -1);
+  if(thread_id == -1)
+  {
+    cout << "fill_cache @ ptw.cc failed\n";
+    exit(0);
+  }
+  auto set_idx = (vaddr >> vmem.shamt(level - 1)) & bitmask(lg2(NUM_SET));
   auto set_begin = std::next(std::begin(block), set_idx * NUM_WAY);
   auto set_end = std::next(set_begin, NUM_WAY);
   auto fill_block = std::max_element(set_begin, set_end, lru_comparator<block_t, block_t>());
@@ -524,18 +545,26 @@ void PagingStructureCache::fill_cache(uint64_t next_level_paddr, uint64_t vaddr,
   std::for_each(set_begin, set_end, lru_updater<block_t>(fill_block));
 }
 
-std::optional<uint64_t> PagingStructureCache::check_hit(uint64_t address, int thread_id)
+std::optional<uint64_t> PagingStructureCache::check_hit(uint64_t address, uint64_t vaddr, int thread_id)
 {
-  auto set_idx = (address >> vmem.shamt(level + 1)) & bitmask(lg2(NUM_SET));
+  // assert(thread_id != -1);
+  if(thread_id == -1)
+  {
+    cout << "check_hit @ ptw.cc failed\n";
+    exit(0);
+  }
+  /*reason: cache_fill uses indexing from vaddr, then check_hit must use virtual address bits embedded in page_offset_part of generated phys.address
+  [page_nuber|**9bit_offset**|PTE_offset] --> extract from next_pte_base i.e. address*/
+  auto set_idx = (vaddr >> vmem.shamt(level - 1)) & bitmask(lg2(NUM_SET));
   auto set_begin = std::next(std::begin(block), set_idx * NUM_WAY);
   auto set_end = std::next(set_begin, NUM_WAY);
-  auto hit_block = std::find_if(set_begin, set_end, eq_addr<block_t>{address, vmem.shamt(level + 1)});
+  auto hit_block = std::find_if(set_begin, set_end, eq_addr<block_t>{address, vmem.shamt(level - 1)});
 
   if (hit_block != set_end)
   {
     if(hit_block->thread_id == thread_id)
     {
-      return splice_bits(hit_block->data, vmem.get_offset(address, level) * PTE_BYTES, LOG2_PAGE_SIZE);
+      return splice_bits(hit_block->data, vmem.get_offset(address, level - 1) * PTE_BYTES, LOG2_PAGE_SIZE);
     }
   }
 

@@ -51,7 +51,7 @@ std::pair<uint64_t, bool> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t vad
 
 std::pair<uint64_t, bool> VirtualMemory::get_pte_pa(uint32_t cpu_num, uint64_t vaddr, uint32_t level)
 {
-  std::tuple key{cpu_num, vaddr >> shamt(level + 1), level};
+  std::tuple key{cpu_num, vaddr >> shamt(level-1), level};
   auto [ppage, fault] = page_table.insert({key, next_pte_page});
 
   // this PTE doesn't yet have a mapping
@@ -63,5 +63,12 @@ std::pair<uint64_t, bool> VirtualMemory::get_pte_pa(uint32_t cpu_num, uint64_t v
     }
   }
 
-  return {splice_bits(ppage->second, get_offset(vaddr, level) * PTE_BYTES, lg2(page_size)), fault};
+  return {splice_bits(ppage->second, get_offset(vaddr, level-1) * PTE_BYTES, lg2(page_size)), fault};
+}
+
+
+void VirtualMemory::print_stat()
+{
+  std::cout << "page table size(PT), " << page_table.size() << '\n';
+  std::cout << "mapped pages(data), " << vpage_to_ppage_map.size() << '\n';
 }

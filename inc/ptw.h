@@ -32,7 +32,7 @@ public:
   const std::size_t level;
   PagingStructureCache(std::string v1, uint8_t v2, uint32_t v3, uint32_t v4) : NAME(v1), NUM_SET(v3), NUM_WAY(v4), level(v2) {}
 
-  std::optional<uint64_t> check_hit(uint64_t address, int thread_id);
+  std::optional<uint64_t> check_hit(uint64_t address, uint64_t vaddr, int thread_id);
   void fill_cache(uint64_t next_level_paddr, uint64_t vaddr, int thread_id);
 
   void invalidate(int thread_id)
@@ -86,17 +86,22 @@ public:
   PagingStructureCache PSCL5, PSCL4, PSCL3, PSCL2;
 
   vector<uint64_t> CR3_addr;
-  std::map<std::pair<uint64_t, std::size_t>, uint64_t> page_table;
+  // std::map<std::pair<uint64_t, std::size_t>, uint64_t> page_table;
   list<PagingStructureCache*> pscl_array;
 
   // usercode
   PTWDataModel* ptw_datamodel;
+  vector<int> fill_counters;
 
   PageTableWalker(std::string v1, uint32_t cpu, unsigned fill_level, uint32_t v2, uint32_t v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8,
                   uint32_t v9, uint32_t v10, uint32_t v11, uint32_t v12, uint32_t v13, unsigned latency, MemoryRequestConsumer* ll, CACHE* llc);
 
   ~PageTableWalker()
   {
+    for(int i=0; i< fill_counters.size(); i++)
+    {
+      cout << "Fill count level " << i << ", " << fill_counters[i] << '\n';
+    }
     ptw_datamodel->print_stats();
   }
   // functions

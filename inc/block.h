@@ -93,6 +93,7 @@ public:
   State state = State::State_end;
 
   DataType dtype = DataType::INVALID;
+  uint64_t page_table_base_address = 0;
 };
 
 template <>

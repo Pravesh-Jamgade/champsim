@@ -23,7 +23,7 @@
 #include "hist.h"
 #include "pagetable.h"
 
-PageTable* pageTable;
+vector<PageTable*> ptt;
 map<uint64_t, PTWC> ptw_pred;
 map<uint64_t, uint64_t> l2_pte_map;
 
@@ -594,7 +594,8 @@ int main(int argc, char** argv)
 
   // overwrite relevant to extra settings
   overwrite_cache();
-  pageTable = new PageTable();
+  for(int i=0; i< 16; i++)
+    ptt.push_back(new PageTable());
 
   printf("Simulator Configuration\n%s", instantiation_code);
 
@@ -826,6 +827,11 @@ for(auto cache: caches)
 
 print_ptw_freq_and_cost();
 
+for(int i=0; i< KNOB_SMT_ENABLE*NUM_CPUS; i++)
+    ptt[i]->print_stat(i);
+
+cout << '\n';
+vmem.print_stat();
 cout << "\nDone!\n";
 
   return 0;
