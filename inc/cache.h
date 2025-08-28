@@ -254,6 +254,7 @@ public:
       cout << "victima l2 write, " << victima_counters[L2_WRITE] << '\n'; 
       cout << "victima l2 read hit, " << victima_counters[L2_READ_HIT] << '\n'; 
       cout << "victima l2 read miss, " << victima_counters[L2_READ_MISS] << '\n'; 
+      cout << "victima stlb eivct, " << victima_counters[STLB_EVICT] << '\n'; 
 
       cout << "\nvictima cache block usage @ L2 cache\n";
       for(int i=1; i< 9; i++)
@@ -261,35 +262,14 @@ public:
         cout << "victima_block_usage " << i << ", " << victima_block_usage[i] << '\n';
       }
 
-      // cout << "\nvictima PTE stored from stlb to l2\n";
-      // cout << "vitima_pte vp, pp\n";
-      // for(auto entry: l2_pte_map)
-      //   cout << "victima_pte " << entry.first << ", " << entry.second << '\n';
-      
       cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
       // print pollution
       translation_pollution->print(NAME);
       victima_pollution->print(NAME);
+      cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
     }
     if(cache_is[IS_STLB])
     {
-      cout << NAME << "\n<<<<<<<<<<<<<<< Victima Counters STLB >>>>>>>>>>>>>>>\n";
-      cout << "victima stlb evict, " << victima_counters[STLB_EVICT] << '\n';
-      cout << "victima stlb pte hit victima, " << victima_counters[STLB_VICTIMA_HIT] << '\n';
-      cout << "victima stlb pte hit ptw, " << victima_counters[STLB_PTW_HIT] << '\n';
-
-      cout << "victima pte dropped because either (both ptw and victima)it was late or victima was miss at L2\n";
-      cout << "victima stlb zero-drop ptw, " << victima_counters[STLB_ZERO_DROP_PTW] << '\n';
-      cout << "victima stlb mshrmiss-drop ptw, " << victima_counters[STLB_MSHRMISS_DROP_PTW] << '\n';
-      cout << "victima stlb mshr_recv_already-drop ptw, " << victima_counters[STLB_MSHRRECV_DROP_PTW] << '\n';
-      cout << "victima stlb dumy ptw, " << victima_counters[STLB_DUMY_PTW] << '\n';
-
-      cout << "victima stlb zero-drop victima, " << victima_counters[STLB_ZERO_DROP_VICTIMA] << '\n';
-      cout << "victima stlb mshrmiss-drop victima, " << victima_counters[STLB_MSHRMISS_DROP_VICTIMA] << '\n';
-      cout << "victima stlb mshr_recv_already-drop victima, " << victima_counters[STLB_MSHRRECV_DROP_VICTIMA] << '\n';
-      cout << "victima stlb dumy victima, " << victima_counters[STLB_DUMY_VICTIMA] << '\n';
-      cout << NAME << "\n<<<<<<<<<<<<<<< 0 >>>>>>>>>>>>>>>\n";
-
       cout << "Transition hitmap for offset counter over windows:\n";
       cout << "Offset V/s frequency_of_offset\n\n";
 

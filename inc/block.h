@@ -8,6 +8,7 @@
 #include "circular_buffer.hpp"
 #include "instruction.h"
 #include "user.h"
+#include "pagetable.h"
 
 class MemoryRequestProducer;
 class LSQ_ENTRY;
@@ -32,7 +33,7 @@ enum VF
   MSHR_WAIT_AP,
   MSHR_WAIT_DP,
 
-  victima_l2_insert,
+  victima_stlbevict_ptw,
   VF_END
 };
 
@@ -58,8 +59,21 @@ enum CYCLE_ENQ
   CYCLE_ENQ_END
 };
 
+enum PSC_STATE
+{
+  QUEUED,
+  STALL,
+  PSC_STATE_END
+};
+
+class PSCClass
+{
+  public:
+  PSC_STATE psc_state = PSC_STATE::PSC_STATE_END;
+};
+
 // message packet
-class PACKET
+class PACKET: public PSCClass
 {
 public:
   bool scheduled = false;
@@ -94,6 +108,7 @@ public:
 
   DataType dtype = DataType::INVALID;
   uint64_t page_table_base_address = 0;
+  CacheBlock* cacheBlock = nullptr;
 };
 
 template <>
