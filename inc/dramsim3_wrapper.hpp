@@ -6,6 +6,12 @@
 #include "operable.h"
 #include "dramsim3.h"
 #include "util.h"
+#include "pagetable.h"
+#include <vector>
+#include "vmem.h"
+extern int KNOB_SMT_ENABLE;
+extern vector<PageTable*> ptt;
+extern VirtualMemory vmem;
 
 namespace dramsim3 {
     class MemorySystem;

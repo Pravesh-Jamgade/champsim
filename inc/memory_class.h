@@ -5,6 +5,7 @@
 #include <map>
 
 #include "block.h"
+#include "pagetable.h"
 
 // CACHE ACCESS TYPE
 #define LOAD 0
@@ -40,9 +41,9 @@ public:
 
   uint32_t m_used = 0; // 8 entries of 8B each
   bool victima_block = 0;
-
   std::map<uint64_t, uint64_t> vp_2_pp_map;
-
+ 
+  CacheBlock cacheBlock;
   DataType dtype = DataType::INVALID;
 
   // for tlb block, each PTE is 8Byte, so we have 8 entries in 64B block

@@ -27,6 +27,7 @@ extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 
 // illusiong of stored cache line by 8byte granularity
 extern map<uint64_t, uint64_t> l2_pte_map;
+extern vector<PageTable*> ptt;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -35,6 +36,12 @@ void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
     auto fill_mshr = MSHR.begin();
+
+    if(fill_mshr->thread_id==-1 && fill_mshr->type != PREFETCH)
+    {
+      cout << "handle_fill: thread_id == -1 and request != PREFETCH\n";
+      exit(-1);
+    }
 
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
     {
@@ -55,7 +62,7 @@ void CACHE::handle_fill()
           return;
         }
 
-        // request again
+        // POM failed, now request for PTW
         fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
         fill_mshr->dtype = DataType::INVALID;
         fill_mshr->hit_where = CACHE_ID_END;
@@ -86,6 +93,14 @@ void CACHE::handle_fill()
     // find victim
     uint32_t set = get_set(fill_mshr->address);
 
+    // transform CacheBlock to TLBBlock: change indexing to use VA and ASID
+    if(KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima] && fill_mshr->vflag[VF::victima_stlbevict_ptw])
+    {
+      // chainging addr to v_addr
+      fill_mshr->address = fill_mshr->v_address;
+      set = get_set(fill_mshr->v_address);
+    }
+
     auto set_begin = std::next(std::begin(block), set * NUM_WAY);
     auto set_end = std::next(set_begin, NUM_WAY);
     auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
@@ -109,7 +124,6 @@ void CACHE::handle_fill()
         ret->return_data(&(*fill_mshr));
     }
     
-
     func_track_workingset(fill_mshr->address);
     func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
     func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
@@ -136,6 +150,11 @@ void CACHE::handle_writeback()
 
     // handle the oldest entry
     PACKET& handle_pkt = WQ.front();
+    if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
+    {
+      cout << "handle_writeback: thread_id == -1 and request != PREFETCH\n";
+      exit(-1);
+    }
 
     // access cache
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
@@ -293,7 +312,11 @@ void CACHE::handle_read()
 
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
-    assert(handle_pkt.thread_id!=-1);
+    if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
+    {
+      cout << "handle_read: thread_id == -1 and request != PREFETCH\n";
+      exit(-1);
+    }
 
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
@@ -398,7 +421,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     std::cout << " cycle: " << current_cycle << std::endl;
   });
 
-  dlog.log("hit", NAME, handle_pkt.address, handle_pkt.v_address,"instr", handle_pkt.instr_id,"data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, "cycle", current_cycle,'\n');
+  dlog.log("hit", NAME, handle_pkt.address, handle_pkt.v_address,"instr", handle_pkt.instr_id,"data", handle_pkt.data, "level",(int)handle_pkt.translation_level, "t", handle_pkt.thread_id, "cycle", current_cycle,'\n');
 
   BLOCK& hit_block = block[set * NUM_WAY + way];
 
@@ -444,7 +467,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
-  dlog.log("miss", NAME, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data", handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
+  dlog.log("miss", NAME, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data", handle_pkt.data, "level",(int)handle_pkt.translation_level, "t",handle_pkt.thread_id, "type",(int)handle_pkt.type, "cycle", current_cycle, '\n');
 
   // position matters
   if(KNOB_VICTIMA)
@@ -494,8 +517,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   });
 
   // check mshr
-  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]);
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS, handle_pkt.thread_id, is_tlb||check_thread_id));
+  bool check_thread_id = is_tlb || (KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]);
+  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, OFFSET_BITS, handle_pkt.thread_id, check_thread_id));
   bool mshr_full = (MSHR.size() == MSHR_SIZE);
 
   // usercode
@@ -526,6 +549,28 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   } 
   else 
   {
+    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA==0;
+    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_To_PTW];
+
+    // Test Occupancy
+    if(sendVictimaPacket)
+    {
+      if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
+      {
+        return false;
+      }
+    }
+
+    // Test Occupancy
+    if(sendPomPacket)
+    {
+      if(l1cache->get_occupancy(1,0) == l1cache->get_size(1,0))
+      {
+        return false;
+      }
+    }
+
+    // If ideal, send do zero-latency lookup. If miss send usual packet
     if(KNOB_IDEAL_VICTIMA && KNOB_VICTIMA && cache_is[IS_STLB])
     {
       PACKET newPacket = handle_pkt;
@@ -565,15 +610,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       return false;
     }
     
-    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB];
     PACKET newPacket = handle_pkt;
     if(sendVictimaPacket)
     {
-      if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
-      {
-        return false;
-      }
-
       newPacket.address = handle_pkt.address;
       newPacket.v_address = handle_pkt.v_address;
       newPacket.to_return = {this};
@@ -605,18 +644,10 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       handle_pkt.vflag[VF::ptw_copy] = true;
     }
 
-    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_To_PTW];
-
-    // test RQ occupancy in L1
     if(sendPomPacket)
     {
-      if(l1cache->get_occupancy(1,0) == l1cache->get_size(1,0))
-      {
-        return false;
-      }
-
       PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
-      auto[ppn, fault] = ptw->get_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
+      auto[phy_addr, fault] = ptw->addr_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
 
       if(fault)
         handle_pkt.pomflag[POM::POM_MISS] = false;
@@ -706,6 +737,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
 bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
+  BLOCK& fill_block = block[set * NUM_WAY + way];
+
   // Position matters
   // POM packet return mem trip. Test if it was hit in POM-TLB. If so, return data (from handle_fill)
   // If not hit, then discard this fill request, initiate PTW
@@ -716,7 +749,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     // test if mapping already been used before
     PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
-    auto[ppn, fault] = ptw->get_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
+    auto[ppn, fault] = ptw->addr_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
     if(!fault)
     {
       handle_pkt.data = ppn;
@@ -726,6 +759,63 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     {
       handle_pkt.pomflag[POM::POM_To_PTW] = true;
       return false;
+    }
+  }
+
+  // Block is valid, we are dropping it from STLB
+  // test if we do have have this costly block as Victima-block available in L2-cache, if not then test can we add PTW request
+  bool sendVictimaPTWRequest = 0;
+  // Proposed-idea: hashcache full then  do remove one hash entry and with that we need to remove corrresponding L2 cache-block
+  // order of uasge of variable matter: writeExtendedVictimaPacket is our goal, and adjustHashCache is a management
+  bool adjustHashCache = 0;
+  bool writeExtendedVictimaPacket = 0;
+  if(cache_is[IS_STLB] && fill_block.valid)
+  {
+    if(KNOB_EXTEND_VICTIMA)
+    {
+      // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full: invalidationPacket
+      if(hash_cache.size() >= KNOB_HASH_CACHE_MAX_LIMIT)
+      {
+        // test L2 read queue occupancy: if full we cannot send invalidation packet
+        if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
+        {
+          return false;
+        }
+        adjustHashCache = 1;
+      }
+
+      // test if cluster-8 available to be able to written in L2
+      PACKET packet;
+      packet.thread_id = handle_pkt.thread_id;
+      pair<bool, PTEContainer> ret = collect_pte[packet.thread_id].test();
+
+      // cluster-8 is avail
+      if(ret.first)
+      {
+        /// test WQ occupancy at L2
+        if(l2cache->get_occupancy(2,0) == l2cache->get_size(2,0))
+        {
+          return false;
+        }
+        writeExtendedVictimaPacket = 1;
+      }
+    }
+    else if(KNOB_VICTIMA)
+    {
+      CACHE* cache = (CACHE*)l2cache->getObject();
+      pair<bool, size_t> response = cache->peek_singleline(handle_pkt);
+
+      // miss @L2, check queue availability for PTW
+      // not found at L2, send PTW request
+      if(!response.first)
+      {
+        // // initiate PTW when RQ has occupancy & TLB block is absent
+        if(lower_level->get_occupancy(1,0) == lower_level->get_size(1,0))
+        {
+          return false;
+        }
+        sendVictimaPTWRequest = 1;
+      }
     }
   }
 
@@ -743,8 +833,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   assert(!bypass);
 #endif
   assert(handle_pkt.type != WRITEBACK || !bypass);
-
-  BLOCK& fill_block = block[set * NUM_WAY + way];
   bool evicting_dirty = !bypass && (lower_level != NULL) && fill_block.dirty;
 
   // since writebacks from i/dtlb are making cache-blocks at STLB dirty, 
@@ -771,6 +859,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.instr_id = handle_pkt.instr_id;
       writeback_packet.ip = 0;
       writeback_packet.type = WRITEBACK;
+      writeback_packet.thread_id = fill_block.thread_id;
 
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
@@ -778,21 +867,16 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_FILLLIKEMISS_NEXTLEVEL_FULL]++;
         return false;
       }
-
-      if(handle_pkt.type == LOAD)
-        cacheDataModel->cache_stat[CacheStat::Load_Writeback]++;
-      else if(handle_pkt.type == TRANSLATION)
-        cacheDataModel->cache_stat[CacheStat::Translation_Writeback]++;
-      else if(handle_pkt.type == RFO)
-        cacheDataModel->cache_stat[CacheStat::RFO_Writeback]++;
-      else if(handle_pkt.type == PREFETCH)
-        cacheDataModel->cache_stat[CacheStat::Prefetch_Writeback]++;
-      
-      cacheDataModel->cache_stat[CacheStat::Total_Writeback]++;
-
     }
    
     bool track_reuse = false;
+    
+    // cross-checking: test if we have any invalid block
+    auto invFound = find_if(block.begin()+set * NUM_WAY, block.begin()+set * NUM_WAY + NUM_WAY, [](BLOCK& a){ return !a.valid; });
+    if(invFound == block.begin()+set * NUM_WAY + NUM_WAY)
+    {
+      cacheDataModel->hist_set_conflict_events[set]++;
+    }
 
     // invalid block
     // count Compulsory miss
@@ -806,39 +890,51 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     {
       if(KNOB_VICTIMA)
       {
-        if(cache_is[CACHE_ID::IS_STLB] && victima_lookup(handle_pkt.v_address))
+        if(cache_is[CACHE_ID::IS_STLB])// && victima_lookup(handle_pkt.v_address))
         {
-          if(l2cache->get_occupancy(2,0) == l2cache->get_size(2,0))
+          // Victima Routine
+          // TLB block is absent at L2
+          if(sendVictimaPTWRequest)
           {
-            return false;
+            // Sending evicted packet for PTW
+            // // tracking
+            func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
+
+            PACKET ptwpacket;
+            ptwpacket.to_return = {};
+            ptwpacket.cpu = handle_pkt.cpu;
+            ptwpacket.address = fill_block.address;
+            ptwpacket.data = fill_block.data;
+            ptwpacket.instr_id = handle_pkt.instr_id;
+            ptwpacket.ip = 0;
+            ptwpacket.type = TRANSLATION;
+            ptwpacket.vflag[VF::victima] = true;
+            ptwpacket.vflag[VF::victima_stlbevict_ptw] = true;//storing result of leaf-pte to L2 and transforming it to TLBblock or victimablock
+            ptwpacket.thread_id = handle_pkt.thread_id;
+            victima_counters[VC::STLB_EVICT]++;
+
+            lower_level->add_rq(&ptwpacket);
           }
-
-          PACKET writeback_packet;
-
-          writeback_packet.fill_level = l2cache->fill_level;
-          writeback_packet.cpu = handle_pkt.cpu;
-          writeback_packet.address = fill_block.address;
-          writeback_packet.data = fill_block.data;
-          writeback_packet.instr_id = handle_pkt.instr_id;
-          writeback_packet.ip = 0;
-          writeback_packet.type = WRITEBACK;
-          writeback_packet.vflag[VF::victima] = true;
-          writeback_packet.dtype = DataType::VIC;
-          writeback_packet.thread_id = handle_pkt.thread_id;
-
-          if(KNOB_EXTEND_VICTIMA)
+          // Extended-Victima Routine
+          else if(writeExtendedVictimaPacket)
           {
+            PACKET writeback_packet;
+
+            writeback_packet.fill_level = l2cache->fill_level;
+            writeback_packet.cpu = handle_pkt.cpu;
+            writeback_packet.address = fill_block.address;
+            writeback_packet.data = fill_block.data;
+            writeback_packet.instr_id = handle_pkt.instr_id;
+            writeback_packet.ip = 0;
+            writeback_packet.type = WRITEBACK;
+            writeback_packet.vflag[VF::victima] = true;
+            writeback_packet.thread_id = handle_pkt.thread_id;
+
             // order matters
             {
               // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full 
-              if(hash_cache.size() >= KNOB_HASH_CACHE_MAX_LIMIT)
+              if(adjustHashCache)
               {
-                // test L2 read queue occupancy: if full we cannot send invalidation packet
-                if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
-                {
-                  return false;
-                }
-
                 // make space in hash_cache, sends invalid packet to L2 via add_rq()
                 adjust_hashcache();
               }
@@ -851,19 +947,15 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             }
             
             // add packet to relevant cluster if space is available; otherwise just write it as normal victima or leave it?
-            if(add_to_cluster(&writeback_packet) == -1)
+            if(add_to_cluster(&writeback_packet) == -1)// failed
             {
 
             }
-            // if packet added to cluster then write will be done when proper cluster is formed later in the process
+            // if packet added to cluster then write will be done when proper cluster is formed later in the process// success
             else
             {
               
             }
-          }
-          else
-          {
-            l2cache->add_wq(&writeback_packet);
           }
 
           // tracking
@@ -872,7 +964,21 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
-          int usage = fill_block.getUsage();
+          PageTable* pt = ptt[KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id];
+          if(pt == nullptr)
+          {
+            cout << "Filllike_miss: PageTable not found, even though L2 cache-block exists\n";
+            exit(-1);
+          }
+
+          CacheBlock* cb = pt->lookup(fill_block.address);
+          if(cb == nullptr)
+          {
+            cout << "Filllike_miss: Cacheblock absent in PageTable, even though L2 cache-block exists\n";
+            exit(-1);
+          }
+
+          int usage = cb->getUsage();
           victima_block_usage[usage]++;
           victima_counters[VC::L2_EVICT]++;
         }
@@ -881,7 +987,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         if(cache_is[IS_L2])
         {
           uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : OFFSET_BITS);
-          EvictCause evict_cause = (handle_pkt.type == WRITEBACK && handle_pkt.vflag[VF::victima] && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
+          EvictCause evict_cause = (handle_pkt.vflag[VF::victima_stlbevict_ptw] && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
           victima_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::VictimaPollutionTracker, evict_cause), fill_block.thread_id));
         }
       }
@@ -896,17 +1002,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           translation_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::TranslationPollutionTracker, evict_cause), fill_block.thread_id));
         }
       }
-
-      // tracking type of cache block being dropped
-      if(handle_pkt.type == LOAD)
-        cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
-      else if(handle_pkt.type == TRANSLATION)
-        cacheDataModel->cache_stat[CacheStat::Translation_Drop]++;
-      else if(handle_pkt.type == RFO)
-        cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
-      else if(handle_pkt.type == PREFETCH)
-        cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
-      cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
 
       // counting the number of times set has seen conflict and as a result a dirty block is sent-back
       // it needs infinit FA cache to keep history
@@ -923,8 +1018,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         else
         {
           uint64_t cache_block_index = (handle_pkt.address > 6) & 0x3f;
-          page_it->second.test(cache_block_index);
-          cacheDataModel->category_of_misses[MISS::CAP]++;
+          if(page_it->second.test(cache_block_index))
+            cacheDataModel->category_of_misses[MISS::CAP]++;
         }
       }
 
@@ -936,7 +1031,33 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           cacheDataModel->category_of_misses[MISS::CONF]++;
         }
       }
-
+      
+      if(evicting_dirty)
+      {
+        if(handle_pkt.type == LOAD)
+          cacheDataModel->cache_stat[CacheStat::Load_Writeback]++;
+        else if(handle_pkt.type == TRANSLATION)
+          cacheDataModel->cache_stat[CacheStat::Translation_Writeback]++;
+        else if(handle_pkt.type == RFO)
+          cacheDataModel->cache_stat[CacheStat::RFO_Writeback]++;
+        else if(handle_pkt.type == PREFETCH)
+          cacheDataModel->cache_stat[CacheStat::Prefetch_Writeback]++;
+        
+        cacheDataModel->cache_stat[CacheStat::Total_Writeback]++;
+      }
+      else
+      {
+        // tracking type of cache block being dropped
+        if(handle_pkt.type == LOAD)
+          cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
+        else if(handle_pkt.type == TRANSLATION)
+          cacheDataModel->cache_stat[CacheStat::Translation_Drop]++;
+        else if(handle_pkt.type == RFO)
+          cacheDataModel->cache_stat[CacheStat::RFO_Drop]++;
+        else if(handle_pkt.type == PREFETCH)
+          cacheDataModel->cache_stat[CacheStat::Prefetch_Drop]++;
+        cacheDataModel->cache_stat[CacheStat::Total_Drop]++;
+      }
 
       // track evicted/overwritten block
       {
@@ -986,7 +1107,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.instr_id = handle_pkt.instr_id;
     fill_block.came_from_request = handle_pkt.type;
     fill_block.m_used = handle_pkt.type==WRITEBACK ? 0: fill_block.m_used;
-    fill_block.victima_block = handle_pkt.vflag[VF::victima];
+    fill_block.victima_block = handle_pkt.vflag[VF::victima_stlbevict_ptw];
     fill_block.thread_id = handle_pkt.thread_id;
     fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
@@ -1163,10 +1284,10 @@ int CACHE::add_rq(PACKET* packet)
               << " occupancy: " << RQ.occupancy();
   })
 
-  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
+  bool check_thread_id = is_tlb || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
 
   // check for the latest writebacks in the write queue
-  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, is_tlb || check_thread_id) );
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS, packet->thread_id, check_thread_id) );
   
   if (found_wq != WQ.end()) {
 
@@ -1426,7 +1547,7 @@ void CACHE::return_data(PACKET* packet)
   if(packet->pomflag[POM::POM])
     dlog.log(NAME, ", Ret POM, ", packet->address,'\n');
 
-  dlog.log("return", NAME, "hw", handle_pkt.hit_where, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data",handle_pkt.data, (int)handle_pkt.translation_level, handle_pkt.thread_id, (int)handle_pkt.type, "cycle", current_cycle, '\n');
+  dlog.log("return", NAME, "hw", handle_pkt.hit_where, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data",handle_pkt.data, "level",(int)handle_pkt.translation_level, "t", handle_pkt.thread_id, "type" ,(int)handle_pkt.type, "cycle", current_cycle, '\n');
 
   // check MSHR information
   bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
@@ -1455,7 +1576,7 @@ void CACHE::return_data(PACKET* packet)
   // assign data type for this block
   mshr_entry->dtype = foundDtype;
 
-  if(KNOB_VICTIMA && cache_is[IS_STLB])
+  if(KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA == 0)
   {
     // count:
     // We sent out actual and a dummy packet.
@@ -1616,6 +1737,7 @@ void CACHE::print_deadlock()
       std::cout << "[" << NAME << " MSHR] entry: " << j++ << " instr_id: " << entry.instr_id;
       std::cout << " address: " << std::hex << (entry.address >> LOG2_BLOCK_SIZE) << " full_addr: " << entry.address << std::dec << " type: " << +entry.type;
       std::cout << " fill_level: " << +entry.fill_level << " event_cycle: " << entry.event_cycle << std::endl;
+      cout << "hw, " << entry.hit_where <<", " << entry.data << '\n';
       cout << "recv, " << entry.vflag[VF::recv_victima] << ", mshr_state, " << entry.mshr_state << ", AP, " << entry.vflag[VF::PACKET_AP_RECV] << ", DP, " << entry.vflag[VF::PACKET_DP_RECV] << ", ptw_copy, " << entry.vflag[VF::ptw_copy] << ", victima, " << entry.vflag[VF::victima] << ", victima_miss, " << entry.vflag[VF::victima_acutal_packet_miss] << ", dummy, " << entry.vflag[VF::victima_dumy] << ", th, " << entry.thread_id << '\n';
     }
   } else {

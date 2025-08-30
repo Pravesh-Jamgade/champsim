@@ -108,7 +108,6 @@ enum DataType
     PMD,
     PUD,
     PGD,
-    VIC,
     PRE,
     INVALID,
     DataType_end
