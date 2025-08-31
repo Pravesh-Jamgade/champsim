@@ -897,8 +897,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           if(sendVictimaPTWRequest)
           {
             // Sending evicted packet for PTW
-            // // tracking
-            func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
 
             PACKET ptwpacket;
             ptwpacket.to_return = {};
