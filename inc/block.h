@@ -41,7 +41,7 @@ enum POM
 {
   POM = 0,
   POM_MISS,
-  POM_To_PTW,
+  POM_TO_PTW,
   POM_END
 };
 

@@ -44,7 +44,7 @@ void CACHE::handle_fill()
     // But want to track access
     if(KNOB_POMTLB && cache_is[IS_STLB])
     {
-      if(fill_mshr->pomflag[POM::POM_To_PTW])
+      if(fill_mshr->pomflag[POM::POM_TO_PTW])
       {
         if(get_occupancy(1,0) == get_size(1,0))
         {
@@ -69,6 +69,7 @@ void CACHE::handle_fill()
         continue;
       }
     }
+    
     // order matters
     if(KNOB_POMTLB && !is_tlb && fill_mshr->pomflag[POM_MISS])
     {
@@ -528,28 +529,17 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   } 
   else 
   {
-    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA==0;
-    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_To_PTW];
-
-    // Test Occupancy
-    if(sendVictimaPacket)
+    // Order Really Matter
+    // #1
+    if (mshr_full)  // not enough MSHR resource
     {
-      if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
-      {
-        return false;
-      }
+      cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL]++;
+      cacheDataModel->mshr_queue[Basic::REJECTED]++;
+      return false; // TODO should we allow prefetches anyway if they will not
+                    // be filled to this level?
     }
 
-    // Test Occupancy
-    if(sendPomPacket)
-    {
-      if(l1cache->get_occupancy(1,0) == l1cache->get_size(1,0))
-      {
-        return false;
-      }
-    }
-
-    // If ideal, send do zero-latency lookup. If miss send usual packet
+    // If victima-ideal, do send zero-latency lookup. If miss send usual packet
     if(KNOB_IDEAL_VICTIMA && KNOB_VICTIMA && cache_is[IS_STLB])
     {
       PACKET newPacket = handle_pkt;
@@ -571,22 +561,38 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       }
     }
 
-    if (mshr_full)  // not enough MSHR resource
+    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA==0;
+    // its a miss and we are @STLB and its not yet has searched POMTLB, send it to POM search via L1D
+    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_TO_PTW];
+
+    // Test Occupancy of L2
+    if(sendVictimaPacket)
     {
-      cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_MSHR_FULL]++;
-      cacheDataModel->mshr_queue[Basic::REJECTED]++;
-      return false; // TODO should we allow prefetches anyway if they will not
-                    // be filled to this level?
+      if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
+      {
+        return false;
+      }
     }
-
-    bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
-
-    // check to make sure the lower level queue has room for this read miss
-    int queue_type = (is_read) ? 1 : 3;
-    if (lower_level->get_occupancy(queue_type, handle_pkt.address) == lower_level->get_size(queue_type, handle_pkt.address))
+    // Test Occupancy of L1
+    else if(sendPomPacket)
     {
-      cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
-      return false;
+      if(l1cache->get_occupancy(1,0) == l1cache->get_size(1,0))
+      {
+        return false;
+      }
+    }
+    // Default-code: Test Occupancy of lower level
+    else
+    {
+      bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
+
+      // check to make sure the lower level queue has room for this read miss
+      int queue_type = (is_read) ? 1 : 3;
+      if (lower_level->get_occupancy(queue_type, handle_pkt.address) == lower_level->get_size(queue_type, handle_pkt.address))
+      {
+        cacheDataModel->adv_stats[AdvStat::CASCADE_STALL_READLIKEMISS_NEXTLEVEL_FULL]++;
+        return false;
+      }
     }
     
     PACKET newPacket = handle_pkt;
@@ -622,15 +628,17 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       handle_pkt.vflag[VF::PACKET_DP_RECV] = !newPacket.vflag[VF::PACKET_DP_RECV];
       handle_pkt.vflag[VF::ptw_copy] = true;
     }
-
-    if(sendPomPacket)
+    else if(sendPomPacket)
     {
       PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
       auto[phy_addr, fault] = ptw->addr_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
 
-      if(fault)
-        handle_pkt.pomflag[POM::POM_MISS] = false;
-
+      // if fault-->missing translation in pagetable
+      // POM packet is sent upon STLB miss, champsim imple. assign page at PTW code upon return path
+      // At DRAM we are not sure of whether we have hit or miss for PTE
+      // Hence return journey of POM packet if its a hit then only we write to data cache.
+      // Hit/miss we peek here from page table and set POM_MISS and disallow any write on return path
+      handle_pkt.pomflag[POM::POM_MISS] = !fault;
       handle_pkt.pomflag[POM::POM] = true;
     }
 
@@ -671,7 +679,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
     else
     {
-      if(handle_pkt.pomflag[POM::POM_To_PTW])
+      if(handle_pkt.pomflag[POM::POM_TO_PTW])
       {
         dlog.log(current_cycle, ", PTW POM, ", handle_pkt.address, '\n');
       }
@@ -736,7 +744,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
     else
     {
-      handle_pkt.pomflag[POM::POM_To_PTW] = true;
+      handle_pkt.pomflag[POM::POM_TO_PTW] = true;
       return false;
     }
   }
