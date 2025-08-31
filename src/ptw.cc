@@ -217,8 +217,6 @@ void PageTableWalker::handle_read()
       it->event_cycle = std::numeric_limits<uint64_t>::max();
 
       it->uv_cycle_enqueue = current_cycle;
-
-      victima_update(packet.v_address, PageFeature::PTW_Freq);
     }
     
     RQ.pop_front();

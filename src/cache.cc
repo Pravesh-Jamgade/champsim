@@ -19,6 +19,10 @@
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
+extern int KNOB_VICTIMA, KNOB_EXTEND_VICTIMA, KNOB_HASH_CACHE_MAX_LIMIT;
+
+// illusiong of stored cache line by 8byte granularity
+extern list<pair<string, uint64_t>> hash_cache;
 extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 
 // illusiong of stored cache line by 8byte granularity
@@ -32,6 +36,12 @@ void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
     auto fill_mshr = MSHR.begin();
+
+    if(fill_mshr->thread_id==-1 && fill_mshr->type != PREFETCH)
+    {
+      cout << "handle_fill: thread_id == -1 and request != PREFETCH\n";
+      exit(-1);
+    }
 
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
     {
@@ -87,6 +97,8 @@ void CACHE::handle_fill()
     // transform CacheBlock to TLBBlock: change indexing to use VA and ASID
     if(KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima] && fill_mshr->vflag[VF::victima_stlbevict_ptw])
     {
+      // chainging addr to v_addr
+      fill_mshr->address = fill_mshr->v_address;
       set = get_set(fill_mshr->v_address);
     }
 
@@ -139,6 +151,11 @@ void CACHE::handle_writeback()
 
     // handle the oldest entry
     PACKET& handle_pkt = WQ.front();
+    if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
+    {
+      cout << "handle_writeback: thread_id == -1 and request != PREFETCH\n";
+      exit(-1);
+    }
 
     // access cache
     uint32_t set = get_set(handle_pkt.address, handle_pkt.vflag[VF::victima]);
@@ -296,7 +313,11 @@ void CACHE::handle_read()
 
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
-    assert(handle_pkt.thread_id!=-1);
+    if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
+    {
+      cout << "handle_read: thread_id == -1 and request != PREFETCH\n";
+      exit(-1);
+    }
 
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
@@ -752,21 +773,57 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // Block is valid, we are dropping it from STLB
   // test if we do have have this costly block as Victima-block available in L2-cache, if not then test can we add PTW request
   bool sendVictimaPTWRequest = 0;
-  if(KNOB_VICTIMA && cache_is[IS_STLB] && fill_block.valid)
+  // Proposed-idea: hashcache full then  do remove one hash entry and with that we need to remove corrresponding L2 cache-block
+  // order of uasge of variable matter: writeExtendedVictimaPacket is our goal, and adjustHashCache is a management
+  bool adjustHashCache = 0;
+  bool writeExtendedVictimaPacket = 0;
+  if(cache_is[IS_STLB] && fill_block.valid)
   {
-    CACHE* cache = (CACHE*)l2cache->getObject();
-    pair<bool, size_t> response = cache->peek_singleline(handle_pkt);
-
-    // miss @L2, check queue availability for PTW
-    // not found at L2, send PTW request
-    if(!response.first)
+    if(KNOB_EXTEND_VICTIMA)
     {
-      // // initiate PTW when RQ has occupancy & TLB block is absent
-      if(lower_level->get_occupancy(1,0) == lower_level->get_size(1,0))
+      // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full: invalidationPacket
+      if(hash_cache.size() >= KNOB_HASH_CACHE_MAX_LIMIT)
       {
-        return false;
+        // test L2 read queue occupancy: if full we cannot send invalidation packet
+        if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
+        {
+          return false;
+        }
+        adjustHashCache = 1;
       }
-      sendVictimaPTWRequest = 1;
+
+      // test if cluster-8 available to be able to written in L2
+      PACKET packet;
+      packet.thread_id = handle_pkt.thread_id;
+      pair<bool, PTEContainer> ret = collect_pte[packet.thread_id].test();
+
+      // cluster-8 is avail
+      if(ret.first)
+      {
+        /// test WQ occupancy at L2
+        if(l2cache->get_occupancy(2,0) == l2cache->get_size(2,0))
+        {
+          return false;
+        }
+        writeExtendedVictimaPacket = 1;
+      }
+    }
+    else if(KNOB_VICTIMA)
+    {
+      CACHE* cache = (CACHE*)l2cache->getObject();
+      pair<bool, size_t> response = cache->peek_singleline(handle_pkt);
+
+      // miss @L2, check queue availability for PTW
+      // not found at L2, send PTW request
+      if(!response.first)
+      {
+        // // initiate PTW when RQ has occupancy & TLB block is absent
+        if(lower_level->get_occupancy(1,0) == lower_level->get_size(1,0))
+        {
+          return false;
+        }
+        sendVictimaPTWRequest = 1;
+      }
     }
   }
 
@@ -810,6 +867,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.instr_id = handle_pkt.instr_id;
       writeback_packet.ip = 0;
       writeback_packet.type = WRITEBACK;
+      writeback_packet.thread_id = fill_block.thread_id;
 
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
@@ -823,11 +881,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     
     // cross-checking: test if we have any invalid block
     auto invFound = find_if(block.begin()+set * NUM_WAY, block.begin()+set * NUM_WAY + NUM_WAY, [](BLOCK& a){ return !a.valid; });
-    if(invFound != block.begin()+set * NUM_WAY + NUM_WAY)
+    if(invFound == block.begin()+set * NUM_WAY + NUM_WAY)
     {
       cacheDataModel->hist_set_conflict_events[set]++;
     }
-
 
     // invalid block
     // count Compulsory miss
@@ -843,12 +900,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       {
         if(cache_is[CACHE_ID::IS_STLB])// && victima_lookup(handle_pkt.v_address))
         {
+          // Victima Routine
           // TLB block is absent at L2
           if(sendVictimaPTWRequest)
           {
             // Sending evicted packet for PTW
-            // // tracking
-            func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
 
             PACKET ptwpacket;
             ptwpacket.to_return = {};
@@ -865,6 +921,52 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
             lower_level->add_rq(&ptwpacket);
           }
+          // Extended-Victima Routine
+          else if(writeExtendedVictimaPacket)
+          {
+            PACKET writeback_packet;
+
+            writeback_packet.fill_level = l2cache->fill_level;
+            writeback_packet.cpu = handle_pkt.cpu;
+            writeback_packet.address = fill_block.address;
+            writeback_packet.data = fill_block.data;
+            writeback_packet.instr_id = handle_pkt.instr_id;
+            writeback_packet.ip = 0;
+            writeback_packet.type = WRITEBACK;
+            writeback_packet.vflag[VF::victima] = true;
+            writeback_packet.thread_id = handle_pkt.thread_id;
+
+            // order matters
+            {
+              // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full 
+              if(adjustHashCache)
+              {
+                // make space in hash_cache, sends invalid packet to L2 via add_rq()
+                adjust_hashcache();
+              }
+            }
+
+            // check if cluster is avail to be written at L2
+            if(use_cluster(&writeback_packet))
+            {
+              l2cache->add_wq(&writeback_packet);
+            }
+            
+            // add packet to relevant cluster if space is available; otherwise just write it as normal victima or leave it?
+            if(add_to_cluster(&writeback_packet) == -1)// failed
+            {
+
+            }
+            // if packet added to cluster then write will be done when proper cluster is formed later in the process// success
+            else
+            {
+              
+            }
+          }
+
+          // tracking
+          func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
+          victima_counters[VC::STLB_EVICT]++;
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
@@ -1802,4 +1904,68 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
     // Append newest eviction
     // eviction_history_pte is assumed to be a map<va, pa> (or unordered_map)
     eviction_history_pte.insert({v_address, data});
+}
+
+// check if we are above limit
+// remove entry is hash_cache reached to its limit
+// invalidation packet for same entry sent to L2
+void CACHE::adjust_hashcache()
+{
+  //*** test: L2 rq occupancy alredy done before ***//
+  // invalidate corresponding entry is in the L2, since we are removing hash_entry
+  pair<string, uint64_t> hash_entry = hash_cache.front();
+
+  // prepare packet to invalidate entry in L2 if it exists
+  PACKET invpacket;
+  invpacket.address = hash_entry.second;
+  invpacket.vflag[VF::INVALIDATE_PACKET] = 1;
+
+  // packet sent to L2
+  l2cache->add_rq(&invpacket);
+
+  // remove entry from hash_cache
+  hash_cache.pop_front();
+}
+
+// Proposed IDEA @STLB
+// true: write as ext-victima packet
+int CACHE::use_cluster(PACKET* packet)
+{
+  // test if cluster-8 available to be able to written in L2
+  pair<bool, PTEContainer> ret = collect_pte[packet->thread_id].test();
+  if(ret.first)
+  {
+    // generate hash for cluster-8
+    string hash_str= "";
+    for(auto entry: ret.second.collection)
+      hash_str += to_string(entry.vaddr) + "_";
+    hash_cache.push_back(make_pair(hash_str, ret.second.collection.front().vaddr));
+
+    // store this buffer of 8 PTE in L2 cache block using current packet
+    packet->vflag[VF::EXT_VICTIMA_PACKET] = 1;
+    packet->pte_container = ret.second;
+    return true;
+  }
+  return false;
+}
+
+// Proposed IDEA @STLB
+// -1: cannot be inserted. write as victima packet
+// -2: insert done. write later collect now
+int CACHE::add_to_cluster(PACKET* packet)
+{
+  uint64_t offset = (packet->address >> LOG2_PAGE_SIZE) & 0x7;
+  uint64_t vp = (packet->address & ~(PAGE_SIZE-1));
+  uint64_t pp = (packet->data & ~(PAGE_SIZE-1));
+
+  // test occupancy in PTEContainer specific to this offset
+  if(collect_pte[packet->thread_id].isSpaceAvail(offset))
+  {
+    // insert in PTEContainer --> insertion done
+    collect_pte[packet->thread_id].insert(offset, PTEclass(vp, pp, packet->thread_id));
+
+    // since space is avail, we dont need to write it yet
+    return -2;
+  }
+  return -1;
 }

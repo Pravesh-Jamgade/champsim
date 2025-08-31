@@ -14,6 +14,7 @@
 #include <map>
 #include "DataModel.h"
 #include "victima.h"
+#include "user.h"
 #include"logger.h"
 #include <bitset>
 #include "pollution.h"
@@ -31,6 +32,12 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+
+  // 16 threads
+  // 8 possible offsets
+  // corresponding PTE
+  ThreadBucket collect_pte[16];
+  // std::mt19937 rng(42);
 
   vector<vector<PollutionEntry>> global_set_history;
 
@@ -211,6 +218,10 @@ public:
     return found != ptw_pred.end();
   }
 
+  int add_to_cluster(PACKET* packet);
+  void adjust_hashcache();
+  int use_cluster(PACKET* packet);
+
   void print_logs()
   {
     string prefix = NAME + " ";
@@ -366,6 +377,10 @@ public:
         repl_type(repl), pref_type(pref)
   {
 
+    for(int i=0; i< 16; i++)
+    {
+      collect_pte[i] = ThreadBucket();
+    }
     dlog = logger();
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));

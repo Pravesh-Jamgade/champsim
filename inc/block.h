@@ -33,6 +33,8 @@ enum VF
   MSHR_WAIT_AP,
   MSHR_WAIT_DP,
 
+  EXT_VICTIMA_PACKET,
+  INVALIDATE_PACKET,
   victima_stlbevict_ptw,
   VF_END
 };
@@ -103,6 +105,8 @@ public:
   int thread_id=-1;
 
   CACHE_ID hit_where = CACHE_ID::CACHE_ID_END;
+
+  PTEContainer pte_container;
   
   State state = State::State_end;
 
