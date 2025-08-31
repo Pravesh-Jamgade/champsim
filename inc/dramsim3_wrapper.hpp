@@ -209,6 +209,16 @@ public:
         //DEBUG std::cout << "[ACT] Ch-" << ch << " Ra-" << ra << " Ba-" << ba << " Ro-" << ro << std::endl;
     }
     void PrintStats() { memory_system_->PrintStats(); }
+
+    void print_deadlock() {
+        if(!std::empty(RQ))
+        {
+            for(auto entry: RQ)
+            {
+                std::cout << std::hex << entry.address << ", " << entry.v_address << ", " << std::dec << entry.instr_id << '\n'; 
+            }
+        }
+    }
 protected:
     dramsim3::MemorySystem* memory_system_;
     std::vector<PACKET> RQ{DRAM_RQ_SIZE*DRAM_CHANNELS}; // Meta-RQ for callbacks
