@@ -211,6 +211,7 @@ public:
     void PrintStats() { memory_system_->PrintStats(); }
 
     void print_deadlock() {
+        std::cout << "DRMA RQ\n";
         if(!std::empty(RQ))
         {
             for(auto entry: RQ)

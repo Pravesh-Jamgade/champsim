@@ -52,43 +52,51 @@ void CACHE::handle_fill()
     // order matters
     // No write - hence No tracking of PTE
     // But want to track access
-    if(KNOB_POMTLB && cache_is[IS_STLB])
+    if(KNOB_POMTLB && fill_mshr->pomflag[POM::POM])
     {
-      if(fill_mshr->pomflag[POM::POM_TO_PTW])
+      if(cache_is[IS_STLB])
       {
-        if(get_occupancy(1,0) == get_size(1,0))
+        // if it is a returning POM_TO_PTW at STLB, then its state now FINI, test it
+        // and do nothing if  POM_TO_PTW_FINI set
+        if(fill_mshr->pomflag[POM::POM_TO_PTW_FINI]) {}
+        // POM_TO_PTW was a miss, erase our entry and add new to RQ for default PTW
+        else if(fill_mshr->pomflag[POM::POM_TO_PTW])
         {
-          cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
-          return;
-        }
+          if(get_occupancy(1,0) == get_size(1,0))
+          {
+            cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
+            return;
+          }
 
-        // POM failed, now request for PTW
-        fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
-        fill_mshr->dtype = DataType::INVALID;
-        fill_mshr->hit_where = CACHE_ID_END;
-        PACKET newPacket = *fill_mshr;
-        add_rq(&newPacket);
-        
+          // POM failed, now request for PTW
+          fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
+          fill_mshr->dtype = DataType::INVALID;
+          fill_mshr->hit_where = CACHE_ID_END;
+          PACKET newPacket = *fill_mshr;
+          add_rq(&newPacket);
+          
+          func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
+          func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
+          MSHR.erase(fill_mshr);
+          writes_available_this_cycle--;
+          cacheDataModel->mshr_queue[Basic::ACCESS]++;
+          global_access_count++;
+          cacheDataModel->mshr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
+          continue;
+        }
+      }
+      // avoid to write POM_MISS packet since we dont have mapping in POMTLB and it will be a empty block hence dont write
+      else if(!is_tlb && fill_mshr->pomflag[POM_MISS])
+      {
         func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
         func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
+        func_return(&*fill_mshr);
         MSHR.erase(fill_mshr);
+        // showing congestion
         writes_available_this_cycle--;
         cacheDataModel->mshr_queue[Basic::ACCESS]++;
-        global_access_count++;
-        cacheDataModel->mshr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
         continue;
       }
-    }
-    
-    // order matters
-    if(KNOB_POMTLB && !is_tlb && fill_mshr->pomflag[POM_MISS])
-    {
-      func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
-      func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
-      MSHR.erase(fill_mshr);
-      // writes_available_this_cycle--;
-      cacheDataModel->mshr_queue[Basic::ACCESS]++;
-      continue;
     }
     
     // find victim
@@ -550,6 +558,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   } 
   else 
   {
+    bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
+
     // Order Really Matter
     // #1
     if (mshr_full)  // not enough MSHR resource
@@ -605,8 +615,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     // Default-code: Test Occupancy of lower level
     else
     {
-      bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
-
       // check to make sure the lower level queue has room for this read miss
       int queue_type = (is_read) ? 1 : 3;
       if (lower_level->get_occupancy(queue_type, handle_pkt.address) == lower_level->get_size(queue_type, handle_pkt.address))
@@ -654,12 +662,12 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
       auto[phy_addr, fault] = ptw->addr_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
 
-      // if fault-->missing translation in pagetable
+      // if 'fault' -->missing translation in pagetable
       // POM packet is sent upon STLB miss, champsim imple. assign page at PTW code upon return path
       // At DRAM we are not sure of whether we have hit or miss for PTE
       // Hence return journey of POM packet if its a hit then only we write to data cache.
       // Hit/miss we peek here from page table and set POM_MISS and disallow any write on return path
-      handle_pkt.pomflag[POM::POM_MISS] = !fault;
+      handle_pkt.pomflag[POM::POM_MISS] = fault;
       handle_pkt.pomflag[POM::POM] = true;
     }
 
@@ -750,10 +758,14 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // Position matters
   // POM packet return mem trip. Test if it was hit in POM-TLB. If so, return data (from handle_fill)
   // If not hit, then discard this fill request, initiate PTW
+  // Note: since we have removed RQ entry for this packet at STLB,
+  // We could remove MSHR entry here and add new entry to RQ of STLB --> (detailed modeling)
+  // Right now we are using same MSHR entry and initiate PTW by setting new flag POM_TO_PTW
+  // As soon we are back to STLB, we send out PTW with POM_TO_PTW flag. 
   if(KNOB_POMTLB && cache_is[IS_STLB] && handle_pkt.pomflag[POM::POM])
   {
-    // reset packet type flag
-    handle_pkt.pomflag[POM::POM] = false;
+    // // reset packet type flag
+    // handle_pkt.pomflag[POM::POM] = false;
 
     // test if mapping already been used before
     PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
@@ -765,6 +777,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
     else
     {
+      // We wont remove this MSHR and reuse this to send out PTW and then reset its event_cycle to avoid re-entering to fill
       handle_pkt.pomflag[POM::POM_TO_PTW] = true;
       return false;
     }
@@ -1229,6 +1242,7 @@ int CACHE::invalidate_entry(uint64_t inval_addr)
 
 int CACHE::add_rq(PACKET* packet)
 {
+  #ifdef TQ
   if(KNOB_TRANSLATION_QUEUE && packet->type == TRANSLATION)
   {
     champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
@@ -1274,6 +1288,7 @@ int CACHE::add_rq(PACKET* packet)
     RQ_TO_CACHE++;
     return TQ.occupancy();
   }
+  #endif
 
   cacheDataModel->rd_queue[Basic::REQUESTED]++;
   // assert(packet->address != 0);
@@ -1686,6 +1701,9 @@ void CACHE::return_data(PACKET* packet)
     mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
     mshr_entry->hit_where = packet->hit_where;
 
+    // PTW has set POM_TO_PTW_FINI to 1, get this value as handle_fill needs it to distinguish
+    mshr_entry->pomflag[POM::POM_TO_PTW_FINI] = packet->pomflag[POM::POM_TO_PTW_FINI];
+
   }
   
   DP(if (warmup_complete[packet->cpu]) {
@@ -1968,4 +1986,13 @@ int CACHE::add_to_cluster(PACKET* packet)
     return -2;
   }
   return -1;
+}
+
+
+void CACHE::func_return(PACKET* packet)
+{
+  for(auto ret: packet->to_return)
+  {
+    ret->return_data(packet);
+  }
 }

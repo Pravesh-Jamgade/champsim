@@ -121,6 +121,7 @@ void PageTableWalker::handle_read()
     // shift amount is 27 for 4-th-level. How ? --> 9 * (4-1) = 27 --> i.e [9 * (curr_level-1)]
     uint64_t next_pt_addr = splice_bits(CR3_addr[cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id], vmem.get_offset(handle_pkt.address, ptw_level-1) * PTE_BYTES, LOG2_PAGE_SIZE);
 
+    // std::cout <<std::hex<< "PTW handle_read, " << CR3_addr[cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id] << ", " << (vmem.get_offset(handle_pkt.address, ptw_level-1) * PTE_BYTES) << "="<< next_pt_addr <<std::dec<< "\n";
     bool miss_at_root = true;
 
     if(0)
@@ -362,6 +363,7 @@ void PageTableWalker::handle_fill()
           fill_mshr->address = addr;
           // order of line imp: level=1 becomes level=0 and hence it will notify end of PTW and allocate data_page (minor-fault) if not exists
           fill_mshr->translation_level = fill_mshr->translation_level - 1;
+
         }
         else if(fill_mshr->state == State::PSC_Search)
         {
@@ -370,6 +372,10 @@ void PageTableWalker::handle_fill()
           uint8_t ptw_level = fill_mshr->translation_level;
           // use next 9bits with base addr of next level page table
           uint64_t next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level-1) * PTE_BYTES, LOG2_PAGE_SIZE);
+          
+          // std::cout <<std::hex << "PTW handle_fill, " << addr << ", " << (vmem.get_offset(fill_mshr->v_address, ptw_level-1) * PTE_BYTES) << "="<< next_pt_addr << std::dec << "\n";
+
+
           // lookup this levels PSC, if found in PSC then update next_pt_addr, ptw_level and continue search
           for (auto pscl : pscl_array) 
           {
@@ -401,6 +407,7 @@ void PageTableWalker::handle_fill()
 
           fill_mshr->address = next_pt_addr;
           fill_mshr->translation_level = ptw_level;
+          fill_mshr->psc_state = PSC_STATE::QUEUED;
 
           if(miss_in_psc)
           {
@@ -421,7 +428,6 @@ void PageTableWalker::handle_fill()
 
               fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
               fill_mshr->page_table_base_address = addr;
-              fill_mshr->psc_state = PSC_STATE::QUEUED;
 
               MSHR.splice(std::end(MSHR), MSHR, fill_mshr);
   
@@ -483,7 +489,7 @@ void PageTableWalker::return_data(PACKET* packet)
       mshr_entry.event_cycle = current_cycle + 1;
       mshr_entry.state = State::PTW_FILL;
       mshr_entry.hit_where = packet->hit_where;
-
+      mshr_entry.pomflag[POM::POM_TO_PTW_FINI] = mshr_entry.pomflag[POM::POM_TO_PTW]; 
       
       DP(if (warmup_complete[cpu]) {
         std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry.instr_id;

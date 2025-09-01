@@ -187,6 +187,8 @@ public:
   // track hit access latency 
   void func_track_hit_access_latency(uint64_t enq_cycle, int metadata=0);
 
+  void func_return(PACKET* packet);
+
   void _context_switch(int thread_id) 
   {
     
