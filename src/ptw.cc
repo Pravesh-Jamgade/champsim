@@ -21,6 +21,8 @@ extern vector<PageTable*> ptt; // page-table-tracker
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
+extern uint64_t POM_CPU_KEY;
+
 PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, uint32_t v2, uint32_t v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7,
                                  uint32_t v8, uint32_t v9, uint32_t v10, uint32_t v11, uint32_t v12, uint32_t v13, unsigned latency, MemoryRequestConsumer* ll, CACHE* llc)
     : champsim::operable(1, v1), MemoryRequestConsumer(fill_level), MemoryRequestProducer(ll), NAME(v1), cpu(cpu), MSHR_SIZE(v11), MAX_READ(v12),
@@ -78,11 +80,22 @@ void PageTableWalker::_overwrite()
   }
 
   pscl_array.reverse();
+
+  std::random_device rd;
+  std::mt19937_64 engine(rd());
+  std::uniform_int_distribution<uint64_t> dist;
+
   // supporting 16 threads
   for(int i=0; i< 16; i++)
     CR3_addr.push_back(vmem.get_pte_pa(i, 0, vmem.pt_levels).first);
+
+    uint64_t random_64bit_num = dist(engine);
+    uint64_t mask = (1ULL << 48) - 1;
+    random_64bit_num = random_64bit_num & mask;
+    asid.push_back(random_64bit_num);
   // CR3_addr.reserve(16);
 
+  POMTLB_baseaddr = vmem.get_pte_pa(POM_CPU_KEY, 0, vmem.pt_levels).first;
   vmem.print_stat();
 }
 

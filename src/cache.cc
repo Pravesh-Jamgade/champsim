@@ -28,6 +28,7 @@ extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 // illusiong of stored cache line by 8byte granularity
 extern map<uint64_t, uint64_t> l2_pte_map;
 extern vector<PageTable*> ptt;
+extern uint64_t POM_CPU_KEY;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -72,7 +73,11 @@ void CACHE::handle_fill()
           fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
           fill_mshr->dtype = DataType::INVALID;
           fill_mshr->hit_where = CACHE_ID_END;
+
           PACKET newPacket = *fill_mshr;
+          // reset POMTLBaddress to virt address
+          newPacket.address = newPacket.v_address;
+
           add_rq(&newPacket);
           
           func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
@@ -659,8 +664,15 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
     else if(sendPomPacket)
     {
+      // generate phy address for POMTLB
       PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
+      uint64_t pomtlb_base = ptw->get_pomtlb_baseaddr();
+      pomtlb_base += (handle_pkt.address ^ ptw->asid[handle_pkt.thread_id]);
+      // update address to pomtlb address
+      handle_pkt.address = pomtlb_base;
       auto[phy_addr, fault] = ptw->addr_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
+
+      dlog.log(current_cycle, ", Send POM, ", handle_pkt.address, "^", ptw->asid[handle_pkt.thread_id], "=", pomtlb_base,'\n');
 
       // if 'fault' -->missing translation in pagetable
       // POM packet is sent upon STLB miss, champsim imple. assign page at PTW code upon return path
@@ -699,7 +711,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     //POMTLB: record miss, send to cache-hierarchy + No PTW requests, PTW start upon POM return.
     if(sendPomPacket)
     {
-      dlog.log(current_cycle, ", Send POM, ", handle_pkt.address, '\n');
       l1cache->add_rq(&handle_pkt);
     }
     else if (!is_read)
@@ -710,7 +721,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     {
       if(handle_pkt.pomflag[POM::POM_TO_PTW])
       {
-        dlog.log(current_cycle, ", PTW POM, ", handle_pkt.address, '\n');
+        dlog.log(current_cycle, ", PTW POM, ", handle_pkt.address, handle_pkt.v_address, '\n');
       }
       lower_level->add_rq(&handle_pkt);
     }

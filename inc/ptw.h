@@ -86,6 +86,9 @@ public:
   PagingStructureCache PSCL5, PSCL4, PSCL3, PSCL2;
 
   vector<uint64_t> CR3_addr;
+  uint64_t POMTLB_baseaddr;
+  vector<uint64_t> asid;
+
   // std::map<std::pair<uint64_t, std::size_t>, uint64_t> page_table;
   list<PagingStructureCache*> pscl_array;
 
@@ -135,6 +138,10 @@ public:
       pscl->invalidate(thread_id);
     }
   }
+
+  uint64_t get_pomtlb_baseaddr() {
+    return POMTLB_baseaddr;
+  } 
 
 };
 
