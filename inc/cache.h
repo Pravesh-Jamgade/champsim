@@ -56,6 +56,7 @@ public:
   vector<vector<int>> transition_hitmap_for_vp_page, transition_hitmap_for_pp_page;
 
   logger dlog;
+  logger dassert;
 
   //usercode
   bool is_tlb = false;
@@ -383,7 +384,9 @@ public:
     {
       collect_pte[i] = ThreadBucket();
     }
+    
     dlog = logger();
+    dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
 

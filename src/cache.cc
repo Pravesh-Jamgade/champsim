@@ -40,8 +40,8 @@ void CACHE::handle_fill()
 
     if(fill_mshr->thread_id==-1 && fill_mshr->type != PREFETCH)
     {
-      cout << "handle_fill: thread_id == -1 and request != PREFETCH\n";
-      exit(-1);
+      dassert.log("handle_fill: thread_id == -1 and request != PREFETCH", "instr", fill_mshr->instr_id, "addr", fill_mshr->address, "v_addr", fill_mshr->v_address, "type", fill_mshr->type, "NAME", NAME, "victima", fill_mshr->vflag[VF::victima], "pom", fill_mshr->pomflag[POM::POM], "\n");
+      exit(0);
     }
 
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
@@ -166,8 +166,8 @@ void CACHE::handle_writeback()
     PACKET& handle_pkt = WQ.front();
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
     {
-      cout << "handle_writeback: thread_id == -1 and request != PREFETCH\n";
-      exit(-1);
+      dassert.log("handle_writeback: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", handle_pkt.address, "v_addr", handle_pkt.v_address, "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
+      exit(0);
     }
 
     // access cache
@@ -328,8 +328,8 @@ void CACHE::handle_read()
     PACKET& handle_pkt = RQ.front();
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
     {
-      cout << "handle_read: thread_id == -1 and request != PREFETCH\n";
-      exit(-1);
+      dassert.log("handle_read: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", handle_pkt.address, "v_addr", handle_pkt.v_address, "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
+      exit(0);
     }
 
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
@@ -483,21 +483,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
   dlog.log("miss", NAME, handle_pkt.address, handle_pkt.v_address, "instr", handle_pkt.instr_id, "data", handle_pkt.data, "level",(int)handle_pkt.translation_level, "t",handle_pkt.thread_id, "type",(int)handle_pkt.type, "cycle", current_cycle, '\n');
 
-  // position matters
-  if(KNOB_VICTIMA)
-  {
-    if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
-    {
-      // its a miss and not DP (dummy packet) hence set, AP miss
-      handle_pkt.vflag[victima_acutal_packet_miss] = 1;
-      for(auto ret: handle_pkt.to_return)
-      {
-        ret->return_data(&handle_pkt);
-      }
-      return true;
-    }
-  }
-
   if(cache_is[IS_L2])
   {
     translation_pollution->countPollution(get_set(handle_pkt.address), 
@@ -517,6 +502,21 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
                       handle_pkt.thread_id
                     )
                 );
+  }
+
+  // position matters
+  if(KNOB_VICTIMA)
+  {
+    if(cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
+    {
+      // its a miss and not DP (dummy packet) hence set, AP miss
+      handle_pkt.vflag[victima_acutal_packet_miss] = 1;
+      for(auto ret: handle_pkt.to_return)
+      {
+        ret->return_data(&handle_pkt);
+      }
+      return true;
+    }
   }
 
   cacheDataModel->mshr_queue[Basic::REQUESTED]++;
@@ -601,7 +601,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     // its a miss and we are @STLB and its not yet has searched POMTLB, send it to POM search via L1D
     bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_TO_PTW];
 
-    // Test Occupancy of L2
+    // Test Occupancy of L2, since victima packet parallely sends PTW packet request we need to test PTW rq occupancy
     if(sendVictimaPacket)
     {
       if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
@@ -609,7 +609,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
         return false;
       }
     }
-    // Test Occupancy of L1
+    // Test Occupancy of L1, we dont sent PTW packet until POM packet comes back with a miss at POMTLB
     else if(sendPomPacket)
     {
       if(l1cache->get_occupancy(1,0) == l1cache->get_size(1,0))
@@ -725,7 +725,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       }
       lower_level->add_rq(&handle_pkt);
     }
-      
   }
 
   // update prefetcher on load instructions and prefetches from upper levels
@@ -805,10 +804,11 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   {
     if(KNOB_EXTEND_VICTIMA)
     {
+      // IF GAIN IS NOT AVAILABLE THEN DONT USE THIS MAINTAINANCE CODE
       // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full: invalidationPacket
       if(hash_cache.size() >= KNOB_HASH_CACHE_MAX_LIMIT)
       {
-        // test L2 read queue occupancy: if full we cannot send invalidation packet
+        // test L2 read queue occupancy: if full we cannot send invalidation packet to 
         if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
         {
           return false;
@@ -941,7 +941,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             ptwpacket.vflag[VF::victima] = true;
             ptwpacket.vflag[VF::victima_stlbevict_ptw] = true;//storing result of leaf-pte to L2 and transforming it to TLBblock or victimablock
             ptwpacket.thread_id = handle_pkt.thread_id;
-            victima_counters[VC::STLB_EVICT]++;
 
             lower_level->add_rq(&ptwpacket);
           }
@@ -997,15 +996,15 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           PageTable* pt = ptt[KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id];
           if(pt == nullptr)
           {
-            cout << "Filllike_miss: PageTable not found, even though L2 cache-block exists\n";
-            exit(-1);
+            dassert.log("Filllike_miss: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", handle_pkt.address, "v_addr", handle_pkt.v_address, "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
+            exit(0);
           }
 
           CacheBlock* cb = pt->lookup(fill_block.address);
           if(cb == nullptr)
           {
-            cout << "Filllike_miss: Cacheblock absent in PageTable, even though L2 cache-block exists\n";
-            exit(-1);
+            dassert.log("Filllike_miss: Cacheblock absent in PageTable, even though L2 cache-block exists: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", handle_pkt.address, "v_addr", handle_pkt.v_address, "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
+            exit(0);
           }
 
           int usage = cb->getUsage();
@@ -1305,7 +1304,7 @@ int CACHE::add_rq(PACKET* packet)
   // assert(packet->address != 0);
   if(packet->address == 0)
   {
-    cout << "Stop\n";
+    dassert.log("add_rq Address Zero Packet", "instr", packet->instr_id, "addr", packet->address, "v_addr", packet->v_address, "type", packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
     exit(0);
   }
   RQ_ACCESS++;
@@ -1501,7 +1500,13 @@ int CACHE::add_pq(PACKET* packet)
 {
   packet->thread_id = SHARED;
   cacheDataModel->pf_queue[Basic::REQUESTED]++;
-  assert(packet->address != 0);
+
+  if(packet->address == 0)
+  {
+    dassert.log("add_pq Address Zero Packet", "instr", packet->instr_id, "addr", packet->address, "v_addr", packet->v_address, "type", packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
+    exit(0);
+  }
+
   PQ_ACCESS++;
 
   DP(if (warmup_complete[packet->cpu]) {
