@@ -1,7 +1,7 @@
 #include "logger.h"
-// logger::logger(bool flag){
-//     this->flag = flag;
-// }
+logger::logger(bool flag){
+    this->flag = flag;
+}
 
 void logger::log(){
     cout<<"";
