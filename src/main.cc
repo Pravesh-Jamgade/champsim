@@ -21,9 +21,13 @@
 #include "INIReader.h"
 #include "victima.h"
 #include "hist.h"
+#include "pagetable.h"
 
+vector<PageTable*> ptt;
 map<uint64_t, PTWC> ptw_pred;
+list<pair<string, uint64_t>> hash_cache;
 map<uint64_t, uint64_t> l2_pte_map;
+uint64_t POM_CPU_KEY = 123456789;
 
 uint8_t warmup_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
@@ -49,7 +53,8 @@ extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_TTP;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_STTMRAM_STLB;
-extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
+extern int KNOB_VICTIMA, KNOB_EXTEND_VICTIMA, KNOB_HASH_CACHE_MAX_LIMIT;
+extern int KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_LIVE_INPUT;
@@ -483,7 +488,7 @@ int main(int argc, char** argv)
     }
   }
 
-  trace_shared_buff += "/tmp/"+ output_file;
+  trace_shared_buff += output_file;
   output_file += ".log";
   // std::ofstream out(output_file.c_str());
   // std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
@@ -519,6 +524,11 @@ int main(int argc, char** argv)
   KNOB_STLB_DO_NOT_TRACK_MISS = iniReader->GetInteger("KNOB", "STLB_DO_NOT_TRACK_MISS", 0);
   KNOB_STTMRAM_STLB = iniReader->GetInteger("STTMRAM", "STLB", 0);
   KNOB_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_VICTIMA", 0);
+  KNOB_EXTEND_VICTIMA = iniReader->GetInteger("VICTIMA", "EXTEND_VICTIMA", 0);
+  KNOB_HASH_CACHE_MAX_LIMIT = iniReader->GetInteger("VICTIMA", "HASH_CACHE_MAX_LIMIT", 64);
+  KNOB_SMT_ENABLE = iniReader->GetInteger("SMT", "ENABLE_SMT", 0);
+  
+
   KNOB_IDEAL_VICTIMA = iniReader->GetInteger("VICTIMA", "ENABLE_IDEAL_VICTIMA", 0);
   KNOB_SMT_ENABLE = iniReader->GetInteger("SMT", "ENABLE_SMT", 0);
   KNOB_PSCL_ROOT_LEVEL = iniReader->GetInteger("PageTable", "ROOT_PT_LEVEL", 4);
@@ -528,20 +538,22 @@ int main(int argc, char** argv)
   KNOB_POMTLB = iniReader->GetInteger("POMTLB", "ENABLE_POMTLB", 0);
   
   std::cout << "Extra settings:\n";
-  std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
-  std::cout << "TTP="<<KNOB_TTP<<'\n';
-  std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
-  std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
-  std::cout << "VICTIMA\n-ENABLE_VICTIMA="<<KNOB_VICTIMA<<'\n';
-  std::cout << "-ENABLE_IDEAL_VICTIMA="<<KNOB_IDEAL_VICTIMA<<'\n';
-  std::cout << "ENABLE MFOEv2=" << KNOB_ENABLE_MFOE_V2 << '\n'; 
-  std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
-  std::cout << "PT Levels="<<KNOB_PSCL_ROOT_LEVEL<<'\n';
-  std::cout << "Live Input="<<KNOB_LIVE_INPUT<<'\n';
-  std::cout << "Debug Log="<<KNOB_ENABLE_LOG<<'\n';
-  std::cout << "Output file="<<output_file<<'\n';
-  std::cout << "Enable Context Switch="<<KNOB_ENABLE_CTX<<'\n';
-  std::cout << '\n';
+  // std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
+  // std::cout << "TTP="<<KNOB_TTP<<'\n';
+  // std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
+  // std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
+  // std::cout << "VICTIMA\n-ENABLE_VICTIMA="<<KNOB_VICTIMA<<'\n';
+  // std::cout << "-ENABLE_IDEAL_VICTIMA="<<KNOB_IDEAL_VICTIMA<<'\n';
+  // std::cout << "ENABLE MFOEv2=" << KNOB_ENABLE_MFOE_V2 << '\n'; 
+  // std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
+  // std::cout << "PT Levels="<<KNOB_PSCL_ROOT_LEVEL<<'\n';
+  // std::cout << "Live Input="<<KNOB_LIVE_INPUT<<'\n';
+  // std::cout << "Debug Log="<<KNOB_ENABLE_LOG<<'\n';
+  // std::cout << "Output file="<<output_file<<'\n';
+  // std::cout << "Enable Context Switch="<<KNOB_ENABLE_CTX<<'\n';
+  // std::cout << '\n';
+
+  iniReader->print();
   
   int total_cores = KNOB_SMT_ENABLE >0 ? NUM_CPUS * KNOB_SMT_ENABLE:  NUM_CPUS;
   simulation_complete.resize(total_cores, 0);
@@ -592,6 +604,8 @@ int main(int argc, char** argv)
 
   // overwrite relevant to extra settings
   overwrite_cache();
+  for(int i=0; i< 16; i++)
+    ptt.push_back(new PageTable());
 
   printf("Simulator Configuration\n%s", instantiation_code);
 
@@ -823,6 +837,11 @@ for(auto cache: caches)
 
 print_ptw_freq_and_cost();
 
+for(int i=0; i< KNOB_SMT_ENABLE*NUM_CPUS; i++)
+    ptt[i]->print_stat(i);
+
+cout << '\n';
+vmem.print_stat();
 cout << "\nDone!\n";
 
   return 0;

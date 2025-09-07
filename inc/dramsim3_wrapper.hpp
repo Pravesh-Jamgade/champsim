@@ -6,6 +6,12 @@
 #include "operable.h"
 #include "dramsim3.h"
 #include "util.h"
+#include "pagetable.h"
+#include <vector>
+#include "vmem.h"
+extern int KNOB_SMT_ENABLE;
+extern vector<PageTable*> ptt;
+extern VirtualMemory vmem;
 
 namespace dramsim3 {
     class MemorySystem;
@@ -203,6 +209,17 @@ public:
         //DEBUG std::cout << "[ACT] Ch-" << ch << " Ra-" << ra << " Ba-" << ba << " Ro-" << ro << std::endl;
     }
     void PrintStats() { memory_system_->PrintStats(); }
+
+    void print_deadlock() {
+        std::cout << "DRMA RQ\n";
+        if(!std::empty(RQ))
+        {
+            for(auto entry: RQ)
+            {
+                std::cout << std::hex << entry.address << ", " << entry.v_address << ", " << std::dec << entry.instr_id << '\n'; 
+            }
+        }
+    }
 protected:
     dramsim3::MemorySystem* memory_system_;
     std::vector<PACKET> RQ{DRAM_RQ_SIZE*DRAM_CHANNELS}; // Meta-RQ for callbacks

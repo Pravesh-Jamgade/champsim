@@ -31,11 +31,20 @@ uint64_t VirtualMemory::shamt(uint32_t level) const { return LOG2_PAGE_SIZE + lg
 
 uint64_t VirtualMemory::get_offset(uint64_t vaddr, uint32_t level) const { return (vaddr >> shamt(level)) & bitmask(lg2(page_size / PTE_BYTES)); }
 
-// get existing mapping (fault=false)
-std::pair<uint64_t, bool> VirtualMemory::get_vp_to_pp(uint32_t cpu_num, uint64_t vaddr)
+//No alteration to PageTable: get existing mapping (fault=false)
+pair<uint64_t, bool> VirtualMemory::get_vp_to_pp(uint32_t cpu_num, uint64_t vaddr)
 {
-  auto [ppage, fault] = vpage_to_ppage_map.insert({{cpu_num, vaddr >> LOG2_PAGE_SIZE}, ppage_free_list.front()});
-  return {splice_bits(ppage->second, vaddr, LOG2_PAGE_SIZE), fault};
+  std::pair key {cpu_num, vaddr >> LOG2_PAGE_SIZE};
+  auto ppage = vpage_to_ppage_map.find(key);
+  return {ppage->second & ~(PAGE_SIZE - 1), ppage == vpage_to_ppage_map.end()};
+}
+
+//No alteration to PageTable: get existing mapping (fault=false)
+pair<uint64_t, bool> VirtualMemory::get_va_to_pa(uint32_t cpu_num, uint64_t vaddr)
+{
+  std::pair key {cpu_num, vaddr >> LOG2_PAGE_SIZE};
+  auto ppage = vpage_to_ppage_map.find(key);
+  return {ppage->second, ppage == vpage_to_ppage_map.end()};
 }
 
 std::pair<uint64_t, bool> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t vaddr)
@@ -51,7 +60,7 @@ std::pair<uint64_t, bool> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t vad
 
 std::pair<uint64_t, bool> VirtualMemory::get_pte_pa(uint32_t cpu_num, uint64_t vaddr, uint32_t level)
 {
-  std::tuple key{cpu_num, vaddr >> shamt(level + 1), level};
+  std::tuple key{cpu_num, vaddr >> shamt(level-1), level};
   auto [ppage, fault] = page_table.insert({key, next_pte_page});
 
   // this PTE doesn't yet have a mapping
@@ -63,5 +72,12 @@ std::pair<uint64_t, bool> VirtualMemory::get_pte_pa(uint32_t cpu_num, uint64_t v
     }
   }
 
-  return {splice_bits(ppage->second, get_offset(vaddr, level) * PTE_BYTES, lg2(page_size)), fault};
+  return {splice_bits(ppage->second, get_offset(vaddr, level-1) * PTE_BYTES, lg2(page_size)), fault};
+}
+
+
+void VirtualMemory::print_stat()
+{
+  std::cout << "page table size(PT), " << page_table.size() << '\n';
+  std::cout << "mapped pages(data), " << vpage_to_ppage_map.size() << '\n';
 }
