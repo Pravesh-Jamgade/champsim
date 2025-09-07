@@ -902,14 +902,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     }
    
     bool track_reuse = false;
-    
-    // cross-checking: test if we have any invalid block
-    auto invFound = find_if(block.begin()+set * NUM_WAY, block.begin()+set * NUM_WAY + NUM_WAY, [](BLOCK& a){ return !a.valid; });
-    if(invFound == block.begin()+set * NUM_WAY + NUM_WAY)
-    {
-      cacheDataModel->hist_set_conflict_events[set]++;
-    }
-
+   
     // invalid block
     // count Compulsory miss
     if(!fill_block.valid)
@@ -1054,7 +1047,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       // count Conflict misses
       {
-        auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, OFFSET_BITS));
+        auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, OFFSET_BITS, handle_pkt.thread_id, is_tlb));
         if(it!=fa_array.end())
         {
           cacheDataModel->category_of_misses[MISS::CONF]++;
@@ -1093,7 +1086,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         if(fa_array.size() >= FA_SIZE)
         fa_array.pop_back();
         
-        auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address,  match_offset_bits ? 0 : OFFSET_BITS));
+        auto found_out = find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(fill_block.address,  match_offset_bits ? 0 : OFFSET_BITS, fill_block.thread_id, is_tlb));
         if(found_out==fa_array.end())
         {
           fa_array.push_back(block[set*NUM_WAY + way]);
@@ -1102,7 +1095,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       // counting the number of times set has seen conflict and as a result a clean block is overwritten
       cacheDataModel->hist_set_conflict_events[set]++;
-
       track_reuse = true;
     }
 

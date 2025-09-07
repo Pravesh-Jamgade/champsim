@@ -467,6 +467,8 @@ void PageTableWalker::operate()
 
 int PageTableWalker::add_rq(PACKET* packet)
 {
+  victima_update(packet->address, PTW_Freq);
+  
   ptw_datamodel->queue_basic_metric[Basic::REQUESTED]++;
   assert(packet->address != 0);
 
