@@ -851,9 +851,8 @@ cout << "\nDone!\n";
 void print_ptw_freq_and_cost()
 {
   cout << '\n';
-  cout << "A page has done PTW x-times (x-axis) and it has reached to DRAM y-times (y-axis) (out of x): [x][y] = event_count \n";
-  cout << "PTW frequency VS cost\n";
-  vector<vector<int>> ptw_freq_cost(10, vector<int>(10, 0));
+  cout << "PTW cost VS frequency\n";
+  vector<vector<int>> ptw_freq_cost(20, vector<int>(5, 0));
   for(auto entry: ptw_pred)
   {
     int freq = entry.second.freq;
@@ -867,38 +866,38 @@ void print_ptw_freq_and_cost()
     }
     else if(modfreq == freq && modcost != cost)
     {
-      ptw_freq_cost[freq][9]++;
+      ptw_freq_cost[freq][4]++;
     }
     else if(modfreq != freq && modcost == cost)
     {
-      ptw_freq_cost[9][cost]++;
+      ptw_freq_cost[19][cost]++;
     }
     else
     {
-      ptw_freq_cost[9][9]++;
+      ptw_freq_cost[19][4]++;
     }
   }
 
   // Print column headers
   cout << setw(6) << " " << "|";
-  for (int i = 0; i < ptw_freq_cost[0].size(); ++i) {
+  for (int i = 0; i < ptw_freq_cost.size(); ++i) {
       cout << setw(4) << i;
   }
   cout << '\n';
 
   // Print separator line
   cout << string(6, '-') << "+";
-  for (int i = 0; i < ptw_freq_cost[0].size(); ++i) {
+  for (int i = 0; i < ptw_freq_cost.size(); ++i) {
       cout << string(4, '-');
   }
   cout << '\n';
 
-  for(int i=0; i< ptw_freq_cost.size(); i++)
+  for(int i=0; i< ptw_freq_cost[0].size(); i++)
   {
     cout << setw(6) << i << "|";
-    for(int j=0; j< ptw_freq_cost[0].size(); j++)
+    for(int j=0; j< ptw_freq_cost.size(); j++)
     {
-      cout<<setw(4)<<ptw_freq_cost[i][j];
+      cout<<setw(4)<<ptw_freq_cost[j][i];
     }
     cout<<'\n';
   }
