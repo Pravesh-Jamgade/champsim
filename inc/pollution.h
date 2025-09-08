@@ -69,7 +69,7 @@ class Pollution
     Pollution(int sets, int ways, vector<vector<PollutionEntry>>* ref): num_set(sets)
     {
         this->ref = ref;
-        HIS_LIMIT = 2*ways;
+        HIS_LIMIT = 4*ways;
     }
 
     void insert(int set, const PollutionEntry& entry)
@@ -79,11 +79,24 @@ class Pollution
         // check if pollution_entry already pushed by some other Pollution Trackers
         for(auto& se: set_hist)
         {
-            // entry exists
             if(se.addr == entry.addr)
-            {   
-                // append eviction_cause
-                se.append_cause(entry.cause);
+            {
+                // if victima, then make sure to match thread_id
+                if(entry.cause[0].first == PollutionTracker::VictimaPollutionTracker)
+                {
+                    // append eviction_cause or insert new entry 
+                    if( se.thread_id == entry.thread_id )
+                    {
+                        se.append_cause(entry.cause);
+                    }
+                    else
+                        break;
+                }
+                else 
+                {
+                    se.append_cause(entry.cause);
+                }
+
                 return;
             }
         }

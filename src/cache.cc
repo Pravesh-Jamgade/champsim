@@ -494,7 +494,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
                     )
                 );
  
-    victima_pollution->countPollution(get_set(handle_pkt.address), 
+    if(handle_pkt.vflag[VF::victima])
+    {
+      victima_pollution->countPollution(get_set(handle_pkt.address), 
                     PollutionEntry
                     (
                       handle_pkt.address>>(match_offset_bits?0:OFFSET_BITS), 
@@ -502,6 +504,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
                       handle_pkt.thread_id
                     )
                 );
+    }
   }
 
   // position matters
