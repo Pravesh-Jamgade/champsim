@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <deque>
 #include <map>
+#include <queue>
 
 // reserve 1MB of space
 #define VMEM_RESERVE_CAPACITY 1048576
@@ -20,7 +21,7 @@ private:
 
   uint64_t next_pte_page;
 
-  queue<uint64_t> pre_allocated_pages;
+  std::queue<uint64_t> pre_allocated_pages;
 
 public:
   const uint64_t minor_fault_penalty;
