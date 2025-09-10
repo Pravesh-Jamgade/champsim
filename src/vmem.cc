@@ -23,6 +23,14 @@ VirtualMemory::VirtualMemory(uint64_t capacity, uint64_t pg_size, uint32_t page_
   // then shuffle it
   std::shuffle(std::begin(ppage_free_list), std::end(ppage_free_list), std::mt19937_64{random_seed});
 
+  // // initiating pre-allocated pages
+  // int take_pages = PRE_ALLOC_LIMIT;
+  // while(take_pages--)
+  // {
+  //   pre_allocated_pages.put(ppage_free_list.front());
+  //   ppage_free_list.pop_front();
+  // }
+
   next_pte_page = ppage_free_list.front();
   ppage_free_list.pop_front();
 }
