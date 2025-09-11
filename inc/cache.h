@@ -307,7 +307,7 @@ public:
       for (int i = 0; i < 8; ++i) {
           cout << setw(6) << i << "|";
           for (int j = 0; j < transition_hitmap_for_offset[i].size(); ++j) {
-              cout << setw(4) << transition_hitmap_for_offset[i][j];
+              cout << setw(4) << transition_hitmap_for_offset[i][j] << ',';
           }
           cout << '\n';
       }
@@ -334,7 +334,7 @@ public:
       for (int i = 0; i < 8; ++i) {
           cout << setw(6) << i << "|";
           for (int j = 0; j < transition_hitmap_for_vp_page[i].size(); ++j) {
-              cout << setw(4) << transition_hitmap_for_vp_page[i][j];
+              cout << setw(4) << transition_hitmap_for_vp_page[i][j] << ',';
           }
           cout << '\n';
       }
@@ -360,7 +360,7 @@ public:
       for (int i = 0; i < 8; ++i) {
           cout << setw(6) << i << "|";
           for (int j = 0; j < transition_hitmap_for_pp_page[i].size(); ++j) {
-              cout << setw(4) << transition_hitmap_for_pp_page[i][j];
+              cout << setw(4) << transition_hitmap_for_pp_page[i][j] << ',';
           }
           cout << '\n';
       }

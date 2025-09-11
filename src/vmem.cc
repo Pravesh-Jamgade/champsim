@@ -55,6 +55,7 @@ pair<uint64_t, bool> VirtualMemory::get_va_to_pa(uint32_t cpu_num, uint64_t vadd
   return {ppage->second, ppage == vpage_to_ppage_map.end()};
 }
 
+// original
 std::pair<uint64_t, bool> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t vaddr)
 {
   auto [ppage, fault] = vpage_to_ppage_map.insert({{cpu_num, vaddr >> LOG2_PAGE_SIZE}, ppage_free_list.front()});

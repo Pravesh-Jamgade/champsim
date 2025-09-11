@@ -897,7 +897,7 @@ void print_ptw_freq_and_cost()
     cout << setw(6) << i << "|";
     for(int j=0; j< ptw_freq_cost.size(); j++)
     {
-      cout<<setw(4)<<ptw_freq_cost[j][i];
+      cout<<setw(4)<<ptw_freq_cost[j][i]<<',';
     }
     cout<<'\n';
   }
