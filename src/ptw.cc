@@ -16,7 +16,7 @@ extern int KNOB_ENABLE_MFOE_V2;
 #define PSC_READ_LATENCY 2
 
 extern map<uint64_t, PTWC> ptw_pred;
-extern vector<PageTable*> ptt; // page-table-tracker
+extern vector<PageTable*> page_table_tracker; // page-table-tracker
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -87,13 +87,14 @@ void PageTableWalker::_overwrite()
 
   // supporting 16 threads
   for(int i=0; i< 16; i++)
+  {
     CR3_addr.push_back(vmem.get_pte_pa(i, 0, vmem.pt_levels).first);
 
     uint64_t random_64bit_num = dist(engine);
     uint64_t mask = (1ULL << 48) - 1;
     random_64bit_num = random_64bit_num & mask;
     asid.push_back(random_64bit_num);
-  // CR3_addr.reserve(16);
+  }
 
   POMTLB_baseaddr = vmem.get_pte_pa(POM_CPU_KEY, 0, vmem.pt_levels).first;
   vmem.print_stat();
@@ -273,9 +274,10 @@ void PageTableWalker::handle_fill()
       {
         // we are using existing mapping (va_to_pa) and beliving it to be true when it says fault
         // we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
-        ptt[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
+        page_table_tracker[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
 
-        fill_mshr->event_cycle = current_cycle + vmem.minor_fault_penalty;
+        fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
+
         MSHR.sort(ord_event_cycle<PACKET>{});
 
         ptw_datamodel->page_fault[fill_mshr->translation_level]++;
@@ -333,10 +335,10 @@ void PageTableWalker::handle_fill()
       if (warmup_complete[cpu] && fault) 
       {
         // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
-        ptt[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
+        page_table_tracker[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
         // cout << std::hex << fill_mshr->page_table_base_address << ", " << fill_mshr->address << ", " << addr << '\n';
 
-        fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? 1:vmem.minor_fault_penalty);
+        fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
         MSHR.sort(ord_event_cycle<PACKET>{});
 
         ptw_datamodel->page_fault[fill_mshr->translation_level]++;

@@ -68,6 +68,7 @@ public:
   enum VC
   {
     STLB_EVICT=0,
+    VICTIMA_PTW_COUNT,
     STLB_VICTIMA_HIT,
     STLB_PTW_HIT,
     L2_EVICT,
@@ -269,6 +270,7 @@ public:
       cout << "victima l2 read hit, " << victima_counters[L2_READ_HIT] << '\n'; 
       cout << "victima l2 read miss, " << victima_counters[L2_READ_MISS] << '\n'; 
       cout << "victima stlb eivct, " << victima_counters[STLB_EVICT] << '\n'; 
+      cout << "victima PTW's, " << victima_counters[VICTIMA_PTW_COUNT] << '\n'; 
 
       cout << "\nvictima cache block usage @ L2 cache\n";
       for(int i=1; i< 9; i++)

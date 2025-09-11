@@ -4,9 +4,12 @@
 #include <cstdint>
 #include <deque>
 #include <map>
+#include <queue>
 
 // reserve 1MB of space
 #define VMEM_RESERVE_CAPACITY 1048576
+
+#define PRE_ALLOC_LIMIT 10
 
 #define PTE_BYTES 8
 
@@ -17,6 +20,8 @@ private:
   std::map<std::tuple<uint32_t, uint64_t, uint32_t>, uint64_t> page_table;
 
   uint64_t next_pte_page;
+
+  std::queue<uint64_t> pre_allocated_pages;
 
 public:
   const uint64_t minor_fault_penalty;

@@ -27,7 +27,7 @@ extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 
 // illusiong of stored cache line by 8byte granularity
 extern map<uint64_t, uint64_t> l2_pte_map;
-extern vector<PageTable*> ptt;
+extern vector<PageTable*> page_table_tracker;
 extern uint64_t POM_CPU_KEY;
 
 extern VirtualMemory vmem;
@@ -807,17 +807,17 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   {
     if(KNOB_EXTEND_VICTIMA)
     {
-      // IF GAIN IS NOT AVAILABLE THEN DONT USE THIS MAINTAINANCE CODE
-      // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full: invalidationPacket
-      if(hash_cache.size() >= KNOB_HASH_CACHE_MAX_LIMIT)
-      {
-        // test L2 read queue occupancy: if full we cannot send invalidation packet to 
-        if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
-        {
-          return false;
-        }
-        adjustHashCache = 1;
-      }
+      // // IF GAIN IS NOT AVAILABLE THEN DONT USE THIS MAINTAINANCE CODE
+      // // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full: invalidationPacket
+      // if(hash_cache.size() >= KNOB_HASH_CACHE_MAX_LIMIT)
+      // {
+      //   // test L2 read queue occupancy: if full we cannot send invalidation packet to 
+      //   if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
+      //   {
+      //     return false;
+      //   }
+      //   adjustHashCache = 1;
+      // }
 
       // test if cluster-8 available to be able to written in L2
       PACKET packet;
@@ -837,19 +837,13 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     }
     else if(KNOB_VICTIMA)
     {
-      CACHE* cache = (CACHE*)l2cache->getObject();
-      pair<bool, size_t> response = cache->peek_singleline(handle_pkt);
-
-      // miss @L2, check queue availability for PTW
-      // not found at L2, send PTW request
-      if(!response.first)
+      // TODO: add inference from PTW-cost predictor here
       {
         // // initiate PTW when RQ has occupancy & TLB block is absent
-        if(lower_level->get_occupancy(1,0) == lower_level->get_size(1,0))
+        if(lower_level->get_occupancy(1,0) != lower_level->get_size(1,0))
         {
-          return false;
+          sendVictimaPTWRequest = 1;
         }
-        sendVictimaPTWRequest = 1;
       }
     }
   }
@@ -939,6 +933,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             ptwpacket.thread_id = handle_pkt.thread_id;
 
             lower_level->add_rq(&ptwpacket);
+            victima_counters[VC::VICTIMA_PTW_COUNT]++;
           }
           // Extended-Victima Routine
           else if(writeExtendedVictimaPacket)
@@ -989,7 +984,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
-          PageTable* pt = ptt[KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id];
+          PageTable* pt = page_table_tracker[KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id];
           if(pt == nullptr)
           {
             dassert.log("Filllike_miss: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", handle_pkt.address, "v_addr", handle_pkt.v_address, "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
@@ -1007,10 +1002,14 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           victima_block_usage[usage]++;
           victima_counters[VC::L2_EVICT]++;
         }
-
-        // track pollution for victima
+        
         if(cache_is[IS_L2])
         {
+          // track victima_fill
+          if(handle_pkt.vflag[VF::victima_stlbevict_ptw])
+            victima_counters[VC::L2_WRITE]++;
+
+          // track pollution for victima
           uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : OFFSET_BITS);
           EvictCause evict_cause = (handle_pkt.vflag[VF::victima_stlbevict_ptw] && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
           victima_pollution->insert(set, PollutionEntry(track_addr, make_pair(PollutionTracker::VictimaPollutionTracker, evict_cause), fill_block.thread_id));
