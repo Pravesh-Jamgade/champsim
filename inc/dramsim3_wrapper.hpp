@@ -10,7 +10,7 @@
 #include <vector>
 #include "vmem.h"
 extern int KNOB_SMT_ENABLE;
-extern vector<PageTable*> ptt;
+extern vector<PageTable*> page_table_tracker;
 extern VirtualMemory vmem;
 
 namespace dramsim3 {

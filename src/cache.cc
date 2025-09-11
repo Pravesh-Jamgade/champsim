@@ -27,7 +27,7 @@ extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 
 // illusiong of stored cache line by 8byte granularity
 extern map<uint64_t, uint64_t> l2_pte_map;
-extern vector<PageTable*> ptt;
+extern vector<PageTable*> page_table_tracker;
 extern uint64_t POM_CPU_KEY;
 
 extern VirtualMemory vmem;
@@ -984,7 +984,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
-          PageTable* pt = ptt[KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id];
+          PageTable* pt = page_table_tracker[KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id];
           if(pt == nullptr)
           {
             dassert.log("Filllike_miss: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", handle_pkt.address, "v_addr", handle_pkt.v_address, "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");

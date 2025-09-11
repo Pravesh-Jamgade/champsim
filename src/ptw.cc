@@ -16,7 +16,7 @@ extern int KNOB_ENABLE_MFOE_V2;
 #define PSC_READ_LATENCY 2
 
 extern map<uint64_t, PTWC> ptw_pred;
-extern vector<PageTable*> ptt; // page-table-tracker
+extern vector<PageTable*> page_table_tracker; // page-table-tracker
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -274,7 +274,7 @@ void PageTableWalker::handle_fill()
       {
         // we are using existing mapping (va_to_pa) and beliving it to be true when it says fault
         // we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
-        ptt[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
+        page_table_tracker[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
 
         fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
 
@@ -335,7 +335,7 @@ void PageTableWalker::handle_fill()
       if (warmup_complete[cpu] && fault) 
       {
         // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
-        ptt[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
+        page_table_tracker[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
         // cout << std::hex << fill_mshr->page_table_base_address << ", " << fill_mshr->address << ", " << addr << '\n';
 
         fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
