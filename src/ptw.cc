@@ -209,7 +209,7 @@ void PageTableWalker::handle_read()
       packet.to_return = {this};
       packet.thread_id = handle_pkt.thread_id;
       packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level==1 && handle_pkt.vflag[VF::victima_stlbevict_ptw] && ptw_level==1 && handle_pkt.vflag[VF::victima]);//only lead PTE needs this flag 
-
+      
       int rq_index = lower_level->add_rq(&packet);
       if (rq_index == -2)
         return;
@@ -263,6 +263,8 @@ void PageTableWalker::handle_fill()
       // Return the translated physical address to STLB. Does not contain last
       // 12 bits
       auto [addr, fault] = vmem.va_to_pa(cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id, fill_mshr->v_address);
+      // fault is taken care at DRAM
+      fault = fill_mshr->page_fault;
 
       if(KNOB_TTP==1)
       {
@@ -272,10 +274,6 @@ void PageTableWalker::handle_fill()
       // We dont have free frame availbale, hence minor fault.
       if (warmup_complete[cpu] && fault) 
       {
-        // we are using existing mapping (va_to_pa) and beliving it to be true when it says fault
-        // we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
-        page_table_tracker[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
-
         fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
 
         MSHR.sort(ord_event_cycle<PACKET>{});
@@ -325,7 +323,7 @@ void PageTableWalker::handle_fill()
       {
         pair<uint64_t, bool> pte = vmem.get_pte_pa(cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id, fill_mshr->v_address, fill_mshr->translation_level);
         addr = pte.first;
-        fault = pte.second;
+        fault = fill_mshr->page_fault;
       }
       else
       {
@@ -334,10 +332,6 @@ void PageTableWalker::handle_fill()
 
       if (warmup_complete[cpu] && fault) 
       {
-        // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
-        page_table_tracker[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
-        // cout << std::hex << fill_mshr->page_table_base_address << ", " << fill_mshr->address << ", " << addr << '\n';
-
         fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
         MSHR.sort(ord_event_cycle<PACKET>{});
 
@@ -435,6 +429,7 @@ void PageTableWalker::handle_fill()
             packet.thread_id = fill_mshr->thread_id;
             packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level==1 && fill_mshr->vflag[VF::victima_stlbevict_ptw] && fill_mshr->vflag[VF::victima]);// if level=1 then only translation cache-block to tlb-block at L2
             packet.psc_state = PSC_STATE::QUEUED;
+            packet.page_table_base_address = addr;
             
             int rq_index = lower_level->add_rq(&packet);
             if (rq_index != -2) 
@@ -507,6 +502,7 @@ void PageTableWalker::return_data(PACKET* packet)
       mshr_entry.state = State::PTW_FILL;
       mshr_entry.hit_where = packet->hit_where;
       mshr_entry.pomflag[POM::POM_TO_PTW_FINI] = mshr_entry.pomflag[POM::POM_TO_PTW]; 
+      mshr_entry.page_fault = packet->page_fault;
       
       DP(if (warmup_complete[cpu]) {
         std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry.instr_id;

@@ -45,6 +45,32 @@ public:
     int add_rq(PACKET* packet) override 
     {
         if (all_warmup_complete <= NUM_CPUS) {
+
+            uint64_t newaddr;
+            uint32_t cpu_no = KNOB_SMT_ENABLE*packet->cpu + packet->thread_id;
+
+            // check page-fault
+            // for data-page
+            if(packet->translation_level == 0)
+            {
+                auto entry = vmem.va_to_pa(cpu_no, packet->v_address);
+                newaddr = entry.first;
+                packet->page_fault = entry.second;
+            }// for page-table
+            else
+            {
+                auto entry = vmem.get_pte_pa(cpu_no, packet->v_address, packet->translation_level);
+                newaddr = entry.first;
+                packet->page_fault = entry.second;
+            }
+
+            if(packet->page_fault)
+            {
+                // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
+                page_table_tracker[cpu_no]->insert(packet->page_table_base_address, packet->address , newaddr, packet->translation_level);
+                // cout << std::hex << fill_mshr->page_table_base_address << ", " << fill_mshr->address << ", " << addr << '\n';
+            }
+
             packet->hit_where = CACHE_ID::IS_DRAM;
             for (auto ret : packet->to_return)
                 ret->return_data(packet);
@@ -193,6 +219,32 @@ public:
         auto rq_pkt = std::find_if(std::begin(RQ), std::end(RQ), 
                                     eq_addr<PACKET>(addr, LOG2_BLOCK_SIZE));
         if (rq_pkt != std::end(RQ)) {
+
+            uint64_t newaddr;
+            uint32_t cpu_no = KNOB_SMT_ENABLE*rq_pkt->cpu + rq_pkt->thread_id;
+
+            // check page-fault
+            // for data-page
+            if(rq_pkt->translation_level == 0)
+            {
+                auto entry = vmem.va_to_pa(cpu_no, rq_pkt->v_address);
+                newaddr = entry.first;
+                rq_pkt->page_fault = entry.second;
+            }// for page-table
+            else
+            {
+                auto entry = vmem.get_pte_pa(cpu_no, rq_pkt->v_address, rq_pkt->translation_level);
+                newaddr = entry.first;
+                rq_pkt->page_fault = entry.second;
+            }
+
+            if(rq_pkt->page_fault)
+            {
+                // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
+                page_table_tracker[cpu_no]->insert(rq_pkt->page_table_base_address, rq_pkt->address , newaddr, rq_pkt->translation_level);
+                // cout << std::hex << fill_mshr->page_table_base_address << ", " << fill_mshr->address << ", " << addr << '\n';
+            }
+
             rq_pkt->hit_where = CACHE_ID::IS_DRAM;
             for (auto ret : rq_pkt->to_return) 
                 ret->return_data(&(*rq_pkt));

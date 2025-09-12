@@ -1710,6 +1710,7 @@ void CACHE::return_data(PACKET* packet)
     mshr_entry->pf_metadata = packet->pf_metadata;
     mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
     mshr_entry->hit_where = packet->hit_where;
+    mshr_entry->page_fault = packet->page_fault;
 
     // PTW has set POM_TO_PTW_FINI to 1, get this value as handle_fill needs it to distinguish
     mshr_entry->pomflag[POM::POM_TO_PTW_FINI] = packet->pomflag[POM::POM_TO_PTW_FINI];
