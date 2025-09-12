@@ -274,6 +274,8 @@ void PageTableWalker::handle_fill()
       // We dont have free frame availbale, hence minor fault.
       if (warmup_complete[cpu] && fault) 
       {
+        // reset page_fault flag
+        fill_mshr->page_fault = false;
         fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
 
         MSHR.sort(ord_event_cycle<PACKET>{});
@@ -332,6 +334,8 @@ void PageTableWalker::handle_fill()
 
       if (warmup_complete[cpu] && fault) 
       {
+        // reset page_fault flag
+        fill_mshr->page_fault = false;
         fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
         MSHR.sort(ord_event_cycle<PACKET>{});
 
