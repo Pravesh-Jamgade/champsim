@@ -109,7 +109,7 @@ public:
         // std::cout << "YYYYYYYYYYYYYYY\n";
         // Check for duplicates
         auto rq_it = std::find_if(std::begin(RQ), std::end(RQ), 
-                                    eq_addr<PACKET>(packet->address, LOG2_BLOCK_SIZE, packet->thread_id, false));
+                                    eq_addr<PACKET>(packet->address, LOG2_BLOCK_SIZE));
         if (rq_it != std::end(RQ)) 
         { // Duplicate found
             std::cout << "[Meta-RQ] duplicate rq_it->type: " << int(rq_it->type) 
@@ -244,7 +244,7 @@ public:
 
     void ReadCallBack(uint64_t addr) { 
         auto rq_pkt = std::find_if(std::begin(RQ), std::end(RQ), 
-                                    eq_addr<PACKET>(addr, LOG2_BLOCK_SIZE, rq_pkt->thread_id, false));
+                                    eq_addr<PACKET>(addr, LOG2_BLOCK_SIZE));
         if (rq_pkt != std::end(RQ)) {
 
             if(rq_pkt->type == TRANSLATION)
