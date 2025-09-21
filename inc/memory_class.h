@@ -37,6 +37,8 @@ public:
   // replacement state
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
 
+  int hit_before_eviction=0;
+
   int came_from_request = NUM_TYPES; // default: invalid block
 
   uint32_t m_used = 0; // 8 entries of 8B each

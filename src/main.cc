@@ -842,6 +842,8 @@ for(int i=0; i< KNOB_SMT_ENABLE*NUM_CPUS; i++)
 
 cout << '\n';
 vmem.print_stat();
+cout << '\n';
+
 cout << "\nDone!\n";
 
   return 0;

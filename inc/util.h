@@ -2,6 +2,21 @@
 #define UTIL_H
 
 #include <cstdint>
+#include <string>
+#include <fstream>
+#include <sstream> 
+
+extern int KNOB_SMT_ENABLE;
+
+
+ // Convert integer to hex string
+static std::string intToHex(uint64_t value) {
+  std::ostringstream oss;
+  oss << std::hex << std::uppercase << value;
+  return oss.str();
+}
+
+inline constexpr int cpu_index(uint32_t cpu, int thread) { return KNOB_SMT_ENABLE* cpu + thread; }
 
 constexpr unsigned lg2(uint64_t n) { return n < 2 ? 0 : 1 + lg2(n / 2); }
 

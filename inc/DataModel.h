@@ -323,6 +323,7 @@ class PTWDataModel
         {
             queue_basic_metric[i] = 0;
         }
+        page_fault = vector<uint64_t>(5,0);
     }
 
     PTWDataModel(uint32_t cpu): cpu(cpu)
@@ -331,6 +332,7 @@ class PTWDataModel
         {
             queue_basic_metric[i] = 0;
         }
+        page_fault = vector<uint64_t>(5,0);
     }
 
     // count psc level hit count. If hit in pscl5, says we have base address for next_level. And we dont need separate memory access
@@ -354,7 +356,7 @@ class PTWDataModel
     string pscl_packet_processed_str[PSCL_END] = {"*", "pscl2_avg_miss_latency", "pscl3_avg_miss_latency", "pscl4_avg_miss_latency", "pscl5_avg_miss_latency"};
 
     // page-faults at each level of radix tree (psc level)
-    uint64_t page_fault[PSCL_END] = {0};
+    vector<uint64_t> page_fault;
 
     map<CACHE_ID, int> readmiss_hitwhere;
 

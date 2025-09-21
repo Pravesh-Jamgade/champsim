@@ -67,6 +67,7 @@ public:
     PageFeature_end
   };
 
+  logger debugLog;
   logger dlog;
   Track track;
 
