@@ -11,6 +11,7 @@
 #include <string>
 #include "champsim_constants.h"
 #include "logger.h"
+#include "vmem.h"
 using namespace std;
 
 // Compile-time sanity
@@ -18,6 +19,7 @@ static_assert((PAGE_SIZE & (PAGE_SIZE - 1)) == 0, "PAGE_SIZE must be power of tw
 static_assert((BLOCK_SIZE & (BLOCK_SIZE - 1)) == 0, "BLOCK_SIZE must be power of two");
 constexpr uint64_t kBlocksPerPage = PAGE_SIZE / BLOCK_SIZE;
 static logger pagetable_logger(true);
+extern VirtualMemory vmem;
 
 // Utilities
 inline constexpr uint64_t page_align(uint64_t addr) { return addr & ~(PAGE_SIZE - 1ULL); }
@@ -33,9 +35,10 @@ class CacheBlock
     void map_entry(uint64_t ptekey, uint64_t allocated_page)
     {
         // Represent address of 8byte location
-        ptekey = ptekey & (~7);
+        ptekey = (ptekey >> 12) & (~7);
         // Update if exists
         pte.insert_or_assign(ptekey, allocated_page);
+        // pagetable_logger.log("INSERTED","ptekey",intToHex(ptekey), "ptevalue",intToHex(allocated_page), '\n');
     }
 
     bool erase_offset(uint64_t offset_within_base_addr)
@@ -175,7 +178,7 @@ public:
         auto pit = pages.find(page_base);
         if (pit == pages.end())
         {
-            pagetable_logger.log("PageTable lookup failed: Page not found", page_base, '\n');
+            pagetable_logger.log("[Tester] PageTable lookup failed: Page not found", intToHex(page_base), '\n');
             return nullptr;
         }
             
@@ -184,7 +187,7 @@ public:
         auto bit = pit->second.blocks.find(cbid);
         if (bit == pit->second.blocks.end())
         {
-            pagetable_logger.log("Cacheblock lookup failed: Cache block not found", cbid, '\n');
+            pagetable_logger.log("[Tester] Cacheblock lookup failed: Cache block not found", "addr", intToHex(phys_addr) , "page", intToHex(page_base), "cb", cbid, '\n');
             return nullptr;
         }
             
@@ -197,13 +200,15 @@ public:
         if(level == 0) return 0;
 
         const uint64_t phy_base = page_align(phys_addr);
-        uint64_t search_key = (level ==1) ? virt_addr : phys_addr;
-        search_key = search_key & (~7);
+        uint64_t search_key = phys_addr;//(level ==1 ) ? virt_addr : phys_addr;
+        search_key = (search_key >> 12) & (~7);
 
         auto pit = pages.find(phy_base);
         if (pit == pages.end())
         {
-            pagetable_logger.log("PageTable lookup failed: Page not found", phy_base, '\n');
+            for(auto curPage: pages)
+                curPage.second.print_stat_detail();
+            pagetable_logger.log("PageTable lookup failed: Page not found", "addr", intToHex(phys_addr), "page", intToHex(phy_base), "level", level, '\n');
             exit(-1);
         }
             
@@ -212,7 +217,16 @@ public:
         auto bit = pit->second.blocks.find(cbid);
         if (bit == pit->second.blocks.end())
         {
-            pagetable_logger.log("Cacheblock lookup failed: Cache block not found", cbid, '\n');
+            for(auto curPage: pages)
+                curPage.second.print_stat_detail();
+      
+            pagetable_logger.log("Cacheblock lookup failed: Cache block not found", "addr", intToHex(phys_addr) , "page", intToHex(phy_base), "cb", cbid, "level", (int)level, "exitingData", intToHex(existingData), '\n');
+           
+            for(auto pte: vmem.get_pagetable())
+            {
+                pagetable_logger.log(get<0>(pte.first), get<1>(pte.first), get<2>(pte.first), "page-next", intToHex(page_align(pte.second)), '\n');
+            }
+
             exit(-1);
         }
             
@@ -226,7 +240,7 @@ public:
         for(auto curPage: pages)
             curPage.second.print_stat_detail();
       
-        pagetable_logger.log("PTE not found: ", "addr", intToHex(phys_addr), "base_page",intToHex(phy_base), "cache_block",cbid, "ptekey",intToHex(search_key), "level", (int)level, "exitingData", intToHex(existingData),'\n');
+        pagetable_logger.log("PTE not found: ", "addr", intToHex(phys_addr), "vaddr", intToHex(virt_addr), "base_page",intToHex(phy_base), "cache_block",cbid, "ptekey",intToHex(search_key), "level", (int)level, "exitingData", intToHex(existingData),'\n');
         exit(-1);
     }
 
@@ -263,75 +277,72 @@ public:
 
     void print_stat(int thread)
     {
-        for(auto page: pages)
-        {
-            print_stat_detail(page.first);
-        }
-
+        // // TODO enable for DEBUG only
+        // for(auto page: pages)
+        // {
+        //     print_stat_detail(page.first);
+        // }
         // cout << '\n';
-
         // for(auto page: pages)
         // {
         //     // if(page.second.page_table_page)
         //         page.second.print_stat();
         // }
 
-        // cout << '\n';
-        // // total_pages_at_each_level + cr3_allocated_page
-        // cout << "total_pages_at_each_level + cr3_allocated_page: " << pages.size() << '\n';
-        // for (int i = 0; i < ptw_level_pages.size(); i++)
-        // {
-        //     cout << "Thread " << thread << " Pagetable level " << i << ": " << ptw_level_pages[i] << '\n';
-        // }
-        
+        cout << '\n';
+        // total_pages_at_each_level + cr3_allocated_page
+        cout << "total_pages_at_each_level + cr3_allocated_page: " << pages.size() << '\n';
+        for (int i = 0; i < ptw_level_pages.size(); i++)
+        {
+            cout << "Thread " << thread << " Pagetable level " << i << ": " << ptw_level_pages[i] << '\n';
+        }
 
-        // map<int,int> accumulate_page_level_occupancy;
-        // for(int i=0; i< 9; i++) accumulate_page_level_occupancy[i] = 0;
+        map<int,int> accumulate_page_level_occupancy;
+        for(int i=0; i< 9; i++) accumulate_page_level_occupancy[i] = 0;
 
-        // for(auto page: pages)
-        // {
-        //     if(page.second.page_table_page == 0)
-        //         continue;
+        for(auto page: pages)
+        {
+            if(page.second.page_table_page == 0)
+                continue;
             
-        //     vector<int> accumulate_block_level_occupancy(9,0);
-            
+            vector<int> accumulate_block_level_occupancy(9,0);
 
-        //     // occupancy & frequency
-        //     int nonzero_sum = 0;
-        //     vector<int> block_level_histogram = page.second.get_block_level_occupancy_histogram();
-        //     for(int i=0; i< block_level_histogram.size(); i++)
-        //     {
-        //         accumulate_block_level_occupancy[i] += block_level_histogram[i];
-        //         accumulate_page_level_occupancy[i] += block_level_histogram[i];
-        //         nonzero_sum += block_level_histogram[i];
-        //     }
+            // occupancy & frequency
+            int nonzero_sum = 0;
+            vector<int> block_level_histogram = page.second.get_block_level_occupancy_histogram();
+            for(int i=0; i< block_level_histogram.size(); i++)
+            {
+                accumulate_block_level_occupancy[i] += block_level_histogram[i];
+                accumulate_page_level_occupancy[i] += block_level_histogram[i];
+                nonzero_sum += block_level_histogram[i];
+            }
 
-        //     // if(nonzero_sum != 0)
-        //     {
-        //         cout << "page: " << intToHex(page_align(page.first)) << ", level, " << page.second.page_table_level;
-        //         for(auto printEntry: accumulate_block_level_occupancy)
-        //             cout << setw(6) << printEntry << ",";
-        //         cout << '\n';
-        //     }
-        // }
+            // // if(nonzero_sum != 0)
+            // {
+            //     cout << "page: " << intToHex(page_align(page.first)) << ", level, " << page.second.page_table_level;
+            //     for(auto printEntry: accumulate_block_level_occupancy)
+            //         cout << setw(6) << printEntry << ",";
+            //     cout << '\n';
+            // }
+        }
 
-        // cout << "Histogram of occupancy of cache block\n";
-        // cout << setw(7) << " " << "|";
-        // for(int i=0; i< accumulate_page_level_occupancy.size(); i++)
-        //     cout << setw(5) << i;
-        // cout << '\n';
+        cout << "Histogram of occupancy of cache block\n";
+        cout << setw(7) << " " << "|";
+        for(int i=0; i< accumulate_page_level_occupancy.size(); i++)
+            cout << setw(5) << i;
+        cout << '\n';
 
-        // // Print separator line
-        // cout << string(7, '-') << "+";
-        // for(int i=0; i< accumulate_page_level_occupancy.size(); i++)
-        //     cout << setw(5) << "-";
-        // cout << '\n';
+        // Print separator line
+        cout << string(7, '-') << "+";
+        for(int i=0; i< accumulate_page_level_occupancy.size(); i++)
+            cout << setw(5) << "-";
+        cout << '\n';
 
-        // // Print each row
-        // cout << setw(7) << " " << "|";
-        // for(int i=0; i< accumulate_page_level_occupancy.size(); i++)
-        //     cout << setw(5) << accumulate_page_level_occupancy[i] << ',';
-        // cout << '\n';
+        // Print each row
+        cout << setw(7) << " " << "|";
+        for(int i=0; i< accumulate_page_level_occupancy.size(); i++)
+            cout << setw(5) << accumulate_page_level_occupancy[i] << ',';
+        cout << '\n';
     }
 };
 

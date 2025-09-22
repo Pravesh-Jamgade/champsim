@@ -40,7 +40,7 @@ public:
             numPPages = (DRAM_CHANNELS * DRAM_RANKS * DRAM_BANKS 
                                 * DRAM_ROWS * DRAM_COLUMNS * BLOCK_SIZE) / PAGE_SIZE;
             procPageAccess = new bool[numPPages]{false};
-            dlog = logger(false);
+            dlog = logger(true);
             data_page = pt_page = 0;
             data_page_faulted = pt_page_faulted = 0;
         }
@@ -77,9 +77,8 @@ public:
                         pt_page_faulted++;
                 }
 
-                uint64_t keyaddr = packet->translation_level==1? packet->v_address: packet->address;
-                if(packet->page_fault)
-                {
+                uint64_t keyaddr = packet->address; //packet->translation_level==1? packet->v_address: packet->address;
+                
                     // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
                     page_table_tracker[cpu_no]->insert(
                                                 packet->page_table_base_address, // basepage
@@ -88,11 +87,10 @@ public:
                                                 newaddr,                         // PTE value for key, value pointing to either data-page or page-table page
                                                 packet->translation_level);
                     // cout << std::hex << fill_mshr->page_table_base_address << ", " << fill_mshr->address << ", " << addr << '\n';
-                }
 
                 packet->data = newaddr;
 
-                dlog.log("PTE", "req_addr", intToHex(packet->address), "req_page", intToHex(page_align(packet->address)), "ptekey", intToHex(keyaddr&(~7)), "ptevalue", intToHex(page_align(newaddr)), "level", (int)packet->translation_level, "t", packet->thread_id, '\n');
+                dlog.log("PTE", "req_addr", intToHex(packet->address), "req_page", intToHex(page_align(packet->address)), "ptekey", intToHex((keyaddr>>12)&(~7)), "ptevalue", intToHex(page_align(newaddr)), "level", (int)packet->translation_level, "t", packet->thread_id, "pf", packet->page_fault, '\n');
             }
             
             packet->hit_where = CACHE_ID::IS_DRAM;
@@ -273,9 +271,8 @@ public:
                         pt_page_faulted++;
                 }
 
-                uint64_t keyaddr = rq_pkt->translation_level==1? rq_pkt->v_address: rq_pkt->address;
-                if(rq_pkt->page_fault)
-                {
+                uint64_t keyaddr = rq_pkt->address; //rq_pkt->translation_level==1? rq_pkt->v_address: rq_pkt->address;
+                
                     // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
                     page_table_tracker[cpu_no]->insert(
                                                 rq_pkt->page_table_base_address, // basepage
@@ -284,11 +281,10 @@ public:
                                                 newaddr,                         // PTE value for key, value pointing to either data-page or page-table page
                                                 rq_pkt->translation_level);
                     // cout << std::hex << fill_mshr->page_table_base_address << ", " << fill_mshr->address << ", " << addr << '\n';
-                }
 
                 rq_pkt->data = newaddr;
                 
-                dlog.log("PTE", "req_addr", intToHex(rq_pkt->address), "req_page", intToHex(page_align(rq_pkt->address)), "ptekey", intToHex(keyaddr &(~7) ), "ptevalue", intToHex(page_align(newaddr)), "level", (int)rq_pkt->translation_level, "t", rq_pkt->thread_id, '\n');
+                dlog.log("PTE", "req_addr", intToHex(rq_pkt->address), "req_page", intToHex(page_align(rq_pkt->address)), "ptekey", intToHex((keyaddr>>12) &(~7) ), "ptevalue", intToHex(page_align(newaddr)), "level", (int)rq_pkt->translation_level, "t", rq_pkt->thread_id, "pf", rq_pkt->page_fault, '\n');
             }
 
             rq_pkt->hit_where = CACHE_ID::IS_DRAM;

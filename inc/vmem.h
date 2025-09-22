@@ -41,6 +41,7 @@ public:
   std::pair<uint64_t, bool> get_va_to_pa(uint32_t cpu_num, uint64_t vaddr);
 
   void print_stat();
+  auto get_pagetable(){return page_table;}
 
 };
 
