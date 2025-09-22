@@ -451,14 +451,14 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
       handle_pkt.data = found->second;
   }
 
-  if(handle_pkt.vflag[victima_stlbevict_ptw])
-    debugLog.log("Hit", current_cycle, NAME, "PA", intToHex(handle_pkt.address), "VP", intToHex(page_align(handle_pkt.v_address)), "Data", intToHex(page_align(hit_block.data)), "instr", handle_pkt.instr_id, "level", (int)handle_pkt.translation_level, "t", handle_pkt.thread_id, '\n');
+  // if(handle_pkt.vflag[victima_stlbevict_ptw])
+  //   debugLog.log("Hit", current_cycle, NAME, "PA", intToHex(handle_pkt.address), "VP", intToHex(page_align(handle_pkt.v_address)), "Data", intToHex(page_align(hit_block.data)), "instr", handle_pkt.instr_id, "level", (int)handle_pkt.translation_level, "t", handle_pkt.thread_id, '\n');
 
-  if(hit_block.victima_block)
-    debugLog.log("Update", current_cycle, NAME, "PA", intToHex(hit_block.address), "VP", intToHex(page_align(hit_block.v_address)), "oldData", intToHex(page_align(oldData)), "newData", intToHex(page_align(hit_block.data)), "instr", hit_block.instr_id, "t", hit_block.thread_id, '\n');
+  // if(hit_block.victima_block)
+  //   debugLog.log("Update", current_cycle, NAME, "PA", intToHex(hit_block.address), "VP", intToHex(page_align(hit_block.v_address)), "oldData", intToHex(page_align(oldData)), "newData", intToHex(page_align(hit_block.data)), "instr", hit_block.instr_id, "t", hit_block.thread_id, '\n');
 
 
-  // debugLog.log( current_cycle, NAME, "level-"+to_string((int)handle_pkt.translation_level), "base_page", intToHex(page_align(handle_pkt.page_table_base_address)), "pte_addr", intToHex(handle_pkt.address), "VA", intToHex(handle_pkt.v_address), "nextpage", intToHex(page_align(handle_pkt.data)), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
+  debugLog.log( "ReadHit" , current_cycle, NAME, "level-"+to_string((int)handle_pkt.translation_level), "PA", intToHex(handle_pkt.address), "VA", intToHex(handle_pkt.v_address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
 
   // update prefetcher on load instruction
   if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
@@ -570,6 +570,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // in case request is already returned, we should keep event_cycle
       mshr_entry->event_cycle = prior_event_cycle;
     }
+
+    debugLog.log( "ReadMiss" , current_cycle, NAME, "level-"+to_string((int)handle_pkt.translation_level), "PA", intToHex(handle_pkt.address), "VA", intToHex(handle_pkt.v_address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
+    debugLog.log( "MergeWith", "level-"+to_string((int)mshr_entry->translation_level), "PA", intToHex(mshr_entry->address), "VA", intToHex(mshr_entry->v_address), "instr", mshr_entry->instr_id, "t", mshr_entry->thread_id, '\n');
 
     cacheDataModel->mshr_queue[Basic::MERGED]++;
   } 
@@ -766,7 +769,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     cacheDataModel->reuse_distance->add_data_freq(distance, 1);
   }
   global_reuse[tag] = global_access_count;
- 
+  
+  debugLog.log( "ReadMiss" , current_cycle, NAME, "level-"+to_string((int)handle_pkt.translation_level), "PA", intToHex(handle_pkt.address), "VA", intToHex(handle_pkt.v_address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
+
   return true;
 }
 
@@ -1121,9 +1126,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     if (handle_pkt.type == PREFETCH)
       pf_fill++;
 
-      // if victima_block is getting updated
-    if(fill_block.victima_block)
-    debugLog.log("VictimaBlockUpdate", current_cycle, NAME, "PP", intToHex(page_align(fill_block.address)), "VP", intToHex(page_align(fill_block.v_address)), "Data", intToHex(page_align(fill_block.data)), "instr", fill_block.instr_id, "t", handle_pkt.thread_id, '\n');
+    //   // if victima_block is getting updated
+    // if(fill_block.victima_block)
+    // debugLog.log("VictimaBlockUpdate", current_cycle, NAME, "PP", intToHex(page_align(fill_block.address)), "VP", intToHex(page_align(fill_block.v_address)), "Data", intToHex(page_align(fill_block.data)), "instr", fill_block.instr_id, "t", handle_pkt.thread_id, '\n');
   
     fill_block.valid = true;
     fill_block.prefetch = (handle_pkt.type == PREFETCH && handle_pkt.pf_origin_level == fill_level);
@@ -1141,7 +1146,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
 
-    if(handle_pkt.translation_level !=0 )
+    // if(handle_pkt.translation_level !=0 )
     debugLog.log("Insert", current_cycle, NAME, "PA", intToHex(fill_block.address), "VP", intToHex(page_align(fill_block.v_address)), "Data", intToHex(page_align(fill_block.data)), "instr", fill_block.instr_id, "t", handle_pkt.thread_id, '\n');
   }
 
@@ -1335,6 +1340,7 @@ int CACHE::add_rq(PACKET* packet)
   champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : use_offset(packet->type), packet->thread_id, check_thread_id) );
   
   if (found_wq != WQ.end()) {
+    debugLog.log( "ReadWQ-hit" , current_cycle, NAME, "level-"+to_string((int)packet->translation_level), "PA", intToHex(packet->address), "VA", intToHex(packet->v_address), "instr", packet->instr_id, "t", packet->thread_id, '\n');
 
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;)
     packet->hit_where = CACHE_ID::WQ;
@@ -1351,6 +1357,8 @@ int CACHE::add_rq(PACKET* packet)
   // check for duplicates in the read queue
   auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, use_offset(packet->type), packet->thread_id, is_tlb || check_thread_id) );
   if (found_rq != RQ.end()) {
+    debugLog.log( "ReadMerge" , current_cycle, NAME, "level-"+to_string((int)packet->translation_level), "PA", intToHex(packet->address), "VA", intToHex(packet->v_address), "instr", packet->instr_id, "t", packet->thread_id, '\n');
+
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
 
     packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
@@ -1386,7 +1394,7 @@ int CACHE::add_rq(PACKET* packet)
   DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;)
 
   RQ_TO_CACHE++;
-
+    
   cacheDataModel->rd_queue[Basic::ADDED]++;
   // cacheDataModel->rd_queue[Basic::ACCESS]++;
   return RQ.occupancy();

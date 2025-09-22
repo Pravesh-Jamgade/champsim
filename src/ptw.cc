@@ -33,7 +33,7 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       llcObject(llc)
 {
 
-  debugLog = logger(false);
+  debugLog = logger(true);
   dlog = logger(false);
   ptw_datamodel = new PTWDataModel(cpu);
   fill_counters.resize(5);
@@ -162,7 +162,7 @@ void PageTableWalker::handle_read()
        
         if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.v_address, handle_pkt.thread_id); check_addr.has_value()) 
         {
-          if(handle_pkt.vflag[victima_stlbevict_ptw])
+          // if(handle_pkt.vflag[victima_stlbevict_ptw])
           debugLog.log("PSC-Hit", current_cycle, "level-"+to_string(ptw_level),"VP", intToHex(page_align(handle_pkt.v_address)), "next_pte_addr", intToHex(next_pt_addr), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
 
           miss_at_root = false;
@@ -218,7 +218,7 @@ void PageTableWalker::handle_read()
       if (rq_index == -2)
         return;
       
-      if(handle_pkt.vflag[victima_stlbevict_ptw])
+      // if(handle_pkt.vflag[victima_stlbevict_ptw])
       debugLog.log("PTW-sent",current_cycle,  "level-"+to_string(ptw_level),"VP", intToHex(page_align(packet.v_address)), "next_pte_addr", intToHex(packet.address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
 
       // Track PTW
@@ -387,7 +387,7 @@ void PageTableWalker::handle_fill()
             
             if (auto check_addr = pscl->check_hit(next_pt_addr, fill_mshr->v_address, fill_mshr->thread_id); check_addr.has_value()) 
             {
-              if(fill_mshr->vflag[victima_stlbevict_ptw])
+              // if(fill_mshr->vflag[victima_stlbevict_ptw])
               debugLog.log( "PSC-Hit", current_cycle,"level-"+to_string(ptw_level), "VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, '\n');
               ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
               next_pt_addr = check_addr.value();
@@ -426,7 +426,7 @@ void PageTableWalker::handle_fill()
             int rq_index = lower_level->add_rq(&packet);
             if (rq_index != -2) 
             {
-              if(fill_mshr->vflag[victima_stlbevict_ptw])
+              // if(fill_mshr->vflag[victima_stlbevict_ptw])
               debugLog.log("PTW-sent", current_cycle, "level-"+to_string(ptw_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, '\n');
               fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
               fill_mshr->page_table_base_address = addr;
