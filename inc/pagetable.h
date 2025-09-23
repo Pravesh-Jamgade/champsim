@@ -200,7 +200,7 @@ public:
         if(level == 0) return 0;
 
         const uint64_t phy_base = page_align(phys_addr);
-        uint64_t search_key = phys_addr;//(level ==1 ) ? virt_addr : phys_addr;
+        uint64_t search_key = (level ==1 ) ? virt_addr : phys_addr;
         search_key = (search_key >> 12) & (~7);
 
         auto pit = pages.find(phy_base);
