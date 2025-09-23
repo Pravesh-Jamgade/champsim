@@ -33,7 +33,7 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       llcObject(llc)
 {
 
-  debugLog = logger(true);
+  debugLog = logger(false);
   dlog = logger(false);
   ptw_datamodel = new PTWDataModel(cpu);
   fill_counters.resize(5);
@@ -370,6 +370,7 @@ void PageTableWalker::handle_fill()
           // order of line imp: level=1 becomes level=0 and hence it will notify end of PTW and allocate data_page (minor-fault) if not exists
           fill_mshr->translation_level = fill_mshr->translation_level - 1;
 
+          debugLog.log("PTW-fill", current_cycle, "level-"+to_string((int)fill_mshr->translation_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, '\n');
         }
         else if(fill_mshr->state == State::PSC_Search)
         {

@@ -77,7 +77,7 @@ public:
                         pt_page_faulted++;
                 }
 
-                uint64_t keyaddr = packet->address; //packet->translation_level==1? packet->v_address: packet->address;
+                uint64_t keyaddr = packet->translation_level==1? packet->v_address: packet->address;
                 
                     // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
                     page_table_tracker[cpu_no]->insert(
@@ -92,7 +92,7 @@ public:
 
                 dlog.log("PTE", "req_addr", intToHex(packet->address), "req_page", intToHex(page_align(packet->address)), "ptekey", intToHex((keyaddr>>12)&(~7)), "ptevalue", intToHex(page_align(newaddr)), "level", (int)packet->translation_level, "t", packet->thread_id, "pf", packet->page_fault, '\n');
             }
-            
+
             packet->hit_where = CACHE_ID::IS_DRAM;
 
             for (auto ret : packet->to_return)
@@ -115,7 +115,9 @@ public:
                         << " rq_it->cpu: " << rq_it->cpu
                         << " pkt->type: " << int(packet->type) 
                         << " pkt->address: " << packet->address
-                        << " pkt->cpu: " << packet->cpu << std::endl;
+                        << " pkt->cpu: " << packet->cpu 
+                        << " pkt->instr: " << packet->instr_id 
+                        << std::endl;
 
             rq_it->thread_id = packet->thread_id;
             rq_it->scheduled = packet->scheduled;
@@ -243,6 +245,7 @@ public:
     void ReadCallBack(uint64_t addr) { 
         auto rq_pkt = std::find_if(std::begin(RQ), std::end(RQ), 
                                     eq_addr<PACKET>(addr, LOG2_BLOCK_SIZE));
+
         if (rq_pkt != std::end(RQ)) {
 
             if(rq_pkt->type == TRANSLATION)
@@ -271,7 +274,7 @@ public:
                         pt_page_faulted++;
                 }
 
-                uint64_t keyaddr = rq_pkt->address; //rq_pkt->translation_level==1? rq_pkt->v_address: rq_pkt->address;
+                uint64_t keyaddr = rq_pkt->translation_level==1? rq_pkt->v_address: rq_pkt->address;
                 
                     // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
                     page_table_tracker[cpu_no]->insert(
@@ -289,7 +292,10 @@ public:
 
             rq_pkt->hit_where = CACHE_ID::IS_DRAM;
             for (auto ret : rq_pkt->to_return) 
+            {
                 ret->return_data(&(*rq_pkt));
+            }
+                
             *rq_pkt = {};
         }
         else {
