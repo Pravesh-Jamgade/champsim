@@ -38,6 +38,7 @@ class CacheBlock
         ptekey = (ptekey >> 12) & (~7);
         // Update if exists
         pte.insert_or_assign(ptekey, allocated_page);
+        
         // pagetable_logger.log("INSERTED","ptekey",intToHex(ptekey), "ptevalue",intToHex(allocated_page), '\n');
     }
 
@@ -78,9 +79,18 @@ class Page
     }
 
     void map_entry(uint64_t offset_within_base_addr, uint64_t ptekey, uint64_t allocated_page)
-    {
+    {   
+        
+        // missing page
+        if(8469217280 == allocated_page)
+            cout << "missing page in pagetable as PTE, key:" << intToHex(ptekey) << ", value:" << intToHex(allocated_page) << '\n';
+        
         // offset must be within the page
         const uint64_t cbid = block_index(offset_within_base_addr);
+
+        if(page_align(offset_within_base_addr) == 3750301696 && cbid == 43)
+            cout << "page, " << intToHex(page_align(offset_within_base_addr))<< ", key, " << intToHex(ptekey) << ", value, " << intToHex(allocated_page) << '\n';
+
         auto &blk = blocks[cbid]; // creates on demand
         blk.map_entry(ptekey, allocated_page);
     }
@@ -200,7 +210,7 @@ public:
         if(level == 0) return 0;
 
         const uint64_t phy_base = page_align(phys_addr);
-        uint64_t search_key = (level ==1 ) ? virt_addr : phys_addr;
+        uint64_t search_key = phys_addr;// (level ==1 ) ? virt_addr : phys_addr;
         search_key = (search_key >> 12) & (~7);
 
         auto pit = pages.find(phy_base);
