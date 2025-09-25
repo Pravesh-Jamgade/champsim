@@ -25,34 +25,36 @@ extern VirtualMemory vmem;
 inline constexpr uint64_t page_align(uint64_t addr) { return addr & ~(PAGE_SIZE - 1ULL); }
 inline constexpr uint64_t block_index(uint64_t off) { return (off / BLOCK_SIZE) % kBlocksPerPage; }
 
+namespace std {
+    template <>
+    struct hash<tuple<uint64_t, uint64_t, int>> {
+        size_t operator()(const tuple<uint64_t, uint64_t, int>& t) const {
+            size_t h1 = hash<uint64_t>{}(get<0>(t));
+            size_t h2 = hash<uint64_t>{}(get<1>(t));
+            size_t h3 = hash<int>{}(get<2>(t));
+            // Combine hashes
+            return h1 ^ (h2 << 1) ^ (h3 << 2);
+        }
+    };
+}
+
 class CacheBlock
 {
     public:
     // key: byte offset within the base page (you may choose to store a line index instead)
     // val: allocated physical page base
-    std::unordered_map<uint64_t, uint64_t> pte;
+    // tuple {addr>PAGE_SIZE, addr>>shtamt(level-1), thread_id}
+    std::unordered_map<tuple<uint64_t, uint64_t, int>, uint64_t> pte;
 
-    void map_entry(uint64_t ptekey, uint64_t allocated_page)
+    void map_entry(uint64_t ptekey, uint64_t allocated_page, int level)
     {
-        // Represent address of 8byte location
-        ptekey = (ptekey >> 12) & (~7);
+       tuple<int, uint64_t, uint64_t> key = make_tuple(level, ptekey>>(vmem.shamt(level-1)), level==0?-1:ptekey%8);
         // Update if exists
-        pte.insert_or_assign(ptekey, allocated_page);
-        
+        pte.insert_or_assign(key, allocated_page);
         // pagetable_logger.log("INSERTED","ptekey",intToHex(ptekey), "ptevalue",intToHex(allocated_page), '\n');
     }
 
-    bool erase_offset(uint64_t offset_within_base_addr)
-    {
-        return pte.erase(offset_within_base_addr) != 0;
-    }
-
-    bool empty() const { return pte.empty(); }
-
-    int getUsage()
-    {
-        return pte.size();
-    }
+    int getUsage() const { return pte.size(); }
 };
 
 class Page
@@ -61,15 +63,13 @@ class Page
     bool page_table_page = 0;
     int page_table_level = -1;
     uint64_t base_addr = 0;
-    uint64_t base_full_addr = 0;
     // key: cache-block index within the page (0..kBlocksPerPage-1)
     std::unordered_map<uint64_t, CacheBlock> blocks;
 
     Page(){}
-    Page(uint64_t base, uint64_t base_full_addr)
+    Page(uint64_t base)
     {
         this->base_addr = base;
-        this->base_full_addr = base_full_addr;
     }
 
     void set_page_type(int level)
@@ -78,41 +78,19 @@ class Page
         page_table_level = level;
     }
 
-    void map_entry(uint64_t offset_within_base_addr, uint64_t ptekey, uint64_t allocated_page)
+    void map_entry(uint64_t offset_within_base_addr, uint64_t ptekey, uint64_t allocated_page, int level)
     {   
-        
-        // missing page
-        if(8469217280 == allocated_page)
-            cout << "missing page in pagetable as PTE, key:" << intToHex(ptekey) << ", value:" << intToHex(allocated_page) << '\n';
-        
         // offset must be within the page
         const uint64_t cbid = block_index(offset_within_base_addr);
-
-        if(page_align(offset_within_base_addr) == 3750301696 && cbid == 43)
-            cout << "page, " << intToHex(page_align(offset_within_base_addr))<< ", key, " << intToHex(ptekey) << ", value, " << intToHex(allocated_page) << '\n';
-
         auto &blk = blocks[cbid]; // creates on demand
-        blk.map_entry(ptekey, allocated_page);
-    }
-
-    // Optional: clean up empty blocks
-    bool erase_offset(uint64_t offset_within_base_addr)
-    {
-        const uint64_t cbid = block_index(offset_within_base_addr);
-        auto it = blocks.find(cbid);
-        if (it == blocks.end())
-            return false;
-        bool removed = it->second.erase_offset(offset_within_base_addr);
-        if (removed && it->second.empty())
-            blocks.erase(it);
-        return removed;
+        blk.map_entry(ptekey, allocated_page, level);
     }
 
     bool empty() const { return blocks.empty(); }
 
     void print_stat()
     {
-        cout << intToHex(page_align(base_full_addr)) << std::dec << ", cache_blocks: " << blocks.size() << ", level, " << page_table_level << '\n';
+        cout << intToHex(base_addr) << std::dec << ", cache_blocks: " << blocks.size() << ", level, " << page_table_level << '\n';
 
         for (auto entry : blocks)
         {
@@ -122,13 +100,13 @@ class Page
 
     void print_stat_detail()
     {
-        cout << "page," << intToHex(page_align(base_full_addr)) << std::dec << ", cache_blocks: " << blocks.size() << ", level, " << page_table_level << '\n';
+        cout << "page," << intToHex(base_addr) << std::dec << ", cache_blocks: " << blocks.size() << ", level, " << page_table_level << '\n';
 
         for (auto cacheBlockEntry : blocks)
         {
             for(auto pteEntry: cacheBlockEntry.second.pte)
             {
-                cout << "cb, " << cacheBlockEntry.first << ", pte, " << intToHex(pteEntry.first) << ", "<< intToHex(page_align(pteEntry.second)) << '\n';
+                cout << "cb, " << cacheBlockEntry.first << ", pte, [page=" << intToHex(get<0>(pteEntry.first)) << ", addrTrace=" << intToHex(get<1>(pteEntry.first)) << ", thread_id=" << get<2>(pteEntry.first) << "]" << ", "<< intToHex(page_align(pteEntry.second)) << '\n';
             }
             cout << '\n';
         }
@@ -162,20 +140,22 @@ public:
         ptw_level_pages.resize(5, 0);
     }
 
-    // Insert/overwrite a mapping: (base page table addr, offset within that page) -> allocated physical page
-    void insert(uint64_t base_page_table_addr, uint64_t offset_within_base_addr, uint64_t ptekey, uint64_t new_allocate_addr, uint8_t level)
+    // Insert a mapping
+    void insert(uint64_t complete_address, uint64_t ptekey, uint64_t new_allocate_addr, uint8_t level)
     {
-        const uint64_t base_page = page_align(offset_within_base_addr);
+        // Align addresses to page boundaries
+        const uint64_t base_page = page_align(complete_address);
         const uint64_t allocated_page = page_align(new_allocate_addr);
 
         // Ensure both pages exist
-        auto &basePg = pages.try_emplace(base_page, Page(base_page,base_page_table_addr)).first->second;
-        auto &allocPg = pages.try_emplace(allocated_page, Page(allocated_page,new_allocate_addr)).first->second; // reserve allocated mapping page if you track both
+        auto &basePg = pages.try_emplace(base_page, Page(base_page)).first->second;
+        auto &allocPg = pages.try_emplace(allocated_page, Page(allocated_page)).first->second; // reserve allocated mapping page if you track both
 
-        // since it is the next-level page and if level==1 then its a data page
+        // assign level for base page
         basePg.set_page_type(level);
 
-        basePg.map_entry(offset_within_base_addr, ptekey, allocated_page);
+        // map new allocated page to ptekey within cache block of base page
+        basePg.map_entry(complete_address, ptekey, allocated_page, level);
 
         // we counting how many PTE are inserted here. Implies how many faults happened at Next-level and inserted PTE on current level here
         ptw_level_pages[(int)level]++;
@@ -205,13 +185,13 @@ public:
     }
 
     // non-const overload
-    uint64_t lookupEntry(uint64_t phys_addr, uint64_t virt_addr, uint8_t level, uint64_t existingData)
+    uint64_t lookupEntry(int cpu, uint64_t phys_addr, uint64_t virt_addr, int level, uint64_t existingData)
     {
         if(level == 0) return 0;
 
         const uint64_t phy_base = page_align(phys_addr);
-        uint64_t search_key = phys_addr;// (level ==1 ) ? virt_addr : phys_addr;
-        search_key = (search_key >> 12) & (~7);
+        uint64_t use_addr = (level ==1 ) ? virt_addr : phys_addr;
+        tuple<int, uint64_t, uint64_t> search_key = make_tuple(level, use_addr>>(vmem.shamt(level-1)), level==0?-1:use_addr%8);
 
         auto pit = pages.find(phy_base);
         if (pit == pages.end())
@@ -250,27 +230,8 @@ public:
         for(auto curPage: pages)
             curPage.second.print_stat_detail();
       
-        pagetable_logger.log("PTE not found: ", "addr", intToHex(phys_addr), "vaddr", intToHex(virt_addr), "base_page",intToHex(phy_base), "cache_block",cbid, "ptekey",intToHex(search_key), "level", (int)level, "exitingData", intToHex(existingData),'\n');
+        pagetable_logger.log("PTE not found: ", "addr", intToHex(phys_addr), "vaddr", intToHex(virt_addr), "base_page",intToHex(phy_base), "cache_block",cbid, "ptekey: ",intToHex(get<0>(search_key)), intToHex(get<1>(search_key)), intToHex(get<2>(search_key)), "level", (int)level, "exitingData", intToHex(existingData),'\n');
         exit(-1);
-    }
-
-    // Erase mapping at (base page + offset)
-    bool erase(uint64_t base_page_table_addr, uint64_t offset_within_base_addr)
-    {
-        const uint64_t base_page = page_align(base_page_table_addr);
-        auto it = pages.find(base_page);
-        if (it == pages.end())
-            return false;
-        bool removed = it->second.erase_offset(offset_within_base_addr);
-        if (removed && it->second.empty())
-            pages.erase(it);
-        return removed;
-    }
-
-    // Erase an entire page (e.g., on invalidation)
-    bool erase_page(uint64_t any_addr_in_page)
-    {
-        return pages.erase(page_align(any_addr_in_page)) != 0;
     }
 
     bool contains_page(uint64_t any_addr_in_page) const

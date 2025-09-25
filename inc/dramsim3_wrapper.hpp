@@ -77,11 +77,10 @@ public:
                         pt_page_faulted++;
                 }
 
-                uint64_t keyaddr =  packet->address; //packet->translation_level==1? packet->v_address: packet->address;
+                uint64_t keyaddr =  packet->translation_level==1? packet->v_address: packet->address;
                 
                     // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
                     page_table_tracker[cpu_no]->insert(
-                                                packet->page_table_base_address, // basepage
                                                 packet->address,                 // complete address for storing PTE within same page
                                                 keyaddr,                         // PTE key in same basepage
                                                 newaddr,                         // PTE value for key, value pointing to either data-page or page-table page
@@ -274,11 +273,10 @@ public:
                         pt_page_faulted++;
                 }
 
-                uint64_t keyaddr = rq_pkt->address; //rq_pkt->translation_level==1? rq_pkt->v_address: rq_pkt->address;
+                uint64_t keyaddr = rq_pkt->translation_level==1? rq_pkt->v_address: rq_pkt->address;
                 
                     // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
                     page_table_tracker[cpu_no]->insert(
-                                                rq_pkt->page_table_base_address, // basepage
                                                 rq_pkt->address,
                                                 keyaddr,                         // PTE key in same basepage
                                                 newaddr,                         // PTE value for key, value pointing to either data-page or page-table page
