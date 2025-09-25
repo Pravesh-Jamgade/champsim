@@ -440,7 +440,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   handle_pkt.data = hit_block.data;
   if(handle_pkt.type == TRANSLATION)
-  // handle_pkt.data = page_table_tracker[cpu_index(handle_pkt.cpu, handle_pkt.thread_id)]->lookupEntry(handle_pkt.address, handle_pkt.v_address, handle_pkt.translation_level, hit_block.data);
+  handle_pkt.data = page_table_tracker[cpu_index(handle_pkt.cpu, handle_pkt.thread_id)]->lookupEntry(handle_pkt.cpu, handle_pkt.address, handle_pkt.v_address, handle_pkt.translation_level, hit_block.data);
  
 
   if(KNOB_VICTIMA && cache_is[CACHE_ID::IS_L2] && handle_pkt.vflag[VF::victima])
