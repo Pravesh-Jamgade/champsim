@@ -354,6 +354,8 @@ void PageTableWalker::handle_fill()
 
         if(fill_mshr->state == State::PTW_FILL)
         {
+          ptw_datamodel->matrix_cache_to_ptwlevel_hits[fill_mshr->translation_level][fill_mshr->hit_where]++;
+          
           fill_counters[fill_mshr->translation_level]++;
           if (fill_mshr->translation_level == PSCL5.level)
             PSCL5.fill_cache(addr, fill_mshr->v_address, fill_mshr->thread_id);

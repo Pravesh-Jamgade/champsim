@@ -80,17 +80,8 @@ class Page
 
     void map_entry(uint64_t offset_within_base_addr, uint64_t ptekey, uint64_t allocated_page)
     {   
-        
-        // missing page
-        if(8469217280 == allocated_page)
-            cout << "missing page in pagetable as PTE, key:" << intToHex(ptekey) << ", value:" << intToHex(allocated_page) << '\n';
-        
         // offset must be within the page
         const uint64_t cbid = block_index(offset_within_base_addr);
-
-        if(page_align(offset_within_base_addr) == 3750301696 && cbid == 43)
-            cout << "page, " << intToHex(page_align(offset_within_base_addr))<< ", key, " << intToHex(ptekey) << ", value, " << intToHex(allocated_page) << '\n';
-
         auto &blk = blocks[cbid]; // creates on demand
         blk.map_entry(ptekey, allocated_page);
     }
@@ -287,18 +278,6 @@ public:
 
     void print_stat(int thread)
     {
-        // // TODO enable for DEBUG only
-        // for(auto page: pages)
-        // {
-        //     print_stat_detail(page.first);
-        // }
-        // cout << '\n';
-        // for(auto page: pages)
-        // {
-        //     // if(page.second.page_table_page)
-        //         page.second.print_stat();
-        // }
-
         cout << '\n';
         // total_pages_at_each_level + cr3_allocated_page
         cout << "total_pages_at_each_level + cr3_allocated_page: " << pages.size() << '\n';
@@ -326,14 +305,6 @@ public:
                 accumulate_page_level_occupancy[i] += block_level_histogram[i];
                 nonzero_sum += block_level_histogram[i];
             }
-
-            // // if(nonzero_sum != 0)
-            // {
-            //     cout << "page: " << intToHex(page_align(page.first)) << ", level, " << page.second.page_table_level;
-            //     for(auto printEntry: accumulate_block_level_occupancy)
-            //         cout << setw(6) << printEntry << ",";
-            //     cout << '\n';
-            // }
         }
 
         cout << "Histogram of occupancy of cache block\n";
