@@ -32,7 +32,7 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       llcObject(llc)
 {
 
-  debugLog = logger(true);
+  debugLog = logger(false);
   dlog = logger(false);
   ptw_datamodel = new PTWDataModel(cpu);
   fill_counters.resize(5);
@@ -203,7 +203,7 @@ void PageTableWalker::handle_read()
         return;
       
       // if(handle_pkt.vflag[victima_stlbevict_ptw])
-      debugLog.log("PTW-sent",current_cycle,  "level-"+to_string(ptw_level),"VP", intToHex(page_align(packet.v_address)), "next_pte_addr", intToHex(packet.address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
+      debugLog.log("PTW-sent", current_cycle,  "level-"+to_string(ptw_level),"VP", intToHex(page_align(packet.v_address)), "next_pte_addr", intToHex(packet.address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
 
       // Track PTW
       if(track.stop == 0)
@@ -338,9 +338,11 @@ void PageTableWalker::handle_fill()
 
         if(fill_mshr->state == State::PTW_FILL)
         {
-          ptw_datamodel->matrix_cache_to_ptwlevel_hits[fill_mshr->translation_level][fill_mshr->hit_where]++;
+          debugLog.log("PTW-fill", current_cycle, "level-"+to_string((int)fill_mshr->translation_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, "hw", hit_where_str[fill_mshr->hit_where], '\n');
 
+          ptw_datamodel->matrix_cache_to_ptwlevel_hits[fill_mshr->translation_level][fill_mshr->hit_where]++;
           fill_counters[fill_mshr->translation_level]++;
+          
           if (fill_mshr->translation_level == PSCL5.level)
             PSCL5.fill_cache(addr, fill_mshr->v_address, fill_mshr->thread_id);
           if (fill_mshr->translation_level == PSCL4.level)
@@ -355,8 +357,6 @@ void PageTableWalker::handle_fill()
           fill_mshr->address = addr;
           // order of line imp: level=1 becomes level=0 and hence it will notify end of PTW and allocate data_page (minor-fault) if not exists
           fill_mshr->translation_level = fill_mshr->translation_level - 1;
-
-          debugLog.log("PTW-fill", current_cycle, "level-"+to_string((int)fill_mshr->translation_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, '\n');
         }
         else if(fill_mshr->state == State::PSC_Search)
         {

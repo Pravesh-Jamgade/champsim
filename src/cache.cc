@@ -41,7 +41,7 @@ void CACHE::handle_fill()
 
     if(fill_mshr->thread_id==-1 && fill_mshr->type != PREFETCH)
     {
-      dassert.log("handle_fill: thread_id == -1 and request != PREFETCH", "instr", fill_mshr->instr_id, "addr", fill_mshr->address, "v_addr", fill_mshr->v_address, "type", fill_mshr->type, "NAME", NAME, "victima", fill_mshr->vflag[VF::victima], "pom", fill_mshr->pomflag[POM::POM], "\n");
+      dassert.log("handle_fill: thread_id == -1 and request != PREFETCH", "instr", fill_mshr->instr_id, "addr", intToHex(fill_mshr->address), "v_addr", intToHex(fill_mshr->v_address), "type", fill_mshr->type, "NAME", NAME, "victima", fill_mshr->vflag[VF::victima], "pom", fill_mshr->pomflag[POM::POM], "\n");
       exit(0);
     }
 
@@ -166,7 +166,7 @@ void CACHE::handle_writeback()
     PACKET& handle_pkt = WQ.front();
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
     {
-      dassert.log("handle_writeback: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", handle_pkt.address, "v_addr", handle_pkt.v_address, "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
+      dassert.log("handle_writeback: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
       exit(0);
     }
 
@@ -327,10 +327,10 @@ void CACHE::handle_read()
     PACKET& handle_pkt = RQ.front();
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
     {
-      dassert.log("handle_read: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", handle_pkt.address, "v_addr", handle_pkt.v_address, "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
+      dassert.log("handle_read: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
       exit(0);
     }
-   
+    
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
@@ -433,22 +433,13 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   });
 
   BLOCK& hit_block = block[set * NUM_WAY + way];
-  uint64_t oldData = hit_block.data;
   hit_block.m_used++;
   hit_block.hit_before_eviction++;
   handle_pkt.hit_where = cache_id;
 
   handle_pkt.data = hit_block.data;
-  if(handle_pkt.type == TRANSLATION)
-  handle_pkt.data = process_page_table->get_pte(handle_pkt.cpu, handle_pkt.address, handle_pkt.translation_level).second;
-
-  if(KNOB_VICTIMA && cache_is[CACHE_ID::IS_L2] && handle_pkt.vflag[VF::victima])
-  {
-    uint64_t vp_addr = handle_pkt.address & ~(PAGE_SIZE-1);
-    auto found = l2_pte_map.find(vp_addr);
-    if(found != l2_pte_map.end())
-      handle_pkt.data = found->second;
-  }
+  // if(handle_pkt.type == TRANSLATION && !is_tlb)
+  // handle_pkt.data = process_page_table->get_pte(handle_pkt.cpu, handle_pkt.address, handle_pkt.translation_level).second;
 
   // update prefetcher on load instruction
   if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
@@ -1301,8 +1292,8 @@ int CACHE::add_rq(PACKET* packet)
   // assert(packet->address != 0);
   if(packet->address == 0)
   {
-    dassert.log("add_rq Address Zero Packet", "instr", packet->instr_id, "addr", packet->address, "v_addr", packet->v_address, "type", (int)packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
-    exit(0);
+    dassert.log("add_rq Address Zero Packet", "instr", packet->instr_id, "addr", intToHex(packet->address), "v_addr", intToHex(packet->v_address), "type", (int)packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
+    exit(-1);
   }
   RQ_ACCESS++;
 
@@ -1499,7 +1490,7 @@ int CACHE::add_pq(PACKET* packet)
 
   if(packet->address == 0)
   {
-    dassert.log("add_pq Address Zero Packet", "instr", packet->instr_id, "addr", packet->address, "v_addr", packet->v_address, "type", packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
+    dassert.log("add_pq Address Zero Packet", "instr", packet->instr_id, "addr", intToHex(packet->address), "v_addr", intToHex(packet->v_address), "type", packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
     exit(0);
   }
 

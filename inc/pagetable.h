@@ -45,8 +45,10 @@ class CacheBlock
     bool valid_cacheblock = false;
     int pt_level = -1;
     int cache_block_id = -1;
-    vector<uint64_t> list_pte;
+    
     public:
+    vector<uint64_t> list_pte;
+
     CacheBlock(){}
     CacheBlock(int curr_pt_level, int cache_block_id)
     {
@@ -75,8 +77,9 @@ class Page
     int page_number = -1;
     //default: data page
     int pt_level = -1;
-    map<int, CacheBlock> list_cacheblocks;
+    
     public:
+    map<int, CacheBlock> list_cacheblocks;
 
     Page(){}
     Page(int curr_pt_level, int page_number)
@@ -110,9 +113,9 @@ class PageTableTracker
 {
     // default: unintialized page-table
     int pt_level = -1;
-    map<uint64_t, Page> list_pages;
 
     public:
+    map<uint64_t, Page> list_pages;
 
     PageTableTracker(int pt_level)
     {
@@ -121,7 +124,7 @@ class PageTableTracker
 
     void insertAtPageTable(uint64_t pte_address, uint64_t pte_value, int pt_level)
     {
-        int page_number = (pte_address >> LOG2_PAGE_SIZE) & 0xFFF; // 12-bit page number within 4MB range
+        int page_number = (pte_address >> LOG2_PAGE_SIZE); // 12-bit page number within 4MB range
         int cache_block_id = (pte_address >> LOG2_BLOCK_SIZE) & 0x3F; // 6-bit cache block id within page
         int pte_offset = (pte_address >> 3) & 0x7; // 3-bit offset within cache block
 
@@ -135,7 +138,7 @@ class PageTableTracker
 
     pair<bool, uint64_t> get_pte(uint64_t pte_address)
     {
-        int page_number = (pte_address >> LOG2_PAGE_SIZE) & 0xFFF; // 12-bit page number within 4MB range
+        int page_number = (pte_address >> LOG2_PAGE_SIZE); // 12-bit page number within 4MB range
         int cache_block_id = (pte_address >> LOG2_BLOCK_SIZE) & 0x3F; // 6-bit cache block id within page
         int pte_offset = (pte_address >> 3) & 0x7; // 3-bit offset within cache block
 
@@ -152,8 +155,9 @@ class PageTableTracker
 class PageTableLevelTracker
 {
     int cpu_id = -1;
-    vector<PageTableTracker> list_pages_tables_levels;
+    
     public:
+    vector<PageTableTracker> list_pages_tables_levels;
     
     PageTableLevelTracker(){}
     PageTableLevelTracker(int cpu_id, int num_pt_levels)
@@ -199,7 +203,7 @@ class PageTableLevelTracker
 
 class ProcessPageTable
 {
-    unordered_map<int, PageTableLevelTracker> page_table_levels_tracker; // key: cpu or asid of process
+    unordered_map<int, PageTableLevelTracker> process_to_pagetable_levels_tracker; // key: cpu or asid of process
 
     public:
     ProcessPageTable(){}
@@ -209,7 +213,7 @@ class ProcessPageTable
     void init()
     {
         for(int i=0; i< 16; i++)
-            page_table_levels_tracker[i] = PageTableLevelTracker(i, vmem.pt_levels);
+            process_to_pagetable_levels_tracker[i] = PageTableLevelTracker(i, vmem.pt_levels);
     }
 
     // TODO: we are not handling ASID here hence using CPU id instead of ASID
@@ -221,7 +225,7 @@ class ProcessPageTable
             pagetable_logger.log("Error: invalid process/cpu id for inserting a pte", "addr", intToHex(pte_address), "pte_value", intToHex(pte_value), "pt_level", pt_level, '\n');
             exit(-1);
         }
-        page_table_levels_tracker[process_id].insertAtPageTableLevel(pte_address, pte_value, pt_level);
+        process_to_pagetable_levels_tracker[process_id].insertAtPageTableLevel(pte_address, pte_value, pt_level);
     }
 
     // true -> pte found,       false -> page-fault
@@ -233,7 +237,7 @@ class ProcessPageTable
         {
             // TODO: make it realistic later
             // virtual prefetches dont walk page table they are just using existing mapping
-            for(auto entry: page_table_levels_tracker)
+            for(auto entry: process_to_pagetable_levels_tracker)
             {
                 PageTableLevelTracker& page_table_level_tracker = entry.second;
                 found_pte = page_table_level_tracker.get_pte(pte_address, pt_level);
@@ -244,12 +248,15 @@ class ProcessPageTable
             pagetable_logger.log("Error: invalid process/cpu id", "cpu", process_id, "addr", pte_address, "pt_level", pt_level, '\n');
             exit(-1);
         }
-        return page_table_levels_tracker[process_id].get_pte(pte_address, pt_level);   
+        return process_to_pagetable_levels_tracker[process_id].get_pte(pte_address, pt_level);   
     }
 
     pair<bool, uint64_t> operate_pagetable(int process_id, uint64_t pte_address, int pt_level)
     {
         auto result_pte = get_pte(process_id, pte_address, pt_level);
+
+        // pagetable_logger.log("Operate", "cpu", process_id, "addr", intToHex(pte_address), "pt_level", pt_level, "fault", !result_pte.first, "data", intToHex(result_pte.second), '\n');
+
         if(result_pte.first)
         {
             // found pte
@@ -258,9 +265,97 @@ class ProcessPageTable
         
         // page-fault
         uint64_t new_page_addr = vmem.func_allocate_page();
+        // pagetable_logger.log("InsertPTE", "cpu", process_id, "addr", intToHex(pte_address), "pt_level", pt_level, "fault", !result_pte.first, "newalloc", intToHex(new_page_addr), '\n');
+
         insert(process_id, pte_address, new_page_addr, pt_level);
-        return {true, new_page_addr};
-    }   
+        return {false, new_page_addr};
+    }  
+    
+    void printStat()
+    {
+        int pages_by_level[vmem.pt_levels+1] = {0};
+        int cacheblocks_by_level[vmem.pt_levels+1] = {0};
+        vector<int> cacheBlockOccupancy(8, 0);
+        vector<int> cacheBlockOccupancyByLevels[vmem.pt_levels+1];
+
+        for(int i=0; i<= vmem.pt_levels; i++)
+            cacheBlockOccupancyByLevels[i].resize(8, 0);
+
+        for(auto entry: process_to_pagetable_levels_tracker)
+        {
+            int process_id = entry.first;
+            PageTableLevelTracker& page_table_level_tracker = entry.second;
+            for(int level=1; level<= vmem.pt_levels; level++)
+            {
+                pages_by_level[level] += page_table_level_tracker.list_pages_tables_levels[level].list_pages.size();
+                
+                for(auto page_entry: page_table_level_tracker.list_pages_tables_levels[level].list_pages)
+                {
+                    int page_number = page_entry.first;
+                    Page& page = page_entry.second;
+
+                    cacheblocks_by_level[level] += page.list_cacheblocks.size();
+
+                    for(auto cacheblock_entry: page.list_cacheblocks)
+                    {
+                        int cache_block_id = cacheblock_entry.first;
+                        CacheBlock& cache_block = cacheblock_entry.second;
+
+                        for(int i=0; i<8; i++)
+                        {
+                            auto pte = cache_block.get_pte(i);
+                            if(pte.first)
+                            {
+                                cacheBlockOccupancy[i]++;
+                                cacheBlockOccupancyByLevels[level][i]++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        pagetable_logger.log("level", "pages_by_level", "cacheblock_by_levels", '\n');
+        for(int i=0; i< vmem.pt_levels; i++)
+        {
+            pagetable_logger.log(i+1, pages_by_level[i+1], cacheblocks_by_level[i+1], '\n');
+        }
+
+        pagetable_logger.log("count-1","count-2","count-3","count-4", "count-5","count-6","count-7","count-8",'\n');
+        pagetable_logger.log(cacheBlockOccupancy[1], cacheBlockOccupancy[2], cacheBlockOccupancy[3], cacheBlockOccupancy[4], cacheBlockOccupancy[5], cacheBlockOccupancy[6], cacheBlockOccupancy[7], cacheBlockOccupancy[8], '\n');
+        
+        pagetable_logger.log("level", "count-1","count-2","count-3","count-4", "count-5","count-6","count-7","count-8",'\n');
+        for(int level=1; level<= vmem.pt_levels; level++)
+            pagetable_logger.log(level, cacheBlockOccupancyByLevels[level][1], cacheBlockOccupancyByLevels[level][2], cacheBlockOccupancyByLevels[level][3], cacheBlockOccupancyByLevels[level][4], cacheBlockOccupancyByLevels[level][5], cacheBlockOccupancyByLevels[level][6], cacheBlockOccupancyByLevels[level][7], cacheBlockOccupancyByLevels[level][8], '\n');
+    }
+
+    void printTree()
+    {
+        for(auto entry: process_to_pagetable_levels_tracker)
+        {
+            int process_id = entry.first;
+            PageTableLevelTracker& page_table_level_tracker = entry.second;
+            for(int level=1; level<= vmem.pt_levels; level++)
+            {
+                for(auto page_entry: page_table_level_tracker.list_pages_tables_levels[level].list_pages)
+                {
+                    int page_number = page_entry.first;
+                    Page& page = page_entry.second;
+                    for(auto cacheblock_entry: page.list_cacheblocks)
+                    {
+                        int cache_block_id = cacheblock_entry.first;
+                        CacheBlock& cache_block = cacheblock_entry.second;
+                        for(int i=0; i<8; i++)
+                        {
+                            auto pte = cache_block.get_pte(i);
+                            if(pte.first)
+                                pagetable_logger.log("cpu", process_id, "level", level, "Page", intToHex(page_number), "CB", cache_block_id, "PTE", i, intToHex(pte.second), '\n');
+                        }
+                    }
+                }
+            }
+        }
+    }
 };
 
 #endif // PAGE_TABLE_H

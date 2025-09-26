@@ -431,6 +431,13 @@ void signal_handler(int signal)
   exit(1);
 }
 
+// Function to be called upon program termination
+void on_exit_handler() {
+    // std::cout << "Invoking handler due to program exit." << std::endl;
+    // process_page_table->printTree();
+}
+
+
 int main(int argc, char** argv)
 {
   // interrupt signal hanlder
@@ -439,6 +446,11 @@ int main(int argc, char** argv)
   sigemptyset(&sigIntHandler.sa_mask);
   sigIntHandler.sa_flags = 0;
   sigaction(SIGINT, &sigIntHandler, NULL);
+
+  if (std::atexit(on_exit_handler) != 0) {
+        std::cerr << "Failed to register exit handler." << std::endl;
+        return EXIT_FAILURE;
+    }
 
   
   // initialize knobs
@@ -837,6 +849,8 @@ for(auto cache: caches)
 
 print_ptw_freq_and_cost();
 cout << '\n';
+
+process_page_table->printStat();
 cout << "\nDone!\n";
 
   return 0;
