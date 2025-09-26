@@ -28,7 +28,7 @@ extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 
 // illusiong of stored cache line by 8byte granularity
 extern map<uint64_t, uint64_t> l2_pte_map;
-extern vector<PageTable*> page_table_tracker;
+extern ProcessPageTable* process_page_table;
 extern uint64_t POM_CPU_KEY;
 
 extern VirtualMemory vmem;
@@ -440,8 +440,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   handle_pkt.data = hit_block.data;
   if(handle_pkt.type == TRANSLATION)
-  handle_pkt.data = page_table_tracker[cpu_index(handle_pkt.cpu, handle_pkt.thread_id)]->lookupEntry(handle_pkt.cpu, handle_pkt.address, handle_pkt.v_address, handle_pkt.translation_level, hit_block.data);
- 
+  handle_pkt.data = process_page_table->get_pte(handle_pkt.cpu, handle_pkt.address, handle_pkt.translation_level).second;
 
   if(KNOB_VICTIMA && cache_is[CACHE_ID::IS_L2] && handle_pkt.vflag[VF::victima])
   {
@@ -673,14 +672,16 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       pomtlb_base += (handle_pkt.address ^ ptw->asid[handle_pkt.thread_id]);
       // update address to pomtlb address
       handle_pkt.address = pomtlb_base;
-      auto[phy_addr, fault] = ptw->addr_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
+      int cpu_id = cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
+      // since its a POM address, we use translation_level=1
+      pair<bool, uint64_t> pom_anticipatory_lookup = process_page_table->get_pte(cpu_id, handle_pkt.address, 1);
 
       // if 'fault' -->missing translation in pagetable
       // POM packet is sent upon STLB miss, champsim imple. assign page at PTW code upon return path
       // At DRAM we are not sure of whether we have hit or miss for PTE
       // Hence return journey of POM packet if its a hit then only we write to data cache.
       // Hit/miss we peek here from page table and set POM_MISS and disallow any write on return path
-      handle_pkt.pomflag[POM::POM_MISS] = fault;
+      handle_pkt.pomflag[POM::POM_MISS] = pom_anticipatory_lookup.first;
       handle_pkt.pomflag[POM::POM] = true;
     }
 
@@ -778,11 +779,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // handle_pkt.pomflag[POM::POM] = false;
 
     // test if mapping already been used before
-    PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
-    auto[ppn, fault] = ptw->addr_va_to_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, handle_pkt.address);
-    if(!fault)
+    int cpu_id = cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
+    // since its a POM address, we use translation_level=1
+    pair<bool, uint64_t> test_pte = process_page_table->get_pte(cpu_id, handle_pkt.address,1);
+    if(test_pte.first)
     {
-      handle_pkt.data = ppn;
+      handle_pkt.data = test_pte.second;
     }
     // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
     else
@@ -1299,7 +1301,7 @@ int CACHE::add_rq(PACKET* packet)
   // assert(packet->address != 0);
   if(packet->address == 0)
   {
-    dassert.log("add_rq Address Zero Packet", "instr", packet->instr_id, "addr", packet->address, "v_addr", packet->v_address, "type", packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
+    dassert.log("add_rq Address Zero Packet", "instr", packet->instr_id, "addr", packet->address, "v_addr", packet->v_address, "type", (int)packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
     exit(0);
   }
   RQ_ACCESS++;
@@ -2005,29 +2007,6 @@ void CACHE::func_return(PACKET* packet)
 
 CacheBlock* CACHE::func_test_page_table(BLOCK& fill_block)
 {
-  if(fill_block.came_from_request == TRANSLATION)
-  {
-    PageTable* pt = page_table_tracker[KNOB_SMT_ENABLE * fill_block.cpu + fill_block.thread_id];
-    if(pt == nullptr)
-    {
-      dassert.log(NAME+" Filllike_miss: Page absent in PageTable", "instr", fill_block.instr_id, "addr", fill_block.address, "v_addr", fill_block.v_address, "type", (int)fill_block.came_from_request, "NAME", NAME, "victima", fill_block.victima_block, "used", fill_block.m_used, "\n");
-      exit(0);
-    }
-
-    CacheBlock* cb = pt->lookup(fill_block.address);
-    if(cb == nullptr)
-    {
-      pt->print_stat_detail(fill_block.address);
-      
-      dassert.log(NAME+" Filllike_miss: Cacheblock absent in PageTable", "instr", fill_block.instr_id, "addr", intToHex(fill_block.address), "v_addr", intToHex(fill_block.v_address), "type", (int)fill_block.came_from_request, "NAME", NAME, "victima", fill_block.victima_block, "used", fill_block.m_used, "data", intToHex(page_align(fill_block.data)), "\n");
-      
-      for(int i=0; i< KNOB_SMT_ENABLE*NUM_CPUS; i++)
-        page_table_tracker[i]->print_stat(i);
-      
-      exit(0);
-    }
-
-    return cb;
-  }
+  
   return nullptr;
 }

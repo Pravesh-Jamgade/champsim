@@ -12,6 +12,7 @@
 #include "champsim_constants.h"
 #include "logger.h"
 #include "vmem.h"
+#include "user.h"
 using namespace std;
 
 // Compile-time sanity
@@ -40,261 +41,226 @@ namespace std {
 
 class CacheBlock
 {
+    // default: data page
+    bool valid_cacheblock = false;
+    int pt_level = -1;
+    int cache_block_id = -1;
+    vector<uint64_t> list_pte;
     public:
-    // key: byte offset within the base page (you may choose to store a line index instead)
-    // val: allocated physical page base
-    // tuple {addr>PAGE_SIZE, addr>>shtamt(level-1), thread_id}
-    std::unordered_map<tuple<uint64_t, uint64_t, int>, uint64_t> pte;
-
-    void map_entry(uint64_t ptekey, uint64_t allocated_page, int level)
+    CacheBlock(){}
+    CacheBlock(int curr_pt_level, int cache_block_id)
     {
-       tuple<int, uint64_t, uint64_t> key = make_tuple(level, ptekey>>(vmem.shamt(level-1)), level==0?-1:ptekey%8);
-        // Update if exists
-        pte.insert_or_assign(key, allocated_page);
-        // pagetable_logger.log("INSERTED","ptekey",intToHex(ptekey), "ptevalue",intToHex(allocated_page), '\n');
+        list_pte.resize(8, UINT64_MAX);
+        this->cache_block_id = cache_block_id;
+        valid_cacheblock = true;
     }
 
-    int getUsage() const { return pte.size(); }
+    void insertAtCacheBlockPTE(uint64_t pte, int index)
+    {
+        if(list_pte[index] != UINT64_MAX)
+        {
+            std::cout << "Error: attempting to overwrite PTE in cacheblock=" << cache_block_id << ", pteindex="<< index << '\n';
+            exit(-1);
+        }
+
+        list_pte[index] = pte;
+    }
+
+    // if value != UINT64_MAX: valid else fault ? and PTE
+    pair<bool, uint64_t> get_pte(int index) { return {list_pte[index] != UINT64_MAX, list_pte[index]};}
 };
 
 class Page
 {
+    int page_number = -1;
+    //default: data page
+    int pt_level = -1;
+    map<int, CacheBlock> list_cacheblocks;
     public:
-    bool page_table_page = 0;
-    int page_table_level = -1;
-    uint64_t base_addr = 0;
-    // key: cache-block index within the page (0..kBlocksPerPage-1)
-    std::unordered_map<uint64_t, CacheBlock> blocks;
 
     Page(){}
-    Page(uint64_t base)
+    Page(int curr_pt_level, int page_number)
     {
-        this->base_addr = base;
+        this->pt_level = curr_pt_level;
+        this->page_number = page_number;
     }
 
-    void set_page_type(int level)
+    void insertAtPage(uint64_t pte, int cache_block_id, int pte_offset)
     {
-        page_table_page = level != 0;
-        page_table_level = level;
-    }
-
-    void map_entry(uint64_t offset_within_base_addr, uint64_t ptekey, uint64_t allocated_page, int level)
-    {   
-        // offset must be within the page
-        const uint64_t cbid = block_index(offset_within_base_addr);
-        auto &blk = blocks[cbid]; // creates on demand
-        blk.map_entry(ptekey, allocated_page, level);
-    }
-
-    bool empty() const { return blocks.empty(); }
-
-    void print_stat()
-    {
-        cout << intToHex(base_addr) << std::dec << ", cache_blocks: " << blocks.size() << ", level, " << page_table_level << '\n';
-
-        for (auto entry : blocks)
+        auto foundCacheBlock = list_cacheblocks.find(cache_block_id);
+        if(foundCacheBlock == list_cacheblocks.end())
         {
-            cout << "block: " << entry.first << ", ptes: " << entry.second.getUsage() << '\n';
+            list_cacheblocks[cache_block_id] = CacheBlock(pt_level, cache_block_id);
         }
+        list_cacheblocks[cache_block_id].insertAtCacheBlockPTE(pte, pte_offset);        
     }
 
-    void print_stat_detail()
+    pair<bool, uint64_t> get_pte(int cache_block_id, int pte_offset)
     {
-        cout << "page," << intToHex(base_addr) << std::dec << ", cache_blocks: " << blocks.size() << ", level, " << page_table_level << '\n';
-
-        for (auto cacheBlockEntry : blocks)
+        auto foundCacheBlock = list_cacheblocks.find(cache_block_id);
+        if(foundCacheBlock == list_cacheblocks.end())
         {
-            for(auto pteEntry: cacheBlockEntry.second.pte)
-            {
-                cout << "cb, " << cacheBlockEntry.first << ", pte, [page=" << intToHex(get<0>(pteEntry.first)) << ", addrTrace=" << intToHex(get<1>(pteEntry.first)) << ", thread_id=" << get<2>(pteEntry.first) << "]" << ", "<< intToHex(page_align(pteEntry.second)) << '\n';
-            }
-            cout << '\n';
+            return {false, 0};
         }
-    }
-
-    vector<int> get_block_level_occupancy_histogram()
-    {
-        vector<int> hist(9,0);
-        
-        for(int i=0; i< 9; i++) hist[i] = 0;
-
-        for (auto entry : blocks)
-        {
-            auto temp = entry.second.getUsage();
-            hist[temp]++;
-        }
-        return hist;
+        return foundCacheBlock->second.get_pte(pte_offset);
     }
 };
 
-class PageTable
+class PageTableTracker
 {
-public:
-    // key: page base address
-    std::unordered_map<uint64_t, Page> pages;
+    // default: unintialized page-table
+    int pt_level = -1;
+    map<uint64_t, Page> list_pages;
 
-    vector<int> ptw_level_pages;
+    public:
 
-    PageTable()
+    PageTableTracker(int pt_level)
     {
-        ptw_level_pages.resize(5, 0);
+        this->pt_level = pt_level;
     }
 
-    // Insert a mapping
-    void insert(uint64_t complete_address, uint64_t ptekey, uint64_t new_allocate_addr, uint8_t level)
+    void insertAtPageTable(uint64_t pte_address, uint64_t pte_value, int pt_level)
     {
-        // Align addresses to page boundaries
-        const uint64_t base_page = page_align(complete_address);
-        const uint64_t allocated_page = page_align(new_allocate_addr);
+        int page_number = (pte_address >> LOG2_PAGE_SIZE) & 0xFFF; // 12-bit page number within 4MB range
+        int cache_block_id = (pte_address >> LOG2_BLOCK_SIZE) & 0x3F; // 6-bit cache block id within page
+        int pte_offset = (pte_address >> 3) & 0x7; // 3-bit offset within cache block
 
-        // Ensure both pages exist
-        auto &basePg = pages.try_emplace(base_page, Page(base_page)).first->second;
-        auto &allocPg = pages.try_emplace(allocated_page, Page(allocated_page)).first->second; // reserve allocated mapping page if you track both
-
-        // assign level for base page
-        basePg.set_page_type(level);
-
-        // map new allocated page to ptekey within cache block of base page
-        basePg.map_entry(complete_address, ptekey, allocated_page, level);
-
-        // we counting how many PTE are inserted here. Implies how many faults happened at Next-level and inserted PTE on current level here
-        ptw_level_pages[(int)level]++;
-    }
-
-    // non-const overload
-    CacheBlock *lookup(uint64_t phys_addr)
-    {
-        const uint64_t page_base = page_align(phys_addr);
-        auto pit = pages.find(page_base);
-        if (pit == pages.end())
+        auto foundPage = list_pages.find(page_number);
+        if(foundPage == list_pages.end())
         {
-            pagetable_logger.log("[Tester] PageTable lookup failed: Page not found", intToHex(page_base), '\n');
-            return nullptr;
+            list_pages[page_number] = Page(pt_level, page_number);
         }
-            
-        const uint64_t cbid = block_index(phys_addr);
-
-        auto bit = pit->second.blocks.find(cbid);
-        if (bit == pit->second.blocks.end())
-        {
-            pagetable_logger.log("[Tester] Cacheblock lookup failed: Cache block not found", "addr", intToHex(phys_addr) , "page", intToHex(page_base), "cb", cbid, '\n');
-            return nullptr;
-        }
-            
-        return &bit->second; // type: CacheBlock*
+        list_pages[page_number].insertAtPage(pte_value, cache_block_id, pte_offset);
     }
 
-    // non-const overload
-    uint64_t lookupEntry(int cpu, uint64_t phys_addr, uint64_t virt_addr, int level, uint64_t existingData)
+    pair<bool, uint64_t> get_pte(uint64_t pte_address)
     {
-        if(level == 0) return 0;
+        int page_number = (pte_address >> LOG2_PAGE_SIZE) & 0xFFF; // 12-bit page number within 4MB range
+        int cache_block_id = (pte_address >> LOG2_BLOCK_SIZE) & 0x3F; // 6-bit cache block id within page
+        int pte_offset = (pte_address >> 3) & 0x7; // 3-bit offset within cache block
 
-        const uint64_t phy_base = page_align(phys_addr);
-        uint64_t use_addr = (level ==1 ) ? virt_addr : phys_addr;
-        tuple<int, uint64_t, uint64_t> search_key = make_tuple(level, use_addr>>(vmem.shamt(level-1)), level==0?-1:use_addr%8);
-
-        auto pit = pages.find(phy_base);
-        if (pit == pages.end())
+        auto foundPage = list_pages.find(page_number);
+        if(foundPage == list_pages.end())
         {
-            for(auto curPage: pages)
-                curPage.second.print_stat_detail();
-            pagetable_logger.log("PageTable lookup failed: Page not found", "addr", intToHex(phys_addr), "page", intToHex(phy_base), "level", level, '\n');
+            // page not found fault
+            return {false, 0};
+        }
+        return list_pages[page_number].get_pte(cache_block_id, pte_offset);
+    }
+};
+
+class PageTableLevelTracker
+{
+    int cpu_id = -1;
+    vector<PageTableTracker> list_pages_tables_levels;
+    public:
+    
+    PageTableLevelTracker(){}
+    PageTableLevelTracker(int cpu_id, int num_pt_levels)
+    {
+        this->cpu_id = cpu_id;
+        list_pages_tables_levels.resize(num_pt_levels+1, PageTableTracker(0));
+        for(int i=1; i<= num_pt_levels; i++)
+            list_pages_tables_levels[i] = PageTableTracker(i);
+    }
+
+    void insertAtPageTableLevel(uint64_t pte_address, uint64_t pte_value, int pt_level)
+    {
+        if(pt_level < 1 || pt_level >= list_pages_tables_levels.size())
+        {
+            std::cout << "Error: invalid page-table level=" << pt_level << '\n';
             exit(-1);
         }
-            
-        const uint64_t cbid = block_index(phys_addr);
+        auto& pagetable = list_pages_tables_levels[pt_level];
+        pagetable.insertAtPageTable(pte_address, pte_value, pt_level);
+    }
 
-        auto bit = pit->second.blocks.find(cbid);
-        if (bit == pit->second.blocks.end())
+    pair<bool, uint64_t> get_pte(uint64_t pte_address, int pt_level)
+    {
+        pair<bool, uint64_t> found_pte;
+        // prefetch packet, shared page between processes or cpus
+        if(pt_level < 1 || pt_level >= list_pages_tables_levels.size())
         {
-            for(auto curPage: pages)
-                curPage.second.print_stat_detail();
-      
-            pagetable_logger.log("Cacheblock lookup failed: Cache block not found", "addr", intToHex(phys_addr) , "page", intToHex(phy_base), "cb", cbid, "level", (int)level, "exitingData", intToHex(existingData), '\n');
-           
-            for(auto pte: vmem.get_pagetable())
+            for(auto entry: list_pages_tables_levels)
             {
-                pagetable_logger.log(get<0>(pte.first), get<1>(pte.first), get<2>(pte.first), "page-next", intToHex(page_align(pte.second)), '\n');
+                PageTableTracker& page_table_tracker = entry;
+                found_pte = page_table_tracker.get_pte(pte_address);
+                if(found_pte.first) //found
+                    return found_pte;
             }
-
+            pagetable_logger.log("Error: invalid pt-level=-1", "pte_address", pte_address, "pt_level", pt_level, '\n');
             exit(-1);
-        }
-            
-        CacheBlock* cb = &bit->second; // type: CacheBlock*
-        auto pointer = cb->pte.find(search_key);
-        if(pointer != cb->pte.end())
-        {
-            return pointer->second;
         }
         
-        for(auto curPage: pages)
-            curPage.second.print_stat_detail();
-      
-        pagetable_logger.log("PTE not found: ", "addr", intToHex(phys_addr), "vaddr", intToHex(virt_addr), "base_page",intToHex(phy_base), "cache_block",cbid, "ptekey: ",intToHex(get<0>(search_key)), intToHex(get<1>(search_key)), intToHex(get<2>(search_key)), "level", (int)level, "exitingData", intToHex(existingData),'\n');
-        exit(-1);
+        found_pte = list_pages_tables_levels[pt_level].get_pte(pte_address);
+        return found_pte;
+    }
+};
+
+class ProcessPageTable
+{
+    unordered_map<int, PageTableLevelTracker> page_table_levels_tracker; // key: cpu or asid of process
+
+    public:
+    ProcessPageTable(){}
+
+    // initalize for 16 threads or process
+    // initializes for vmem.pt_levels   
+    void init()
+    {
+        for(int i=0; i< 16; i++)
+            page_table_levels_tracker[i] = PageTableLevelTracker(i, vmem.pt_levels);
     }
 
-    bool contains_page(uint64_t any_addr_in_page) const
+    // TODO: we are not handling ASID here hence using CPU id instead of ASID
+    // In future, we can extend this to handle ASID as well hence porcess_id is either ASID or CPU id
+    void insert(int process_id, uint64_t pte_address, uint64_t pte_value, int pt_level)
     {
-        return pages.find(page_align(any_addr_in_page)) != pages.end();
-    }
-
-    size_t size_pages() const { return pages.size(); }
-
-    void print_stat_detail(uint64_t addr)
-    {
-        pages[page_align(addr)].print_stat_detail();
-    }
-
-    void print_stat(int thread)
-    {
-        cout << '\n';
-        // total_pages_at_each_level + cr3_allocated_page
-        cout << "total_pages_at_each_level + cr3_allocated_page: " << pages.size() << '\n';
-        for (int i = 0; i < ptw_level_pages.size(); i++)
+        if(process_id < 0)
         {
-            cout << "Thread " << thread << " Pagetable level " << i << ": " << ptw_level_pages[i] << '\n';
+            pagetable_logger.log("Error: invalid process/cpu id for inserting a pte", "addr", intToHex(pte_address), "pte_value", intToHex(pte_value), "pt_level", pt_level, '\n');
+            exit(-1);
         }
+        page_table_levels_tracker[process_id].insertAtPageTableLevel(pte_address, pte_value, pt_level);
+    }
 
-        map<int,int> accumulate_page_level_occupancy;
-        for(int i=0; i< 9; i++) accumulate_page_level_occupancy[i] = 0;
-
-        for(auto page: pages)
+    // true -> pte found,       false -> page-fault
+    pair<bool, uint64_t> get_pte(int process_id, uint64_t pte_address, int pt_level)
+    {
+        pair<bool, uint64_t> found_pte;
+        // prefetch packet, shared page between processes or cpus
+        if(process_id == -1)
         {
-            if(page.second.page_table_page == 0)
-                continue;
-            
-            vector<int> accumulate_block_level_occupancy(9,0);
-
-            // occupancy & frequency
-            int nonzero_sum = 0;
-            vector<int> block_level_histogram = page.second.get_block_level_occupancy_histogram();
-            for(int i=0; i< block_level_histogram.size(); i++)
+            // TODO: make it realistic later
+            // virtual prefetches dont walk page table they are just using existing mapping
+            for(auto entry: page_table_levels_tracker)
             {
-                accumulate_block_level_occupancy[i] += block_level_histogram[i];
-                accumulate_page_level_occupancy[i] += block_level_histogram[i];
-                nonzero_sum += block_level_histogram[i];
+                PageTableLevelTracker& page_table_level_tracker = entry.second;
+                found_pte = page_table_level_tracker.get_pte(pte_address, pt_level);
+                if(found_pte.first) //found
+                    return found_pte;
             }
+
+            pagetable_logger.log("Error: invalid process/cpu id", "cpu", process_id, "addr", pte_address, "pt_level", pt_level, '\n');
+            exit(-1);
         }
-
-        cout << "Histogram of occupancy of cache block\n";
-        cout << setw(7) << " " << "|";
-        for(int i=0; i< accumulate_page_level_occupancy.size(); i++)
-            cout << setw(5) << i;
-        cout << '\n';
-
-        // Print separator line
-        cout << string(7, '-') << "+";
-        for(int i=0; i< accumulate_page_level_occupancy.size(); i++)
-            cout << setw(5) << "-";
-        cout << '\n';
-
-        // Print each row
-        cout << setw(7) << " " << "|";
-        for(int i=0; i< accumulate_page_level_occupancy.size(); i++)
-            cout << setw(5) << accumulate_page_level_occupancy[i] << ',';
-        cout << '\n';
+        return page_table_levels_tracker[process_id].get_pte(pte_address, pt_level);   
     }
+
+    pair<bool, uint64_t> operate_pagetable(int process_id, uint64_t pte_address, int pt_level)
+    {
+        auto result_pte = get_pte(process_id, pte_address, pt_level);
+        if(result_pte.first)
+        {
+            // found pte
+            return {true, result_pte.second};
+        }
+        
+        // page-fault
+        uint64_t new_page_addr = vmem.func_allocate_page();
+        insert(process_id, pte_address, new_page_addr, pt_level);
+        return {true, new_page_addr};
+    }   
 };
 
 #endif // PAGE_TABLE_H

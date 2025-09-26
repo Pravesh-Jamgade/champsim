@@ -23,14 +23,6 @@ VirtualMemory::VirtualMemory(uint64_t capacity, uint64_t pg_size, uint32_t page_
   // then shuffle it
   std::shuffle(std::begin(ppage_free_list), std::end(ppage_free_list), std::mt19937_64{random_seed});
 
-  // // initiating pre-allocated pages
-  // int take_pages = PRE_ALLOC_LIMIT;
-  // while(take_pages--)
-  // {
-  //   pre_allocated_pages.put(ppage_free_list.front());
-  //   ppage_free_list.pop_front();
-  // }
-
   next_pte_page = ppage_free_list.front();
   ppage_free_list.pop_front();
 }
@@ -38,22 +30,6 @@ VirtualMemory::VirtualMemory(uint64_t capacity, uint64_t pg_size, uint32_t page_
 uint64_t VirtualMemory::shamt(uint32_t level) const { return LOG2_PAGE_SIZE + lg2(page_size / PTE_BYTES) * (level); }
 
 uint64_t VirtualMemory::get_offset(uint64_t vaddr, uint32_t level) const { return (vaddr >> shamt(level)) & bitmask(lg2(page_size / PTE_BYTES)); }
-
-//No alteration to PageTable: get existing mapping (fault=false)
-pair<uint64_t, bool> VirtualMemory::get_vp_to_pp(uint32_t cpu_num, uint64_t vaddr)
-{
-  std::pair key {cpu_num, vaddr >> LOG2_PAGE_SIZE};
-  auto ppage = vpage_to_ppage_map.find(key);
-  return {ppage->second & ~(PAGE_SIZE - 1), ppage == vpage_to_ppage_map.end()};
-}
-
-//No alteration to PageTable: get existing mapping (fault=false)
-pair<uint64_t, bool> VirtualMemory::get_va_to_pa(uint32_t cpu_num, uint64_t vaddr)
-{
-  std::pair key {cpu_num, vaddr >> LOG2_PAGE_SIZE};
-  auto ppage = vpage_to_ppage_map.find(key);
-  return {ppage->second, ppage == vpage_to_ppage_map.end()};
-}
 
 // original
 std::pair<uint64_t, bool> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t vaddr)
@@ -84,9 +60,9 @@ std::pair<uint64_t, bool> VirtualMemory::get_pte_pa(uint32_t cpu_num, uint64_t v
   return {splice_bits(ppage->second, get_offset(vaddr, level-1) * PTE_BYTES, lg2(page_size)), fault};
 }
 
-
-void VirtualMemory::print_stat()
+uint64_t VirtualMemory::func_allocate_page()
 {
-  std::cout << "page table size(PT), " << page_table.size() << '\n';
-  std::cout << "mapped pages(data), " << vpage_to_ppage_map.size() << '\n';
+  uint64_t ret_page = ppage_free_list.front();
+  ppage_free_list.pop_front();
+  return ret_page;
 }

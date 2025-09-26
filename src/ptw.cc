@@ -16,11 +16,10 @@ extern int KNOB_ENABLE_MFOE_V2;
 #define PSC_READ_LATENCY 2
 
 extern map<uint64_t, PTWC> ptw_pred;
-extern vector<PageTable*> page_table_tracker; // page-table-tracker
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
-
+extern ProcessPageTable* process_page_table;
 extern uint64_t POM_CPU_KEY;
 
 PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, uint32_t v2, uint32_t v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7,
@@ -33,32 +32,16 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       llcObject(llc)
 {
 
-  debugLog = logger(false);
+  debugLog = logger(true);
   dlog = logger(false);
   ptw_datamodel = new PTWDataModel(cpu);
   fill_counters.resize(5);
-  
-  // if(KNOB_PSCL_ROOT_LEVEL != (vmem.pt_levels-1))
-  // {
-  //   cout << "Overwrite Setting, PTW-levels=" <<KNOB_PSCL_ROOT_LEVEL<<'\n';
-  //   vmem.pt_levels = KNOB_PSCL_ROOT_LEVEL;
-  // }
-
-  // pscl_array.push_back(&PSCL2);
-  // pscl_array.push_back(&PSCL3);
-  // pscl_array.push_back(&PSCL4);
-  // pscl_array.push_back(&PSCL5);
-
-  // while(pscl_array.back()->level != KNOB_PSCL_ROOT_LEVEL)
-  // {
-  //   pscl_array.pop_back();
-  // }
 
   // supporting 16 threads
   for(int i=0; i< 16; i++)
   {
-    auto entry = vmem.get_pte_pa(i, 0, vmem.pt_levels);
-    CR3_addr.push_back(entry.first);
+    auto entry = vmem.func_allocate_page();
+    CR3_addr.push_back(entry);
   }
 
 }
@@ -98,8 +81,9 @@ void PageTableWalker::_overwrite()
     asid.push_back(random_64bit_num);
   }
 
-  POMTLB_baseaddr = vmem.get_pte_pa(POM_CPU_KEY, 0, vmem.pt_levels).first;
-  vmem.print_stat();
+  POMTLB_baseaddr = vmem.func_allocate_page();
+  POM_CPU_KEY = (POMTLB_baseaddr >> LOG2_PAGE_SIZE) & ((1ULL << 16) - 1);
+  cout << NAME << ", POMTLB_baseaddr= " << std::hex << POMTLB_baseaddr << std::dec << ", POM_CPU_KEY= " << POM_CPU_KEY << '\n';
 }
 
 void PageTableWalker::handle_read()
@@ -355,7 +339,7 @@ void PageTableWalker::handle_fill()
         if(fill_mshr->state == State::PTW_FILL)
         {
           ptw_datamodel->matrix_cache_to_ptwlevel_hits[fill_mshr->translation_level][fill_mshr->hit_where]++;
-          
+
           fill_counters[fill_mshr->translation_level]++;
           if (fill_mshr->translation_level == PSCL5.level)
             PSCL5.fill_cache(addr, fill_mshr->v_address, fill_mshr->thread_id);
@@ -622,55 +606,4 @@ void PageTableWalker::victima_update(uint64_t addr, int signal, int hit_where)
   {
     ptw_pred[page].cost+= 1;
   }
-
-  // // page already there
-  // if(found != ptw_pred.end())
-  // {
-  //   // udpdate lru
-  //   for(auto& entry: ptw_pred)
-  //   {
-  //     if(entry.second.lru < ptw_pred[page].lru)
-  //     entry.second.lru++;
-  //   }
-  //   // move to mru
-  //   ptw_pred[page].lru = 0;
-  // }
-  // else  
-  // {
-  //   // replacement
-  //   if(ptw_pred.size() == 16)
-  //   {
-  //     auto it = find_if(ptw_pred.begin(), ptw_pred.end(), [](const auto& a){ return a.second.lru == 15;});
-  //     if (it != ptw_pred.end()) {
-  //       ptw_pred.erase(it);
-  //     }
-  //     else
-  //     {
-  //       cout << "PTW_PRED lru not found !\n";
-  //       exit(0);
-  //     }
-  //   }
-
-  //   // udpdate lru
-  //   for(auto &entry: ptw_pred)
-  //   {
-  //     entry.second.lru++;
-  //   }
-    
-  //   // default to mru
-  //   ptw_pred[page] = {0, 0, 0};
-  // }
-}
-
-
-std::pair<uint64_t, bool> PageTableWalker::page_vp_to_pp(uint32_t cpu_num, uint64_t vaddr)
-{
-  auto [ppn, fault] = vmem.get_vp_to_pp(cpu_num, vaddr);
-  return make_pair(ppn, fault);
-}
-
-std::pair<uint64_t, bool> PageTableWalker::addr_va_to_pa(uint32_t cpu_num, uint64_t vaddr)
-{
-  auto [ppn, fault] = vmem.get_va_to_pa(cpu_num, vaddr);
-  return make_pair(ppn, fault);
 }

@@ -123,10 +123,6 @@ public:
   uint32_t get_size(uint8_t queue_type, uint64_t address) override;
 
   uint64_t get_shamt(uint8_t pt_level);
-
-  std::pair<uint64_t, bool> addr_va_to_pa(uint32_t cpu_num, uint64_t vaddr);
-  std::pair<uint64_t, bool> page_vp_to_pp(uint32_t cpu_num, uint64_t vaddr);
-
   void print_deadlock() override;
 
   void* getObject(){return this;}
