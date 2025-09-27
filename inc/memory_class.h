@@ -37,6 +37,8 @@ public:
   // replacement state
   uint32_t lru = std::numeric_limits<uint32_t>::max() >> 1;
 
+  int hit_before_eviction=0;
+
   int came_from_request = NUM_TYPES; // default: invalid block
 
   uint32_t m_used = 0; // 8 entries of 8B each
@@ -58,6 +60,7 @@ public:
     return __builtin_popcount(m_used);
   }
   int thread_id = -1;
+  int translation_level_if_pagetable_block = -1; // 1,2,3,4 for PTE, PMD, PUD, PGD
 };
 
 class MemoryRequestConsumer

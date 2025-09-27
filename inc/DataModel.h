@@ -323,6 +323,7 @@ class PTWDataModel
         {
             queue_basic_metric[i] = 0;
         }
+        page_fault = vector<uint64_t>(5,0);
     }
 
     PTWDataModel(uint32_t cpu): cpu(cpu)
@@ -331,6 +332,8 @@ class PTWDataModel
         {
             queue_basic_metric[i] = 0;
         }
+        page_fault = vector<uint64_t>(5,0);
+        matrix_cache_to_ptwlevel_hits = vector<vector<uint64_t>>(PSCL_END, vector<uint64_t>(CACHE_ID_END+1, 0));
     }
 
     // count psc level hit count. If hit in pscl5, says we have base address for next_level. And we dont need separate memory access
@@ -354,10 +357,11 @@ class PTWDataModel
     string pscl_packet_processed_str[PSCL_END] = {"*", "pscl2_avg_miss_latency", "pscl3_avg_miss_latency", "pscl4_avg_miss_latency", "pscl5_avg_miss_latency"};
 
     // page-faults at each level of radix tree (psc level)
-    uint64_t page_fault[PSCL_END] = {0};
+    vector<uint64_t> page_fault;
 
     map<CACHE_ID, int> readmiss_hitwhere;
-
+    vector<vector<uint64_t>> matrix_cache_to_ptwlevel_hits;
+ 
     uint32_t cpu =0;
 
     void print_stats()
@@ -396,6 +400,56 @@ class PTWDataModel
             cout << hit_where_str[entry.first] << ", " << entry.second << '\n';
         }
         cout << '\n';
+        
+    //      // Print column headers
+    //   cout << setw(6) << " " << "|";
+    //   for (int i = 0; i < transition_hitmap_for_pp_page[0].size(); ++i) {
+    //       cout << setw(3) << i;
+    //   }
+    //   cout << '\n';
+
+    //   // Print separator line
+    //   cout << string(6, '-') << "+";
+    //   for (int i = 0; i < transition_hitmap_for_pp_page[0].size(); ++i) {
+    //       cout << string(4, '-');
+    //   }
+    //   cout << '\n';
+
+    //   // Print each row
+    //   for (int i = 0; i < 8; ++i) {
+    //       cout << setw(6) << i << "|";
+    //       for (int j = 0; j < transition_hitmap_for_pp_page[i].size(); ++j) {
+    //           cout << setw(3) << transition_hitmap_for_pp_page[i][j] << ',';
+    //       }
+    //       cout << '\n';
+    //   }
+
+        cout <<setw(7)<<" "<< "|";
+        for(int i=0; i< matrix_cache_to_ptwlevel_hits[0].size(); i++)
+            cout << setw(7) << hit_where_str[i];
+        cout << '\n';
+        
+        cout << string(7, '-') << "+";
+        for(int i=0; i< matrix_cache_to_ptwlevel_hits[0].size(); i++)
+            cout << string(7, '-');
+        cout << '\n';
+         
+        for(int i=1; i< matrix_cache_to_ptwlevel_hits.size(); i++)
+        {
+            auto row = matrix_cache_to_ptwlevel_hits[i];
+            if(i==0)
+                continue;
+        
+            cout << setw(7) << PSCL_Hit_str[i] << "|";
+            for(auto ele: row)
+            {
+                cout << setw(7) << ele << ", ";
+            }
+            cout << '\n';
+        }
+        
+        cout << '\n';
+
     }
 
 };

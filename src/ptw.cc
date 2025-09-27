@@ -16,11 +16,10 @@ extern int KNOB_ENABLE_MFOE_V2;
 #define PSC_READ_LATENCY 2
 
 extern map<uint64_t, PTWC> ptw_pred;
-extern vector<PageTable*> page_table_tracker; // page-table-tracker
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
-
+extern ProcessPageTable* process_page_table;
 extern uint64_t POM_CPU_KEY;
 
 PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, uint32_t v2, uint32_t v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7,
@@ -33,29 +32,17 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       llcObject(llc)
 {
 
-  dlog = logger();
+  debugLog = logger(true);
+  dlog = logger(false);
   ptw_datamodel = new PTWDataModel(cpu);
   fill_counters.resize(5);
-  
-  // if(KNOB_PSCL_ROOT_LEVEL != (vmem.pt_levels-1))
-  // {
-  //   cout << "Overwrite Setting, PTW-levels=" <<KNOB_PSCL_ROOT_LEVEL<<'\n';
-  //   vmem.pt_levels = KNOB_PSCL_ROOT_LEVEL;
-  // }
 
-  // pscl_array.push_back(&PSCL2);
-  // pscl_array.push_back(&PSCL3);
-  // pscl_array.push_back(&PSCL4);
-  // pscl_array.push_back(&PSCL5);
-
-  // while(pscl_array.back()->level != KNOB_PSCL_ROOT_LEVEL)
-  // {
-  //   pscl_array.pop_back();
-  // }
-
-  // // supporting 16 threads
-  // for(int i=0; i< 16; i++)
-  //   CR3_addr.push_back(vmem.get_pte_pa(i, 0, vmem.pt_levels).first);
+  // supporting 16 threads
+  for(int i=0; i< 16; i++)
+  {
+    auto entry = vmem.func_allocate_page();
+    CR3_addr.push_back(entry);
+  }
 
 }
 
@@ -88,16 +75,15 @@ void PageTableWalker::_overwrite()
   // supporting 16 threads
   for(int i=0; i< 16; i++)
   {
-    CR3_addr.push_back(vmem.get_pte_pa(i, 0, vmem.pt_levels).first);
-
     uint64_t random_64bit_num = dist(engine);
     uint64_t mask = (1ULL << 48) - 1;
     random_64bit_num = random_64bit_num & mask;
     asid.push_back(random_64bit_num);
   }
 
-  POMTLB_baseaddr = vmem.get_pte_pa(POM_CPU_KEY, 0, vmem.pt_levels).first;
-  vmem.print_stat();
+  POMTLB_baseaddr = vmem.func_allocate_page();
+  POM_CPU_KEY = (POMTLB_baseaddr >> LOG2_PAGE_SIZE) & ((1ULL << 16) - 1);
+  cout << NAME << ", POMTLB_baseaddr= " << std::hex << POMTLB_baseaddr << std::dec << ", POM_CPU_KEY= " << POM_CPU_KEY << '\n';
 }
 
 void PageTableWalker::handle_read()
@@ -113,6 +99,7 @@ void PageTableWalker::handle_read()
       handle_pkt.psc_state = PSC_STATE::STALL;
       handle_pkt.event_cycle = current_cycle + PSC_READ_LATENCY;
       RQ.sort(ord_event_cycle<PACKET>{});
+      reads_this_cycle--;
       continue;
     }
 
@@ -156,9 +143,11 @@ void PageTableWalker::handle_read()
       {
         if(ptw_level != pscl->level)
           continue;
+       
         if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.v_address, handle_pkt.thread_id); check_addr.has_value()) 
         {
-          dlog.log("pscl_hit-"+to_string(pscl->level), NAME, handle_pkt.address, handle_pkt.v_address,"instr", handle_pkt.instr_id,"data", handle_pkt.data , "t", handle_pkt.thread_id, "cycle", current_cycle,'\n');
+          // if(handle_pkt.vflag[victima_stlbevict_ptw])
+          debugLog.log("PSC-Hit", current_cycle, "level-"+to_string(ptw_level),"VP", intToHex(page_align(handle_pkt.v_address)), "next_pte_addr", intToHex(next_pt_addr), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
 
           miss_at_root = false;
           ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
@@ -186,8 +175,6 @@ void PageTableWalker::handle_read()
         }
         else
         {
-          dlog.log("pscl_miss-"+to_string(pscl->level), NAME, handle_pkt.address, handle_pkt.v_address,"instr", handle_pkt.instr_id,"data", handle_pkt.data, "t", handle_pkt.thread_id, "cycle", current_cycle,'\n');
-
           ptw_datamodel->queue_psc_miss_metric[ptw_level]++;
           miss_at_root = true;
           break;
@@ -208,11 +195,15 @@ void PageTableWalker::handle_read()
       packet.translation_level = packet.init_translation_level;
       packet.to_return = {this};
       packet.thread_id = handle_pkt.thread_id;
-      packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level==1 && handle_pkt.vflag[VF::victima_stlbevict_ptw] && ptw_level==1 && handle_pkt.vflag[VF::victima]);//only lead PTE needs this flag 
-
+      // "victima_stlbevict_ptw" we are updating it here, the same packet will be use as MSHR entry. For next iteration of PTW, we would need to use same flag value. Hence test the ptw_level and flag.
+      packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level == 1 && handle_pkt.vflag[VF::victima_stlbevict_ptw]);
+  
       int rq_index = lower_level->add_rq(&packet);
       if (rq_index == -2)
         return;
+      
+      // if(handle_pkt.vflag[victima_stlbevict_ptw])
+      debugLog.log("PTW-sent", current_cycle,  "level-"+to_string(ptw_level),"VP", intToHex(page_align(packet.v_address)), "next_pte_addr", intToHex(packet.address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
 
       // Track PTW
       if(track.stop == 0)
@@ -227,6 +218,9 @@ void PageTableWalker::handle_read()
       packet.type = handle_pkt.type;
       packet.psc_state = PSC_STATE::QUEUED;
       
+      // "victima_stlbevict_ptw" we are updating it here, the same packet will be use as MSHR entry. For next iteration of PTW, we would need to use same flag value. Hence test the ptw_level and flag.
+      packet.vflag[VF::victima_stlbevict_ptw] = handle_pkt.vflag[VF::victima_stlbevict_ptw];
+
       auto it = MSHR.insert(std::end(MSHR), packet);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
@@ -245,48 +239,31 @@ void PageTableWalker::handle_fill()
 
   while (fill_this_cycle > 0 && !std::empty(MSHR) && MSHR.front().event_cycle <= current_cycle) {
     auto fill_mshr = MSHR.begin();
-
+    
     //TODO: add search cost
     if(fill_mshr->psc_state == PSC_STATE::QUEUED)
     {
       fill_mshr->psc_state = PSC_STATE::STALL;
       fill_mshr->event_cycle = current_cycle + PSC_READ_LATENCY;
       MSHR.sort(ord_event_cycle<PACKET>{});
+      fill_this_cycle--;
       continue;
     }
 
     // Translation complete now remove MSHR entry, when translation level is 0
     if (fill_mshr->translation_level == 0) // If translation complete
     {
-      dlog.log("pscl_fill0", NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, "t", fill_mshr->thread_id, "cycle", current_cycle,'\n');
-
-      // Return the translated physical address to STLB. Does not contain last
-      // 12 bits
-      auto [addr, fault] = vmem.va_to_pa(cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id, fill_mshr->v_address);
+      uint64_t addr = fill_mshr->data;
+      // fault is taken care at DRAM
+      bool fault = fill_mshr->page_fault;
 
       if(KNOB_TTP==1)
       {
         llcObject->prefetch_line(addr, llcObject->fill_level, 1);
       }  
-
-      // We dont have free frame availbale, hence minor fault.
-      if (warmup_complete[cpu] && fault) 
+      
+      //// Translation finally complete
       {
-        // we are using existing mapping (va_to_pa) and beliving it to be true when it says fault
-        // we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
-        page_table_tracker[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
-
-        fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
-
-        MSHR.sort(ord_event_cycle<PACKET>{});
-
-        ptw_datamodel->page_fault[fill_mshr->translation_level]++;
-        victima_update(fill_mshr->v_address, PageFeature::PTW_Cost, fill_mshr->hit_where);
-      } 
-      // Translation finally complete
-      else 
-      {
-        fill_mshr->data = addr;
         fill_mshr->address = fill_mshr->v_address;
 
         DP(if (warmup_complete[packet->cpu]) {
@@ -309,7 +286,6 @@ void PageTableWalker::handle_fill()
 
         ptw_datamodel->packet_processed++;
         ptw_datamodel->packet_processed_total_miss_latency += total_miss_latency;
-
       }
     } 
     
@@ -321,11 +297,14 @@ void PageTableWalker::handle_fill()
     {
       uint64_t addr = 0;
       bool fault = false;
+      
+      // packet return from PTW, now we will fill into specific PSC.
+      // We also check if its fault if so then we add stall latency, which causes our packet to return again, hence next time we will use "else" block.
+      // Once fill is done, we move to search next level, that time again we want to avoid entering to "if" block
       if(fill_mshr->state == State::PTW_FILL)
       {
-        pair<uint64_t, bool> pte = vmem.get_pte_pa(cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id, fill_mshr->v_address, fill_mshr->translation_level);
-        addr = pte.first;
-        fault = pte.second;
+        addr = fill_mshr->data;
+        fault = fill_mshr->page_fault;
       }
       else
       {
@@ -334,14 +313,12 @@ void PageTableWalker::handle_fill()
 
       if (warmup_complete[cpu] && fault) 
       {
-        // when we do PTW_FILL, we know whether we had fault or not. If we have fault, allocate data-page and map its entry to page-table-page
-        page_table_tracker[cpu*KNOB_SMT_ENABLE + fill_mshr->thread_id]->insert(fill_mshr->page_table_base_address, fill_mshr->address , addr, fill_mshr->translation_level);
-        // cout << std::hex << fill_mshr->page_table_base_address << ", " << fill_mshr->address << ", " << addr << '\n';
-
+        // reset page_fault flag, to prevent from entering again in stall period and move to fill PSC
+        fill_mshr->page_fault = false;
         fill_mshr->event_cycle = current_cycle + (KNOB_ENABLE_MFOE_V2 ? PSC_READ_LATENCY : vmem.minor_fault_penalty);
         MSHR.sort(ord_event_cycle<PACKET>{});
 
-        ptw_datamodel->page_fault[fill_mshr->translation_level]++;
+        ptw_datamodel->page_fault[(int)fill_mshr->translation_level]++;
         victima_update(fill_mshr->v_address, PageFeature::PTW_Cost, fill_mshr->hit_where);
       } 
       else 
@@ -361,9 +338,11 @@ void PageTableWalker::handle_fill()
 
         if(fill_mshr->state == State::PTW_FILL)
         {
-          dlog.log("pscl_fill"+to_string((int)fill_mshr->translation_level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, "t", fill_mshr->thread_id, "cycle", current_cycle,'\n');
+          debugLog.log("PTW-fill", current_cycle, "level-"+to_string((int)fill_mshr->translation_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, "hw", hit_where_str[fill_mshr->hit_where], '\n');
 
+          ptw_datamodel->matrix_cache_to_ptwlevel_hits[fill_mshr->translation_level][fill_mshr->hit_where]++;
           fill_counters[fill_mshr->translation_level]++;
+          
           if (fill_mshr->translation_level == PSCL5.level)
             PSCL5.fill_cache(addr, fill_mshr->v_address, fill_mshr->thread_id);
           if (fill_mshr->translation_level == PSCL4.level)
@@ -378,7 +357,6 @@ void PageTableWalker::handle_fill()
           fill_mshr->address = addr;
           // order of line imp: level=1 becomes level=0 and hence it will notify end of PTW and allocate data_page (minor-fault) if not exists
           fill_mshr->translation_level = fill_mshr->translation_level - 1;
-
         }
         else if(fill_mshr->state == State::PSC_Search)
         {
@@ -387,9 +365,6 @@ void PageTableWalker::handle_fill()
           uint8_t ptw_level = fill_mshr->translation_level;
           // use next 9bits with base addr of next level page table
           uint64_t next_pt_addr = splice_bits(addr, vmem.get_offset(fill_mshr->v_address, ptw_level-1) * PTE_BYTES, LOG2_PAGE_SIZE);
-          
-          // std::cout <<std::hex << "PTW handle_fill, " << addr << ", " << (vmem.get_offset(fill_mshr->v_address, ptw_level-1) * PTE_BYTES) << "="<< next_pt_addr << std::dec << "\n";
-
 
           // lookup this levels PSC, if found in PSC then update next_pt_addr, ptw_level and continue search
           for (auto pscl : pscl_array) 
@@ -399,8 +374,8 @@ void PageTableWalker::handle_fill()
             
             if (auto check_addr = pscl->check_hit(next_pt_addr, fill_mshr->v_address, fill_mshr->thread_id); check_addr.has_value()) 
             {
-              dlog.log("pscl_hit"+to_string(pscl->level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
-
+              // if(fill_mshr->vflag[victima_stlbevict_ptw])
+              debugLog.log( "PSC-Hit", current_cycle,"level-"+to_string(ptw_level), "VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, '\n');
               ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
               next_pt_addr = check_addr.value();
 
@@ -412,8 +387,6 @@ void PageTableWalker::handle_fill()
             }
             else
             {
-              dlog.log("pscl_miss"+to_string(pscl->level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
-
               miss_in_psc = true;
               ptw_datamodel->queue_psc_miss_metric[ptw_level]++;
               break;
@@ -433,14 +406,15 @@ void PageTableWalker::handle_fill()
             packet.to_return = {this};
             packet.translation_level = ptw_level;
             packet.thread_id = fill_mshr->thread_id;
-            packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level==1 && fill_mshr->vflag[VF::victima_stlbevict_ptw] && fill_mshr->vflag[VF::victima]);// if level=1 then only translation cache-block to tlb-block at L2
+            packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level==1 && fill_mshr->vflag[VF::victima_stlbevict_ptw]);// if level=1 then only translation cache-block to tlb-block at L2
             packet.psc_state = PSC_STATE::QUEUED;
-            
+            packet.page_table_base_address = addr;
+
             int rq_index = lower_level->add_rq(&packet);
             if (rq_index != -2) 
             {
-              dlog.log("pscl_request"+to_string(fill_mshr->translation_level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
-
+              // if(fill_mshr->vflag[victima_stlbevict_ptw])
+              debugLog.log("PTW-sent", current_cycle, "level-"+to_string(ptw_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, '\n');
               fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
               fill_mshr->page_table_base_address = addr;
 
@@ -450,8 +424,6 @@ void PageTableWalker::handle_fill()
               ptw_datamodel->psc_level_packet_processed[packet.translation_level]++;
               fill_mshr->uv_cycle_enqueue = current_cycle;
             }
-            else dlog.log("pscl_cancel_request"+to_string(fill_mshr->translation_level), NAME, fill_mshr->address, fill_mshr->v_address,"instr", fill_mshr->instr_id,"data", fill_mshr->data, (int)fill_mshr->translation_level, fill_mshr->thread_id, "cycle", current_cycle,'\n');
-
           }
         }
       }
@@ -507,6 +479,8 @@ void PageTableWalker::return_data(PACKET* packet)
       mshr_entry.state = State::PTW_FILL;
       mshr_entry.hit_where = packet->hit_where;
       mshr_entry.pomflag[POM::POM_TO_PTW_FINI] = mshr_entry.pomflag[POM::POM_TO_PTW]; 
+      mshr_entry.page_fault = packet->page_fault;
+      mshr_entry.data = packet->data;
       
       DP(if (warmup_complete[cpu]) {
         std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry.instr_id;
@@ -632,55 +606,4 @@ void PageTableWalker::victima_update(uint64_t addr, int signal, int hit_where)
   {
     ptw_pred[page].cost+= 1;
   }
-
-  // // page already there
-  // if(found != ptw_pred.end())
-  // {
-  //   // udpdate lru
-  //   for(auto& entry: ptw_pred)
-  //   {
-  //     if(entry.second.lru < ptw_pred[page].lru)
-  //     entry.second.lru++;
-  //   }
-  //   // move to mru
-  //   ptw_pred[page].lru = 0;
-  // }
-  // else  
-  // {
-  //   // replacement
-  //   if(ptw_pred.size() == 16)
-  //   {
-  //     auto it = find_if(ptw_pred.begin(), ptw_pred.end(), [](const auto& a){ return a.second.lru == 15;});
-  //     if (it != ptw_pred.end()) {
-  //       ptw_pred.erase(it);
-  //     }
-  //     else
-  //     {
-  //       cout << "PTW_PRED lru not found !\n";
-  //       exit(0);
-  //     }
-  //   }
-
-  //   // udpdate lru
-  //   for(auto &entry: ptw_pred)
-  //   {
-  //     entry.second.lru++;
-  //   }
-    
-  //   // default to mru
-  //   ptw_pred[page] = {0, 0, 0};
-  // }
-}
-
-
-std::pair<uint64_t, bool> PageTableWalker::page_vp_to_pp(uint32_t cpu_num, uint64_t vaddr)
-{
-  auto [ppn, fault] = vmem.get_vp_to_pp(cpu_num, vaddr);
-  return make_pair(ppn, fault);
-}
-
-std::pair<uint64_t, bool> PageTableWalker::addr_va_to_pa(uint32_t cpu_num, uint64_t vaddr)
-{
-  auto [ppn, fault] = vmem.get_va_to_pa(cpu_num, vaddr);
-  return make_pair(ppn, fault);
 }

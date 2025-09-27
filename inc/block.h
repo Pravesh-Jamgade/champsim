@@ -114,6 +114,8 @@ public:
   DataType dtype = DataType::INVALID;
   uint64_t page_table_base_address = 0;
   CacheBlock* cacheBlock = nullptr;
+  // for PTW module
+  bool page_fault = 0;
 };
 
 template <>

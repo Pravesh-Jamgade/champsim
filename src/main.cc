@@ -23,7 +23,7 @@
 #include "hist.h"
 #include "pagetable.h"
 
-vector<PageTable*> page_table_tracker;
+ProcessPageTable* process_page_table;
 map<uint64_t, PTWC> ptw_pred;
 list<pair<string, uint64_t>> hash_cache;
 map<uint64_t, uint64_t> l2_pte_map;
@@ -431,6 +431,13 @@ void signal_handler(int signal)
   exit(1);
 }
 
+// Function to be called upon program termination
+void on_exit_handler() {
+    std::cout << "Invoking handler due to program exit." << std::endl;
+    process_page_table->printTree();
+}
+
+
 int main(int argc, char** argv)
 {
   // interrupt signal hanlder
@@ -439,6 +446,11 @@ int main(int argc, char** argv)
   sigemptyset(&sigIntHandler.sa_mask);
   sigIntHandler.sa_flags = 0;
   sigaction(SIGINT, &sigIntHandler, NULL);
+
+  if (std::atexit(on_exit_handler) != 0) {
+        std::cerr << "Failed to register exit handler." << std::endl;
+        return EXIT_FAILURE;
+    }
 
   
   // initialize knobs
@@ -604,8 +616,8 @@ int main(int argc, char** argv)
 
   // overwrite relevant to extra settings
   overwrite_cache();
-  for(int i=0; i< 16; i++)
-    page_table_tracker.push_back(new PageTable());
+  process_page_table = new ProcessPageTable();
+  process_page_table->init();
 
   printf("Simulator Configuration\n%s", instantiation_code);
 
@@ -836,12 +848,9 @@ for(auto cache: caches)
 }
 
 print_ptw_freq_and_cost();
-
-for(int i=0; i< KNOB_SMT_ENABLE*NUM_CPUS; i++)
-    page_table_tracker[i]->print_stat(i);
-
 cout << '\n';
-vmem.print_stat();
+
+process_page_table->printStat();
 cout << "\nDone!\n";
 
   return 0;
@@ -897,7 +906,7 @@ void print_ptw_freq_and_cost()
     cout << setw(6) << i << "|";
     for(int j=0; j< ptw_freq_cost.size(); j++)
     {
-      cout<<setw(4)<<ptw_freq_cost[j][i];
+      cout<<setw(4)<<ptw_freq_cost[j][i]<<',';
     }
     cout<<'\n';
   }

@@ -55,6 +55,7 @@ public:
   // distance VS number of times this offset seen 
   vector<vector<int>> transition_hitmap_for_vp_page, transition_hitmap_for_pp_page;
 
+  logger debugLog;
   logger dlog;
   logger dassert;
 
@@ -147,8 +148,8 @@ public:
   uint32_t get_occupancy(uint8_t queue_type, uint64_t address) override;
   uint32_t get_size(uint8_t queue_type, uint64_t address) override;
 
-  uint32_t get_set(uint64_t address, bool victima=false);
-  uint32_t get_way(uint64_t address, uint32_t set, int thread_id, bool victima=false);
+  uint32_t get_set(int type, uint64_t address, bool victima=false);
+  uint32_t get_way(int type, uint64_t address, uint32_t set, int thread_id, bool victima=false);
 
   int invalidate_entry(uint64_t inval_addr);
   int prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata);
@@ -172,7 +173,7 @@ public:
 
   void* getObject(){return this;}
 
-  uint32_t get_offset(uint64_t address);
+  uint64_t use_offset(int type);
 
   pair<bool, uint64_t> peek_singleline(PACKET handle_pkt);
 
@@ -190,6 +191,8 @@ public:
   void func_track_hit_access_latency(uint64_t enq_cycle, int metadata=0);
 
   void func_return(PACKET* packet);
+
+  CacheBlock* func_test_page_table(BLOCK& fill_block);
 
   void _context_switch(int thread_id) 
   {
@@ -269,8 +272,6 @@ public:
       cout << "victima l2 write, " << victima_counters[L2_WRITE] << '\n'; 
       cout << "victima l2 read hit, " << victima_counters[L2_READ_HIT] << '\n'; 
       cout << "victima l2 read miss, " << victima_counters[L2_READ_MISS] << '\n'; 
-      cout << "victima stlb eivct, " << victima_counters[STLB_EVICT] << '\n'; 
-      cout << "victima PTW's, " << victima_counters[VICTIMA_PTW_COUNT] << '\n'; 
 
       cout << "\nvictima cache block usage @ L2 cache\n";
       for(int i=1; i< 9; i++)
@@ -286,6 +287,11 @@ public:
     }
     if(cache_is[IS_STLB])
     {
+      cout << '\n';
+      cout << "victima stlb eivct, " << victima_counters[STLB_EVICT] << '\n'; 
+      cout << "victima PTW's, " << victima_counters[VICTIMA_PTW_COUNT] << '\n'; 
+      cout << '\n';
+
       cout << "Transition hitmap for offset counter over windows:\n";
       cout << "Offset V/s frequency_of_offset\n\n";
 
@@ -307,7 +313,7 @@ public:
       for (int i = 0; i < 8; ++i) {
           cout << setw(6) << i << "|";
           for (int j = 0; j < transition_hitmap_for_offset[i].size(); ++j) {
-              cout << setw(4) << transition_hitmap_for_offset[i][j];
+              cout << setw(4) << transition_hitmap_for_offset[i][j] << ',';
           }
           cout << '\n';
       }
@@ -334,7 +340,7 @@ public:
       for (int i = 0; i < 8; ++i) {
           cout << setw(6) << i << "|";
           for (int j = 0; j < transition_hitmap_for_vp_page[i].size(); ++j) {
-              cout << setw(4) << transition_hitmap_for_vp_page[i][j];
+              cout << setw(3) << transition_hitmap_for_vp_page[i][j] << ',';
           }
           cout << '\n';
       }
@@ -345,7 +351,7 @@ public:
       // Print column headers
       cout << setw(6) << " " << "|";
       for (int i = 0; i < transition_hitmap_for_pp_page[0].size(); ++i) {
-          cout << setw(4) << i;
+          cout << setw(3) << i;
       }
       cout << '\n';
 
@@ -360,7 +366,7 @@ public:
       for (int i = 0; i < 8; ++i) {
           cout << setw(6) << i << "|";
           for (int j = 0; j < transition_hitmap_for_pp_page[i].size(); ++j) {
-              cout << setw(4) << transition_hitmap_for_pp_page[i][j];
+              cout << setw(3) << transition_hitmap_for_pp_page[i][j] << ',';
           }
           cout << '\n';
       }
@@ -387,7 +393,8 @@ public:
       collect_pte[i] = ThreadBucket();
     }
     
-    dlog = logger();
+    debugLog = logger(false);
+    dlog = logger(true);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
