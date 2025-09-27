@@ -271,9 +271,42 @@ class ProcessPageTable
         return {false, new_page_addr};
     }  
 
-    uint64_t get_cacheblock_usage(int process_id, uint64_t pte_address, int pt_level)
+    Page getpage(int process_id, uint64_t pte_address, int pt_level)
     {
-        pair<bool, uint64_t> found_pte = get_pte(process_id, pte_address, pt_level);        
+        if(process_id < 0)
+        {
+            pagetable_logger.log("Error: invalid process/cpu id for getting a page", "addr", intToHex(pte_address), "pt_level", pt_level, '\n');
+            exit(-1);
+        }
+        auto found_process = process_to_pagetable_levels_tracker.find(process_id);
+        if(found_process == process_to_pagetable_levels_tracker.end())
+        {
+            pagetable_logger.log("Error: process/cpu id not found for getting a page", "addr", intToHex(pte_address), "pt_level", pt_level, '\n');
+            exit(-1);
+        }
+        return found_process->second.list_pages_tables_levels[pt_level].list_pages[pte_address >> LOG2_PAGE_SIZE];
+    }
+
+    int get_cacheblock_usage(int process_id, uint64_t pte_address, int pt_level)
+    {
+        int usage = 0;
+        Page page = getpage(process_id, pte_address, pt_level);
+        int cache_block_id = (pte_address >> LOG2_BLOCK_SIZE) & 0x3F; // 6-bit cache block id within page
+
+        if(page.list_cacheblocks.find(cache_block_id) == page.list_cacheblocks.end())
+        {
+            std::cout << "Error: cacheblock not found for getting usage" << "cpu" << process_id << "addr" << intToHex(pte_address) << "pt_level" << pt_level << '\n';
+            exit(-1);
+        }
+
+        CacheBlock cache_block = page.list_cacheblocks[cache_block_id];
+        for(int i=0; i<8; i++)
+        {
+            auto pte = cache_block.get_pte(i);
+            if(pte.first)
+                usage++;
+        }
+        return usage;
     }
     
     void printStat()
