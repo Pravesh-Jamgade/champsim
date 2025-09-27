@@ -251,6 +251,7 @@ class ProcessPageTable
         return process_to_pagetable_levels_tracker[process_id].get_pte(pte_address, pt_level);   
     }
 
+    // True->page_found and False->page_not_found
     pair<bool, uint64_t> operate_pagetable(int process_id, uint64_t pte_address, int pt_level)
     {
         auto result_pte = get_pte(process_id, pte_address, pt_level);
@@ -287,7 +288,8 @@ class ProcessPageTable
         return found_process->second.list_pages_tables_levels[pt_level].list_pages[pte_address >> LOG2_PAGE_SIZE];
     }
 
-    int get_cacheblock_usage(int process_id, uint64_t pte_address, int pt_level)
+    // number of valid PTE and which pte are valid
+    pair<int, uint8_t> get_cacheblock_usage(int process_id, uint64_t pte_address, int pt_level)
     {
         int usage = 0;
         Page page = getpage(process_id, pte_address, pt_level);
@@ -299,14 +301,19 @@ class ProcessPageTable
             exit(-1);
         }
 
+        uint8_t valid_bits = 0;
+
         CacheBlock cache_block = page.list_cacheblocks[cache_block_id];
         for(int i=0; i<8; i++)
         {
             auto pte = cache_block.get_pte(i);
             if(pte.first)
+            {
                 usage++;
+                valid_bits |= 1 << i;
+            }
         }
-        return usage;
+        return {usage, valid_bits};
     }
     
     void printStat()

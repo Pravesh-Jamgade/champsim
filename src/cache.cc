@@ -105,20 +105,30 @@ void CACHE::handle_fill()
       }
     }
     
-    // find victim
-    uint32_t set = get_set(fill_mshr->type, fill_mshr->address);
+    bool victima_flag = KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima] && fill_mshr->vflag[VF::victima_stlbevict_ptw];
 
-    // transform CacheBlock to TLBBlock: change indexing to use VA and ASID
-    if(KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima] && fill_mshr->vflag[VF::victima_stlbevict_ptw])
+    // if victima block then use virt-address to find set/way
+    uint32_t set = get_set(fill_mshr->type, (victima_flag? fill_mshr->v_address: fill_mshr->address), victima_flag);
+
+    // if it is hit implies, Transltion cache block is already there, its PTE might not be valid one thats why it brought from lower level
+    uint32_t way = get_way(fill_mshr->type, fill_mshr->address, set, fill_mshr->thread_id, victima_flag);
+    bool hit = way < NUM_WAY;
+    if(fill_mshr->type == TRANSLATION && !is_tlb)
     {
-      // cout << "Debug, " << NAME << ", " << "victima_fill, " << fill_mshr->address << ", " << fill_mshr->v_address << '\n';
-      set = get_set(fill_mshr->type, fill_mshr->v_address);
+      // block was here already, but its PTE was not valid, now it is valid, hence update
+      if(hit)
+      {
+        
+      }
     }
 
     auto set_begin = std::next(std::begin(block), set * NUM_WAY);
     auto set_end = std::next(set_begin, NUM_WAY);
     auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
-    uint32_t way = std::distance(set_begin, first_inv);
+
+    // translation block was already here, but its PTE was not valid, now it is valid, hence update same cache block
+    way = hit ? way : std::distance(set_begin, first_inv);
+
     if (way == NUM_WAY)
       way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                          fill_mshr->type);
@@ -160,8 +170,6 @@ void CACHE::handle_writeback()
       return;
     }
 
-    bool write_true = false;
-
     // handle the oldest entry
     PACKET& handle_pkt = WQ.front();
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
@@ -180,22 +188,9 @@ void CACHE::handle_writeback()
     uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));
     uint64_t pp = (handle_pkt.data & ~(PAGE_SIZE-1));
 
-    bool test = l2_pte_map.find(vp)!=l2_pte_map.end();
-    if(handle_pkt.vflag[VF::victima] && KNOB_VICTIMA && cache_is[IS_L2])
-    {
-      hit = hit && test;
-      if(hit)
-      {
-        BLOCK* hit_block = &block[set * NUM_WAY + way];
-        hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
-      }
-    }
-
     if (hit) // HIT
     {
       impl_replacement_update_state(handle_pkt.cpu, set, way, fill_block.address, handle_pkt.ip, 0, handle_pkt.type, 1);
-
-      write_true = true;
 
       // COLLECT STATS
       sim_hit[handle_pkt.cpu][handle_pkt.type]++;
@@ -228,7 +223,6 @@ void CACHE::handle_writeback()
                                              handle_pkt.type);
 
         success = filllike_miss(set, way, handle_pkt);
-        write_true = true;
       }
       
       if (!success)
@@ -238,21 +232,6 @@ void CACHE::handle_writeback()
       }
 
       cacheDataModel->wr_queue[Basic::MISS]++;
-    }
-
-    if(write_true)
-    {
-      // writing stlb PTE to L2
-      if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
-      {
-        uint32_t offset = (handle_pkt.address >> LOG2_PAGE_SIZE) & 0x7;
-        fill_block.updateUsage(offset);
-        auto find_page = l2_pte_map.find(vp);
-        if(find_page == l2_pte_map.end())
-        {
-          l2_pte_map.insert({vp, pp});
-        }
-      }
     }
 
     // remove this entry from WQ
@@ -337,26 +316,21 @@ void CACHE::handle_read()
 
     uint32_t set = get_set(handle_pkt.type, handle_pkt.address, handle_pkt.vflag[VF::victima]);
     uint32_t way = get_way(handle_pkt.type, handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
-
+   
     bool hit = way < NUM_WAY;
-
-    uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));
-    uint64_t pp = (handle_pkt.data & ~(PAGE_SIZE-1));
-
-    bool test = l2_pte_map.find(vp)!=l2_pte_map.end();
-    if(handle_pkt.vflag[VF::victima] && KNOB_VICTIMA && cache_is[IS_L2])
+    
+    // Test whether expected PTE is valid or not
+    BLOCK* hit_block = &block[set * NUM_WAY + way];
+    if(handle_pkt.type == TRANSLATION && hit)
     {
-      hit = hit && test;
-      if(hit)
-      {
-        BLOCK* hit_block = &block[set * NUM_WAY + way];
-        hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
-      }
+      int offset = get_pte_offset(handle_pkt.address);
+      bool is_pte_valid = hit_block->testValidity(offset);
+      hit = hit && is_pte_valid;
     }
 
     if (hit) // HIT
     {
-      BLOCK* hit_block = &block[set * NUM_WAY + way];
+      
       readlike_hit(set, way, handle_pkt);
 
       if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]) victima_counters[VC::L2_READ_HIT]++;
@@ -433,7 +407,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   });
 
   BLOCK& hit_block = block[set * NUM_WAY + way];
-  hit_block.m_used++;
   hit_block.hit_before_eviction++;
   handle_pkt.hit_where = cache_id;
 
@@ -761,6 +734,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
   BLOCK& fill_block = block[set * NUM_WAY + way];
+  int cpu_id = fill_block.cpu * KNOB_SMT_ENABLE + fill_block.thread_id;
 
   // Position matters
   // POM packet return mem trip. Test if it was hit in POM-TLB. If so, return data (from handle_fill)
@@ -977,10 +951,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
           victima_counters[VC::STLB_EVICT]++;
         }
+        // if victima block from L2 is evicted
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
-          int cpu_id = fill_block.cpu * KNOB_SMT_ENABLE + fill_block.thread_id;
-          int usage = process_page_table->get_cacheblock_usage(cpu_id, fill_block.address, fill_block.translation_level_if_pagetable_block);
+          int usage = process_page_table->get_cacheblock_usage(cpu_id, fill_block.address, fill_block.translation_level_if_pagetable_block).first;
           victima_block_usage[usage]++;
           victima_counters[VC::L2_EVICT]++;
         }
@@ -1117,12 +1091,23 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
     fill_block.came_from_request = handle_pkt.type;
-    fill_block.m_used = 0; //handle_pkt.type==WRITEBACK ? 0: fill_block.m_used;
     fill_block.victima_block = handle_pkt.vflag[VF::victima_stlbevict_ptw];
     fill_block.thread_id = handle_pkt.thread_id;
     fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
     fill_block.translation_level_if_pagetable_block = (handle_pkt.type == TRANSLATION) ? handle_pkt.translation_level: -1;
+
+    // track the valid bits of each of PTE whenever a cache block corresponding to PT is brought in
+    if(handle_pkt.type == TRANSLATION && !is_tlb)
+    {
+      auto pt_meta = process_page_table->get_cacheblock_usage(cpu_id, handle_pkt.address, handle_pkt.translation_level);
+      fill_block.valid_ptes = pt_meta.second;
+      if(pt_meta.first != __builtin_popcount(pt_meta.second))
+      {
+        dassert.log("Error: pte_count != valid_pte_bits", pt_meta.first, pt_meta.second, '\n');
+        exit(-1);
+      }
+    }
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
@@ -1214,8 +1199,8 @@ uint32_t CACHE::get_way(int type, uint64_t address, uint32_t set, int th, bool v
   }
   else if(type == TRANSLATION)
   {
-    // 8x 8byte entries in cache block
-    offset = 3;
+    // // 8x 8byte entries in cache block
+    // offset = 3;
   }
 
   auto begin = std::next(block.begin(), set * NUM_WAY);

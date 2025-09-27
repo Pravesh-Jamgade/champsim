@@ -12,7 +12,10 @@
 #include "logger.h"
 
 extern int KNOB_SMT_ENABLE;
+extern int KNOB_POMTLB;
 extern ProcessPageTable* process_page_table;
+// tuple[POM_PP, VP, thread_id] and PP
+extern unordered_map<tuple<uint64_t, uint64_t, int>, uint64_t> pom_table;
 namespace dramsim3 {
     class MemorySystem;
 };
@@ -54,15 +57,33 @@ public:
                 uint32_t cpu_no = KNOB_SMT_ENABLE*packet->cpu + packet->thread_id;
                 if(packet->type == TRANSLATION)
                 {
-                    uint32_t cpu_no = KNOB_SMT_ENABLE*packet->cpu + packet->thread_id;
-                    pair<bool, uint64_t> result = process_page_table->operate_pagetable(cpu_no, packet->address, packet->translation_level);
-                    result.first? pt_page_faulted++:0;
-                    packet->data = result.second;
-                    packet->page_fault = result.first;
+                    if(packet->pomflag[POM::POM] && KNOB_POMTLB)
+                    {
+                        auto foundPOM = pom_table.find(make_tuple(cpu_no, packet->address, packet->thread_id));
+                        if(foundPOM == pom_table.end())
+                        {
+                           packet->pomflag[POM::POM_MISS] = true; 
+                        }
+                        else
+                        {
+                            packet->pomflag[POM::POM_MISS] = false;
+                            packet->data = foundPOM->second;
+                            packet->hit_where = CACHE_ID::IS_DRAM;
+                        }
+                    }
+                    else
+                    {
+                        pair<bool, uint64_t> result = process_page_table->operate_pagetable(cpu_no, packet->address, packet->translation_level);
+                        result.first? pt_page_faulted++:0;
+                        packet->data = result.second;
+                        packet->page_fault = !result.first;
+                        packet->hit_where = CACHE_ID::IS_DRAM;
+                    }
                 }
             }
+            else packet->hit_where = CACHE_ID::IS_DRAM;
 
-            packet->hit_where = CACHE_ID::IS_DRAM;
+            
             for (auto ret : packet->to_return)
                 ret->return_data(packet);
 
@@ -219,13 +240,31 @@ public:
             if(rq_pkt->type == TRANSLATION)
             {
                 uint32_t cpu_no = KNOB_SMT_ENABLE*rq_pkt->cpu + rq_pkt->thread_id;
-                pair<bool, uint64_t> result = process_page_table->operate_pagetable(cpu_no, rq_pkt->address, rq_pkt->translation_level);
-                result.first? pt_page_faulted++:0;
-                rq_pkt->data = result.second;
-                rq_pkt->page_fault = result.first;
+                if(rq_pkt->pomflag[POM::POM] && KNOB_POMTLB)
+                {
+                    auto foundPOM = pom_table.find(make_tuple(cpu_no, rq_pkt->address, rq_pkt->thread_id));
+                    if(foundPOM == pom_table.end())
+                    {
+                        rq_pkt->pomflag[POM::POM_MISS] = true; 
+                    }
+                    else
+                    {
+                        rq_pkt->pomflag[POM::POM_MISS] = false;
+                        rq_pkt->data = foundPOM->second;
+                        rq_pkt->hit_where = CACHE_ID::IS_DRAM;
+                    }
+                }
+                else
+                {
+                    pair<bool, uint64_t> result = process_page_table->operate_pagetable(cpu_no, rq_pkt->address, rq_pkt->translation_level);
+                    result.first? pt_page_faulted++:0;
+                    rq_pkt->data = result.second;
+                    rq_pkt->page_fault = !result.first;
+                    rq_pkt->hit_where = CACHE_ID::IS_DRAM;
+                }
             }
-
-            rq_pkt->hit_where = CACHE_ID::IS_DRAM;
+            else rq_pkt->hit_where = CACHE_ID::IS_DRAM;
+           
             for (auto ret : rq_pkt->to_return) 
             {
                 ret->return_data(&(*rq_pkt));

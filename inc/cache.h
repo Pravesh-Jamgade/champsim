@@ -194,6 +194,11 @@ public:
 
   CacheBlock* func_test_page_table(BLOCK& fill_block);
 
+  int get_pte_offset(uint64_t addr)
+  {
+    return (addr >> 3) && 0x7;
+  }
+
   void _context_switch(int thread_id) 
   {
     

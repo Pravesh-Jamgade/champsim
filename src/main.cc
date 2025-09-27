@@ -28,7 +28,7 @@ map<uint64_t, PTWC> ptw_pred;
 list<pair<string, uint64_t>> hash_cache;
 map<uint64_t, uint64_t> l2_pte_map;
 uint64_t POM_CPU_KEY = 123456789;
-
+unordered_map<tuple<uint64_t, uint64_t, int>, uint64_t> pom_table;
 uint8_t warmup_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
 

@@ -41,23 +41,28 @@ public:
 
   int came_from_request = NUM_TYPES; // default: invalid block
 
-  uint32_t m_used = 0; // 8 entries of 8B each
   bool victima_block = 0;
   std::map<uint64_t, uint64_t> vp_2_pp_map;
  
   CacheBlock cacheBlock;
   DataType dtype = DataType::INVALID;
 
+  uint8_t valid_ptes = 0;
+
   // for tlb block, each PTE is 8Byte, so we have 8 entries in 64B block
   void updateUsage(uint32_t offset){
     uint32_t mask = offset;
-    m_used |= 1 << mask;
+    valid_ptes |= 1 << mask;
+  }
+
+  bool testValidity(int offset){
+    return valid_ptes & (1 << offset);
   }
 
   // use only for TLB blocks
   int getUsage()
   {
-    return __builtin_popcount(m_used);
+    return __builtin_popcount(valid_ptes);
   }
   int thread_id = -1;
   int translation_level_if_pagetable_block = -1; // 1,2,3,4 for PTE, PMD, PUD, PGD
