@@ -438,8 +438,13 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   handle_pkt.hit_where = cache_id;
 
   handle_pkt.data = hit_block.data;
-  // if(handle_pkt.type == TRANSLATION && !is_tlb)
-  // handle_pkt.data = process_page_table->get_pte(handle_pkt.cpu, handle_pkt.address, handle_pkt.translation_level).second;
+  if(handle_pkt.type == TRANSLATION && !is_tlb)
+  {
+    int cpu_id = handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
+    uint64_t pte_value = process_page_table->get_pte(cpu_id, handle_pkt.address, handle_pkt.translation_level).second;
+    // dlog.log("readlike_hit: ", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_value", intToHex(pte_value), "NAME", NAME, "\n");
+    handle_pkt.data = pte_value;
+  }
 
   // update prefetcher on load instruction
   if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
@@ -974,9 +979,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         }
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
-          // CacheBlock* cb = func_test_page_table(fill_block);
-          // int usage = cb->getUsage();
-          // victima_block_usage[usage]++;
+          int cpu_id = fill_block.cpu * KNOB_SMT_ENABLE + fill_block.thread_id;
+          int usage = process_page_table->get_cacheblock_usage(cpu_id, fill_block.address, fill_block.translation_level_if_pagetable_block);
+          victima_block_usage[usage]++;
           victima_counters[VC::L2_EVICT]++;
         }
         
@@ -1117,6 +1122,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.thread_id = handle_pkt.thread_id;
     fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
+    fill_block.translation_level_if_pagetable_block = (handle_pkt.type == TRANSLATION) ? handle_pkt.translation_level: -1;
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))

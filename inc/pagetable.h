@@ -270,16 +270,21 @@ class ProcessPageTable
         insert(process_id, pte_address, new_page_addr, pt_level);
         return {false, new_page_addr};
     }  
+
+    uint64_t get_cacheblock_usage(int process_id, uint64_t pte_address, int pt_level)
+    {
+        pair<bool, uint64_t> found_pte = get_pte(process_id, pte_address, pt_level);        
+    }
     
     void printStat()
     {
         int pages_by_level[vmem.pt_levels+1] = {0};
         int cacheblocks_by_level[vmem.pt_levels+1] = {0};
-        vector<int> cacheBlockOccupancy(8, 0);
+        vector<int> cacheBlockOccupancy(9, 0);
         vector<int> cacheBlockOccupancyByLevels[vmem.pt_levels+1];
 
         for(int i=0; i<= vmem.pt_levels; i++)
-            cacheBlockOccupancyByLevels[i].resize(8, 0);
+            cacheBlockOccupancyByLevels[i] = vector<int>(9,0);
 
         for(auto entry: process_to_pagetable_levels_tracker)
         {
@@ -300,33 +305,44 @@ class ProcessPageTable
                     {
                         int cache_block_id = cacheblock_entry.first;
                         CacheBlock& cache_block = cacheblock_entry.second;
-
+                        
+                        int occupancy = 0;
                         for(int i=0; i<8; i++)
                         {
                             auto pte = cache_block.get_pte(i);
                             if(pte.first)
                             {
-                                cacheBlockOccupancy[i]++;
-                                cacheBlockOccupancyByLevels[level][i]++;
+                                occupancy++;
                             }
                         }
+
+                        cacheBlockOccupancy[occupancy]++;
+                        cacheBlockOccupancyByLevels[level][occupancy]++;
                     }
                 }
             }
         }
 
-        pagetable_logger.log("level", "pages_by_level", "cacheblock_by_levels", '\n');
+        cout << setw(9) << "Level," << setw(9) << "Pages," << setw(9) << "CacheBlocks" << '\n';
         for(int i=0; i< vmem.pt_levels; i++)
         {
-            pagetable_logger.log(i+1, pages_by_level[i+1], cacheblocks_by_level[i+1], '\n');
+            cout << setw(7) << (i+1) <<","<< setw(7)<< pages_by_level[i+1] <<","<< setw(7) << cacheblocks_by_level[i+1] << '\n';
         }
 
-        pagetable_logger.log("count-1","count-2","count-3","count-4", "count-5","count-6","count-7","count-8",'\n');
-        pagetable_logger.log(cacheBlockOccupancy[1], cacheBlockOccupancy[2], cacheBlockOccupancy[3], cacheBlockOccupancy[4], cacheBlockOccupancy[5], cacheBlockOccupancy[6], cacheBlockOccupancy[7], cacheBlockOccupancy[8], '\n');
-        
-        pagetable_logger.log("level", "count-1","count-2","count-3","count-4", "count-5","count-6","count-7","count-8",'\n');
+        cout << setw(9) << "count-1," << setw(9) << "count-2," << setw(9) << "count-3," << setw(9) << "count-4," << setw(9) << "count-5," << setw(9) << "count-6," << setw(9) << "count-7," << setw(9) << "count-8" << '\n';
+        for(int i=1; i< 9; i++)
+            cout << setw(7) << cacheBlockOccupancy[i] << ", ";
+        cout << '\n';
+        cout << '\n';
+
+        cout << setw(9) << "level," << setw(9) << "count-1," << setw(9) << "count-2," << setw(9) << "count-3," << setw(9) << "count-4," << setw(9) << "count-5," << setw(9) << "count-6," << setw(9) << "count-7," << setw(9) << "count-8," << '\n';
         for(int level=1; level<= vmem.pt_levels; level++)
-            pagetable_logger.log(level, cacheBlockOccupancyByLevels[level][1], cacheBlockOccupancyByLevels[level][2], cacheBlockOccupancyByLevels[level][3], cacheBlockOccupancyByLevels[level][4], cacheBlockOccupancyByLevels[level][5], cacheBlockOccupancyByLevels[level][6], cacheBlockOccupancyByLevels[level][7], cacheBlockOccupancyByLevels[level][8], '\n');
+        {
+            cout <<setw(7) << level << ",";
+            for(int i=1; i< 9; i++)
+                cout << setw(7) << cacheBlockOccupancyByLevels[level][i] << ",";
+            cout << '\n';
+        }
     }
 
     void printTree()

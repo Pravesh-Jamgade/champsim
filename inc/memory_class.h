@@ -60,6 +60,7 @@ public:
     return __builtin_popcount(m_used);
   }
   int thread_id = -1;
+  int translation_level_if_pagetable_block = -1; // 1,2,3,4 for PTE, PMD, PUD, PGD
 };
 
 class MemoryRequestConsumer

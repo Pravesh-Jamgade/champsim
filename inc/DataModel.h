@@ -424,21 +424,26 @@ class PTWDataModel
     //       cout << '\n';
     //   }
 
-        cout <<setw(6)<<" "<< "|";
+        cout <<setw(7)<<" "<< "|";
         for(int i=0; i< matrix_cache_to_ptwlevel_hits[0].size(); i++)
             cout << setw(7) << hit_where_str[i];
         cout << '\n';
         
-        cout << string(6, '-') << "+";
+        cout << string(7, '-') << "+";
         for(int i=0; i< matrix_cache_to_ptwlevel_hits[0].size(); i++)
-            cout << string(4, '-');
+            cout << string(7, '-');
         cout << '\n';
          
-        for(auto row: matrix_cache_to_ptwlevel_hits)
+        for(int i=1; i< matrix_cache_to_ptwlevel_hits.size(); i++)
         {
+            auto row = matrix_cache_to_ptwlevel_hits[i];
+            if(i==0)
+                continue;
+        
+            cout << setw(7) << PSCL_Hit_str[i] << "|";
             for(auto ele: row)
             {
-                cout << setw(8) << ele << ", ";
+                cout << setw(7) << ele << ", ";
             }
             cout << '\n';
         }

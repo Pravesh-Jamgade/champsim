@@ -394,7 +394,7 @@ public:
     }
     
     debugLog = logger(false);
-    dlog = logger(false);
+    dlog = logger(true);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
