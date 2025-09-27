@@ -16,7 +16,7 @@ static std::string intToHex(uint64_t value) {
   return oss.str();
 }
 
-inline constexpr int cpu_index(uint32_t cpu, int thread) { return KNOB_SMT_ENABLE* cpu + thread; }
+// inline constexpr int cpu_index(uint32_t cpu, int thread) { return KNOB_SMT_ENABLE* cpu + thread; }
 
 constexpr unsigned lg2(uint64_t n) { return n < 2 ? 0 : 1 + lg2(n / 2); }
 
