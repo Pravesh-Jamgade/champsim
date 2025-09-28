@@ -196,7 +196,7 @@ public:
 
   int get_pte_offset(uint64_t addr)
   {
-    return (addr >> 3) && 0x7;
+    return ((addr >> 3) & 0x7);
   }
 
   void _context_switch(int thread_id) 
@@ -399,7 +399,7 @@ public:
     }
     
     debugLog = logger(false);
-    dlog = logger(true);
+    dlog = logger(false);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));

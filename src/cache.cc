@@ -105,13 +105,13 @@ void CACHE::handle_fill()
       }
     }
     
-    bool victima_flag = KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima] && fill_mshr->vflag[VF::victima_stlbevict_ptw];
+    bool victima_flag = KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima_stlbevict_ptw];
 
     // if victima block then use virt-address to find set/way
     uint32_t set = get_set(fill_mshr->type, (victima_flag? fill_mshr->v_address: fill_mshr->address), victima_flag);
 
     // if it is hit implies, Transltion cache block is already there, its PTE might not be valid one thats why it brought from lower level
-    uint32_t way = get_way(fill_mshr->type, fill_mshr->address, set, fill_mshr->thread_id, victima_flag);
+    uint32_t way = get_way(fill_mshr->type, (victima_flag? fill_mshr->v_address: fill_mshr->address), set, fill_mshr->thread_id, victima_flag);
     bool hit = way < NUM_WAY;
     if(fill_mshr->type == TRANSLATION && !is_tlb)
     {
@@ -325,12 +325,13 @@ void CACHE::handle_read()
     {
       int offset = get_pte_offset(handle_pkt.address);
       bool is_pte_valid = hit_block->testValidity(offset);
+      bitset<8> tobits(hit_block->valid_ptes);
+      debugLog.log("CACHE-HIT"+NAME, current_cycle, "level-"+to_string(handle_pkt.translation_level), "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block->address), "cb_vaddr", intToHex(hit_block->v_address), "cb_data", intToHex(hit_block->data), "level-"+to_string(hit_block->translation_level_if_pagetable_block), "pte_offset", offset, "pte_valid", is_pte_valid, "bits", tobits, "\n");
       hit = hit && is_pte_valid;
     }
 
     if (hit) // HIT
     {
-      
       readlike_hit(set, way, handle_pkt);
 
       if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]) victima_counters[VC::L2_READ_HIT]++;
@@ -414,9 +415,9 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   if(handle_pkt.type == TRANSLATION && !is_tlb)
   {
     int cpu_id = handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
-    uint64_t pte_value = process_page_table->get_pte(cpu_id, handle_pkt.address, handle_pkt.translation_level).second;
-    // dlog.log("readlike_hit: ", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_value", intToHex(pte_value), "NAME", NAME, "\n");
-    handle_pkt.data = pte_value;
+    pair<bool, uint64_t> pte_value = process_page_table->get_pte(cpu_id, handle_pkt.address, handle_pkt.translation_level);
+    debugLog.log("readlike_hit", current_cycle, "level-"+to_string(handle_pkt.translation_level), "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_fault", !pte_value.first, "pte_value", intToHex(pte_value.second), "NAME", NAME, "\n");
+    handle_pkt.data = pte_value.second;
   }
 
   // update prefetcher on load instruction
@@ -734,7 +735,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
   BLOCK& fill_block = block[set * NUM_WAY + way];
-  int cpu_id = fill_block.cpu * KNOB_SMT_ENABLE + fill_block.thread_id;
 
   // Position matters
   // POM packet return mem trip. Test if it was hit in POM-TLB. If so, return data (from handle_fill)
@@ -954,7 +954,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         // if victima block from L2 is evicted
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
-          int usage = process_page_table->get_cacheblock_usage(cpu_id, fill_block.address, fill_block.translation_level_if_pagetable_block).first;
+          int cpu_id = (fill_block.cpu * KNOB_SMT_ENABLE + fill_block.thread_id);
+          int usage = process_page_table->get_cacheblock_usage(cpu_id, fill_block.address, fill_block.translation_level_if_pagetable_block, "victima_evict-->filllikemiss").first;
           victima_block_usage[usage]++;
           victima_counters[VC::L2_EVICT]++;
         }
@@ -1100,7 +1101,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // track the valid bits of each of PTE whenever a cache block corresponding to PT is brought in
     if(handle_pkt.type == TRANSLATION && !is_tlb)
     {
-      auto pt_meta = process_page_table->get_cacheblock_usage(cpu_id, handle_pkt.address, handle_pkt.translation_level);
+      int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
+      auto pt_meta = process_page_table->get_cacheblock_usage(cpu_id, handle_pkt.address, handle_pkt.translation_level, "filllike_miss");
       fill_block.valid_ptes = pt_meta.second;
       if(pt_meta.first != __builtin_popcount(pt_meta.second))
       {
@@ -1195,13 +1197,13 @@ uint32_t CACHE::get_way(int type, uint64_t address, uint32_t set, int th, bool v
   if(KNOB_VICTIMA && victima && cache_is[IS_L2])
   {
     // we need page offset hence
-    offset = lg2(NUM_SET) + LOG2_PAGE_SIZE + 3;//lg2(NUM_SET) + 3;
+    offset = LOG2_PAGE_SIZE + 3;//lg2(NUM_SET) + 3;
   }
-  else if(type == TRANSLATION)
-  {
-    // // 8x 8byte entries in cache block
-    // offset = 3;
-  }
+  // else if(type == TRANSLATION)
+  // {
+  //   // 8x 8byte entries in cache block
+  //   offset = 3;
+  // }
 
   auto begin = std::next(block.begin(), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
@@ -1558,7 +1560,7 @@ int CACHE::add_pq(PACKET* packet)
 void CACHE::return_data(PACKET* packet)
 {
   PACKET handle_pkt = *packet;
-  
+
   // check MSHR information
   bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
 

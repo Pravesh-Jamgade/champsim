@@ -202,7 +202,7 @@ void PageTableWalker::handle_read()
       if (rq_index == -2)
         return;
       
-      // if(handle_pkt.vflag[victima_stlbevict_ptw])
+      // // if(handle_pkt.vflag[victima_stlbevict_ptw])
       debugLog.log("PTW-sent", current_cycle,  "level-"+to_string(ptw_level),"VP", intToHex(page_align(packet.v_address)), "next_pte_addr", intToHex(packet.address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
 
       // Track PTW

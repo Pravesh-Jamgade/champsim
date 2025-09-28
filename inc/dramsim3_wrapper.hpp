@@ -74,10 +74,11 @@ public:
                     else
                     {
                         pair<bool, uint64_t> result = process_page_table->operate_pagetable(cpu_no, packet->address, packet->translation_level);
-                        result.first? pt_page_faulted++:0;
+                        result.first? 0:pt_page_faulted++;
                         packet->data = result.second;
                         packet->page_fault = !result.first;
                         packet->hit_where = CACHE_ID::IS_DRAM;
+                        // dlog.log( "Return_DRAM", current_cycle, "level-"+to_string((int)packet->translation_level),"addr", intToHex(packet->address), "v_addr", intToHex(packet->v_address), " instr", +packet->instr_id, "data", intToHex(packet->data),  " pf", packet->page_fault, '\n');
                     }
                 }
             }
@@ -257,10 +258,11 @@ public:
                 else
                 {
                     pair<bool, uint64_t> result = process_page_table->operate_pagetable(cpu_no, rq_pkt->address, rq_pkt->translation_level);
-                    result.first? pt_page_faulted++:0;
+                    result.first? 0:pt_page_faulted++;
                     rq_pkt->data = result.second;
                     rq_pkt->page_fault = !result.first;
                     rq_pkt->hit_where = CACHE_ID::IS_DRAM;
+                    // dlog.log( "Return_DRAM", current_cycle, "level-"+to_string((int)rq_pkt->translation_level),"addr", intToHex(rq_pkt->address), "v_addr", intToHex(rq_pkt->v_address), " instr", +rq_pkt->instr_id, "data", intToHex(rq_pkt->data),  " pf", rq_pkt->page_fault, '\n');
                 }
             }
             else rq_pkt->hit_where = CACHE_ID::IS_DRAM;

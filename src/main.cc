@@ -434,7 +434,7 @@ void signal_handler(int signal)
 // Function to be called upon program termination
 void on_exit_handler() {
     std::cout << "Invoking handler due to program exit." << std::endl;
-    // process_page_table->printTree();
+    process_page_table->printTree();
 }
 
 

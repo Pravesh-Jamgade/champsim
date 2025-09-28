@@ -9,6 +9,7 @@
 #include <cassert>
 #include <iomanip>
 #include <string>
+#include <bitset>
 #include "champsim_constants.h"
 #include "logger.h"
 #include "vmem.h"
@@ -276,20 +277,20 @@ class ProcessPageTable
     {
         if(process_id < 0)
         {
-            pagetable_logger.log("Error: invalid process/cpu id for getting a page", "addr", intToHex(pte_address), "pt_level", pt_level, '\n');
+            pagetable_logger.log("Error: invalid process/cpu id for getting a page", "process_id", process_id, "addr", intToHex(pte_address), "pt_level", pt_level, '\n');
             exit(-1);
         }
         auto found_process = process_to_pagetable_levels_tracker.find(process_id);
         if(found_process == process_to_pagetable_levels_tracker.end())
         {
-            pagetable_logger.log("Error: process/cpu id not found for getting a page", "addr", intToHex(pte_address), "pt_level", pt_level, '\n');
+            pagetable_logger.log("Error: process/cpu id not found for getting a page", "process_id", process_id, "addr", intToHex(pte_address), "pt_level", pt_level, '\n');
             exit(-1);
         }
         return found_process->second.list_pages_tables_levels[pt_level].list_pages[pte_address >> LOG2_PAGE_SIZE];
     }
 
     // number of valid PTE and which pte are valid
-    pair<int, uint8_t> get_cacheblock_usage(int process_id, uint64_t pte_address, int pt_level)
+    pair<int, uint8_t> get_cacheblock_usage(int process_id, uint64_t pte_address, int pt_level, string caller="")
     {
         int usage = 0;
         Page page = getpage(process_id, pte_address, pt_level);
@@ -297,7 +298,7 @@ class ProcessPageTable
 
         if(page.list_cacheblocks.find(cache_block_id) == page.list_cacheblocks.end())
         {
-            std::cout << "Error: cacheblock not found for getting usage" << "cpu" << process_id << "addr" << intToHex(pte_address) << "pt_level" << pt_level << '\n';
+            pagetable_logger.log( "Error: cacheblock not found for getting usage", "cpu", process_id, "addr", intToHex(pte_address), "cb", cache_block_id, "pt_level", pt_level, caller, '\n');
             exit(-1);
         }
 
@@ -313,6 +314,8 @@ class ProcessPageTable
                 valid_bits |= 1 << i;
             }
         }
+
+        pagetable_logger.log( "CacheBlockUsage", "cpu", process_id, "addr", intToHex(pte_address), "cb", cache_block_id, "pt_level", pt_level, "usage", usage, "valid_bits", bitset<8>(valid_bits), '\n');
         return {usage, valid_bits};
     }
     
