@@ -10,12 +10,14 @@
 #include <vector>
 #include "vmem.h"
 #include "logger.h"
+#include "pomtlb.h"
 
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_POMTLB;
 extern ProcessPageTable* process_page_table;
+extern POMTLB* pomtlb;
+
 // tuple[POM_PP, VP, thread_id] and PP
-extern unordered_map<tuple<uint64_t, uint64_t, int>, uint64_t> pom_table;
 namespace dramsim3 {
     class MemorySystem;
 };
@@ -41,7 +43,7 @@ public:
             numPPages = (DRAM_CHANNELS * DRAM_RANKS * DRAM_BANKS 
                                 * DRAM_ROWS * DRAM_COLUMNS * BLOCK_SIZE) / PAGE_SIZE;
             procPageAccess = new bool[numPPages]{false};
-            dlog = logger(false);
+            dlog = logger(true);
             data_page = pt_page = 0;
             data_page_faulted = pt_page_faulted = 0;
         }
@@ -50,8 +52,8 @@ public:
     
     int add_rq(PACKET* packet) override 
     {
-        if (all_warmup_complete <= NUM_CPUS) {
-
+        if (all_warmup_complete <= NUM_CPUS) 
+        {
             if(packet->type == TRANSLATION)
             {
                 uint32_t cpu_no = KNOB_SMT_ENABLE*packet->cpu + packet->thread_id;
@@ -59,16 +61,15 @@ public:
                 {
                     if(packet->pomflag[POM::POM] && KNOB_POMTLB)
                     {
-                        auto foundPOM = pom_table.find(make_tuple(cpu_no, packet->address, packet->thread_id));
-                        if(foundPOM == pom_table.end())
+                        pair<bool, uint64_t> result = pomtlb->lookupPOMEntry(cpu_no, packet->address, packet->v_address);
+                        packet->page_fault = true;// its a miss rather than page-fault
+                        packet->pomflag[POM::POM_MISS] = true;
+                        if(result.first) // hit in POM-TLB
                         {
-                           packet->pomflag[POM::POM_MISS] = true; 
-                        }
-                        else
-                        {
-                            packet->pomflag[POM::POM_MISS] = false;
-                            packet->data = foundPOM->second;
                             packet->hit_where = CACHE_ID::IS_DRAM;
+                            packet->data = result.second;
+                            packet->page_fault = false;
+                            packet->pomflag[POM::POM_MISS] = false;
                         }
                     }
                     else
@@ -78,7 +79,11 @@ public:
                         packet->data = result.second;
                         packet->page_fault = !result.first;
                         packet->hit_where = CACHE_ID::IS_DRAM;
-                        // dlog.log( "Return_DRAM", current_cycle, "level-"+to_string((int)packet->translation_level),"addr", intToHex(packet->address), "v_addr", intToHex(packet->v_address), " instr", +packet->instr_id, "data", intToHex(packet->data),  " pf", packet->page_fault, '\n');
+
+                        if(KNOB_POMTLB)
+                        {
+
+                        }
                     }
                 }
             }
@@ -86,7 +91,9 @@ public:
 
             
             for (auto ret : packet->to_return)
+            {
                 ret->return_data(packet);
+            }
 
             return -1; // Fast-forward
         }
@@ -131,6 +138,8 @@ public:
             rq_it->translation_level = packet->translation_level;
             rq_it->init_translation_level = packet->init_translation_level;
             rq_it->page_table_base_address = packet->page_table_base_address;
+            rq_it->pomflag[POM::POM] = packet->pomflag[POM::POM];
+            
             packet_dep_merge(rq_it->lq_index_depend_on_me, packet->lq_index_depend_on_me);
             packet_dep_merge(rq_it->sq_index_depend_on_me, packet->sq_index_depend_on_me);
             packet_dep_merge(rq_it->instr_depend_on_me, packet->instr_depend_on_me);
@@ -173,6 +182,8 @@ public:
         rq_it->translation_level = packet->translation_level;
         rq_it->init_translation_level = packet->init_translation_level;
         rq_it->page_table_base_address = packet->page_table_base_address;
+        rq_it->pomflag[POM::POM] = packet->pomflag[POM::POM];
+
         packet_dep_merge(rq_it->lq_index_depend_on_me, packet->lq_index_depend_on_me);
         packet_dep_merge(rq_it->sq_index_depend_on_me, packet->sq_index_depend_on_me);
         packet_dep_merge(rq_it->instr_depend_on_me, packet->instr_depend_on_me);
@@ -243,16 +254,15 @@ public:
                 uint32_t cpu_no = KNOB_SMT_ENABLE*rq_pkt->cpu + rq_pkt->thread_id;
                 if(rq_pkt->pomflag[POM::POM] && KNOB_POMTLB)
                 {
-                    auto foundPOM = pom_table.find(make_tuple(cpu_no, rq_pkt->address, rq_pkt->thread_id));
-                    if(foundPOM == pom_table.end())
+                    pair<bool, uint64_t> result = pomtlb->lookupPOMEntry(cpu_no, rq_pkt->address, rq_pkt->v_address);
+                    rq_pkt->page_fault = true;// its a miss rather than page-fault
+                    rq_pkt->pomflag[POM::POM_MISS] = true;
+                    if(result.first) // hit in POM-TLB
                     {
-                        rq_pkt->pomflag[POM::POM_MISS] = true; 
-                    }
-                    else
-                    {
-                        rq_pkt->pomflag[POM::POM_MISS] = false;
-                        rq_pkt->data = foundPOM->second;
                         rq_pkt->hit_where = CACHE_ID::IS_DRAM;
+                        rq_pkt->data = result.second;
+                        rq_pkt->page_fault = false;// its a miss rather than page-fault
+                        rq_pkt->pomflag[POM::POM_MISS] = false;
                     }
                 }
                 else
@@ -262,7 +272,6 @@ public:
                     rq_pkt->data = result.second;
                     rq_pkt->page_fault = !result.first;
                     rq_pkt->hit_where = CACHE_ID::IS_DRAM;
-                    // dlog.log( "Return_DRAM", current_cycle, "level-"+to_string((int)rq_pkt->translation_level),"addr", intToHex(rq_pkt->address), "v_addr", intToHex(rq_pkt->v_address), " instr", +rq_pkt->instr_id, "data", intToHex(rq_pkt->data),  " pf", rq_pkt->page_fault, '\n');
                 }
             }
             else rq_pkt->hit_where = CACHE_ID::IS_DRAM;
@@ -310,5 +319,4 @@ protected:
     int data_page, pt_page;
     int data_page_faulted, pt_page_faulted;
 };
-
 #endif

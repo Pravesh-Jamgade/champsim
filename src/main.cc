@@ -22,13 +22,14 @@
 #include "victima.h"
 #include "hist.h"
 #include "pagetable.h"
+#include "pomtlb.h"
 
 ProcessPageTable* process_page_table;
+POMTLB* pomtlb;
 map<uint64_t, PTWC> ptw_pred;
 list<pair<string, uint64_t>> hash_cache;
-map<uint64_t, uint64_t> l2_pte_map;
 uint64_t POM_CPU_KEY = 123456789;
-unordered_map<tuple<uint64_t, uint64_t, int>, uint64_t> pom_table;
+
 uint8_t warmup_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
 
@@ -434,7 +435,7 @@ void signal_handler(int signal)
 // Function to be called upon program termination
 void on_exit_handler() {
     std::cout << "Invoking handler due to program exit." << std::endl;
-    process_page_table->printTree();
+    // process_page_table->printTree();
 }
 
 
@@ -617,7 +618,9 @@ int main(int argc, char** argv)
   // overwrite relevant to extra settings
   overwrite_cache();
   process_page_table = new ProcessPageTable();
-  process_page_table->init();
+  pomtlb = new POMTLB();
+  if(process_page_table != nullptr)
+    process_page_table->init();
 
   printf("Simulator Configuration\n%s", instantiation_code);
 

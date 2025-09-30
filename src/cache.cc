@@ -29,6 +29,7 @@ extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 // illusiong of stored cache line by 8byte granularity
 extern map<uint64_t, uint64_t> l2_pte_map;
 extern ProcessPageTable* process_page_table;
+extern ProcessPageTable* pom_page_table;
 extern uint64_t POM_CPU_KEY;
 
 extern VirtualMemory vmem;
@@ -105,6 +106,7 @@ void CACHE::handle_fill()
       }
     }
     
+    // TODO: Add PTW cost predictor to decide whether to insert the cacheline as victima cache block or not
     bool victima_flag = KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima_stlbevict_ptw];
 
     // if victima block then use virt-address to find set/way
@@ -326,7 +328,7 @@ void CACHE::handle_read()
       int offset = get_pte_offset(handle_pkt.address);
       bool is_pte_valid = hit_block->testValidity(offset);
       bitset<8> tobits(hit_block->valid_ptes);
-      debugLog.log("CACHE-HIT"+NAME, current_cycle, "level-"+to_string(handle_pkt.translation_level), "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block->address), "cb_vaddr", intToHex(hit_block->v_address), "cb_data", intToHex(hit_block->data), "level-"+to_string(hit_block->translation_level_if_pagetable_block), "pte_offset", offset, "pte_valid", is_pte_valid, "bits", tobits, "\n");
+      // debugLog.log("CACHE-HIT"+NAME, current_cycle, "level-"+to_string(handle_pkt.translation_level), "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block->address), "cb_vaddr", intToHex(hit_block->v_address), "cb_data", intToHex(hit_block->data), "level-"+to_string(hit_block->translation_level_if_pagetable_block), "pte_offset", offset, "pte_valid", is_pte_valid, "bits", tobits, "\n");
       hit = hit && is_pte_valid;
     }
 
@@ -411,12 +413,18 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   hit_block.hit_before_eviction++;
   handle_pkt.hit_where = cache_id;
 
+  if(handle_pkt.type == TRANSLATION && !is_tlb)
+  {
+    int offset = get_pte_offset(handle_pkt.address);
+    bool is_pte_valid = hit_block.testValidity(offset);
+  }
+
   handle_pkt.data = hit_block.data;
   if(handle_pkt.type == TRANSLATION && !is_tlb)
   {
     int cpu_id = handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
     pair<bool, uint64_t> pte_value = process_page_table->get_pte(cpu_id, handle_pkt.address, handle_pkt.translation_level);
-    debugLog.log("readlike_hit", current_cycle, "level-"+to_string(handle_pkt.translation_level), "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_fault", !pte_value.first, "pte_value", intToHex(pte_value.second), "NAME", NAME, "\n");
+    // debugLog.log("readlike_hit", current_cycle, "level-"+to_string(handle_pkt.translation_level), "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_fault", !pte_value.first, "pte_value", intToHex(pte_value.second), "NAME", NAME, "\n");
     handle_pkt.data = pte_value.second;
   }
 
@@ -548,16 +556,10 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
 
     // If victima-ideal, do send zero-latency lookup. If miss send usual packet
-    if(KNOB_IDEAL_VICTIMA && KNOB_VICTIMA && cache_is[IS_STLB])
+    if(KNOB_IDEAL_VICTIMA && KNOB_VICTIMA && cache_is[IS_STLB] && handle_pkt.type == TRANSLATION)
     {
-      PACKET newPacket = handle_pkt;
-      newPacket.address = handle_pkt.address;
-      newPacket.v_address = handle_pkt.v_address;
-      newPacket.to_return = {this};
-      newPacket.vflag[VF::victima] = true;
-      newPacket.thread_id = handle_pkt.thread_id;
       // soft lookup
-      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->peek_singleline(newPacket);
+      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->victima_peek_singleline(handle_pkt);
       if(found_peek.first)
       {
         handle_pkt.data = found_peek.second;
@@ -569,9 +571,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       }
     }
 
-    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA==0;
+    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA==0 && handle_pkt.type == TRANSLATION;
     // its a miss and we are @STLB and its not yet has searched POMTLB, send it to POM search via L1D
-    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_TO_PTW];
+    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_TO_PTW] && handle_pkt.type == TRANSLATION;
 
     // Test Occupancy of L2, since victima packet parallely sends PTW packet request we need to test PTW rq occupancy
     if(sendVictimaPacket)
@@ -611,7 +613,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       newPacket.thread_id = handle_pkt.thread_id;
 
       // soft lookup
-      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->peek_singleline(newPacket);
+      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->victima_peek_singleline(newPacket);
 
       // to fix difference in returned physical address ex. F: 346681344, S: 4641652728
       // do softlookup, if not in cache then set dumy status to simulate traffic and dont use its results.
@@ -643,16 +645,12 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // update address to pomtlb address
       handle_pkt.address = pomtlb_base;
       int cpu_id = cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
-      // since its a POM address, we use translation_level=1
-      pair<bool, uint64_t> pom_anticipatory_lookup = process_page_table->get_pte(cpu_id, handle_pkt.address, 1);
-
-      // if 'fault' -->missing translation in pagetable
-      // POM packet is sent upon STLB miss, champsim imple. assign page at PTW code upon return path
-      // At DRAM we are not sure of whether we have hit or miss for PTE
-      // Hence return journey of POM packet if its a hit then only we write to data cache.
-      // Hit/miss we peek here from page table and set POM_MISS and disallow any write on return path
-      handle_pkt.pomflag[POM::POM_MISS] = pom_anticipatory_lookup.first;
       handle_pkt.pomflag[POM::POM] = true;
+
+      // use newpacket so that we will return it till STLB not futher like D/I +TLB
+      newPacket = handle_pkt;
+      // make sure to clear earlier destination like D/I +TLB
+      newPacket.to_return = {this};
     }
 
     // Allocate an MSHR
@@ -683,7 +681,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     //POMTLB: record miss, send to cache-hierarchy + No PTW requests, PTW start upon POM return.
     if(sendPomPacket)
     {
-      l1cache->add_rq(&handle_pkt);
+      l1cache->add_rq(&newPacket);
     }
     else if (!is_read)
     {
@@ -745,20 +743,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // As soon we are back to STLB, we send out PTW with POM_TO_PTW flag. 
   if(KNOB_POMTLB && cache_is[IS_STLB] && handle_pkt.pomflag[POM::POM])
   {
-    // // reset packet type flag
-    // handle_pkt.pomflag[POM::POM] = false;
-
-    // test if mapping already been used before
-    int cpu_id = cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
-    // since its a POM address, we use translation_level=1
-    pair<bool, uint64_t> test_pte = process_page_table->get_pte(cpu_id, handle_pkt.address,1);
-    if(test_pte.first)
-    {
-      handle_pkt.data = test_pte.second;
-    }
     // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
-    else
+    if(handle_pkt.pomflag[POM::POM_MISS])
     {
+      handle_pkt.pomflag[POM::POM_MISS] = false;
       // We wont remove this MSHR and reuse this to send out PTW and then reset its event_cycle to avoid re-entering to fill
       handle_pkt.pomflag[POM::POM_TO_PTW] = true;
       return false;
@@ -1085,14 +1073,23 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.valid = true;
     fill_block.prefetch = (handle_pkt.type == PREFETCH && handle_pkt.pf_origin_level == fill_level);
     fill_block.dirty = (handle_pkt.type == WRITEBACK || (handle_pkt.type == RFO && handle_pkt.to_return.empty()));
-    fill_block.address = handle_pkt.address;
+
+    // Transform cacheblock to victima cache block if it is brought in by victima PTW
+    fill_block.address = handle_pkt.vflag[VF::victima_stlbevict_ptw] ? handle_pkt.v_address : handle_pkt.address;
+    // Keep the original physical address together so that we can use it for our trick to lookup into Page Table to get all 8 PTE if needed by
+    // future STLB miss and hit on this victima cache block
+    fill_block.original_pagetable_cacheblock_address = handle_pkt.address;
+
     fill_block.v_address = handle_pkt.v_address;
     fill_block.data = handle_pkt.data;
     fill_block.ip = handle_pkt.ip;
     fill_block.cpu = handle_pkt.cpu;
     fill_block.instr_id = handle_pkt.instr_id;
     fill_block.came_from_request = handle_pkt.type;
+
+    // Identifies block is brought in by victima PTW
     fill_block.victima_block = handle_pkt.vflag[VF::victima_stlbevict_ptw];
+
     fill_block.thread_id = handle_pkt.thread_id;
     fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
@@ -1693,6 +1690,7 @@ void CACHE::return_data(PACKET* packet)
     mshr_entry->event_cycle = current_cycle + (warmup_complete[cpu] ? FILL_LATENCY : 0);
     mshr_entry->hit_where = packet->hit_where;
     mshr_entry->page_fault = packet->page_fault;
+    mshr_entry->pomflag[POM::POM_MISS] = packet->pomflag[POM::POM_MISS];
 
     // PTW has set POM_TO_PTW_FINI to 1, get this value as handle_fill needs it to distinguish
     mshr_entry->pomflag[POM::POM_TO_PTW_FINI] = packet->pomflag[POM::POM_TO_PTW_FINI];
@@ -1776,29 +1774,28 @@ void CACHE::print_deadlock()
   }
 }
 
-pair<bool, uint64_t> CACHE::peek_singleline(PACKET handle_pkt)
+// peek L2 with virtual address from STLB miss
+pair<bool, uint64_t> CACHE::victima_peek_singleline(const PACKET handle_pkt)
 {
-  pair<bool, uint64_t> ret{false, 0};
-  // found in cache
-  uint32_t set = get_set(handle_pkt.type, handle_pkt.address, handle_pkt.vflag[VF::victima]);
-  uint32_t way = get_way(handle_pkt.type, handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
-  bool hit = way < NUM_WAY;
+  pair<bool, uint64_t> ret;
+  uint32_t set = get_set(handle_pkt.type, handle_pkt.v_address, handle_pkt.vflag[VF::victima]);
+  uint32_t way = get_way(handle_pkt.type, handle_pkt.v_address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
+  
+  BLOCK* hit_block = &block[set * NUM_WAY + way];
+  // extra check to test if block is victima block or not
+  bool hit = way < NUM_WAY && hit_block->victima_block;
 
-  uint64_t vp = (handle_pkt.address & ~(PAGE_SIZE-1));
-  uint64_t pp = (handle_pkt.data & ~(PAGE_SIZE-1));
-
-  bool test = l2_pte_map.find(vp)!=l2_pte_map.end();
-  if(handle_pkt.vflag[VF::victima] && KNOB_VICTIMA && cache_is[IS_L2])
+  // if hit, we now need exact PTE we are looking for, We have pa of earlier PTE that brought this cache block at L2. We will
+  // use that PA to for cache block and use offset from VA
+  if(hit)
   {
-    hit = hit && test;
-    if(hit)
-    {
-      BLOCK* hit_block = &block[set * NUM_WAY + way];
-      hit = (hit && hit_block->victima_block) && (handle_pkt.thread_id == hit_block->thread_id || hit_block->thread_id == SHARED);
-      ret = {hit, hit_block->data};
-    }
+    int cpuid = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+    uint64_t block_offset = (handle_pkt.v_address >> 3) & 0x7;
+    uint64_t cache_block_addr = (hit_block->address >> 6);
+    cache_block_addr = cache_block_addr << 3;
+    uint64_t new_addr = cache_block_addr | block_offset;
+    ret = process_page_table->get_pte(cpuid, new_addr, hit_block->translation_level_if_pagetable_block);
   }
-
   return ret;
 }
 

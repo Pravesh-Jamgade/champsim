@@ -9,6 +9,9 @@
 #include "champsim.h"
 #include "util.h"
 
+// representing 1MB of memory reserved for POM-TLB 256*4KB=1MB, stores 2^17 PTEs
+#define POM_TLB_PAGES 256
+
 VirtualMemory::VirtualMemory(uint64_t capacity, uint64_t pg_size, uint32_t page_table_levels, uint64_t random_seed, uint64_t minor_fault_penalty)
     : minor_fault_penalty(minor_fault_penalty), pt_levels(page_table_levels), page_size(pg_size),
       ppage_free_list((capacity - VMEM_RESERVE_CAPACITY) / PAGE_SIZE, PAGE_SIZE)
@@ -19,6 +22,12 @@ VirtualMemory::VirtualMemory(uint64_t capacity, uint64_t pg_size, uint32_t page_
   // populate the free list
   ppage_free_list.front() = VMEM_RESERVE_CAPACITY;
   std::partial_sum(std::cbegin(ppage_free_list), std::cend(ppage_free_list), std::begin(ppage_free_list));
+
+  // we need contiguous pages for POM-TLB
+  for (uint64_t i = 0; i < POM_TLB_PAGES; i++) {
+    pom_tlb_pages.push_back(ppage_free_list.front());
+    ppage_free_list.pop_front();
+  }
 
   // then shuffle it
   std::shuffle(std::begin(ppage_free_list), std::end(ppage_free_list), std::mt19937_64{random_seed});

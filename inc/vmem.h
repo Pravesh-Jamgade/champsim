@@ -28,6 +28,7 @@ public:
   uint32_t pt_levels;
   const uint32_t page_size; // Size of a PTE page
   std::deque<uint64_t> ppage_free_list;
+  std::deque<uint64_t> pom_tlb_pages;
 
   // capacity and pg_size are measured in bytes, and capacity must be a multiple
   // of pg_size

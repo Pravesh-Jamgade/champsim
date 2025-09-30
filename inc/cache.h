@@ -22,7 +22,6 @@
 extern int KNOB_ENABLE_LOG;
 
 extern map<uint64_t, PTWC> ptw_pred;
-extern map<uint64_t, uint64_t> l2_pte_map;
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -175,7 +174,7 @@ public:
 
   uint64_t use_offset(int type);
 
-  pair<bool, uint64_t> peek_singleline(PACKET handle_pkt);
+  pair<bool, uint64_t> victima_peek_singleline(const PACKET handle_pkt);
 
   // tracking pte
   void func_track_evicted_pte(uint64_t v_addr, uint64_t p_addr);
@@ -399,7 +398,7 @@ public:
     }
     
     debugLog = logger(false);
-    dlog = logger(false);
+    dlog = logger(true);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
