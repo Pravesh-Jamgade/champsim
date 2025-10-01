@@ -943,7 +943,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         else if(cache_is[CACHE_ID::IS_L2] && fill_block.victima_block)
         {
           int cpu_id = (fill_block.cpu * KNOB_SMT_ENABLE + fill_block.thread_id);
-          int usage = process_page_table->get_cacheblock_usage(cpu_id, fill_block.address, fill_block.translation_level_if_pagetable_block, "victima_evict-->filllikemiss").first;
+          int usage = process_page_table->get_cacheblock_usage(cpu_id, fill_block.original_pagetable_cacheblock_address, fill_block.translation_level_if_pagetable_block, "victima_evict-->filllikemiss").first;
           victima_block_usage[usage]++;
           victima_counters[VC::L2_EVICT]++;
         }

@@ -75,11 +75,11 @@ class CacheBlock
 
 class Page
 {
-    int page_number = -1;
     //default: data page
     int pt_level = -1;
     
     public:
+    int page_number = -1;
     map<int, CacheBlock> list_cacheblocks;
 
     Page(){}
@@ -298,7 +298,7 @@ class ProcessPageTable
 
         if(page.list_cacheblocks.find(cache_block_id) == page.list_cacheblocks.end())
         {
-            pagetable_logger.log( "Error: cacheblock not found for getting usage", "cpu", process_id, "addr", intToHex(pte_address), "cb", cache_block_id, "pt_level", pt_level, caller, '\n');
+            pagetable_logger.log( "Error: cacheblock not found for getting usage", "cpu", process_id, "page", intToHex(page.page_number), "addr", intToHex(pte_address), "cb", cache_block_id, "pt_level", pt_level, caller, '\n');
             exit(-1);
         }
 
