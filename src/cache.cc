@@ -109,11 +109,13 @@ void CACHE::handle_fill()
     // TODO: Add PTW cost predictor to decide whether to insert the cacheline as victima cache block or not
     bool victima_flag = KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima_stlbevict_ptw];
 
+    uint64_t address_tobe_used = (victima_flag? fill_mshr->v_address: fill_mshr->address);
+
     // if victima block then use virt-address to find set/way
-    uint32_t set = get_set(fill_mshr->type, (victima_flag? fill_mshr->v_address: fill_mshr->address), victima_flag);
+    uint32_t set = get_set(fill_mshr->type, address_tobe_used, victima_flag);
 
     // if it is hit implies, Transltion cache block is already there, its PTE might not be valid one thats why it brought from lower level
-    uint32_t way = get_way(fill_mshr->type, (victima_flag? fill_mshr->v_address: fill_mshr->address), set, fill_mshr->thread_id, victima_flag);
+    uint32_t way = get_way(fill_mshr->type, address_tobe_used, set, fill_mshr->thread_id, victima_flag);
     bool hit = way < NUM_WAY;
     if(fill_mshr->type == TRANSLATION && !is_tlb)
     {
@@ -1075,7 +1077,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.dirty = (handle_pkt.type == WRITEBACK || (handle_pkt.type == RFO && handle_pkt.to_return.empty()));
 
     // Transform cacheblock to victima cache block if it is brought in by victima PTW
-    fill_block.address = handle_pkt.vflag[VF::victima_stlbevict_ptw] ? handle_pkt.v_address : handle_pkt.address;
+    fill_block.address = (KNOB_VICTIMA && handle_pkt.vflag[VF::victima_stlbevict_ptw]) ? handle_pkt.v_address : handle_pkt.address;
     // Keep the original physical address together so that we can use it for our trick to lookup into Page Table to get all 8 PTE if needed by
     // future STLB miss and hit on this victima cache block
     fill_block.original_pagetable_cacheblock_address = handle_pkt.address;
@@ -1790,10 +1792,17 @@ pair<bool, uint64_t> CACHE::victima_peek_singleline(const PACKET handle_pkt)
   if(hit)
   {
     int cpuid = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+    // 3bit block offset from 6bit cache block
     uint64_t block_offset = (handle_pkt.v_address >> 3) & 0x7;
-    uint64_t cache_block_addr = (hit_block->address >> 6);
+    // cache block address from phy address, zeros out last 6bit
+    uint64_t cache_block_addr = (hit_block->original_pagetable_cacheblock_address >> 6);
+    // shift left 3bits
     cache_block_addr = cache_block_addr << 3;
+    // append block_offset of 3bits
     uint64_t new_addr = cache_block_addr | block_offset;
+    // left shift by 3bits again to complete 6bit block offset
+    new_addr = new_addr << 3;
+    
     ret = process_page_table->get_pte(cpuid, new_addr, hit_block->translation_level_if_pagetable_block);
   }
   return ret;
