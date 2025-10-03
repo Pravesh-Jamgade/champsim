@@ -15,7 +15,7 @@ extern int KNOB_PSCL_ROOT_LEVEL;
 extern int KNOB_ENABLE_MFOE_V2;
 #define PSC_READ_LATENCY 2
 
-extern map<uint64_t, PTWC> ptw_pred;
+extern map<tuple<uint64_t, int>, PTWC> ptw_pred;
 
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
@@ -153,6 +153,7 @@ void PageTableWalker::handle_read()
           ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
           // hit at psc
           // get the next pt addr
+          uint64_t current_pte_address = next_pt_addr;
           next_pt_addr = check_addr.value();
           // update to next level
           ptw_level = ptw_level-1;
@@ -164,6 +165,9 @@ void PageTableWalker::handle_read()
           }
           else if(ptw_level == 0)
           {
+            // assuming it never go to cache hierarch and completes walk witin PSCs then 0 dram but 1 PTW 
+            // PTE address of leaf PT
+            victima_update(current_pte_address, handle_pkt.cpu*KNOB_SMT_ENABLE+handle_pkt.thread_id , PTW_Freq);
             handle_pkt.data = next_pt_addr;
             // found data page
             for(auto ret: handle_pkt.to_return)
@@ -264,6 +268,9 @@ void PageTableWalker::handle_fill()
       
       //// Translation finally complete
       {
+        // PTE address of leaf PT
+        victima_update(fill_mshr->address, fill_mshr->cpu*KNOB_SMT_ENABLE+fill_mshr->thread_id , PTW_Freq);
+
         fill_mshr->address = fill_mshr->v_address;
 
         DP(if (warmup_complete[packet->cpu]) {
@@ -281,7 +288,7 @@ void PageTableWalker::handle_fill()
 
         if (warmup_complete[cpu])
           total_miss_latency += current_cycle - fill_mshr->cycle_enqueued;
-
+        
         MSHR.erase(fill_mshr);
 
         ptw_datamodel->packet_processed++;
@@ -319,7 +326,6 @@ void PageTableWalker::handle_fill()
         MSHR.sort(ord_event_cycle<PACKET>{});
 
         ptw_datamodel->page_fault[(int)fill_mshr->translation_level]++;
-        victima_update(fill_mshr->v_address, PageFeature::PTW_Cost, fill_mshr->hit_where);
       } 
       else 
       {
@@ -351,6 +357,8 @@ void PageTableWalker::handle_fill()
             PSCL3.fill_cache(addr, fill_mshr->v_address, fill_mshr->thread_id);
           if (fill_mshr->translation_level == PSCL2.level)
             PSCL2.fill_cache(addr, fill_mshr->v_address, fill_mshr->thread_id);
+          
+          victima_update(fill_mshr->v_address, fill_mshr->cpu*KNOB_SMT_ENABLE+fill_mshr->thread_id, PageFeature::PTW_Cost, fill_mshr->hit_where);
           
           fill_mshr->state = State::PSC_Search;
           // baseaddress of next_level_pt
@@ -440,9 +448,7 @@ void PageTableWalker::operate()
 }
 
 int PageTableWalker::add_rq(PACKET* packet)
-{
-  victima_update(packet->address, PTW_Freq);
-  
+{  
   ptw_datamodel->queue_basic_metric[Basic::REQUESTED]++;
   assert(packet->address != 0);
 
@@ -586,24 +592,26 @@ void PageTableWalker::print_deadlock()
   }
 }
 
-void PageTableWalker::victima_update(uint64_t addr, int signal, int hit_where)
+void PageTableWalker::victima_update(uint64_t addr, int cpu, int signal, int hit_where)
 {
   uint64_t page = addr & ~(PAGE_SIZE-1);
-  auto found = ptw_pred.find(page);
+  tuple<uint64_t, int> key{page, cpu};
+
+  auto found = ptw_pred.find(key);
 
   if(found == ptw_pred.end())
   {
-    ptw_pred[page] = {0,0,0};
+    ptw_pred[key] = {0,0,0};
   }
 
   // freq: how many times PTW is initiated ?
   if(signal == PageFeature::PTW_Freq)
   {
-    ptw_pred[page].freq+=1;
+    ptw_pred[key].freq+=1;
   }
   // cost: how many times PTW has accessed DRAM ?
   else if(signal == PageFeature::PTW_Cost && hit_where == CACHE_ID::IS_DRAM)
   {
-    ptw_pred[page].cost+= 1;
+    ptw_pred[key].cost+= 1;
   }
 }

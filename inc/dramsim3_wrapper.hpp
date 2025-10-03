@@ -74,9 +74,9 @@ public:
                     }
                     else
                     {
-                        pair<bool, uint64_t> result = process_page_table->operate_pagetable(cpu_no, packet->address, packet->translation_level);
+                        pair<bool, PTEHolder> result = process_page_table->operate_pagetable(cpu_no, packet->address, packet->translation_level);
                         result.first? 0:pt_page_faulted++;
-                        packet->data = result.second;
+                        packet->data = result.second.page_address;
                         packet->page_fault = !result.first;
                         packet->hit_where = CACHE_ID::IS_DRAM;
 
@@ -267,9 +267,9 @@ public:
                 }
                 else
                 {
-                    pair<bool, uint64_t> result = process_page_table->operate_pagetable(cpu_no, rq_pkt->address, rq_pkt->translation_level);
+                    pair<bool, PTEHolder> result = process_page_table->operate_pagetable(cpu_no, rq_pkt->address, rq_pkt->translation_level);
                     result.first? 0:pt_page_faulted++;
-                    rq_pkt->data = result.second;
+                    rq_pkt->data = result.second.page_address;
                     rq_pkt->page_fault = !result.first;
                     rq_pkt->hit_where = CACHE_ID::IS_DRAM;
                 }

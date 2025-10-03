@@ -40,6 +40,19 @@ namespace std {
     };
 }
 
+class PTEHolder
+{
+    public:
+    uint64_t page_address = 0;
+    int dram_accesses_during_ptw = 0;
+    int number_of_ptw = 0;
+
+    PTEHolder(){}
+    PTEHolder(uint64_t pte): page_address(pte) {}
+    void inc_dram_count(){dram_accesses_during_ptw++;}
+    void inc_ptw_count(){number_of_ptw++;}
+};
+
 class CacheBlock
 {
     // default: data page
@@ -48,29 +61,29 @@ class CacheBlock
     int cache_block_id = -1;
     
     public:
-    vector<uint64_t> list_pte;
+    vector<PTEHolder> list_pte;
 
     CacheBlock(){}
     CacheBlock(int curr_pt_level, int cache_block_id)
     {
-        list_pte.resize(8, UINT64_MAX);
+        list_pte.resize(8);
         this->cache_block_id = cache_block_id;
         valid_cacheblock = true;
     }
 
     void insertAtCacheBlockPTE(uint64_t pte, int index)
     {
-        if(list_pte[index] != UINT64_MAX)
+        if(list_pte[index].page_address != UINT64_MAX)
         {
             std::cout << "Error: attempting to overwrite PTE in cacheblock=" << cache_block_id << ", pteindex="<< index << '\n';
             exit(-1);
         }
 
-        list_pte[index] = pte;
+        list_pte[index].page_address = pte;
     }
 
     // if value != UINT64_MAX: valid else fault ? and PTE
-    pair<bool, uint64_t> get_pte(int index) { return {list_pte[index] != UINT64_MAX, list_pte[index]};}
+    pair<bool, PTEHolder> get_pte(int index) { return {list_pte[index].page_address != UINT64_MAX, list_pte[index]};}
 };
 
 class Page
@@ -99,7 +112,7 @@ class Page
         list_cacheblocks[cache_block_id].insertAtCacheBlockPTE(pte, pte_offset);        
     }
 
-    pair<bool, uint64_t> get_pte(int cache_block_id, int pte_offset)
+    pair<bool, PTEHolder> get_pte(int cache_block_id, int pte_offset)
     {
         auto foundCacheBlock = list_cacheblocks.find(cache_block_id);
         if(foundCacheBlock == list_cacheblocks.end())
@@ -137,7 +150,7 @@ class PageTableTracker
         list_pages[page_number].insertAtPage(pte_value, cache_block_id, pte_offset);
     }
 
-    pair<bool, uint64_t> get_pte(uint64_t pte_address)
+    pair<bool, PTEHolder> get_pte(uint64_t pte_address)
     {
         int page_number = (pte_address >> LOG2_PAGE_SIZE); // 12-bit page number within 4MB range
         int cache_block_id = (pte_address >> LOG2_BLOCK_SIZE) & 0x3F; // 6-bit cache block id within page
@@ -147,7 +160,7 @@ class PageTableTracker
         if(foundPage == list_pages.end())
         {
             // page not found fault
-            return {false, 0};
+            return {false, PTEHolder()};
         }
         return list_pages[page_number].get_pte(cache_block_id, pte_offset);
     }
@@ -180,9 +193,9 @@ class PageTableLevelTracker
         pagetable.insertAtPageTable(pte_address, pte_value, pt_level);
     }
 
-    pair<bool, uint64_t> get_pte(uint64_t pte_address, int pt_level)
+    pair<bool, PTEHolder> get_pte(uint64_t pte_address, int pt_level)
     {
-        pair<bool, uint64_t> found_pte;
+        pair<bool, PTEHolder> found_pte;
         // prefetch packet, shared page between processes or cpus
         if(pt_level < 1 || pt_level >= list_pages_tables_levels.size())
         {
@@ -230,9 +243,9 @@ class ProcessPageTable
     }
 
     // true -> pte found,       false -> page-fault
-    pair<bool, uint64_t> get_pte(int process_id, uint64_t pte_address, int pt_level)
+    pair<bool, PTEHolder> get_pte(int process_id, uint64_t pte_address, int pt_level)
     {
-        pair<bool, uint64_t> found_pte;
+        pair<bool, PTEHolder> found_pte;
         // prefetch packet, shared page between processes or cpus
         if(process_id == -1)
         {
@@ -253,7 +266,7 @@ class ProcessPageTable
     }
 
     // True->page_found and False->page_not_found
-    pair<bool, uint64_t> operate_pagetable(int process_id, uint64_t pte_address, int pt_level)
+    pair<bool, PTEHolder> operate_pagetable(int process_id, uint64_t pte_address, int pt_level)
     {
         auto result_pte = get_pte(process_id, pte_address, pt_level);
 
@@ -270,7 +283,9 @@ class ProcessPageTable
         // pagetable_logger.log("InsertPTE", "cpu", process_id, "addr", intToHex(pte_address), "pt_level", pt_level, "fault", !result_pte.first, "newalloc", intToHex(new_page_addr), '\n');
 
         insert(process_id, pte_address, new_page_addr, pt_level);
-        return {false, new_page_addr};
+        result_pte = get_pte(process_id, new_page_addr, pt_level);
+        // oboviously not entry would be there, hence explicitly return "false" as we just created this entry
+        return {false, result_pte.second};
     }  
 
     Page getpage(int process_id, uint64_t pte_address, int pt_level)
@@ -408,7 +423,7 @@ class ProcessPageTable
                         {
                             auto pte = cache_block.get_pte(i);
                             if(pte.first)
-                                pagetable_logger.log("cpu", process_id, "level", level, "Page", intToHex(page_number), "CB", cache_block_id, "PTE", i, intToHex(pte.second), '\n');
+                                pagetable_logger.log("cpu", process_id, "level", level, "Page", intToHex(page_number), "CB", cache_block_id, "PTE", i, intToHex(pte.second.page_address), '\n');
                         }
                     }
                 }

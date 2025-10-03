@@ -26,7 +26,7 @@
 
 ProcessPageTable* process_page_table;
 POMTLB* pomtlb;
-map<uint64_t, PTWC> ptw_pred;
+map<tuple<uint64_t, int>, PTWC> ptw_pred;
 list<pair<string, uint64_t>> hash_cache;
 uint64_t POM_CPU_KEY = 123456789;
 

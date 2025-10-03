@@ -126,7 +126,7 @@ public:
   void print_deadlock() override;
 
   void* getObject(){return this;}
-  void victima_update(uint64_t addr, int signal, int hit_where=-1);
+  void victima_update(uint64_t addr, int cpu, int signal, int hit_where=-1);
   void _overwrite();
   void _context_switch(int thread_id) 
   {

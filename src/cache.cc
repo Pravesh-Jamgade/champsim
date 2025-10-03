@@ -330,6 +330,13 @@ void CACHE::handle_read()
       int offset = get_pte_offset(handle_pkt.address);
       bool is_pte_valid = hit_block->testValidity(offset);
       bitset<8> tobits(hit_block->valid_ptes);
+
+      if(!is_pte_valid)
+      {
+        dassert.log("Fake CACHE-HIT"+NAME, current_cycle, "level-"+to_string(handle_pkt.translation_level), "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block->address), "cb_vaddr", intToHex(hit_block->v_address), "cb_data", intToHex(hit_block->data), "level-"+to_string(hit_block->translation_level_if_pagetable_block), "pte_offset", offset, "pte_valid", is_pte_valid, "bits", tobits, "\n");
+        dassert.log("Error @handle_read (hit != is_pte_valid) ", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
+        exit(-1);
+      }
       // debugLog.log("CACHE-HIT"+NAME, current_cycle, "level-"+to_string(handle_pkt.translation_level), "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block->address), "cb_vaddr", intToHex(hit_block->v_address), "cb_data", intToHex(hit_block->data), "level-"+to_string(hit_block->translation_level_if_pagetable_block), "pte_offset", offset, "pte_valid", is_pte_valid, "bits", tobits, "\n");
       hit = hit && is_pte_valid;
     }
@@ -425,9 +432,9 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   if(handle_pkt.type == TRANSLATION && !is_tlb)
   {
     int cpu_id = handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
-    pair<bool, uint64_t> pte_value = process_page_table->get_pte(cpu_id, handle_pkt.address, handle_pkt.translation_level);
+    pair<bool, PTEHolder> pte_value = process_page_table->get_pte(cpu_id, handle_pkt.address, handle_pkt.translation_level);
     // debugLog.log("readlike_hit", current_cycle, "level-"+to_string(handle_pkt.translation_level), "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_fault", !pte_value.first, "pte_value", intToHex(pte_value.second), "NAME", NAME, "\n");
-    handle_pkt.data = pte_value.second;
+    handle_pkt.data = pte_value.second.page_address;
   }
 
   // update prefetcher on load instruction
@@ -561,10 +568,10 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     if(KNOB_IDEAL_VICTIMA && KNOB_VICTIMA && cache_is[IS_STLB] && handle_pkt.type == TRANSLATION)
     {
       // soft lookup
-      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->victima_peek_singleline(handle_pkt);
+      pair<bool, PTEHolder> found_peek = ((CACHE*)l2cache->getObject())->victima_peek_singleline(handle_pkt);
       if(found_peek.first)
       {
-        handle_pkt.data = found_peek.second;
+        handle_pkt.data = found_peek.second.page_address;
         for(auto ret: handle_pkt.to_return)
           ret->return_data(&handle_pkt);
         
@@ -615,7 +622,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       newPacket.thread_id = handle_pkt.thread_id;
 
       // soft lookup
-      pair<bool, uint64_t> found_peek = ((CACHE*)l2cache->getObject())->victima_peek_singleline(newPacket);
+      pair<bool, PTEHolder> found_peek = ((CACHE*)l2cache->getObject())->victima_peek_singleline(newPacket);
 
       // to fix difference in returned physical address ex. F: 346681344, S: 4641652728
       // do softlookup, if not in cache then set dumy status to simulate traffic and dont use its results.
@@ -796,13 +803,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     }
     else if(KNOB_VICTIMA)
     {
-      // TODO: add inference from PTW-cost predictor here
+      // // initiate PTW when RQ has occupancy & TLB block is absent
+      if(lower_level->get_occupancy(1,0) != lower_level->get_size(1,0))
       {
-        // // initiate PTW when RQ has occupancy & TLB block is absent
-        if(lower_level->get_occupancy(1,0) != lower_level->get_size(1,0))
-        {
-          sendVictimaPTWRequest = 1;
-        }
+        // refet PTW-CP
+        int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
+        sendVictimaPTWRequest = victima_lookup(handle_pkt.data, cpu_id);
       }
     }
   }
@@ -871,7 +877,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     {
       if(KNOB_VICTIMA)
       {
-        if(cache_is[CACHE_ID::IS_STLB])// && victima_lookup(handle_pkt.v_address))
+        if(cache_is[CACHE_ID::IS_STLB])
         {
           // Victima Routine
           // TLB block is absent at L2
@@ -1777,9 +1783,9 @@ void CACHE::print_deadlock()
 }
 
 // peek L2 with virtual address from STLB miss
-pair<bool, uint64_t> CACHE::victima_peek_singleline(const PACKET handle_pkt)
+pair<bool, PTEHolder> CACHE::victima_peek_singleline(const PACKET handle_pkt)
 {
-  pair<bool, uint64_t> ret;
+  pair<bool, PTEHolder> ret;
   uint32_t set = get_set(handle_pkt.type, handle_pkt.v_address, handle_pkt.vflag[VF::victima]);
   uint32_t way = get_way(handle_pkt.type, handle_pkt.v_address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
   
@@ -1802,7 +1808,7 @@ pair<bool, uint64_t> CACHE::victima_peek_singleline(const PACKET handle_pkt)
     uint64_t new_addr = cache_block_addr | block_offset;
     // left shift by 3bits again to complete 6bit block offset
     new_addr = new_addr << 3;
-    
+
     ret = process_page_table->get_pte(cpuid, new_addr, hit_block->translation_level_if_pagetable_block);
   }
   return ret;

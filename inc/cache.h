@@ -21,7 +21,7 @@
 
 extern int KNOB_ENABLE_LOG;
 
-extern map<uint64_t, PTWC> ptw_pred;
+extern map<tuple<uint64_t, int>, PTWC> ptw_pred;
 
 // virtual address space prefetching
 #define VA_PREFETCH_TRANSLATION_LATENCY 2
@@ -174,7 +174,7 @@ public:
 
   uint64_t use_offset(int type);
 
-  pair<bool, uint64_t> victima_peek_singleline(const PACKET handle_pkt);
+  pair<bool, PTEHolder> victima_peek_singleline(const PACKET handle_pkt);
 
   // tracking pte
   void func_track_evicted_pte(uint64_t v_addr, uint64_t p_addr);
@@ -221,12 +221,22 @@ public:
     cacheDataModel = new CacheDataModel(NAME, cpu, NUM_WAY);
   }
 
-  bool victima_lookup(uint64_t addr)
+  bool victima_lookup(uint64_t addr, int cpu)
   {
     uint64_t page = addr & ~(PAGE_SIZE-1);
-    auto found = ptw_pred.find(page);
-    // page already there
-    return found != ptw_pred.end();
+    auto found = ptw_pred.find({page,cpu});
+    if(found != ptw_pred.end())
+    {
+      int cost = found->second.cost;
+      int freq = found->second.freq;
+      if(cost >= 1)
+      {
+        return (freq >= 1 && freq <= 8);
+      }
+    }
+    // page not there
+    exit(-1);
+    return false;
   }
 
   int add_to_cluster(PACKET* packet);
