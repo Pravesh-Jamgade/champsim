@@ -330,13 +330,6 @@ void CACHE::handle_read()
       int offset = get_pte_offset(handle_pkt.address);
       bool is_pte_valid = hit_block->testValidity(offset);
       bitset<8> tobits(hit_block->valid_ptes);
-
-      if(!is_pte_valid)
-      {
-        dassert.log("Fake CACHE-HIT"+NAME, current_cycle, "level-"+to_string(handle_pkt.translation_level), "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block->address), "cb_vaddr", intToHex(hit_block->v_address), "cb_data", intToHex(hit_block->data), "level-"+to_string(hit_block->translation_level_if_pagetable_block), "pte_offset", offset, "pte_valid", is_pte_valid, "bits", tobits, "\n");
-        dassert.log("Error @handle_read (hit != is_pte_valid) ", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
-        exit(-1);
-      }
       // debugLog.log("CACHE-HIT"+NAME, current_cycle, "level-"+to_string(handle_pkt.translation_level), "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block->address), "cb_vaddr", intToHex(hit_block->v_address), "cb_data", intToHex(hit_block->data), "level-"+to_string(hit_block->translation_level_if_pagetable_block), "pte_offset", offset, "pte_valid", is_pte_valid, "bits", tobits, "\n");
       hit = hit && is_pte_valid;
     }

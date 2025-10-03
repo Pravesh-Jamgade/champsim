@@ -43,7 +43,7 @@ namespace std {
 class PTEHolder
 {
     public:
-    uint64_t page_address = 0;
+    uint64_t page_address = UINT64_MAX;
     int dram_accesses_during_ptw = 0;
     int number_of_ptw = 0;
 
@@ -270,7 +270,7 @@ class ProcessPageTable
     {
         auto result_pte = get_pte(process_id, pte_address, pt_level);
 
-        // pagetable_logger.log("Operate", "cpu", process_id, "addr", intToHex(pte_address), "pt_level", pt_level, "fault", !result_pte.first, "data", intToHex(result_pte.second), '\n');
+        // pagetable_logger.log("Operate", "cpu", process_id, "addr", intToHex(pte_address), "pt_level", pt_level, "fault", !result_pte.first, "data", intToHex(result_pte.second.page_address), '\n');
 
         if(result_pte.first)
         {
@@ -283,7 +283,7 @@ class ProcessPageTable
         // pagetable_logger.log("InsertPTE", "cpu", process_id, "addr", intToHex(pte_address), "pt_level", pt_level, "fault", !result_pte.first, "newalloc", intToHex(new_page_addr), '\n');
 
         insert(process_id, pte_address, new_page_addr, pt_level);
-        result_pte = get_pte(process_id, new_page_addr, pt_level);
+        result_pte = get_pte(process_id, pte_address, pt_level);
         // oboviously not entry would be there, hence explicitly return "false" as we just created this entry
         return {false, result_pte.second};
     }  
