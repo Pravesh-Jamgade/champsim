@@ -43,7 +43,7 @@ void CACHE::handle_fill()
     if(fill_mshr->thread_id==-1 && fill_mshr->type != PREFETCH)
     {
       dassert.log("handle_fill: thread_id == -1 and request != PREFETCH", "instr", fill_mshr->instr_id, "addr", intToHex(fill_mshr->address), "v_addr", intToHex(fill_mshr->v_address), "type", fill_mshr->type, "NAME", NAME, "victima", fill_mshr->vflag[VF::victima], "pom", fill_mshr->pomflag[POM::POM], "\n");
-      exit(0);
+      exit(-1);
     }
 
     if (fill_mshr == std::end(MSHR) || fill_mshr->event_cycle > current_cycle)
@@ -179,7 +179,7 @@ void CACHE::handle_writeback()
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
     {
       dassert.log("handle_writeback: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
-      exit(0);
+      exit(-1);
     }
 
     // access cache
@@ -311,19 +311,20 @@ void CACHE::handle_read()
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
     {
       dassert.log("handle_read: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
-      exit(0);
+      exit(-1);
     }
     
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
 
+    // victima lookup from stlb-->l2 uses VP as the address for indexing into L2
     uint32_t set = get_set(handle_pkt.type, handle_pkt.address, handle_pkt.vflag[VF::victima]);
     uint32_t way = get_way(handle_pkt.type, handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
    
     bool hit = way < NUM_WAY;
     
-    // Test whether expected PTE is valid or not
+    // if victima lookup is hit, then check whether valid PTE is present in block. If not, that means it is not page-faulted yet.
     BLOCK* hit_block = &block[set * NUM_WAY + way];
     if(handle_pkt.type == TRANSLATION && hit)
     {
@@ -1482,7 +1483,7 @@ int CACHE::add_pq(PACKET* packet)
   if(packet->address == 0)
   {
     dassert.log("add_pq Address Zero Packet", "instr", packet->instr_id, "addr", intToHex(packet->address), "v_addr", intToHex(packet->v_address), "type", packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
-    exit(0);
+    exit(-1);
   }
 
   PQ_ACCESS++;

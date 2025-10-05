@@ -229,11 +229,10 @@ public:
     {
       int cost = found->second.cost;
       int freq = found->second.freq;
-      if(cost >= 1)
-      {
-        return (freq >= 1 && freq <= 8);
-      }
+      return (freq >= 1 && freq <= 8 && cost >=1);
     }
+
+    dassert.log("Error !, Victima lookup not found page", "addr", intToHex(addr), "page", intToHex(page), "th", cpu, '\n');
     // page not there
     exit(-1);
     return false;
