@@ -167,7 +167,7 @@ void PageTableWalker::handle_read()
           {
             // assuming it never go to cache hierarch and completes walk witin PSCs then 0 dram but 1 PTW 
             // PTE address of leaf PT
-            victima_update(current_pte_address, handle_pkt.cpu*KNOB_SMT_ENABLE+handle_pkt.thread_id , PTW_Freq);
+            victima_update(handle_pkt.v_address, handle_pkt.cpu*KNOB_SMT_ENABLE+handle_pkt.thread_id , PTW_Freq);
             handle_pkt.data = next_pt_addr;
             // found data page
             for(auto ret: handle_pkt.to_return)
@@ -269,7 +269,7 @@ void PageTableWalker::handle_fill()
       //// Translation finally complete
       {
         // PTE address of leaf PT
-        victima_update(fill_mshr->address, fill_mshr->cpu*KNOB_SMT_ENABLE+fill_mshr->thread_id , PTW_Freq);
+        victima_update(fill_mshr->v_address, fill_mshr->cpu*KNOB_SMT_ENABLE+fill_mshr->thread_id , PTW_Freq);
 
         fill_mshr->address = fill_mshr->v_address;
 
