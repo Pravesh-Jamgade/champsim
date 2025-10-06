@@ -434,8 +434,14 @@ void signal_handler(int signal)
 
 // Function to be called upon program termination
 void on_exit_handler() {
-    std::cout << "Invoking handler due to program exit." << std::endl;
-    // process_page_table->printTree();
+  std::cout << "Invoking handler due to program exit." << std::endl;
+  // process_page_table->printTree();
+  for(auto entry: ptw_pred)
+  {
+    int freq = entry.second.freq;
+    int cost = entry.second.cost;
+    cout << intToHex(get<0>(entry.first)) << ", " << get<1>(entry.first) << ", "<< freq << ", " << cost << '\n';
+  }
 }
 
 

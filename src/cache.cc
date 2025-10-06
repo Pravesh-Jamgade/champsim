@@ -805,7 +805,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       {
         // refet PTW-CP
         int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
-        sendVictimaPTWRequest = victima_lookup(handle_pkt.data, cpu_id);
+        sendVictimaPTWRequest = victima_lookup(handle_pkt.v_address, cpu_id);
       }
     }
   }
