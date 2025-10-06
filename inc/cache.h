@@ -406,7 +406,7 @@ public:
       collect_pte[i] = ThreadBucket();
     }
     
-    debugLog = logger(false);
+    debugLog = logger(true);
     dlog = logger(true);
     dassert = logger(true);
 

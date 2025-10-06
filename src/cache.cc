@@ -116,6 +116,7 @@ void CACHE::handle_fill()
 
     // if it is hit implies, Transltion cache block is already there, its PTE might not be valid one thats why it brought from lower level
     uint32_t way = get_way(fill_mshr->type, address_tobe_used, set, fill_mshr->thread_id, victima_flag);
+
     bool hit = way < NUM_WAY;
     if(fill_mshr->type == TRANSLATION && !is_tlb)
     {
@@ -130,8 +131,8 @@ void CACHE::handle_fill()
     auto set_end = std::next(set_begin, NUM_WAY);
     auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
 
-    // translation block was already here, but its PTE was not valid, now it is valid, hence update same cache block
-    way = hit ? way : std::distance(set_begin, first_inv);
+    // // translation block was already here, but its PTE was not valid, now it is valid, hence update same cache block
+    // way = hit ? way : std::distance(set_begin, first_inv);
 
     if (way == NUM_WAY)
       way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
@@ -658,6 +659,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
     // Allocate an MSHR
     if (handle_pkt.fill_level <= fill_level  && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) {
+
       auto it = MSHR.insert(std::end(MSHR), handle_pkt);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
@@ -695,6 +697,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       if(handle_pkt.pomflag[POM::POM_TO_PTW])
       {
       }
+
       lower_level->add_rq(&handle_pkt);
     }
   }
@@ -1096,6 +1099,16 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
     fill_block.translation_level_if_pagetable_block = (handle_pkt.type == TRANSLATION) ? handle_pkt.translation_level: -1;
+
+    // // To verify victima_lookup is working
+    // if(cache_id == CACHE_ID::IS_L2 && handle_pkt.type == TRANSLATION && handle_pkt.translation_level == 1 && handle_pkt.vflag[VF::victima_stlbevict_ptw])
+    // {
+    //   debugLog.log(current_cycle, "fill-cache", NAME, "addr", intToHex(handle_pkt.address), "v_addr", handle_pkt.v_address, "instr", handle_pkt.instr_id, "return_size", handle_pkt.to_return.size(), "data", handle_pkt.data, "level", (int)handle_pkt.translation_level, "set", set, "way", way, '\n');
+    //   debugLog.log("Testing....\n");
+    //   auto[first_it, second_it] = victima_peek_singleline(handle_pkt);
+    //   if(first_it)
+    //   debugLog.log("Eval", "status", first_it, "pte", intToHex(second_it.page_address), '\n');
+    // }
 
     // track the valid bits of each of PTE whenever a cache block corresponding to PT is brought in
     if(handle_pkt.type == TRANSLATION && !is_tlb)
@@ -1780,8 +1793,8 @@ void CACHE::print_deadlock()
 pair<bool, PTEHolder> CACHE::victima_peek_singleline(const PACKET handle_pkt)
 {
   pair<bool, PTEHolder> ret;
-  uint32_t set = get_set(handle_pkt.type, handle_pkt.v_address, handle_pkt.vflag[VF::victima]);
-  uint32_t way = get_way(handle_pkt.type, handle_pkt.v_address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
+  uint32_t set = get_set(handle_pkt.type, handle_pkt.v_address, 1);
+  uint32_t way = get_way(handle_pkt.type, handle_pkt.v_address, set, handle_pkt.thread_id, 1);
   
   BLOCK* hit_block = &block[set * NUM_WAY + way];
   // extra check to test if block is victima block or not
@@ -1792,17 +1805,19 @@ pair<bool, PTEHolder> CACHE::victima_peek_singleline(const PACKET handle_pkt)
   if(hit)
   {
     int cpuid = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
-    // 3bit block offset from 6bit cache block
-    uint64_t block_offset = (handle_pkt.v_address >> 3) & 0x7;
+    // we have phy address of PTE in pt which brought this cache block (needs to zero out last 6-bit to get cacheblock address)
+    // we have virt_addr that points to one of the PTE present in cache block
+    // base_page_level_1_pt + VPN[8:3] --> cache_block
+    // hence, cache_block + VPN[2:0] --> PTE address
+    uint64_t block_offset = (handle_pkt.v_address >> (LOG2_PAGE_SIZE)) & 0x7;
+    block_offset = block_offset << 3;
     // cache block address from phy address, zeros out last 6bit
     uint64_t cache_block_addr = (hit_block->original_pagetable_cacheblock_address >> 6);
-    // shift left 3bits
-    cache_block_addr = cache_block_addr << 3;
-    // append block_offset of 3bits
+    // return 6 bits as zeroed
+    cache_block_addr = cache_block_addr << 6;
+    // append block_offset of 6bits
     uint64_t new_addr = cache_block_addr | block_offset;
-    // left shift by 3bits again to complete 6bit block offset
-    new_addr = new_addr << 3;
-
+    
     ret = process_page_table->get_pte(cpuid, new_addr, hit_block->translation_level_if_pagetable_block);
   }
   return ret;
