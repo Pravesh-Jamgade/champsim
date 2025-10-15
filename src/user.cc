@@ -30,4 +30,6 @@ int KNOB_ENABLE_MFOE_V2 = 0;
 
 int KNOB_ENABLE_CTX = 0;
 
+int KNOB_ENABLE_SWAT_WAYS = 0;
+
 #endif

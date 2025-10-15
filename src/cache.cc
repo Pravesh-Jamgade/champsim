@@ -21,6 +21,7 @@ extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_VICTIMA, KNOB_EXTEND_VICTIMA, KNOB_HASH_CACHE_MAX_LIMIT;
 extern int KNOB_SMT_ENABLE;
+extern int KNOB_ENABLE_SWAT_WAYS;
 
 // illusiong of stored cache line by 8byte granularity
 extern list<pair<string, uint64_t>> hash_cache;
@@ -51,6 +52,8 @@ void CACHE::handle_fill()
       cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
       return;
     }
+
+    int cpuid = KNOB_SMT_ENABLE * fill_mshr->cpu +  fill_mshr->thread_id;
 
     // order matters
     // No write - hence No tracking of PTE
@@ -107,15 +110,18 @@ void CACHE::handle_fill()
     }
     
     // TODO: Add PTW cost predictor to decide whether to insert the cacheline as victima cache block or not
-    bool victima_flag = KNOB_VICTIMA && cache_is[IS_L2] && fill_mshr->vflag[VF::victima_stlbevict_ptw];
+    bool use_vaddr_for_indexing =  cache_is[IS_L2] && 
+      (KNOB_VICTIMA && fill_mshr->vflag[VF::victima_stlbevict_ptw]) || 
+      (KNOB_ENABLE_SWAT_WAYS && fill_mshr->type==TRANSLATION && fill_mshr->translation_level == 1 && 
+       process_page_table->is_translation_block_full(cpuid, fill_mshr->address, fill_mshr->translation_level));
 
-    uint64_t address_tobe_used = (victima_flag? fill_mshr->v_address: fill_mshr->address);
+    uint64_t address_tobe_used = (use_vaddr_for_indexing? fill_mshr->v_address: fill_mshr->address);
 
     // if victima block then use virt-address to find set/way
-    uint32_t set = get_set(fill_mshr->type, address_tobe_used, victima_flag);
+    uint32_t set = get_set(fill_mshr->type, address_tobe_used, use_vaddr_for_indexing);
 
     // if it is hit implies, Transltion cache block is already there, its PTE might not be valid one thats why it brought from lower level
-    uint32_t way = get_way(fill_mshr->type, address_tobe_used, set, fill_mshr->thread_id, victima_flag);
+    uint32_t way = get_way(fill_mshr->type, address_tobe_used, set, fill_mshr->thread_id, use_vaddr_for_indexing);
 
     bool hit = way < NUM_WAY;
     if(fill_mshr->type == TRANSLATION && !is_tlb)

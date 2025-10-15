@@ -62,6 +62,7 @@ extern int KNOB_LIVE_INPUT;
 extern int KNOB_ENABLE_LOG;
 extern int KNOB_ENABLE_MFOE_V2;
 extern int KNOB_ENABLE_CTX;
+extern int KNOB_ENABLE_SWAT_WAYS;
 
 std::vector<tracereader*> traces;
 
@@ -555,6 +556,7 @@ int main(int argc, char** argv)
   KNOB_ENABLE_MFOE_V2 = iniReader->GetInteger("MFOEv2", "ENABLE_MFOE_V2", 0);
   KNOB_ENABLE_CTX = iniReader->GetInteger("SIMULATOR", "ENABLE_CTX_SWITCH", 0);
   KNOB_POMTLB = iniReader->GetInteger("POMTLB", "ENABLE_POMTLB", 0);
+  KNOB_ENABLE_SWAT_WAYS = iniReader->GetInteger("SWAT", "ENABLE_SWAT_WAYS", 0);
   
   std::cout << "Extra settings:\n";
   // std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';

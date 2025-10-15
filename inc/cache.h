@@ -18,9 +18,10 @@
 #include"logger.h"
 #include <bitset>
 #include "pollution.h"
+#include "sector.h"
 
 extern int KNOB_ENABLE_LOG;
-
+extern int KNOB_ENABLE_SWAT_WAYS;
 extern map<tuple<uint64_t, int>, PTWC> ptw_pred;
 
 // virtual address space prefetching
@@ -400,6 +401,23 @@ public:
         MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
         repl_type(repl), pref_type(pref)
   {
+
+    block.resize(NUM_WAY * NUM_SET);
+    if(cache_id == CACHE_ID::IS_L2 && KNOB_ENABLE_SWAT_WAYS)
+    {
+      // for each set
+      for(int setIndex = 0; setIndex < NUM_SET; setIndex++)
+      {
+        for(int i=0; i< NUM_WAY; i++)
+        {
+          // reserve some ways as Sector and rest as normal data-blocks
+          if(i < KNOB_ENABLE_SWAT_WAYS)
+          block[setIndex * NUM_WAY + i].sectorHolder = SectorHolder::make(SectorDesingChoice::ASSOCIATIVE, true);
+          else// normal blocks
+          block[setIndex * NUM_WAY + i].sectorHolder = SectorHolder::make(SectorDesingChoice::ASSOCIATIVE);
+        }
+      }
+    }
 
     for(int i=0; i< 16; i++)
     {

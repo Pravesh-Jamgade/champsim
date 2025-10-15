@@ -3,7 +3,7 @@
 
 #include <limits>
 #include <map>
-
+#include "sector.h"
 #include "block.h"
 #include "pagetable.h"
 
@@ -25,6 +25,7 @@ class VPN
   uint64_t vp = 0;
   uint64_t pp = 0;
 };
+
 
 // CACHE BLOCK
 class BLOCK
@@ -67,6 +68,8 @@ public:
   int thread_id = -1;
   int translation_level_if_pagetable_block = -1; // 1,2,3,4 for PTE, PMD, PUD, PGD
   uint64_t original_pagetable_cacheblock_address;
+
+  SectorHolder sectorHolder;
 };
 
 class MemoryRequestConsumer

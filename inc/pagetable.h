@@ -333,6 +333,14 @@ class ProcessPageTable
         // pagetable_logger.log( "CacheBlockUsage", "cpu", process_id, "addr", intToHex(pte_address), "cb", cache_block_id, "pt_level", pt_level, "usage", usage, "valid_bits", bitset<8>(valid_bits), '\n');
         return {usage, valid_bits};
     }
+
+    // full ??
+    bool is_translation_block_full(int process_id, uint64_t pte_address, int pt_level, string caller="")
+    {
+        pair<int, uint8_t> ret = get_cacheblock_usage( process_id,  pte_address,  pt_level);
+        return ret.first == 8;
+    }
+
     
     void printStat()
     {
