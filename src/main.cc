@@ -860,6 +860,9 @@ print_ptw_freq_and_cost();
 cout << '\n';
 
 process_page_table->printStat();
+
+pomtlb->print_stats();
+
 cout << "\nDone!\n";
 
   return 0;

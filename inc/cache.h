@@ -32,6 +32,8 @@ class CACHE : public champsim::operable, public MemoryRequestConsumer, public Me
 {
 public:
 
+  map<tuple<uint64_t, int>, uint64_t> record_stlbmiss;
+
   // 16 threads
   // 8 possible offsets
   // corresponding PTE
@@ -406,8 +408,8 @@ public:
       collect_pte[i] = ThreadBucket();
     }
     
-    debugLog = logger(true);
-    dlog = logger(true);
+    debugLog = logger(false);
+    dlog = logger(false);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
