@@ -54,11 +54,7 @@ void CACHE::handle_fill()
       return;
     }
 
-<<<<<<< HEAD
-    int cpuid = KNOB_SMT_ENABLE * fill_mshr->cpu +  fill_mshr->thread_id;
-=======
     // debugLog.log(current_cycle, NAME, intToHex(fill_mshr->address), intToHex(fill_mshr->v_address), intToHex(fill_mshr->data), "pom", fill_mshr->pomflag[POM::POM], "pommiss", fill_mshr->pomflag[POM::POM_MISS], "pom_to_ptw", fill_mshr->pomflag[POM::POM_TO_PTW], "pom_to_ptw_fini", fill_mshr->pomflag[POM::POM_TO_PTW_FINI], '\n');
->>>>>>> run_victima_d
 
     // order matters
     // No write - hence No tracking of PTE
