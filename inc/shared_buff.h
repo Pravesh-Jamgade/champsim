@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 #include "trace_instruction.h"
-const int TRACE_BUF_CAP=1024;
+const int TRACE_BUF_CAP=10000000;
 
 // const int NUM_INSTR_DESTINATIONS_SPARC = 4;
 // const int NUM_INSTR_DESTINATIONS = 2;
