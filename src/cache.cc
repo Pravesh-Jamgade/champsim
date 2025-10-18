@@ -9,6 +9,7 @@
 #include "vmem.h"
 #include "user.h"
 #include "ptw.h"
+#include "pomtlb.h"
 
 #ifndef SANITY_CHECK
 #define NDEBUG
@@ -32,7 +33,7 @@ extern map<uint64_t, uint64_t> l2_pte_map;
 extern ProcessPageTable* process_page_table;
 extern ProcessPageTable* pom_page_table;
 extern uint64_t POM_CPU_KEY;
-
+extern POMTLB* pomtlb;
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
@@ -53,11 +54,16 @@ void CACHE::handle_fill()
       return;
     }
 
+<<<<<<< HEAD
     int cpuid = KNOB_SMT_ENABLE * fill_mshr->cpu +  fill_mshr->thread_id;
+=======
+    // debugLog.log(current_cycle, NAME, intToHex(fill_mshr->address), intToHex(fill_mshr->v_address), intToHex(fill_mshr->data), "pom", fill_mshr->pomflag[POM::POM], "pommiss", fill_mshr->pomflag[POM::POM_MISS], "pom_to_ptw", fill_mshr->pomflag[POM::POM_TO_PTW], "pom_to_ptw_fini", fill_mshr->pomflag[POM::POM_TO_PTW_FINI], '\n');
+>>>>>>> run_victima_d
 
     // order matters
     // No write - hence No tracking of PTE
     // But want to track access
+    // allow only POM packet to enter, we will disable it when packet state change to POM_TO_PTW to allow it to write to STLB
     if(KNOB_POMTLB && fill_mshr->pomflag[POM::POM])
     {
       if(cache_is[IS_STLB])
@@ -65,7 +71,7 @@ void CACHE::handle_fill()
         // if it is a returning POM_TO_PTW at STLB, then its state now FINI, test it
         // and do nothing if  POM_TO_PTW_FINI set
         if(fill_mshr->pomflag[POM::POM_TO_PTW_FINI]) {}
-        // POM_TO_PTW was a miss, erase our entry and add new to RQ for default PTW
+        // retry code: POM_TO_PTW was a miss, erase our entry and add new to RQ for default PTW
         else if(fill_mshr->pomflag[POM::POM_TO_PTW])
         {
           if(get_occupancy(1,0) == get_size(1,0))
@@ -74,14 +80,22 @@ void CACHE::handle_fill()
             return;
           }
 
+          pomtlb->pom_counters[POMFLAG::POM_SECOND_REQ]++;
+
           // POM failed, now request for PTW
           fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
           fill_mshr->dtype = DataType::INVALID;
           fill_mshr->hit_where = CACHE_ID_END;
 
           PACKET newPacket = *fill_mshr;
+          
+          // keeping this POM address
+          newPacket.pom_address = fill_mshr->address;
           // reset POMTLBaddress to virt address
           newPacket.address = newPacket.v_address;
+          // this is last step, this will allow POM_TO_PTW packet to neven re-enter
+          // here again as it will become normal packet once more
+          newPacket.pomflag[POM::POM] = false;
 
           add_rq(&newPacket);
           
@@ -162,13 +176,12 @@ void CACHE::handle_fill()
     func_track_workingset(fill_mshr->address);
     func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
     func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
-    
+
     MSHR.erase(fill_mshr);
     writes_available_this_cycle--;
     
     cacheDataModel->mshr_queue[Basic::ACCESS]++;
-    global_access_count++;
-    
+    global_access_count++;    
   }
 }
 
@@ -438,6 +451,9 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     handle_pkt.data = pte_value.second.page_address;
   }
 
+  if(handle_pkt.pomflag[POM::POM])
+    
+
   // update prefetcher on load instruction
   if (should_activate_prefetcher(handle_pkt.type) && handle_pkt.pf_origin_level < fill_level) {
     cpu = handle_pkt.cpu;
@@ -566,7 +582,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
 
     // If victima-ideal, do send zero-latency lookup. If miss send usual packet
-    if(KNOB_IDEAL_VICTIMA && KNOB_VICTIMA && cache_is[IS_STLB] && handle_pkt.type == TRANSLATION)
+    if(KNOB_IDEAL_VICTIMA && KNOB_VICTIMA && cache_is[IS_STLB])
     {
       // soft lookup
       pair<bool, PTEHolder> found_peek = ((CACHE*)l2cache->getObject())->victima_peek_singleline(handle_pkt);
@@ -581,9 +597,10 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       }
     }
 
-    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA==0 && handle_pkt.type == TRANSLATION;
+    bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA==0;
     // its a miss and we are @STLB and its not yet has searched POMTLB, send it to POM search via L1D
-    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_TO_PTW] && handle_pkt.type == TRANSLATION;
+    bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_TO_PTW];
+    // if(cache_id == CACHE_ID::IS_STLB) cout << "Log: " << KNOB_POMTLB << ", " << (!handle_pkt.pomflag[POM::POM_TO_PTW]) << ", " << (handle_pkt.type==TRANSLATION) << '\n';
 
     // Test Occupancy of L2, since victima packet parallely sends PTW packet request we need to test PTW rq occupancy
     if(sendVictimaPacket)
@@ -596,7 +613,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     // Test Occupancy of L1, we dont sent PTW packet until POM packet comes back with a miss at POMTLB
     else if(sendPomPacket)
     {
-      if(l1cache->get_occupancy(1,0) == l1cache->get_size(1,0))
+      if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
       {
         return false;
       }
@@ -661,6 +678,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       newPacket = handle_pkt;
       // make sure to clear earlier destination like D/I +TLB
       newPacket.to_return = {this};
+
+      pomtlb->pom_counters[POMFLAG::POM_FIRST_REQ]++;
     }
 
     // Allocate an MSHR
@@ -692,6 +711,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     //POMTLB: record miss, send to cache-hierarchy + No PTW requests, PTW start upon POM return.
     if(sendPomPacket)
     {
+      dlog.log(current_cycle, NAME, "Send POM", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), handle_pkt.pomflag[POM::POM], handle_pkt.pomflag[POM::POM_MISS], handle_pkt.pomflag[POM::POM_TO_PTW], '\n');
+
       l1cache->add_rq(&newPacket);
     }
     else if (!is_read)
@@ -700,10 +721,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
     else
     {
-      if(handle_pkt.pomflag[POM::POM_TO_PTW])
-      {
-      }
-
       lower_level->add_rq(&handle_pkt);
     }
   }
@@ -763,7 +780,23 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       handle_pkt.pomflag[POM::POM_TO_PTW] = true;
       return false;
     }
+
+    pomtlb->pom_counters[POMFLAG::POM_SUCCESS]++;
   }
+  
+  // // Test POM Lookup
+  // if(cache_id == CACHE_ID::IS_STLB && handle_pkt.pomflag[POM::POM_TO_PTW])
+  // {
+  //   PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
+  //   uint64_t pomtlb_base = ptw->get_pomtlb_baseaddr();
+  //   pomtlb_base += (handle_pkt.address ^ ptw->asid[handle_pkt.thread_id]);
+  //   // update address to pomtlb address
+  //   int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+    
+  //     // probe POMTLB
+  //     auto[ flag, addr] = pomtlb->lookupPOMEntry(cpu_id, pomtlb_base, handle_pkt.v_address);
+  //     cout << "POM LOOKUP Status, POM-addr, " << intToHex(page_align(pomtlb_base)) << ", V-addr, "<< intToHex(page_align(handle_pkt.v_address)) <<", result, "<< flag <<", data, "<< intToHex(addr) <<", packet_data, " << intToHex(page_align(handle_pkt.data)) << '\n';
+  // }
 
   // Block is valid, we are dropping it from STLB
   // test if we do have have this costly block as Victima-block available in L2-cache, if not then test can we add PTW request
@@ -1244,7 +1277,10 @@ int CACHE::invalidate_entry(uint64_t inval_addr)
   uint32_t way = get_way(-1, inval_addr, set, -1);
 
   if (way < NUM_WAY)
+  {
     block[set * NUM_WAY + way].valid = 0;
+    block[set * NUM_WAY + way].address = 0;
+  }
 
   return way;
 }

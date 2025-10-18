@@ -103,6 +103,8 @@ void PageTableWalker::handle_read()
       continue;
     }
 
+    debugLog.log(current_cycle, NAME, "Retry-With-PTW", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "pom", handle_pkt.pomflag[POM::POM], "pommiss", handle_pkt.pomflag[POM::POM_MISS], "pom_to_ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "pom_to_ptw_fini", handle_pkt.pomflag[POM::POM_TO_PTW_FINI], '\n');
+
     // CR3_addr.push_back(vmem.get_pte_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, 0, vmem.pt_levels).first);
 
     DP(if (warmup_complete[packet->cpu]) {
@@ -199,6 +201,10 @@ void PageTableWalker::handle_read()
       packet.translation_level = packet.init_translation_level;
       packet.to_return = {this};
       packet.thread_id = handle_pkt.thread_id;
+      packet.pom_address = handle_pkt.pom_address;
+      // needed at DRAM to store POM-entry
+      packet.pomflag[POM::POM_TO_PTW] = (ptw_level == 1 && handle_pkt.pomflag[POM::POM_TO_PTW]);
+
       // "victima_stlbevict_ptw" we are updating it here, the same packet will be use as MSHR entry. For next iteration of PTW, we would need to use same flag value. Hence test the ptw_level and flag.
       packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level == 1 && handle_pkt.vflag[VF::victima_stlbevict_ptw]);
   
@@ -207,7 +213,7 @@ void PageTableWalker::handle_read()
         return;
       
       // // if(handle_pkt.vflag[victima_stlbevict_ptw])
-      debugLog.log("PTW-sent", current_cycle,  "level-"+to_string(ptw_level),"VP", intToHex(page_align(packet.v_address)), "next_pte_addr", intToHex(packet.address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
+      debugLog.log("PTW-sent", current_cycle,  "level-"+to_string(ptw_level),"VP", intToHex(page_align(packet.v_address)), "next_pte_addr", intToHex(packet.address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, "pomtoptw", packet.pomflag[POM::POM_TO_PTW], "original_pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], '\n');
 
       // Track PTW
       if(track.stop == 0)
@@ -224,7 +230,8 @@ void PageTableWalker::handle_read()
       
       // "victima_stlbevict_ptw" we are updating it here, the same packet will be use as MSHR entry. For next iteration of PTW, we would need to use same flag value. Hence test the ptw_level and flag.
       packet.vflag[VF::victima_stlbevict_ptw] = handle_pkt.vflag[VF::victima_stlbevict_ptw];
-
+      packet.pomflag[POM::POM_TO_PTW] = handle_pkt.pomflag[POM::POM_TO_PTW];
+      
       auto it = MSHR.insert(std::end(MSHR), packet);
       it->cycle_enqueued = current_cycle;
       it->event_cycle = std::numeric_limits<uint64_t>::max();
@@ -344,7 +351,7 @@ void PageTableWalker::handle_fill()
 
         if(fill_mshr->state == State::PTW_FILL)
         {
-          debugLog.log("PTW-fill", current_cycle, "level-"+to_string((int)fill_mshr->translation_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, "hw", hit_where_str[fill_mshr->hit_where], '\n');
+          debugLog.log("PTW-fill", current_cycle, "level-"+to_string((int)fill_mshr->translation_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, "hw", hit_where_str[fill_mshr->hit_where], "ori_pom2ptw", fill_mshr->pomflag[POM::POM_TO_PTW], '\n');
 
           ptw_datamodel->matrix_cache_to_ptwlevel_hits[fill_mshr->translation_level][fill_mshr->hit_where]++;
           fill_counters[fill_mshr->translation_level]++;
@@ -417,12 +424,15 @@ void PageTableWalker::handle_fill()
             packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level==1 && fill_mshr->vflag[VF::victima_stlbevict_ptw]);// if level=1 then only translation cache-block to tlb-block at L2
             packet.psc_state = PSC_STATE::QUEUED;
             packet.page_table_base_address = addr;
+            packet.pom_address = fill_mshr->pom_address;
+            // needed at DRAM to store POM-entry
+            packet.pomflag[POM::POM_TO_PTW] = (ptw_level == 1 && fill_mshr->pomflag[POM::POM_TO_PTW]);
 
             int rq_index = lower_level->add_rq(&packet);
             if (rq_index != -2) 
             {
               // if(fill_mshr->vflag[victima_stlbevict_ptw])
-              debugLog.log("PTW-sent", current_cycle, "level-"+to_string(ptw_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, '\n');
+              debugLog.log("PTW-sent", current_cycle, "level-"+to_string(ptw_level),"VP", intToHex(page_align(fill_mshr->v_address)), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, "pom_to_ptw", packet.pomflag[POM::POM_TO_PTW], "original_pom2ptw", fill_mshr->pomflag[POM::POM_TO_PTW], '\n');
               fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
               fill_mshr->page_table_base_address = addr;
 
@@ -484,7 +494,6 @@ void PageTableWalker::return_data(PACKET* packet)
       mshr_entry.event_cycle = current_cycle + 1;
       mshr_entry.state = State::PTW_FILL;
       mshr_entry.hit_where = packet->hit_where;
-      mshr_entry.pomflag[POM::POM_TO_PTW_FINI] = mshr_entry.pomflag[POM::POM_TO_PTW]; 
       mshr_entry.page_fault = packet->page_fault;
       mshr_entry.data = packet->data;
       

@@ -116,6 +116,8 @@ public:
   // for PTW module
   bool page_fault = 0;
 
+  uint64_t pom_address = 0;
+
 };
 
 template <>

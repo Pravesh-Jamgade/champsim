@@ -16,47 +16,41 @@ uint32_t CACHE::find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const
   auto begin = std::next(std::begin(block), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
   auto victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV; }); // hijack the lru field
-  auto backup_way = victim; // hijack the lru field
 
-  int ktimes = maxRRPV+1;
-
-  uint32_t way = 0;
-  while (ktimes) {
-
+  // not found
+  while (victim == end) 
+  {
+    // increase lru
     for (auto it = begin; it != end; ++it)
-      it->lru++;
-    
-    victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV; });
-    if(victim != end)
     {
-      if(!victim->victima_block)
-      {
-        uint32_t way1 = std::distance(begin, victim);
-        uint32_t way2 = std::distance(begin, backup_way);
-        if(way1 == NUM_WAY && way2 == NUM_WAY)
-        {
-
-        }
-        else if(way1 != NUM_WAY)
-        {
-          way = way1;
-          break;
-        }
-        else if(way2 != NUM_WAY)
-        {
-          way = way2;
-          break;
-        }
-
-      }
-      else backup_way = victim;
+      it->lru++;
     }
-    ktimes--;
+    // test again
+    victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV; });
   }
 
-  
+  // found
+  int k_times = 5;
+  while(k_times--)
+  {
+    // it is not a victima_block then return victim_candidate
+    if(!victim->victima_block)
+    {
+      return std::distance(begin, victim);
+    }
 
-  return way;
+    // it is victima_block reduce its lru value so that it donest get capured again as a lru candidate
+    victim->lru--;
+    for (auto it = begin; it != end; ++it)
+    {
+      if(it == victim) continue;
+      if(it->lru >= maxRRPV) continue;
+      it->lru++;
+    }
+    victim = std::find_if(begin, end, [](BLOCK x) {return x.lru == maxRRPV;});
+  }
+
+  return std::distance(begin, victim);
 }
 
 // called on every cache hit and cache fill
