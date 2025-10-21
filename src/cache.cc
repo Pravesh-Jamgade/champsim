@@ -30,6 +30,7 @@ extern int KNOB_VICTIMA, KNOB_IDEAL_VICTIMA, KNOB_POMTLB;
 
 // illusiong of stored cache line by 8byte granularity
 extern map<uint64_t, uint64_t> l2_pte_map;
+extern vector<int> sector_counters;
 extern ProcessPageTable* process_page_table;
 extern ProcessPageTable* pom_page_table;
 extern uint64_t POM_CPU_KEY;
@@ -37,6 +38,12 @@ extern POMTLB* pomtlb;
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
+/*
+** SWAT **
+1. Test translation cache block occupancy
+  a. IF full use Normal line to write
+  b. Else use sector line to write requested PTE
+*/
 void CACHE::handle_fill()
 {
   while (writes_available_this_cycle > 0) {
@@ -54,7 +61,7 @@ void CACHE::handle_fill()
       return;
     }
 
-    // debugLog.log(current_cycle, NAME, intToHex(fill_mshr->address), intToHex(fill_mshr->v_address), intToHex(fill_mshr->data), "pom", fill_mshr->pomflag[POM::POM], "pommiss", fill_mshr->pomflag[POM::POM_MISS], "pom_to_ptw", fill_mshr->pomflag[POM::POM_TO_PTW], "pom_to_ptw_fini", fill_mshr->pomflag[POM::POM_TO_PTW_FINI], '\n');
+    debugLog.log(current_cycle, "Fill", NAME, intToHex(fill_mshr->address), intToHex(fill_mshr->v_address), intToHex(fill_mshr->data), "pom", fill_mshr->pomflag[POM::POM], "pommiss", fill_mshr->pomflag[POM::POM_MISS], "pom_to_ptw", fill_mshr->pomflag[POM::POM_TO_PTW], "pom_to_ptw_fini", fill_mshr->pomflag[POM::POM_TO_PTW_FINI], '\n');
 
     // order matters
     // No write - hence No tracking of PTE
@@ -120,40 +127,66 @@ void CACHE::handle_fill()
     }
     
     // TODO: Add PTW cost predictor to decide whether to insert the cacheline as victima cache block or not
-    bool use_vaddr_for_indexing =  cache_is[IS_L2] && 
-      (KNOB_VICTIMA && fill_mshr->vflag[VF::victima_stlbevict_ptw]) || 
-      (KNOB_ENABLE_SWAT_WAYS && fill_mshr->type==TRANSLATION && fill_mshr->translation_level == 1 && 
-       process_page_table->is_translation_block_full(cpuid, fill_mshr->address, fill_mshr->translation_level));
+    int cpuid = KNOB_SMT_ENABLE * cpu + fill_mshr->thread_id;
 
+    // We have Translation Cache block at L2 tobe inserted, (brought in-by leaf PTW)
+    bool is_SWAT_enable = cache_is[IS_L2] && KNOB_ENABLE_SWAT_WAYS && fill_mshr->type==TRANSLATION && fill_mshr->translation_level == 1;
+    // if true then write to normal line otherswise to sector line
+    bool write_to_normal_line = true;
+    if(is_SWAT_enable) 
+    write_to_normal_line = process_page_table->is_translation_block_full(cpuid, fill_mshr->address, fill_mshr->translation_level);
+    
+    // Victima PTW brought Translation Cache block
+    bool is_Victima_enable = (KNOB_VICTIMA && fill_mshr->vflag[VF::victima_stlbevict_ptw]);
+    
+    // We are using VPN for indexing into L2 cache
+    bool use_vaddr_for_indexing =  cache_is[IS_L2] && is_Victima_enable || (is_SWAT_enable && write_to_normal_line==false);
+    
+    // Select address to use
     uint64_t address_tobe_used = (use_vaddr_for_indexing? fill_mshr->v_address: fill_mshr->address);
 
     // if victima block then use virt-address to find set/way
-    uint32_t set = get_set(fill_mshr->type, address_tobe_used, use_vaddr_for_indexing);
+    uint32_t set = get_set(fill_mshr->type, address_tobe_used, 0);
 
     // if it is hit implies, Transltion cache block is already there, its PTE might not be valid one thats why it brought from lower level
-    uint32_t way = get_way(fill_mshr->type, address_tobe_used, set, fill_mshr->thread_id, use_vaddr_for_indexing);
-
-    bool hit = way < NUM_WAY;
-    if(fill_mshr->type == TRANSLATION && !is_tlb)
-    {
-      // block was here already, but its PTE was not valid, now it is valid, hence update
-      if(hit)
-      {
-        
-      }
-    }
+    uint32_t way = get_way(fill_mshr->type, address_tobe_used, set, fill_mshr->thread_id, 0);
 
     auto set_begin = std::next(std::begin(block), set * NUM_WAY);
     auto set_end = std::next(set_begin, NUM_WAY);
     auto first_inv = std::find_if_not(set_begin, set_end, is_valid<BLOCK>());
-
     // // translation block was already here, but its PTE was not valid, now it is valid, hence update same cache block
     // way = hit ? way : std::distance(set_begin, first_inv);
 
-    if (way == NUM_WAY)
+    // if block is already there and we are here to update
+    // if sector write, then make sure sector line is selected
+    if(way<NUM_WAY && !block[set*NUM_WAY+way].sectorHolder.is_sector_line && write_to_normal_line==false)
+    {
+      // find correct sector line
+      dassert.log("It should happen that selection=sector and waygiven=normal, since first uses VA and second uses PA: !block[set*NUM_SET+NUM_WAY].sectorHolder.is_sector_line && write_to_normal_line==false\n");
+      exit(1);
+    }
+
+    // let the replacement handle it and avoid sector line
+    if(way<NUM_WAY && block[set*NUM_WAY+way].sectorHolder.is_sector_line && write_to_normal_line)
+    {
+      dassert.log("It should happen that selection=sector and waygiven=normal, since first uses VA and second uses PA: block[set*NUM_SET+NUM_WAY].sectorHolder.is_sector_line && write_to_normal_line\n");
+      exit(1);
+    }
+    
+    // get sector line 
+    if(is_SWAT_enable && write_to_normal_line==false)
+    {
+      auto first_sector_line = std::find_if(set_begin, set_end, [](auto a){ return a.sectorHolder.is_sector_line; });
+      way = std::distance(set_begin, first_sector_line);
+      // dlog.log(current_cycle, "Sector-Fill", NAME, intToHex(fill_mshr->address), intToHex(fill_mshr->v_address), "data", intToHex(fill_mshr->data), "way", way, '\n');
+    }
+    else // make sure the candidate way must not be sector line
+    {
+      if (way == NUM_WAY)
       way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                          fill_mshr->type);
-
+    }
+    
     bool success = filllike_miss(set, way, *fill_mshr);
     if (!success)
     {
@@ -169,6 +202,13 @@ void CACHE::handle_fill()
         ret->return_data(&(*fill_mshr));
     }
     
+    if(is_SWAT_enable)
+    {
+      if(write_to_normal_line==false)
+        sector_counters[SectorChoiceSector]++;
+      else sector_counters[SectorChoiceNormal]++;
+    }
+    
     func_track_workingset(fill_mshr->address);
     func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
     func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
@@ -177,7 +217,7 @@ void CACHE::handle_fill()
     writes_available_this_cycle--;
     
     cacheDataModel->mshr_queue[Basic::ACCESS]++;
-    global_access_count++;    
+    global_access_count++;   
   }
 }
 
@@ -329,6 +369,9 @@ void CACHE::handle_read()
       dassert.log("handle_read: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
       exit(-1);
     }
+
+    debugLog.log(current_cycle, "Read", NAME, current_cycle, "level-"+to_string(handle_pkt.translation_level), "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "\n");
+
     
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
@@ -347,7 +390,6 @@ void CACHE::handle_read()
       int offset = get_pte_offset(handle_pkt.address);
       bool is_pte_valid = hit_block->testValidity(offset);
       bitset<8> tobits(hit_block->valid_ptes);
-      // debugLog.log("CACHE-HIT"+NAME, current_cycle, "level-"+to_string(handle_pkt.translation_level), "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block->address), "cb_vaddr", intToHex(hit_block->v_address), "cb_data", intToHex(hit_block->data), "level-"+to_string(hit_block->translation_level_if_pagetable_block), "pte_offset", offset, "pte_valid", is_pte_valid, "bits", tobits, "\n");
       hit = hit && is_pte_valid;
     }
 
@@ -443,7 +485,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   {
     int cpu_id = handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
     pair<bool, PTEHolder> pte_value = process_page_table->get_pte(cpu_id, handle_pkt.address, handle_pkt.translation_level);
-    // debugLog.log("readlike_hit", current_cycle, "level-"+to_string(handle_pkt.translation_level), "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_fault", !pte_value.first, "pte_value", intToHex(pte_value.second), "NAME", NAME, "\n");
+    // debugLog.log(current_cycle, "readlike_hit", NAME, "level-"+to_string(handle_pkt.translation_level), "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_fault", !pte_value.first, "pte_value", intToHex(pte_value.second.page_address), "NAME", NAME, "\n");
     handle_pkt.data = pte_value.second.page_address;
   }
 
@@ -707,8 +749,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     //POMTLB: record miss, send to cache-hierarchy + No PTW requests, PTW start upon POM return.
     if(sendPomPacket)
     {
-      dlog.log(current_cycle, NAME, "Send POM", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), handle_pkt.pomflag[POM::POM], handle_pkt.pomflag[POM::POM_MISS], handle_pkt.pomflag[POM::POM_TO_PTW], '\n');
-
       l1cache->add_rq(&newPacket);
     }
     else if (!is_read)
@@ -755,9 +795,27 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   return true;
 }
 
+/*
+** SWAT **
+Here we need to take care of Translation Cache block only.
+*/
 bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 {
   BLOCK& fill_block = block[set * NUM_WAY + way];
+
+  // sector line to be written, it can have at most between 1 to 7 PTE
+  bool sector_write = KNOB_ENABLE_SWAT_WAYS && cache_id==CACHE_ID::IS_L2 && fill_block.sectorHolder.is_sector_line  && handle_pkt.translation_level==1 && handle_pkt.type==TRANSLATION;
+  bool sector_overwrite = false;
+  pair<int, vector<uint64_t>> cache_block_data_for_sector;
+  if(sector_write)
+  {
+    int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
+    cache_block_data_for_sector = process_page_table->get_cacheblock_data(cpu_id, handle_pkt.address, handle_pkt.translation_level);
+    // if partial tag of incomming packet and existing cache block mathches then we simply update single PTE otherwise overwite sector line
+    sector_overwrite = !(Indexer::get_partialTag(handle_pkt.v_address >> LOG2_PAGE_SIZE, NUM_SET) == fill_block.address && fill_block.valid);
+
+    // dlog.log(current_cycle, "Filllikemiss", NAME, intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), "way", way, "overwrite", sector_overwrite, "invalid-block", fill_block.valid, "#pte", cache_block_data_for_sector.first, '\n');
+  }
 
   // Position matters
   // POM packet return mem trip. Test if it was hit in POM-TLB. If so, return data (from handle_fill)
@@ -797,43 +855,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // Block is valid, we are dropping it from STLB
   // test if we do have have this costly block as Victima-block available in L2-cache, if not then test can we add PTW request
   bool sendVictimaPTWRequest = 0;
-  // Proposed-idea: hashcache full then  do remove one hash entry and with that we need to remove corrresponding L2 cache-block
-  // order of uasge of variable matter: writeExtendedVictimaPacket is our goal, and adjustHashCache is a management
-  bool adjustHashCache = 0;
-  bool writeExtendedVictimaPacket = 0;
+
   if(cache_is[IS_STLB] && fill_block.valid)
   {
-    if(KNOB_EXTEND_VICTIMA)
-    {
-      // // IF GAIN IS NOT AVAILABLE THEN DONT USE THIS MAINTAINANCE CODE
-      // // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full: invalidationPacket
-      // if(hash_cache.size() >= KNOB_HASH_CACHE_MAX_LIMIT)
-      // {
-      //   // test L2 read queue occupancy: if full we cannot send invalidation packet to 
-      //   if(l2cache->get_occupancy(1,0) == l2cache->get_size(1,0))
-      //   {
-      //     return false;
-      //   }
-      //   adjustHashCache = 1;
-      // }
-
-      // test if cluster-8 available to be able to written in L2
-      PACKET packet;
-      packet.thread_id = handle_pkt.thread_id;
-      pair<bool, PTEContainer> ret = collect_pte[packet.thread_id].test();
-
-      // cluster-8 is avail
-      if(ret.first)
-      {
-        /// test WQ occupancy at L2
-        if(l2cache->get_occupancy(2,0) == l2cache->get_size(2,0))
-        {
-          return false;
-        }
-        writeExtendedVictimaPacket = 1;
-      }
-    }
-    else if(KNOB_VICTIMA)
+    if(KNOB_VICTIMA)
     {
       // // initiate PTW when RQ has occupancy & TLB block is absent
       if(lower_level->get_occupancy(1,0) != lower_level->get_size(1,0))
@@ -932,48 +957,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             lower_level->add_rq(&ptwpacket);
             victima_counters[VC::VICTIMA_PTW_COUNT]++;
           }
-          // Extended-Victima Routine
-          else if(writeExtendedVictimaPacket)
-          {
-            PACKET writeback_packet;
-
-            writeback_packet.fill_level = l2cache->fill_level;
-            writeback_packet.cpu = handle_pkt.cpu;
-            writeback_packet.address = fill_block.address;
-            writeback_packet.data = fill_block.data;
-            writeback_packet.instr_id = handle_pkt.instr_id;
-            writeback_packet.ip = 0;
-            writeback_packet.type = WRITEBACK;
-            writeback_packet.vflag[VF::victima] = true;
-            writeback_packet.thread_id = handle_pkt.thread_id;
-
-            // order matters
-            {
-              // test hashcache size: we will send invalidation packet to L2 if entry hash_cache is full 
-              if(adjustHashCache)
-              {
-                // make space in hash_cache, sends invalid packet to L2 via add_rq()
-                adjust_hashcache();
-              }
-            }
-
-            // check if cluster is avail to be written at L2
-            if(use_cluster(&writeback_packet))
-            {
-              l2cache->add_wq(&writeback_packet);
-            }
-            
-            // add packet to relevant cluster if space is available; otherwise just write it as normal victima or leave it?
-            if(add_to_cluster(&writeback_packet) == -1)// failed
-            {
-
-            }
-            // if packet added to cluster then write will be done when proper cluster is formed later in the process// success
-            else
-            {
-              
-            }
-          }
 
           // tracking
           func_track_evicted_pte(handle_pkt.v_address, fill_block.data);
@@ -1004,7 +987,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       // track pollution && Test page table for being evicted cache_block
       {
         // @ data cache
-        if(cache_is[IS_L2])
+        if(cache_is[IS_L2] && !(sector_overwrite))
         {
           uint64_t track_addr = fill_block.address >> (match_offset_bits ? 0 : use_offset(handle_pkt.type));
           EvictCause evict_cause = (handle_pkt.type == TRANSLATION && fill_block.dtype == DataType::DATA) ? (EvictCause::DATA_BLOCK_EVICTED_BY_TRANSLATION_BLOCK) : (EvictCause::INVALID_CAUSE);
@@ -1134,6 +1117,33 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
     fill_block.translation_level_if_pagetable_block = (handle_pkt.type == TRANSLATION) ? handle_pkt.translation_level: -1;
+
+    // sector write
+    // deals with PTE storage and their imp subtag
+    // make sure Partial Tag is adjusted based in subtag width here
+    if(sector_write)
+    {
+      sector_counters[SCCounter::SectorWrite]++;
+      uint64_t page_addr = handle_pkt.v_address >> 12;
+      int pte_offset = page_addr & 0x7;
+      // since this is sector write use v_address
+      fill_block.address =  page_addr >> (KNOB_ENABLE_SWAT_WAYS + lg2(NUM_SET) + 3);
+      if(sector_overwrite)
+      {
+        // dlog.log("Overwrite content", '\n');
+        // fill_block.sectorHolder.dump();
+        sector_counters[SCCounter::SectorOverwrite]++;
+        fill_block.sectorHolder.overwrite(page_addr, cache_block_data_for_sector.second, NUM_SET);
+      }
+      else
+      {
+        sector_counters[SCCounter::SectorInsert]++;
+        fill_block.sectorHolder.insert(page_addr, cache_block_data_for_sector.second[pte_offset], NUM_SET);
+        
+        dlog.log("Insert content", intToHex(cache_block_data_for_sector.second[pte_offset]), '\n');
+        fill_block.sectorHolder.dump();
+      }
+    }
 
     // // To verify victima_lookup is working
     // if(cache_id == CACHE_ID::IS_L2 && handle_pkt.type == TRANSLATION && handle_pkt.translation_level == 1 && handle_pkt.vflag[VF::victima_stlbevict_ptw])
@@ -1611,6 +1621,8 @@ void CACHE::return_data(PACKET* packet)
 {
   PACKET handle_pkt = *packet;
 
+  debugLog.log(current_cycle, "RET", NAME, intToHex(packet->address), intToHex(packet->v_address), intToHex(packet->data), '\n');
+
   // check MSHR information
   bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
 
@@ -1974,70 +1986,6 @@ void CACHE::func_track_evicted_pte(uint64_t v_address, uint64_t data)
     // Append newest eviction
     // eviction_history_pte is assumed to be a map<va, pa> (or unordered_map)
     eviction_history_pte.insert({v_address, data});
-}
-
-// check if we are above limit
-// remove entry is hash_cache reached to its limit
-// invalidation packet for same entry sent to L2
-void CACHE::adjust_hashcache()
-{
-  //*** test: L2 rq occupancy alredy done before ***//
-  // invalidate corresponding entry is in the L2, since we are removing hash_entry
-  pair<string, uint64_t> hash_entry = hash_cache.front();
-
-  // prepare packet to invalidate entry in L2 if it exists
-  PACKET invpacket;
-  invpacket.address = hash_entry.second;
-  invpacket.vflag[VF::INVALIDATE_PACKET] = 1;
-
-  // packet sent to L2
-  l2cache->add_rq(&invpacket);
-
-  // remove entry from hash_cache
-  hash_cache.pop_front();
-}
-
-// Proposed IDEA @STLB
-// true: write as ext-victima packet
-int CACHE::use_cluster(PACKET* packet)
-{
-  // test if cluster-8 available to be able to written in L2
-  pair<bool, PTEContainer> ret = collect_pte[packet->thread_id].test();
-  if(ret.first)
-  {
-    // generate hash for cluster-8
-    string hash_str= "";
-    for(auto entry: ret.second.collection)
-      hash_str += to_string(entry.vaddr) + "_";
-    hash_cache.push_back(make_pair(hash_str, ret.second.collection.front().vaddr));
-
-    // store this buffer of 8 PTE in L2 cache block using current packet
-    packet->vflag[VF::EXT_VICTIMA_PACKET] = 1;
-    packet->pte_container = ret.second;
-    return true;
-  }
-  return false;
-}
-
-// Proposed IDEA @STLB
-// -1: cannot be inserted. write as victima packet
-// -2: insert done. write later collect now
-int CACHE::add_to_cluster(PACKET* packet)
-{
-  uint64_t offset = (packet->address >> LOG2_PAGE_SIZE) & 0x7;
-  uint64_t vp = (packet->address & ~(PAGE_SIZE-1));
-  uint64_t pp = (packet->data & ~(PAGE_SIZE-1));
-
-  // test occupancy in PTEContainer specific to this offset
-  if(collect_pte[packet->thread_id].isSpaceAvail(offset))
-  {
-    // insert in PTEContainer --> insertion done
-    collect_pte[packet->thread_id].insert(offset, PTEclass(vp, pp, packet->thread_id));
-
-    // since space is avail, we dont need to write it yet
-    return -2;
-  }
-  return -1;
 }
 
 void CACHE::func_return(PACKET* packet)

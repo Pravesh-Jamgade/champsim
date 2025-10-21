@@ -118,6 +118,9 @@ public:
 
   uint64_t pom_address = 0;
 
+  // We need this to understand when do the "existing_sector_block" get replenished with "new_sector_block"
+  bool block_hit_pte_miss = false;
+
 };
 
 template <>

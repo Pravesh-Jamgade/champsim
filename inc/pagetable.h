@@ -334,6 +334,35 @@ class ProcessPageTable
         return {usage, valid_bits};
     }
 
+    // number of valid PTE and which pte are valid
+    pair<int, vector<uint64_t>> get_cacheblock_data(int process_id, uint64_t pte_address, int pt_level, string caller="")
+    {
+        int usage = 0;
+        Page page = getpage(process_id, pte_address, pt_level);
+        int cache_block_id = (pte_address >> LOG2_BLOCK_SIZE) & 0x3F; // 6-bit cache block id within page
+
+        if(page.list_cacheblocks.find(cache_block_id) == page.list_cacheblocks.end())
+        {
+            pagetable_logger.log( "Error: cacheblock not found for getting usage", "cpu", process_id, "page", intToHex(page.page_number), "addr", intToHex(pte_address), "cb", cache_block_id, "pt_level", pt_level, caller, '\n');
+            exit(-1);
+        }
+
+        vector<uint64_t> pte_list(8, UINT64_MAX);
+        CacheBlock cache_block = page.list_cacheblocks[cache_block_id];
+        for(int i=0; i<8; i++)
+        {
+            auto pte = cache_block.get_pte(i);
+            if(pte.first)
+            {
+                usage++;
+                pte_list[i] = pte.second.page_address;
+            }
+        }
+
+        // pagetable_logger.log( "CacheBlockUsage", "cpu", process_id, "addr", intToHex(pte_address), "cb", cache_block_id, "pt_level", pt_level, "usage", usage, "valid_bits", bitset<8>(valid_bits), '\n');
+        return {usage, pte_list};
+    }
+
     // full ??
     bool is_translation_block_full(int process_id, uint64_t pte_address, int pt_level, string caller="")
     {

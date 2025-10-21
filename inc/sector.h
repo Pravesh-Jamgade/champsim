@@ -7,9 +7,19 @@
 #include <variant>
 using namespace std;
 
-extern uint64_t KNOB_SUBTAG_BITS;
+extern int KNOB_ENABLE_SWAT_WAYS;
 
 struct LookupResultU64 { bool hit; uint64_t value; };
+
+enum SCCounter
+{
+    SectorChoiceNormal,
+    SectorChoiceSector,
+    SectorWrite, // matched sector partial tag with incomming translation cache block, this is imp for our idea since we have reduced Tag size we expect multiple neighbouring translation cache block map to single sectorline
+    SectorOverwrite,// completely update entire sector line with incomming 64byte line
+    SectorInsert,// insert single PTE in sectore line
+    SCCounter_End
+};
 
 struct Indexer
 {
@@ -18,7 +28,8 @@ struct Indexer
     // page address
     static int get_index(uint64_t addr) { return (addr & 0x7ULL);}
     // page address, no_of_bits_in_set
-    static int get_subTag(uint64_t addr, int set_num) { return ( (addr >> (3+get_num_bits(set_num))) & get_mask(KNOB_SUBTAG_BITS) ); }
+    static int get_subTag(uint64_t addr, int num_sets) { return ( (addr >> (3+get_num_bits(num_sets))) & get_mask(KNOB_ENABLE_SWAT_WAYS) ); }
+    static int get_partialTag(uint64_t addr, int num_sets) { return (addr >> (lg2(KNOB_ENABLE_SWAT_WAYS) + lg2(num_sets) + 3) ) ; }
 };
 
 struct DirectMap
@@ -53,11 +64,29 @@ struct DirectMap
         slots[index].subTag = Indexer::get_subTag(page_addr, NUM_SET);
     }
 
+    void overwrite(uint64_t page_addr, vector<uint64_t> ptes, int NUM_SET)
+    {
+        for(int i=0; i< 8; i++)
+        {
+            uint64_t pte = ptes[i];
+            int index = Indexer::get_index(page_addr);
+            slots[index].valid = true;
+            slots[index].pte = pte;
+            slots[index].subTag = Indexer::get_subTag(page_addr, NUM_SET);
+        }
+    }
+
+    bool isSpaceAvailable(uint64_t page_addr)
+    {
+       int index = Indexer::get_index(page_addr);
+       return slots[index].valid == false;
+    }
+
     // void dump() {dumper::dump(slots);}
     void dump()
     {
         for(int i=0; i< slots.size(); i++)
-            cout << "i="<<i <<", "<< slots[i].pte << ", " << slots[i].subTag << '\n';
+            cout << "i="<<i <<", "<< intToHex(slots[i].subTag) <<", "<< intToHex(slots[i].pte) << '\n';
     }
 };
 
@@ -88,7 +117,7 @@ struct LRU8
         slots[index].pte = pte;
         slots[index].age = timeTick;
         slots[index].valid = true;
-        cout << "id, " << index << ", subTag, " << subTag << ", pte, " << pte << ", timeTick, " << timeTick << '\n';
+        // cout << "id, " << index << ", subTag, " << intToHex(subTag) << ", pte, " << intToHex(pte) << ", timeTick, " << timeTick << '\n';
     }
 
     template<class EntryArr>
@@ -139,11 +168,33 @@ struct AssociativeMap
         repl.insert(slots, combinedTag, pte);
     }
 
+    void overwrite(uint64_t page_addr, vector<uint64_t> ptes, int NUM_SET)
+    {
+        for(int i=0; i< 8; i++)
+        {
+            uint64_t pte = ptes[i];
+            uint64_t subTag = Indexer::get_subTag(page_addr, NUM_SET);
+            uint64_t pte_offset = Indexer::get_index(page_addr);
+            uint64_t combinedTag = (subTag << 3) | pte_offset;
+            repl.insert(slots, combinedTag, pte);
+        }
+    }
+
+    // if invalid slot available
+    bool isSpaceAvailable(uint64_t page_addr=0)
+    {
+        for(auto sl: slots)
+        {
+            if(!sl.valid)   return true;
+        }
+        return false;
+    }
+
     // void dump() {dumper::dump(slots);}
     void dump()
     {
         for(int i=0; i< slots.size(); i++)
-            cout << "i="<<i <<", "<< slots[i].pte << ", " << slots[i].subTag << ", valid, " << slots[i].valid << '\n';
+            cout << "i="<<i <<", "<< intToHex(slots[i].subTag) <<", "<< intToHex(slots[i].pte) << '\n';
     }
 };
 
@@ -170,8 +221,8 @@ struct SectorDesignSelector<SectorDesingChoice::ASSOCIATIVE>
 // ---- Type-erased interface so callers can use one uniform API ----
 struct ISector {
     virtual ~ISector() {}
-    virtual LookupResultU64 lookup(uint64_t page_addr, int log2_sets) = 0;
-    virtual void            insert(uint64_t page_addr, uint64_t pte, int log2_sets) = 0;
+    virtual LookupResultU64 lookup(uint64_t page_addr, int num_sets) = 0;
+    virtual void            insert(uint64_t page_addr, uint64_t pte, int num_sets) = 0;
     virtual void            dump() = 0;
 };
 
@@ -182,11 +233,11 @@ struct SectorModel : ISector {
     std::unique_ptr<ISector> clone() const override {
         return std::unique_ptr<ISector>(new SectorModel<Impl>(*this)); // copies Impl
       }
-    LookupResultU64 lookup(uint64_t page_addr, int log2_sets) override {
-        return impl.lookup(page_addr, log2_sets);
+    LookupResultU64 lookup(uint64_t page_addr, int num_sets) override {
+        return impl.lookup(page_addr, num_sets);
     }
-    void insert(uint64_t page_addr, uint64_t pte, int log2_sets) override {
-        impl.insert(page_addr, pte, log2_sets);
+    void insert(uint64_t page_addr, uint64_t pte, int num_sets) override {
+        impl.insert(page_addr, pte, num_sets);
     }
     void dump() override { impl.dump(); }
 
@@ -210,16 +261,31 @@ class SectorHolder
         return h;                       // copyable/movable
       }
     
-      LookupResultU64 lookup(uint64_t addr, int log2_sets) {
-        return std::visit([&](auto& s){ return s.lookup(addr, log2_sets); }, sector_);
+      LookupResultU64 lookup(uint64_t addr, int num_sets) {
+        return std::visit([&](auto& s){ return s.lookup(addr, num_sets); }, sector_);
       }
-      void insert(uint64_t addr, uint64_t pte, int log2_sets) {
-        std::visit([&](auto& s){ s.insert(addr, pte, log2_sets); }, sector_);
+      void insert(uint64_t addr, uint64_t pte, int num_sets) {
+        std::visit([&](auto& s){ s.insert(addr, pte, num_sets); }, sector_);
       }
       void dump() {
         std::visit([&](auto & s){ s.dump(); }, sector_);
       }
-    
+      
+      void overwrite(uint64_t addr, vector<uint64_t> ptes, int num_sets)
+      {
+        std::visit([&](auto &s) { s.overwrite(addr, ptes, num_sets); }, sector_);
+      }
+
+      bool isSpaceAvailable(uint64_t addr){
+        return std::visit
+        (
+            [&](auto & s)
+            { 
+                return s.isSpaceAvailable(addr);
+            }, sector_
+        );
+      }
+
       SectorDesingChoice choice() const { return choice_; }
       
       bool is_sector_line = false;

@@ -27,8 +27,8 @@
 ProcessPageTable* process_page_table;
 POMTLB* pomtlb;
 map<tuple<uint64_t, int>, PTWC> ptw_pred;
-list<pair<string, uint64_t>> hash_cache;
 uint64_t POM_CPU_KEY = 123456789;
+vector<int> sector_counters(SCCounter::SCCounter_End, 0);
 
 uint8_t warmup_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
@@ -67,6 +67,7 @@ extern int KNOB_ENABLE_SWAT_WAYS;
 std::vector<tracereader*> traces;
 
 void print_ptw_freq_and_cost();
+void print_sector_stats();
 
 uint64_t champsim::deprecated_clock_cycle::operator[](std::size_t cpu_idx)
 {
@@ -360,7 +361,7 @@ void overwrite_cache()
     stlb->FILL_LATENCY = 3 * stlb->HIT_LATENCY;
   }
   
-  if(KNOB_VICTIMA || KNOB_POMTLB)
+  if(KNOB_VICTIMA || KNOB_POMTLB || KNOB_ENABLE_SWAT_WAYS)
   {
     CACHE* stlb = get_cache_by_name("STLB");
 
@@ -369,6 +370,12 @@ void overwrite_cache()
 
     CACHE* l1 = get_cache_by_name("L1D");
     stlb->l1cache = l1;
+  }
+
+  if(KNOB_ENABLE_SWAT_WAYS)
+  {
+    CACHE* l2 = get_cache_by_name("L2");
+    l2->func_init_sector();
   }
 
   for(auto op: operables)
@@ -865,11 +872,29 @@ process_page_table->printStat();
 
 pomtlb->print_stats();
 
+print_sector_stats();
+
 cout << "\nDone!\n";
 
   return 0;
 }
 
+void print_sector_stats()
+{
+  string headlines[SCCounter::SCCounter_End+1] = {
+    "Write to normal lines",
+    "Write to sector lines",
+    "Sector writes requested",
+    "Sector overwrites",
+    "Sector inserts",
+  };
+
+  for(int i=0; i< SCCounter::SCCounter_End; i++)
+  {
+    cout << headlines[i] << ", " << sector_counters[i] << '\n';
+  }
+  cout << '\n';
+}
 
 void print_ptw_freq_and_cost()
 {

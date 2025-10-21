@@ -245,6 +245,26 @@ public:
   void adjust_hashcache();
   int use_cluster(PACKET* packet);
 
+  void func_init_sector()
+  {
+    // for each set
+    for(int setIndex = 0; setIndex < NUM_SET; setIndex++)
+    {
+      for(int i=0; i< NUM_WAY; i++)
+      {
+        // reserve some ways as Sector and rest as normal data-blocks
+        if(i < KNOB_ENABLE_SWAT_WAYS)
+        {
+          block[setIndex * NUM_WAY + i].sectorHolder = SectorHolder::make(SectorDesingChoice::ASSOCIATIVE, true);
+        }
+        else// normal blocks
+        {
+          block[setIndex * NUM_WAY + i].sectorHolder = SectorHolder::make(SectorDesingChoice::ASSOCIATIVE);
+        }
+      }
+    }
+  }
+
   void print_logs()
   {
     string prefix = NAME + " ";
@@ -405,21 +425,6 @@ public:
   {
 
     block.resize(NUM_WAY * NUM_SET);
-    if(cache_id == CACHE_ID::IS_L2 && KNOB_ENABLE_SWAT_WAYS)
-    {
-      // for each set
-      for(int setIndex = 0; setIndex < NUM_SET; setIndex++)
-      {
-        for(int i=0; i< NUM_WAY; i++)
-        {
-          // reserve some ways as Sector and rest as normal data-blocks
-          if(i < KNOB_ENABLE_SWAT_WAYS)
-          block[setIndex * NUM_WAY + i].sectorHolder = SectorHolder::make(SectorDesingChoice::ASSOCIATIVE, true);
-          else// normal blocks
-          block[setIndex * NUM_WAY + i].sectorHolder = SectorHolder::make(SectorDesingChoice::ASSOCIATIVE);
-        }
-      }
-    }
 
     for(int i=0; i< 16; i++)
     {
@@ -427,7 +432,7 @@ public:
     }
     
     debugLog = logger(false);
-    dlog = logger(false);
+    dlog = logger(true);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
