@@ -1,7 +1,7 @@
 #include "cache.h"
 
 #define maxRRPV 3
-extern int KNOB_ENABLE_SWAT_WAYS;
+static int KNOB_ENABLE_SWAT_WAYS;
 
 // initialize replacement state
 void CACHE::initialize_replacement()
