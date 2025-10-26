@@ -18,6 +18,15 @@ enum SCCounter
     SectorWrite, // matched sector partial tag with incomming translation cache block, this is imp for our idea since we have reduced Tag size we expect multiple neighbouring translation cache block map to single sectorline
     SectorOverwrite,// completely update entire sector line with incomming 64byte line
     SectorInsert,// insert single PTE in sectore line
+    
+    SectorReadReq,
+    SctrPkt_L2_READ_HIT,
+    SctrPkt_L2_READ_MISS,
+    SctrLine_L2_READ_HIT,
+
+    SectorReadIdealReq,
+    SctrPktIdeal_L2_READ_HIT,
+    SctrPktIdeal_L2_READ_MISS,
     SCCounter_End
 };
 
@@ -56,22 +65,27 @@ struct DirectMap
     }
 
     // update at index even if it is valid
-    void insert(uint64_t page_addr, uint64_t pte, int NUM_SET)
+    void insert(uint64_t page_addr, pair<bool, uint64_t> pte, int NUM_SET)
     {
+        if(pte.first == false)
+            return;
         int index = Indexer::get_index(page_addr);
         slots[index].valid = true;
-        slots[index].pte = pte;
+        slots[index].pte = pte.second;
         slots[index].subTag = Indexer::get_subTag(page_addr, NUM_SET);
     }
 
-    void overwrite(uint64_t page_addr, vector<uint64_t> ptes, int NUM_SET)
+    void overwrite(uint64_t page_addr, vector<pair<bool, uint64_t>> ptes, int NUM_SET)
     {
         for(int i=0; i< 8; i++)
         {
-            uint64_t pte = ptes[i];
+            pair<bool, uint64_t> pte = ptes[i];
+            if(pte.first == false)
+                continue;
+
             int index = Indexer::get_index(page_addr);
             slots[index].valid = true;
-            slots[index].pte = pte;
+            slots[index].pte = pte.second;
             slots[index].subTag = Indexer::get_subTag(page_addr, NUM_SET);
         }
     }
@@ -160,23 +174,28 @@ struct AssociativeMap
         return repl.lookup(slots, combinedTag);
     }
 
-    void insert(uint64_t page_addr, uint64_t pte, int NUM_SET)
+    void insert(uint64_t page_addr, pair<bool, uint64_t> pte, int NUM_SET)
     {
+        if(pte.first == false)
+            return;
+        
         uint64_t subTag = Indexer::get_subTag(page_addr, NUM_SET);
         uint64_t pte_offset = Indexer::get_index(page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
-        repl.insert(slots, combinedTag, pte);
+        repl.insert(slots, combinedTag, pte.second);
     }
 
-    void overwrite(uint64_t page_addr, vector<uint64_t> ptes, int NUM_SET)
+    void overwrite(uint64_t page_addr, vector<pair<bool, uint64_t>> ptes, int NUM_SET)
     {
         for(int i=0; i< 8; i++)
         {
-            uint64_t pte = ptes[i];
+            pair<bool, uint64_t> pte = ptes[i];
+            if(pte.first == false)
+                continue;
             uint64_t subTag = Indexer::get_subTag(page_addr, NUM_SET);
             uint64_t pte_offset = Indexer::get_index(page_addr);
             uint64_t combinedTag = (subTag << 3) | pte_offset;
-            repl.insert(slots, combinedTag, pte);
+            repl.insert(slots, combinedTag, pte.second);
         }
     }
 
@@ -264,14 +283,14 @@ class SectorHolder
       LookupResultU64 lookup(uint64_t addr, int num_sets) {
         return std::visit([&](auto& s){ return s.lookup(addr, num_sets); }, sector_);
       }
-      void insert(uint64_t addr, uint64_t pte, int num_sets) {
+      void insert(uint64_t addr, pair<bool, uint64_t> pte, int num_sets) {
         std::visit([&](auto& s){ s.insert(addr, pte, num_sets); }, sector_);
       }
       void dump() {
         std::visit([&](auto & s){ s.dump(); }, sector_);
       }
       
-      void overwrite(uint64_t addr, vector<uint64_t> ptes, int num_sets)
+      void overwrite(uint64_t addr, vector<pair<bool, uint64_t>> ptes, int num_sets)
       {
         std::visit([&](auto &s) { s.overwrite(addr, ptes, num_sets); }, sector_);
       }

@@ -62,7 +62,7 @@ extern int KNOB_LIVE_INPUT;
 extern int KNOB_ENABLE_LOG;
 extern int KNOB_ENABLE_MFOE_V2;
 extern int KNOB_ENABLE_CTX;
-extern int KNOB_ENABLE_SWAT_WAYS;
+extern int KNOB_ENABLE_SWAT_WAYS, KNOB_ENABLE_IDEAL_SWAT;
 
 std::vector<tracereader*> traces;
 
@@ -564,23 +564,9 @@ int main(int argc, char** argv)
   KNOB_ENABLE_CTX = iniReader->GetInteger("SIMULATOR", "ENABLE_CTX_SWITCH", 0);
   KNOB_POMTLB = iniReader->GetInteger("POMTLB", "ENABLE_POMTLB", 0);
   KNOB_ENABLE_SWAT_WAYS = iniReader->GetInteger("SWAT", "ENABLE_SWAT_WAYS", 0);
-  
-  std::cout << "Extra settings:\n";
-  // std::cout << "TQ="<<KNOB_TRANSLATION_QUEUE<<'\n';
-  // std::cout << "TTP="<<KNOB_TTP<<'\n';
-  // std::cout << "STLB_DO_NOT_TRACK_MISS="<<KNOB_STLB_DO_NOT_TRACK_MISS<<'\n';
-  // std::cout << "STTMRAM_STLB="<<KNOB_STTMRAM_STLB<<'\n';
-  // std::cout << "VICTIMA\n-ENABLE_VICTIMA="<<KNOB_VICTIMA<<'\n';
-  // std::cout << "-ENABLE_IDEAL_VICTIMA="<<KNOB_IDEAL_VICTIMA<<'\n';
-  // std::cout << "ENABLE MFOEv2=" << KNOB_ENABLE_MFOE_V2 << '\n'; 
-  // std::cout << "SMT="<<KNOB_SMT_ENABLE<<'\n';
-  // std::cout << "PT Levels="<<KNOB_PSCL_ROOT_LEVEL<<'\n';
-  // std::cout << "Live Input="<<KNOB_LIVE_INPUT<<'\n';
-  // std::cout << "Debug Log="<<KNOB_ENABLE_LOG<<'\n';
-  // std::cout << "Output file="<<output_file<<'\n';
-  // std::cout << "Enable Context Switch="<<KNOB_ENABLE_CTX<<'\n';
-  // std::cout << '\n';
+  KNOB_ENABLE_IDEAL_SWAT = iniReader->GetInteger("SWAT", "ENABLE_IDEAL_SWAT", 0);
 
+  std::cout << "Extra settings:\n";
   iniReader->print();
   
   int total_cores = KNOB_SMT_ENABLE >0 ? NUM_CPUS * KNOB_SMT_ENABLE:  NUM_CPUS;
@@ -882,11 +868,21 @@ cout << "\nDone!\n";
 void print_sector_stats()
 {
   string headlines[SCCounter::SCCounter_End+1] = {
-    "Write to normal lines",
-    "Write to sector lines",
-    "Sector writes requested",
-    "Sector overwrites",
-    "Sector inserts",
+    "SectorChoiceNormal",
+    "SectorChoiceSector",
+    "SectorWrite",   
+    "SectorOverwrite",
+    "SectorInsert",
+
+    "SectorReadReq",
+    "SctrPkt_L2_READ_HIT ", 
+    "SctrPkt_L2_READ_MISS",
+    "SctrLine_L2_READ_HIT",
+
+    "SectorReadIdealReq",
+    "SctrPktIdeal_L2_READ_HIT",
+    "SctrPktIdeal_L2_READ_MISS",
+    "SCCounter_End"
   };
 
   for(int i=0; i< SCCounter::SCCounter_End; i++)

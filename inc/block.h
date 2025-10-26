@@ -13,6 +13,11 @@
 class MemoryRequestProducer;
 class LSQ_ENTRY;
 
+enum SF
+{   
+    sector=0,
+    Sctr_end
+};
 
 enum VF
 {
@@ -100,6 +105,7 @@ public:
 
   bool vflag[VF::VF_END] = {0};
   bool pomflag[POM::POM_END] = {0};
+  bool sctrFlag[SF::Sctr_end] = {0};
 
   // default: wait for Actual Packet
   VF mshr_state = VF::VF_END;

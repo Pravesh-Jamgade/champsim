@@ -135,6 +135,11 @@ class CacheDataModel
             exception_bounds.push_back({201, 0x7fffffff});
             reuse_distance = new Hist(1,5,8,exception_bounds);
         }
+
+        {
+            vector<pair<int,int>> exception_bounds;
+            sector_block_occupancy = new Hist(0,1,8,exception_bounds);
+        }
     }
 
     string name;
@@ -171,6 +176,8 @@ class CacheDataModel
     Hist* victima_access_latency_at_l2;
     // req miss victima latency
     Hist* victima_miss_latency_at_stlb;
+
+    Hist* sector_block_occupancy;
 
     // type of cache blocks
     int block_type_counters[DataType::DataType_end] = {0};
@@ -300,6 +307,10 @@ class CacheDataModel
         {
             cout << data_type_str[i] << ", " << block_type_counters[i] << '\n';
         }
+        cout << '\n';
+
+        cout << "\n" << tag << " sector block occupancy\n";
+        sector_block_occupancy->print_histogram(tag);
         cout << '\n';
     }
 };

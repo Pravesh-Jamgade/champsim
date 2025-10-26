@@ -335,7 +335,7 @@ class ProcessPageTable
     }
 
     // number of valid PTE and which pte are valid
-    pair<int, vector<uint64_t>> get_cacheblock_data(int process_id, uint64_t pte_address, int pt_level, string caller="")
+    pair<int, vector<pair<bool, uint64_t>>> get_cacheblock_data(int process_id, uint64_t pte_address, int pt_level, string caller="")
     {
         int usage = 0;
         Page page = getpage(process_id, pte_address, pt_level);
@@ -347,7 +347,7 @@ class ProcessPageTable
             exit(-1);
         }
 
-        vector<uint64_t> pte_list(8, UINT64_MAX);
+        vector<pair<bool, uint64_t>> pte_list(8);
         CacheBlock cache_block = page.list_cacheblocks[cache_block_id];
         for(int i=0; i<8; i++)
         {
@@ -355,8 +355,8 @@ class ProcessPageTable
             if(pte.first)
             {
                 usage++;
-                pte_list[i] = pte.second.page_address;
             }
+            pte_list[i] = {pte.first, pte.second.page_address};
         }
 
         // pagetable_logger.log( "CacheBlockUsage", "cpu", process_id, "addr", intToHex(pte_address), "cb", cache_block_id, "pt_level", pt_level, "usage", usage, "valid_bits", bitset<8>(valid_bits), '\n');

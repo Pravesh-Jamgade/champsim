@@ -58,7 +58,7 @@ public:
   vector<vector<int>> transition_hitmap_for_vp_page, transition_hitmap_for_pp_page;
 
   logger debugLog;
-  logger dlog;
+  logger dlog, dataflow;
   logger dassert;
 
   //usercode
@@ -178,6 +178,9 @@ public:
   uint64_t use_offset(int type);
 
   pair<bool, PTEHolder> victima_peek_singleline(const PACKET handle_pkt);
+  pair<bool, uint64_t> sector_peek_singleline(const PACKET handle_pkt);
+
+  void func_prepare_victima_packet(PACKET& handle_pkt, PACKET& newPacket);
 
   // tracking pte
   void func_track_evicted_pte(uint64_t v_addr, uint64_t p_addr);
@@ -432,7 +435,8 @@ public:
     }
     
     debugLog = logger(false);
-    dlog = logger(true);
+    dlog = logger(false);
+    dataflow = logger(false);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
