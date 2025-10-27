@@ -61,7 +61,7 @@ void CACHE::handle_fill()
       return;
     }
 
-    dataflow.log(current_cycle, NAME, "fill", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "sector_packet", fill_mshr->vflag[VF::victima], "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), '\n');    
+    dataflow.log(current_cycle, NAME, "fill", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "direct_read", fill_mshr->vflag[VF::victima], "sector_pkt", fill_mshr->vflag[VF::victima_stlbevict_ptw], "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), '\n');    
 
     // order matters
     // No write - hence No tracking of PTE
@@ -320,7 +320,7 @@ void CACHE::handle_read()
       exit(-1);
     }
 
-    dataflow.log(current_cycle, NAME, "read", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "sector_packet", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+    dataflow.log(current_cycle, NAME, "read", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct_read", handle_pkt.vflag[VF::victima], "sector_pkt", handle_pkt.vflag[VF::victima_stlbevict_ptw], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
@@ -468,7 +468,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE], handle_pkt.vflag[VF::victima]);
 
-  dataflow.log(current_cycle, NAME, "hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "sector_packet", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), '\n');    
+  dataflow.log(current_cycle, NAME, "hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct_read", handle_pkt.vflag[VF::victima], "sector_pkt", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), '\n');    
 }
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
@@ -737,7 +737,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   }
   global_reuse[tag] = global_access_count;
 
-  dataflow.log(current_cycle, NAME, "miss", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+  dataflow.log(current_cycle, NAME, "miss", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct_read", handle_pkt.vflag[VF::victima], "sector_pkt", handle_pkt.vflag[VF::victima_stlbevict_ptw], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
 
   return true;
 }
@@ -804,9 +804,17 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   //   cout << "STLB Testing Sector, addr, " << intToHex(handle_pkt.address) << ", vaddr, " << intToHex(handle_pkt.v_address) << ", data, " << intToHex(handle_pkt.data) <<", "<< res.first << ", " << intToHex(res.second) << '\n';
   // }
 
+  // Part Testing Victima
+  // //// Test Victima Lookup
+  // if(cache_is[CACHE_ID::IS_L1D])
+  // {
+  //   auto res = ((CACHE*)lower_level->getObject())->victima_peek_singleline(handle_pkt);
+  //   cout << "STLB Testing Victima, addr, " << intToHex(handle_pkt.address) << ", vaddr, " << intToHex(handle_pkt.v_address) << ", data, " << intToHex(handle_pkt.data) <<", "<< res.first << ", " << intToHex(res.second.page_address) << '\n';
+  // }
+
   // Block is valid, we are dropping it from STLB
   // test if we do have have this costly block as Victima-block available in L2-cache, if not then test can we add PTW request
-  bool sendVictimaPTWRequest = 0;
+  bool sendVictimaPTWRequest = false;
 
   if(cache_is[IS_STLB] && fill_block.valid)
   {
@@ -817,7 +825,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       {
         // refet PTW-CP
         int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
-        sendVictimaPTWRequest = victima_lookup(handle_pkt.v_address, cpu_id);
+        sendVictimaPTWRequest = 1;//victima_lookup(handle_pkt.v_address, cpu_id);
       }
     }
   }
@@ -908,6 +916,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
             lower_level->add_rq(&ptwpacket);
             victima_counters[VC::VICTIMA_PTW_COUNT]++;
+
+            dlog.log(current_cycle, NAME, "evict", "instr", fill_block.instr_id, "th",fill_block.instr_id, "tran", 1, "level", 0, "victima-packet", 1, "addr", intToHex(fill_block.address), "vaddr", intToHex(fill_block.v_address), "data", intToHex(fill_block.data), '\n');
           }
 
           // tracking
@@ -1067,13 +1077,20 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.came_from_request = handle_pkt.type;
 
     // Identifies block is brought in by victima PTW
-    fill_block.victima_block = handle_pkt.vflag[VF::victima_stlbevict_ptw];
+    fill_block.victima_block = cache_is[CACHE_ID::IS_L2] && handle_pkt.vflag[VF::victima_stlbevict_ptw];
 
     fill_block.thread_id = handle_pkt.thread_id;
     fill_block.dtype = handle_pkt.dtype;
     fill_block.vp_2_pp_map.clear();
     fill_block.translation_level_if_pagetable_block = (handle_pkt.type == TRANSLATION) ? handle_pkt.translation_level: -1;
     
+    // Part Testing Victima
+    // // writing victima block
+    // if(fill_block.victima_block)
+    // {
+    //   dlog.log(current_cycle, NAME, "fill", "instr", fill_block.instr_id, "th", fill_block.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "victima-block", fill_block.victima_block, "addr", intToHex(fill_block.address), "vaddr", intToHex(fill_block.v_address), "data", intToHex(fill_block.data), '\n');
+    // }
+
     // sector write
     // deals with PTE storage and their imp subtag
     // make sure Partial Tag is adjusted based in subtag width here
@@ -1157,6 +1174,39 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   if(!is_tlb)
     cacheDataModel->block_type_counters[fill_block.dtype]++;
+
+    // Invoking PTW for eviction
+    //  // Part Testing Victima
+    // if(KNOB_VICTIMA)
+    // {
+    //   if(cache_is[CACHE_ID::IS_STLB])
+    //   {
+    //     // Victima Routine
+    //     // TLB block is absent at L2
+    //     // sendVictimaPTWRequest
+    //     if(1)
+    //     {
+    //       // Sending evicted packet for PTW
+
+    //       PACKET ptwpacket;
+    //       ptwpacket.to_return = {this};
+    //       ptwpacket.cpu = fill_block.cpu;
+    //       ptwpacket.address = fill_block.v_address;
+    //       ptwpacket.v_address = fill_block.v_address;
+    //       ptwpacket.data = fill_block.data;
+    //       ptwpacket.instr_id = fill_block.instr_id;
+    //       ptwpacket.ip = 0;
+    //       ptwpacket.type = TRANSLATION;
+    //       ptwpacket.vflag[VF::victima_stlbevict_ptw] = true;//storing result of leaf-pte to L2 and transforming it to TLBblock or victimablock
+    //       ptwpacket.thread_id = fill_block.thread_id;
+          
+    //       lower_level->add_rq(&ptwpacket);
+    //       victima_counters[VC::VICTIMA_PTW_COUNT]++;
+
+    //       dlog.log(current_cycle, NAME, "forced-evict", "instr", fill_block.instr_id, "th",fill_block.instr_id, "tran", 1, "level", 0, "victima-packet", 1, "addr", intToHex(fill_block.address), "vaddr", intToHex(fill_block.v_address), "data", intToHex(fill_block.data), '\n');
+    //     }
+    //   }
+    // }
 
   return true;
 }
@@ -1589,7 +1639,7 @@ void CACHE::return_data(PACKET* packet)
 {
   PACKET handle_pkt = *packet;
 
-  dataflow.log(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "sector_packet", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+  dataflow.log(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct_read", handle_pkt.vflag[VF::victima], "sector_pkt", handle_pkt.vflag[VF::victima_stlbevict_ptw], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
 
   // check MSHR information
   bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
@@ -1846,7 +1896,7 @@ pair<bool, PTEHolder> CACHE::victima_peek_singleline(const PACKET handle_pkt)
   BLOCK* hit_block = &block[set * NUM_WAY + way];
   // extra check to test if block is victima block or not
   bool hit = way < NUM_WAY && hit_block->victima_block;
-
+  uint64_t pageAddr = handle_pkt.v_address >> LOG2_PAGE_SIZE;
   // if hit, we now need exact PTE we are looking for, We have pa of earlier PTE that brought this cache block at L2. We will
   // use that PA to for cache block and use offset from VA
   if(hit)
@@ -1867,6 +1917,13 @@ pair<bool, PTEHolder> CACHE::victima_peek_singleline(const PACKET handle_pkt)
     
     ret = process_page_table->get_pte(cpuid, new_addr, hit_block->translation_level_if_pagetable_block);
   }
+
+  // for(int i=0; i< NUM_WAY; i++)
+  // {
+  //   BLOCK b = block[set*NUM_WAY + i];
+  //   cout << NAME << " block: " << "way=" << way << "v="<< b.valid << ", addr=" << intToHex(b.address) << ", sft_addr=" << intToHex(b.address >> (LOG2_PAGE_SIZE+3+lg2(NUM_SET))) << ", test="<< intToHex(handle_pkt.v_address) << ", "<< intToHex(pageAddr >> (3+lg2(NUM_SET))) << '\n';
+  // }
+
   return ret;
 }
 

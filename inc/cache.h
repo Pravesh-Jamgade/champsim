@@ -435,7 +435,7 @@ public:
     }
     
     debugLog = logger(false);
-    dlog = logger(false);
+    dlog = logger(true);
     dataflow = logger(false);
     dassert = logger(true);
 
