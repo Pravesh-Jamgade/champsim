@@ -41,6 +41,8 @@ enum VF
   EXT_VICTIMA_PACKET,
   INVALIDATE_PACKET,
   victima_stlbevict_ptw,
+
+  sector_retry,
   VF_END
 };
 

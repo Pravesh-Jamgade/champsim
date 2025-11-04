@@ -125,7 +125,40 @@ void CACHE::handle_fill()
         continue;
       }
     }
-    
+
+    // for victima packet returning data at STLB, if it was a miss then insert new request in STLB otherwise fine
+    if(KNOB_ENABLE_SWAT_WAYS && fill_mshr->vflag[VF::victima] && cache_is[IS_STLB])
+    {
+      // its a miss at L2
+      if(fill_mshr->vflag[VF::victima_acutal_packet_miss])
+      {
+        if(get_occupancy(1,0) == get_size(1,0))
+        {
+          cacheDataModel->mshr_queue_stalls[Stall::OP_PENALTY]++;
+          return;
+        }
+
+        dlog.log(current_cycle, NAME, "sendSectorPacket-2", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), '\n');
+
+        // Sector failed, now request for PTW
+        fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
+        fill_mshr->dtype = DataType::INVALID;
+        fill_mshr->hit_where = CACHE_ID_END;
+        fill_mshr->vflag[VF::victima_acutal_packet_miss] = false;
+        fill_mshr->vflag[VF::victima] = false;
+        fill_mshr->vflag[VF::sector_retry] = true;
+
+        PACKET newPacket = *fill_mshr;
+        add_rq(&newPacket);
+        
+        func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
+        func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
+        MSHR.erase(fill_mshr);
+        writes_available_this_cycle--;
+        continue;
+      }
+    }
+
     // TODO: Add PTW cost predictor to decide whether to insert the cacheline as victima cache block or not
     int cpuid = KNOB_SMT_ENABLE * cpu + fill_mshr->thread_id;
 
@@ -333,13 +366,48 @@ void CACHE::handle_read()
     
     // if victima lookup is hit, then check whether valid PTE is present in block. If not, that means it is not page-faulted yet.
     BLOCK* hit_block = &block[set * NUM_WAY + way];
-    // KNOB_ENABLE_SWAT_WAYS is mapping PTE from different cache bloch, hence this will fail for it
+    
+    // Victima and SWAT reads wont enter here
     if(handle_pkt.type == TRANSLATION && hit)
     {
       int offset = get_pte_offset(handle_pkt.address);
       bool is_pte_valid = hit_block->testValidity(offset);
       bitset<8> tobits(hit_block->valid_ptes);
       hit = hit && is_pte_valid;
+    }
+
+    if(KNOB_VICTIMA
+      && handle_pkt.vflag[VF::victima]
+      && hit)
+    {
+      if(hit_block->victima_block)
+      {
+        auto res = victima_peek_singleline(handle_pkt);
+        hit = hit && res.first;
+      }
+      else
+      {
+        hit = false;
+      }
+    }
+
+    // TODO: Test sector read operation
+    // TODO: Test Sequential L2 and PTW lookup
+    if(KNOB_ENABLE_SWAT_WAYS 
+       && handle_pkt.vflag[VF::victima]
+       && hit)
+    {
+      // it was sector requets packet but we got normal-cache line
+      if(hit_block->sectorHolder.is_sector_line)
+      {
+        // lookup PTE at the offset
+        auto res = hit_block->sectorHolder.lookup(handle_pkt.address, NUM_SET);
+        hit = hit && res.hit;
+      }
+      else
+      {
+        hit = false;
+      }
     }
 
     if (hit) // HIT
@@ -438,6 +506,20 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     pair<bool, PTEHolder> pte_value = process_page_table->get_pte(cpu_id, handle_pkt.address, handle_pkt.translation_level);
     // debugLog.log(current_cycle, "readlike_hit", NAME, "level-"+to_string(handle_pkt.translation_level), "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_fault", !pte_value.first, "pte_value", intToHex(pte_value.second.page_address), "NAME", NAME, "\n");
     handle_pkt.data = pte_value.second.page_address;
+  }
+  else if(KNOB_ENABLE_SWAT_WAYS 
+          && cache_is[CACHE_ID::IS_L2] 
+          && handle_pkt.vflag[VF::victima])
+  {
+    auto res = hit_block.sectorHolder.lookup(handle_pkt.address, NUM_SET);
+    handle_pkt.data = res.value;
+  }
+  else if(KNOB_VICTIMA
+          && cache_is[CACHE_ID::IS_L2]
+          && handle_pkt.vflag[VF::victima])
+  {
+    auto res = victima_peek_singleline(handle_pkt);
+    handle_pkt.data = res.second.page_address;
   }
 
   // update prefetcher on load instruction
@@ -606,7 +688,10 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
 
     bool sendVictimaPacket = KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA==0;
-    bool sendSectorPacket = KNOB_ENABLE_SWAT_WAYS && cache_is[IS_STLB] && KNOB_ENABLE_IDEAL_SWAT==0;
+
+    // handle_pkt.vflag[VF::sector_retry]==false to avoid L2 lookup in Serial L2 and PTW lookup design
+    bool sendSectorPacket = KNOB_ENABLE_SWAT_WAYS && cache_is[IS_STLB] && KNOB_ENABLE_IDEAL_SWAT==0 && handle_pkt.vflag[VF::sector_retry]==false;
+    
     // its a miss and we are @STLB and its not yet has searched POMTLB, send it to POM search via L1D
     bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_TO_PTW];
     // if(cache_id == CACHE_ID::IS_STLB) cout << "Log: " << KNOB_POMTLB << ", " << (!handle_pkt.pomflag[POM::POM_TO_PTW]) << ", " << (handle_pkt.type==TRANSLATION) << '\n';
@@ -643,6 +728,19 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     if(sendVictimaPacket || sendSectorPacket)
     {
       func_prepare_victima_packet(handle_pkt, newPacket);
+
+      // Send Sector Packet but dont sent PTW yet
+      if(sendSectorPacket)
+      {
+        sector_counters[SCCounter::SectorReadReq]++;
+        if(newPacket.address == 0)
+        {
+          dassert.log(current_cycle, NAME, "SendVictimaFail", '\n');
+        }
+        int status = l2cache->add_rq(&newPacket);
+        dlog.log(current_cycle, NAME, "sendSectorPacket-1", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+      }
+        
     }
     else if(sendPomPacket)
     {
@@ -664,7 +762,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     }
 
     // Allocate an MSHR
-    if (handle_pkt.fill_level <= fill_level  && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) {
+    if (
+         handle_pkt.fill_level <= fill_level  
+      && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) {
 
       auto it = MSHR.insert(std::end(MSHR), handle_pkt);
       it->cycle_enqueued = current_cycle;
@@ -675,12 +775,18 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
       // placed here making sure MSHR entry is first inserted. The reason is it might receive hit in WQ of L2, that time it will
       // try to return data to STLB and wont find MSHR hence to prevent such situtation
-      if(sendVictimaPacket || sendSectorPacket)
+      if(sendVictimaPacket)
       {
-        if(sendSectorPacket)
-          sector_counters[SCCounter::SectorReadReq]++;
         int status = l2cache->add_rq(&newPacket);
       }
+
+      // // Parallel PTW and Sector Packet
+      // if(sendVictimaPacket || sendSectorPacket)
+      // {
+      //   if(sendSectorPacket)
+      //     sector_counters[SCCounter::SectorReadReq]++;
+      //   int status = l2cache->add_rq(&newPacket);
+      // }
     }
 
     if( !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS))
@@ -696,13 +802,20 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     {
       l1cache->add_rq(&newPacket);
     }
-    else if (!is_read)
+    if(sendSectorPacket)
     {
-      lower_level->add_pq(&handle_pkt);
+      // This block avoid parallel L2 and PTW lookup: first do L2 lookup and then do PTW lookup
     }
     else
     {
-      lower_level->add_rq(&handle_pkt);
+      if (!is_read)
+      {
+        lower_level->add_pq(&handle_pkt);
+      }
+      else
+      {
+        lower_level->add_rq(&handle_pkt);
+      }
     }
   }
 
@@ -825,7 +938,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       {
         // refet PTW-CP
         int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
-        sendVictimaPTWRequest = 1;//victima_lookup(handle_pkt.v_address, cpu_id);
+        sendVictimaPTWRequest = victima_lookup(handle_pkt.v_address, cpu_id);
       }
     }
   }
@@ -1639,7 +1752,7 @@ void CACHE::return_data(PACKET* packet)
 {
   PACKET handle_pkt = *packet;
 
-  dataflow.log(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct_read", handle_pkt.vflag[VF::victima], "sector_pkt", handle_pkt.vflag[VF::victima_stlbevict_ptw], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+  dataflow.log(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct_read", handle_pkt.vflag[VF::victima], "sector_pkt", handle_pkt.vflag[VF::victima_stlbevict_ptw], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "h", hit_where_str[handle_pkt.hit_where], '\n');    
 
   // check MSHR information
   bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
@@ -1670,8 +1783,9 @@ void CACHE::return_data(PACKET* packet)
   // Sector using Victimas STLB-miss triggered L2-read data path, which does look and sends out PTW parallely
   if(
     (KNOB_VICTIMA && cache_is[IS_STLB] && KNOB_IDEAL_VICTIMA == 0)
-    ||
-    (KNOB_ENABLE_SWAT_WAYS && cache_is[IS_STLB] && KNOB_ENABLE_IDEAL_SWAT == 0)
+    // // To avoid parallel L2 and PTW lookup comment code
+    // ||
+    // (KNOB_ENABLE_SWAT_WAYS && cache_is[IS_STLB] && KNOB_ENABLE_IDEAL_SWAT == 0)
   )
   {
     // count:
@@ -1778,6 +1892,10 @@ void CACHE::return_data(PACKET* packet)
     mshr_entry->hit_where = packet->hit_where;
     mshr_entry->page_fault = packet->page_fault;
     mshr_entry->pomflag[POM::POM_MISS] = packet->pomflag[POM::POM_MISS];
+
+    // return of Sector Packet doing serial L2 read operation
+    mshr_entry->vflag[VF::victima_acutal_packet_miss] = packet->vflag[VF::victima_acutal_packet_miss];
+    mshr_entry->vflag[VF::victima] = packet->vflag[VF::victima];
 
     // PTW has set POM_TO_PTW_FINI to 1, get this value as handle_fill needs it to distinguish
     mshr_entry->pomflag[POM::POM_TO_PTW_FINI] = packet->pomflag[POM::POM_TO_PTW_FINI];
