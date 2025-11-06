@@ -1944,6 +1944,7 @@ void CACHE::return_data(PACKET* packet)
     // sanity check
     if (mshr_entry == MSHR.end()) {
 
+      dassert.log(current_cycle, NAME, "MSHR entry not found", packet->instr_id, intToHex(packet->address), intToHex(packet->v_address), "type", (int)packet->type, "translation_level", (int)packet->translation_level,  "h", hit_where_str[packet->hit_where], '\n');
       std::cerr << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << packet->instr_id << " cannot find a matching entry!";
       std::cerr << " address: " << std::hex << packet->address;
       std::cerr << " v_address: " << packet->v_address;
