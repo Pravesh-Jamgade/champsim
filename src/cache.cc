@@ -559,6 +559,28 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
+  if(is_tlb)
+  {
+    uint64_t pageAddr = handle_pkt.address & ~(PAGE_SIZE-1);
+    bool foundPageInHistory = page_to_block.find(pageAddr) != page_to_block.end();
+    cacheDataModel->page_reuse_hist->add_data_freq(pageAddr, foundPageInHistory);
+  }
+  else
+  {
+    uint64_t pageAddr = handle_pkt.address & ~(PAGE_SIZE-1);
+    // remove 6b block offset and then take 6b mask for block number within page
+    uint64_t cache_block_index = (handle_pkt.address > 6) & 0x3f;
+    // remove 6b block offset, gives cache_block address
+    uint64_t cache_block_addr = handle_pkt.address > 6;
+
+    auto foundPageIt = page_to_block.find(pageAddr);
+    if(foundPageIt != page_to_block.end())
+    {
+      bool foundBlockInHistory =  foundPageIt->second.test(cache_block_index);
+      cacheDataModel->page_reuse_hist->add_data_freq(cache_block_addr, foundBlockInHistory);
+    }
+  }
+
   if(cache_is[IS_L2])
   {
     translation_pollution->countPollution(get_set(handle_pkt.type, handle_pkt.address), 
@@ -843,7 +865,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   if(it!=reuse_history[set].end())
   {
     int dist = std::distance(reuse_history[set].begin(), it);
-    cacheDataModel->hist_reuse_distance[dist]++;
+    cacheDataModel->hist_recall_distance[dist]++;
   }
 
   uint64_t tag = target_addr & ~((1 << (LOG2_BLOCK_SIZE + lg2(NUM_SET))) - 1);
@@ -855,7 +877,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   {
     uint64_t last_global_access = g_it->second;
     int distance = global_access_count > last_global_access? (global_access_count - last_global_access): 0;
-    cacheDataModel->reuse_distance->add_data_freq(distance, 1);
+    cacheDataModel->recall_distance->add_data_freq(distance, 1);
   }
   global_reuse[tag] = global_access_count;
 

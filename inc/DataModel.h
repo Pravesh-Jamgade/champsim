@@ -133,7 +133,13 @@ class CacheDataModel
             exception_bounds.push_back({101, 150});
             exception_bounds.push_back({151, 200});
             exception_bounds.push_back({201, 0x7fffffff});
-            reuse_distance = new Hist(1,5,8,exception_bounds);
+            recall_distance = new Hist(1,5,8,exception_bounds);
+        }
+
+        {
+            vector<pair<int,int>> exception_bounds;
+            exception_bounds.push_back({1, 1});
+            page_reuse_hist = new Hist(2, 5, 10, exception_bounds);
         }
 
         {
@@ -159,12 +165,14 @@ class CacheDataModel
 
     int* category_of_misses;
     map<uint64_t,uint64_t> hist_set_conflict_events;  
-    map<int, int> hist_reuse_distance;
+    map<int, int> hist_recall_distance;
 
     map<CACHE_ID, int> readmiss_hitwhere;
 
     // reuse distance hitogram object
-    Hist* reuse_distance;
+    Hist* recall_distance;
+
+    Hist* page_reuse_hist;
 
     // miss recorded to fulfill mshr
     Hist* miss_fulfilled_latency;
@@ -272,8 +280,11 @@ class CacheDataModel
 
         cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
 
-        cout << tag << "Reuse distance BucketBounds and Frequency\n";
-        reuse_distance->print_histogram(tag);
+        cout << tag << "Page reuse\n";
+        page_reuse_hist->print_histogram(tag);
+        
+        cout << tag << "Recall distance BucketBounds and Frequency\n";
+        recall_distance->print_histogram(tag);
 
         cout << tag << "RQ-Hit latency BucketBounds and Frequency\n";
         hit_access_latency->print_histogram(tag);
