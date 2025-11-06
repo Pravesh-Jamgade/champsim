@@ -61,7 +61,7 @@ void CACHE::handle_fill()
       return;
     }
 
-    dataflow.log(current_cycle, NAME, "fill", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), '\n');    
+    dataflow.log(current_cycle, NAME, "fill", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), "data", intToHex(fill_mshr->data), "h", hit_where_str[fill_mshr->hit_where], '\n');    
 
     // order matters
     // No write - hence No tracking of PTE
@@ -698,7 +698,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     // handle_pkt.vflag[VF::sector_retry]==false to avoid L2 lookup in Serial L2 and PTW lookup design
     bool sendSectorPacket = KNOB_ENABLE_SWAT_WAYS && cache_is[IS_STLB] && KNOB_ENABLE_IDEAL_SWAT==0 && handle_pkt.vflag[VF::sector_retry]==false;
     
-    // its a miss and we are @STLB and its not yet has searched POMTLB, send it to POM search via L1D
+    // its a miss and we are @STLB and its not yet has searched POMTLB, send it to POM search via L2, make sure its not the POMTTLB miss using POM_To_PTW
     bool sendPomPacket = KNOB_POMTLB && cache_is[IS_STLB] && !handle_pkt.pomflag[POM::POM_TO_PTW];
     // if(cache_id == CACHE_ID::IS_STLB) cout << "Log: " << KNOB_POMTLB << ", " << (!handle_pkt.pomflag[POM::POM_TO_PTW]) << ", " << (handle_pkt.type==TRANSLATION) << '\n';
 
@@ -890,35 +890,53 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // Note: since we have removed RQ entry for this packet at STLB,
   // We could remove MSHR entry here and add new entry to RQ of STLB --> (detailed modeling)
   // Right now we are using same MSHR entry and initiate PTW by setting new flag POM_TO_PTW
-  // As soon we are back to STLB, we send out PTW with POM_TO_PTW flag. 
-  if(KNOB_POMTLB && cache_is[IS_STLB] && handle_pkt.pomflag[POM::POM])
+  // As soon we are back to STLB, we send out PTW with POM_TO_PTW flag.
+  bool pom_cache_write = false; 
+  if(KNOB_POMTLB && handle_pkt.pomflag[POM::POM])
   {
-    // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
-    if(handle_pkt.pomflag[POM::POM_MISS])
+    if(cache_is[IS_STLB])
     {
-      dlog.log(current_cycle, NAME, "removePOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+      // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
+      if(handle_pkt.pomflag[POM::POM_MISS])
+      {
+        dlog.log(current_cycle, NAME, "removePOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
 
-      handle_pkt.pomflag[POM::POM_MISS] = false;
-      // We wont remove this MSHR and reuse this to send out PTW and then reset its event_cycle to avoid re-entering to fill
-      handle_pkt.pomflag[POM::POM_TO_PTW] = true;
-      return false;
+        handle_pkt.pomflag[POM::POM_MISS] = false;
+        // We wont remove this MSHR and reuse this to send out PTW and then reset its event_cycle to avoid re-entering to fill
+        handle_pkt.pomflag[POM::POM_TO_PTW] = true;
+        return false;
+      }
     }
+    
+    dlog.log(current_cycle, NAME, "insertPOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
 
-    pomtlb->pom_counters[POMFLAG::POM_SUCCESS]++;
+    pom_cache_write = true;
   }
   
-  // // Test POM Lookup
-  // if(cache_id == CACHE_ID::IS_STLB && handle_pkt.pomflag[POM::POM_TO_PTW])
+  // // Test POM caching at POMTLB: test will give seg-fault, but we can verify it does hit in POMTLB
+  // // And brings POMTLB entry to data-caches
+  // if(cache_is[IS_STLB])
   // {
   //   PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
   //   uint64_t pomtlb_base = ptw->get_pomtlb_baseaddr();
   //   pomtlb_base += (handle_pkt.address ^ ptw->asid[handle_pkt.thread_id]);
-  //   // update address to pomtlb address
-  //   int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
-    
-  //     // probe POMTLB
-  //     auto[ flag, addr] = pomtlb->lookupPOMEntry(cpu_id, pomtlb_base, handle_pkt.v_address);
-  //     cout << "POM LOOKUP Status, POM-addr, " << intToHex(page_align(pomtlb_base)) << ", V-addr, "<< intToHex(page_align(handle_pkt.v_address)) <<", result, "<< flag <<", data, "<< intToHex(addr) <<", packet_data, " << intToHex(page_align(handle_pkt.data)) << '\n';
+
+  //   PACKET newPacket = handle_pkt;
+  //   newPacket.address = pomtlb_base;
+  //   newPacket.v_address = pomtlb_base;
+  //   newPacket.pomflag[POM::POM] = true;
+  //   newPacket.pomflag[POM::POM_TO_PTW] = false;
+  //   newPacket.to_return = {this};
+  //   newPacket.instr_id = 9999999;
+  //   newPacket.data = 0;
+  //   dlog.log(current_cycle, NAME, "Testing POM caching", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", newPacket.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "newAddr", intToHex(newPacket.v_address), '\n');
+
+  //   auto it = MSHR.insert(end(MSHR), newPacket);
+  //   it->cycle_enqueued = current_cycle;
+  //   it->event_cycle = std::numeric_limits<uint64_t>::max();
+  //   it->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR] = current_cycle;
+
+  //   l2cache->add_rq(&newPacket);
   // }
 
   // //// Test Sector Lookup
@@ -1202,6 +1220,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     // Identifies block is brought in by victima PTW
     fill_block.victima_block = cache_is[CACHE_ID::IS_L2] && handle_pkt.vflag[VF::victima_stlbevict_ptw];
+    fill_block.pom_block = pom_cache_write;
 
     fill_block.thread_id = handle_pkt.thread_id;
     fill_block.dtype = handle_pkt.dtype;
@@ -1241,6 +1260,17 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       {
         sector_counters[SCCounter::SectorInsert]++;
         fill_block.sectorHolder.insert(page_addr, cache_block_data_for_sector.second[pte_offset], NUM_SET);
+      }
+    }
+    else if(pom_cache_write)
+    {
+      auto [tag, set_index, offset_index] = pomtlb->split_address(handle_pkt.address);
+      fill_block.pomtlb_lines[offset_index] = {page_align(handle_pkt.v_address), get<1>(handle_pkt.pomtlb_entry)};
+      pomtlb->pom_counters[POMFLAG::POM_SUCCESS]++;
+
+      for(int i=0; i< 8; i++)
+      {
+        cout << "index-"<<i<< " " << intToHex(get<0>(fill_block.pomtlb_lines[i])) << "-" <<  intToHex(get<1>(fill_block.pomtlb_lines[i])) << '\n';
       }
     }
 
@@ -1914,8 +1944,12 @@ void CACHE::return_data(PACKET* packet)
 
     // PTW has set POM_TO_PTW_FINI to 1, get this value as handle_fill needs it to distinguish
     mshr_entry->pomflag[POM::POM_TO_PTW_FINI] = packet->pomflag[POM::POM_TO_PTW_FINI];
-
   }
+
+  // retriving POM TLB, if it hits in POMTLB (which will happen for second request to same page)
+  mshr_entry->pomtlb_entry = packet->pomtlb_entry;
+
+  // cout << "Verify: " << intToHex(get<0>(mshr_entry->pomtlb_entry)) << ", " << intToHex(get<1>(mshr_entry->pomtlb_entry)) << '\n';
   
   DP(if (warmup_complete[packet->cpu]) {
     std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry->instr_id;

@@ -13,6 +13,9 @@ using namespace std;
 
 static logger pom_logger(false);
 
+
+struct PTELookup { bool hit; uint64_t value; array<tuple<uint64_t, uint64_t>, 8> ptes;};
+
 enum POMFLAG
 {
     // STLB-miss now send POM request 
@@ -28,12 +31,13 @@ enum POMFLAG
 class POMTLB
 {
     public:
-    // 8 pte in a cacheblock: vp,pp,lru
+     // 8 pte in a cacheblock: vp,pp,lru
     using PTE = array<tuple<uint64_t, uint64_t>, 8>;
     // way with tag and cacheblock
     using WAYS = array<tuple<uint64_t, PTE, int>, POMWAYS>;
     // set of 4 ways
     using SETS = array<WAYS, POMSETS>;
+
     SETS sets_ways_ptes[CPUS];
 
     int pom_counters[POMFLAG::POMFLAG_END] = {0};
@@ -149,7 +153,7 @@ void dump_pom(const SETS (&tbl)[CPUS], std::ostream& os = std::cout,
             auto& [vp, pp] = ptes[pte_offset];
 
             // found tag
-            if(way_tag == tag && vp == page_align(virt_address)) // hit
+            if(way_tag == tag)// && vp == page_align(virt_address)) // hit
             {
                 // update lru of other ways
                 for(auto& [other_way_tag, other_ptes, other_lru]: all_ways)
@@ -162,23 +166,67 @@ void dump_pom(const SETS (&tbl)[CPUS], std::ostream& os = std::cout,
                     }       
                 }
                 
-                pom_logger.log("POM hit", intToHex(pte_address), intToHex(virt_address), intToHex(vp), intToHex(pp), '\n');
+                pom_logger.log("POM hit", intToHex(pte_address), intToHex(virt_address), intToHex(vp), intToHex(pp),"set", set_index, "offset", pte_offset, '\n');
                 // reset our lru
                 lru = 0;
                 return {true, pp};
             }
         }
 
-        pom_logger.log("POM miss", intToHex(pte_address), intToHex(virt_address), '\n');
+        pom_logger.log("POM miss", intToHex(pte_address), intToHex(virt_address), "set", set_index, "offset", pte_offset, '\n');
 
         return {false, 0};
+    }   
+
+    // get POM-TLB line
+    PTELookup getPOMTLBLine(int process_id, uint64_t pte_address, uint64_t virt_address)  
+    {
+        PTELookup retPTE;
+        auto [tag, set_index, pte_offset] = split_address(pte_address);
+
+        // array of sets
+        SETS& all_sets = sets_ways_ptes[process_id];
+
+        // array of ways for given set
+        auto& all_ways = all_sets[set_index]; 
+        
+        // check if tag matches any way
+        for(auto& [way_tag, ptes, lru]: all_ways)
+        {
+            auto& [vp, pp] = ptes[pte_offset];
+
+            // found tag
+            if(way_tag == tag)
+            {
+                // update lru of other ways
+                for(auto& [other_way_tag, other_ptes, other_lru]: all_ways)
+                {
+                    // avoid the same entry
+                    // check if we have less lru value than matched one
+                    if(other_way_tag != way_tag && other_lru < lru)
+                    {
+                        other_lru++;
+                    }       
+                }
+                
+                pom_logger.log("POM hit", intToHex(pte_address), intToHex(virt_address), "vpage", intToHex(vp), "PTE", intToHex(pp), '\n');
+                // reset our lru
+                lru = 0;
+
+                return {true, pp, ptes};
+            }
+        }
+
+        pom_logger.log("POM miss", intToHex(pte_address), intToHex(virt_address), '\n');
+
+        return {false, 0, {}};
     }
 
     // our POM-TLB "x" sets and 4 ways
     void insertPOMEntry(int process_id, uint64_t pte_address, uint64_t pte_value, uint64_t virt_address)
     {
         auto [tag, set_index, pte_offset] = split_address(pte_address);
-        pom_logger.log("POM INsert", intToHex(pte_address), intToHex(virt_address), intToHex(tag), set_index, pte_offset, '\n');
+        pom_logger.log("POM INSERT", intToHex(pte_address), "vpage", intToHex(page_align(virt_address)), "PTE", intToHex(pte_value), "set", set_index, "offset", pte_offset, '\n');
 
         // array of sets
         SETS& all_sets = sets_ways_ptes[process_id];

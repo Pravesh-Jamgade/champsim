@@ -43,6 +43,10 @@ public:
   int came_from_request = NUM_TYPES; // default: invalid block
 
   bool victima_block = 0;
+  bool pom_block = 0;
+
+  array<tuple<uint64_t, uint64_t>, 8> pomtlb_lines;
+
   std::map<uint64_t, uint64_t> vp_2_pp_map;
  
   CacheBlock cacheBlock;

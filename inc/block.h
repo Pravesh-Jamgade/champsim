@@ -115,8 +115,6 @@ public:
 
   CACHE_ID hit_where = CACHE_ID::CACHE_ID_END;
 
-  PTEContainer pte_container;
-  
   State state = State::State_end;
 
   DataType dtype = DataType::INVALID;
@@ -125,6 +123,7 @@ public:
   bool page_fault = 0;
 
   uint64_t pom_address = 0;
+  tuple<uint64_t, uint64_t> pomtlb_entry;
 
   // We need this to understand when do the "existing_sector_block" get replenished with "new_sector_block"
   bool block_hit_pte_miss = false;

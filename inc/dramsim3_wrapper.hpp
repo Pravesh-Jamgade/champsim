@@ -65,6 +65,7 @@ public:
                     packet->hit_where = CACHE_ID::IS_DRAM;
                     packet->data = result.second;
                     packet->page_fault = false;
+                    packet->pomtlb_entry = result;
                     packet->pomflag[POM::POM_MISS] = false;
                 }
             }
@@ -259,6 +260,7 @@ public:
                     rq_pkt->hit_where = CACHE_ID::IS_DRAM;
                     rq_pkt->data = result.second;
                     rq_pkt->page_fault = false;// its a miss rather than page-fault
+                    rq_pkt->pomtlb_entry = result;
                     rq_pkt->pomflag[POM::POM_MISS] = false;
                 }
             }
