@@ -496,6 +496,8 @@ void PageTableWalker::return_data(PACKET* packet)
       mshr_entry.hit_where = packet->hit_where;
       mshr_entry.page_fault = packet->page_fault;
       mshr_entry.data = packet->data;
+
+      mshr_entry.pomflag[POM::POM_TO_PTW_FINI] = packet->pomflag[POM::POM_TO_PTW];
       
       DP(if (warmup_complete[cpu]) {
         std::cout << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << mshr_entry.instr_id;

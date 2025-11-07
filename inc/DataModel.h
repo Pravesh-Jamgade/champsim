@@ -144,7 +144,15 @@ class CacheDataModel
 
         {
             vector<pair<int,int>> exception_bounds;
-            sector_block_occupancy = new Hist(0,1,8,exception_bounds);
+            exception_bounds.push_back({1,1});
+            exception_bounds.push_back({2,2});
+            exception_bounds.push_back({3,3});
+            exception_bounds.push_back({4,4});
+            exception_bounds.push_back({5,5});
+            exception_bounds.push_back({6,6});
+            exception_bounds.push_back({7,7});
+            exception_bounds.push_back({8,8});
+            sector_block_occupancy = new Hist(0,0,0,exception_bounds);
         }
     }
 

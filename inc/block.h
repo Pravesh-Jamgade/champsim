@@ -52,6 +52,8 @@ enum POM
   POM_MISS,
   POM_TO_PTW,
   POM_TO_PTW_FINI,
+  POM_TEST_REQ,
+  POM_TEST_HIT,
   POM_END
 };
 
@@ -123,7 +125,7 @@ public:
   bool page_fault = 0;
 
   uint64_t pom_address = 0;
-  tuple<uint64_t, uint64_t> pomtlb_entry;
+  array<tuple<uint64_t, uint64_t>, 8> pomtlb_entry;
 
   // We need this to understand when do the "existing_sector_block" get replenished with "new_sector_block"
   bool block_hit_pte_miss = false;

@@ -41,6 +41,7 @@ class POMTLB
     SETS sets_ways_ptes[CPUS];
 
     int pom_counters[POMFLAG::POMFLAG_END] = {0};
+    vector<int> pomblock_occupancy;
 
     POMTLB()
     {
@@ -48,6 +49,8 @@ class POMTLB
         {
             sets_ways_ptes[i] = SETS();
         }
+
+        pomblock_occupancy = vector<int>(8,0);
     }
     
     ~POMTLB()
@@ -118,12 +121,19 @@ void dump_pom(const SETS (&tbl)[CPUS], std::ostream& os = std::cout,
     void print_stats()
     {
         cout << "\n==============================================================\n";
-        dump_pom(sets_ways_ptes);
+        // dump_pom(sets_ways_ptes);
         cout << "\n==============================================================\n";
         cout << "POM Request Sent, " << pom_counters[POMFLAG::POM_FIRST_REQ] << '\n';
         cout << "POM Request Success, " << pom_counters[POMFLAG::POM_SUCCESS] << '\n';
         cout << "POM To PTW Switch, " << pom_counters[POMFLAG::POM_SECOND_REQ] << '\n';
         cout << "\n==============================================================\n";
+
+        for(int i=0; i< 8; i++)
+        {
+            cout << "pom-" << i << "," << pomblock_occupancy[i] << '\n'; 
+        }
+        cout << "\n==============================================================\n";
+
     }
 
     // tag, set_index, pte_offset
@@ -209,11 +219,19 @@ void dump_pom(const SETS (&tbl)[CPUS], std::ostream& os = std::cout,
                     }       
                 }
                 
+                for(int i=0; i< 8; i++)
+                {
+                    retPTE.ptes[i] = ptes[i];
+                }
+
+                retPTE.hit = true;
+                retPTE.value = pp;
+
                 pom_logger.log("POM hit", intToHex(pte_address), intToHex(virt_address), "vpage", intToHex(vp), "PTE", intToHex(pp), '\n');
                 // reset our lru
                 lru = 0;
 
-                return {true, pp, ptes};
+                return retPTE;
             }
         }
 

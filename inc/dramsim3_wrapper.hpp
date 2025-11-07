@@ -57,16 +57,21 @@ public:
             uint32_t cpu_no = KNOB_SMT_ENABLE*packet->cpu + packet->thread_id;
             if(KNOB_POMTLB && packet->pomflag[POM::POM] && !packet->pomflag[POM::POM_TO_PTW])
             {
-                pair<bool, uint64_t> result = pomtlb->lookupPOMEntry(cpu_no, packet->address, packet->v_address);
+            dlog.log(current_cycle, "DRAM-POM-Request, level", (int)packet->translation_level, intToHex(packet->address), intToHex(packet->v_address), intToHex(packet->data), "pom", packet->pomflag[POM::POM], "pommiss", packet->pomflag[POM::POM_MISS], "pomtoptw", packet->pomflag[POM::POM_TO_PTW], '\n');
+
+                // pair<bool, uint64_t> result = pomtlb->lookupPOMEntry(cpu_no, packet->address, packet->v_address);
+                PTELookup result = pomtlb->getPOMTLBLine(cpu_no, packet->address, packet->v_address);
                 packet->page_fault = true;// its a miss rather than page-fault
                 packet->pomflag[POM::POM_MISS] = true;
-                if(result.first) // hit in POM-TLB
+                if(result.hit) // hit in POM-TLB
                 {
                     packet->hit_where = CACHE_ID::IS_DRAM;
-                    packet->data = result.second;
+                    packet->data = result.value;
                     packet->page_fault = false;
-                    packet->pomtlb_entry = result;
+                    packet->pomtlb_entry = result.ptes;
                     packet->pomflag[POM::POM_MISS] = false;
+            dlog.log(current_cycle, "DRAM-POM-HIT, level", (int)packet->translation_level, intToHex(packet->address), intToHex(packet->v_address), intToHex(packet->data), "pom", packet->pomflag[POM::POM], "pommiss", packet->pomflag[POM::POM_MISS], "pomtoptw", packet->pomflag[POM::POM_TO_PTW], '\n');
+
                 }
             }
             else if(packet->type == TRANSLATION)
@@ -252,16 +257,21 @@ public:
 
             if(KNOB_POMTLB && rq_pkt->pomflag[POM::POM]&& !rq_pkt->pomflag[POM::POM_TO_PTW])
             {
-                pair<bool, uint64_t> result = pomtlb->lookupPOMEntry(cpu_no, rq_pkt->address, rq_pkt->v_address);
+            dlog.log(current_cycle, "DRAM-POM-Request, level", (int)rq_pkt->translation_level, intToHex(rq_pkt->address), intToHex(rq_pkt->v_address), intToHex(rq_pkt->data), "pom", rq_pkt->pomflag[POM::POM], "pommiss", rq_pkt->pomflag[POM::POM_MISS], "pomtoptw", rq_pkt->pomflag[POM::POM_TO_PTW], '\n');
+
+                // pair<bool, uint64_t> result = pomtlb->lookupPOMEntry(cpu_no, rq_pkt->address, rq_pkt->v_address);
+                PTELookup result = pomtlb->getPOMTLBLine(cpu_no, rq_pkt->address, rq_pkt->v_address);
                 rq_pkt->page_fault = true;// its a miss rather than page-fault
                 rq_pkt->pomflag[POM::POM_MISS] = true;
-                if(result.first) // hit in POM-TLB
+                if(result.hit) // hit in POM-TLB
                 {
                     rq_pkt->hit_where = CACHE_ID::IS_DRAM;
-                    rq_pkt->data = result.second;
+                    rq_pkt->data = result.value;
                     rq_pkt->page_fault = false;// its a miss rather than page-fault
-                    rq_pkt->pomtlb_entry = result;
+                    rq_pkt->pomtlb_entry = result.ptes;
                     rq_pkt->pomflag[POM::POM_MISS] = false;
+            dlog.log(current_cycle, "DRAM-POM-HIT, level", (int)rq_pkt->translation_level, intToHex(rq_pkt->address), intToHex(rq_pkt->v_address), intToHex(rq_pkt->data), "pom", rq_pkt->pomflag[POM::POM], "pommiss", rq_pkt->pomflag[POM::POM_MISS], "pomtoptw", rq_pkt->pomflag[POM::POM_TO_PTW], '\n');
+
                 }
             }
             else if(rq_pkt->type == TRANSLATION)

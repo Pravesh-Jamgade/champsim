@@ -197,6 +197,8 @@ public:
 
   void func_return(PACKET* packet);
 
+  int func_valid_pompte_count(const PACKET& handle_pkt);
+
   CacheBlock* func_test_page_table(BLOCK& fill_block);
 
   int get_pte_offset(uint64_t addr)
