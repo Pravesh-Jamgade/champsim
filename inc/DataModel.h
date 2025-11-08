@@ -139,6 +139,7 @@ class CacheDataModel
         {
             vector<pair<int,int>> exception_bounds;
             exception_bounds.push_back({1, 1});
+            exception_bounds.push_back({100, 100000});
             page_reuse_hist = new Hist(2, 5, 10, exception_bounds);
         }
 
