@@ -57,7 +57,7 @@ public:
   // distance VS number of times this offset seen 
   vector<vector<int>> transition_hitmap_for_vp_page, transition_hitmap_for_pp_page;
 
-  logger debugLog;
+  logger debugLog, xlog;
   logger dlog, dataflow;
   logger dassert;
 
@@ -436,6 +436,7 @@ public:
       collect_pte[i] = ThreadBucket();
     }
     
+    xlog = logger(true);
     debugLog = logger(false);
     dlog = logger(false);
     dataflow = logger(false);

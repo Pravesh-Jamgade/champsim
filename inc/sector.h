@@ -24,6 +24,8 @@ enum SCCounter
     SctrPkt_L2_READ_MISS,
     SctrLine_L2_READ_HIT,
 
+    SectorHelpingReusePTE,
+
     SectorReadIdealReq,
     SctrPktIdeal_L2_READ_HIT,
     SctrPktIdeal_L2_READ_MISS,
@@ -312,5 +314,6 @@ class SectorHolder
       SectorDesingChoice choice_ = SectorDesingChoice::DIRECT;
       Sector sector_ = DirectMap{};     // default to direct
 };
+
 
 #endif // SECTOR_H

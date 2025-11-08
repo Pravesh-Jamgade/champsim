@@ -23,7 +23,9 @@
 #include "hist.h"
 #include "pagetable.h"
 #include "pomtlb.h"
+#include "sector.h"
 
+set<tuple<uint64_t, int>> pte_map_hist;
 ProcessPageTable* process_page_table;
 POMTLB* pomtlb;
 map<tuple<uint64_t, int>, PTWC> ptw_pred;
@@ -878,6 +880,8 @@ void print_sector_stats()
     "SctrPkt_L2_READ_HIT ", 
     "SctrPkt_L2_READ_MISS",
     "SctrLine_L2_READ_HIT",
+    
+    "SectorHelpingReusePTE",
 
     "SectorReadIdealReq",
     "SctrPktIdeal_L2_READ_HIT",

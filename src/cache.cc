@@ -17,6 +17,8 @@
 
 #define SHARED 3
 
+extern set<tuple<uint64_t, int>> pte_map_hist;
+
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
@@ -349,9 +351,13 @@ void CACHE::handle_read()
       cacheDataModel->rd_queue_stalls[Stall::OP_PENALTY]++;
       return;
     }
-
+    
     // handle the oldest entry
     PACKET& handle_pkt = RQ.front();
+
+    // thread id
+    int cpu_no = KNOB_SMT_ENABLE  * handle_pkt.cpu +  handle_pkt.thread_id;
+
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
     {
       dassert.log("handle_read: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
@@ -442,7 +448,9 @@ void CACHE::handle_read()
         dlog.log(current_cycle, NAME, "sector-hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct-read", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
         sector_counters[SCCounter::SctrPkt_L2_READ_HIT]++;
         if(hit_block->sectorHolder.is_sector_line)
+        {
           sector_counters[SCCounter::SctrLine_L2_READ_HIT]++;
+        }
       }
       cacheDataModel->rd_queue[Basic::HIT]++;
     } else {
@@ -520,11 +528,11 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   BLOCK& hit_block = block[set * NUM_WAY + way];
   hit_block.hit_before_eviction++;
   handle_pkt.hit_where = cache_id;
+  int cpu_id = handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
 
   handle_pkt.data = hit_block.data;
   if(handle_pkt.type == TRANSLATION && !is_tlb)
   {
-    int cpu_id = handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
     pair<bool, PTEHolder> pte_value = process_page_table->get_pte(cpu_id, handle_pkt.address, handle_pkt.translation_level);
     // debugLog.log(current_cycle, "readlike_hit", NAME, "level-"+to_string(handle_pkt.translation_level), "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", (int)handle_pkt.type, "cb_addr", intToHex(hit_block.address), "cb_vaddr", intToHex(hit_block.v_address), "cb_data", intToHex(hit_block.data), "pte_fault", !pte_value.first, "pte_value", intToHex(pte_value.second.page_address), "NAME", NAME, "\n");
     handle_pkt.data = pte_value.second.page_address;
@@ -542,6 +550,26 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   {
     auto res = victima_peek_singleline(handle_pkt);
     handle_pkt.data = res.second.page_address;
+  }
+
+  if(hit_block.sectorHolder.is_sector_line)
+  {
+    // sector used v_addr for indexing
+    uint64_t virt_page = handle_pkt.v_address>> LOG2_PAGE_SIZE;
+    // data is our mapped pte for this vaddr
+    uint64_t phy_page = handle_pkt.data>> LOG2_PAGE_SIZE;
+
+    xlog.log(current_cycle, NAME, "sector-hit-reason", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
+    hit_block.sectorHolder.dump();
+
+    auto findPTE = pte_map_hist.find({virt_page, cpu_id});
+    if(findPTE != pte_map_hist.end())
+    {
+      // stlb miss
+      // pte is requested and used earlier in past
+      // pinned sector reuse hit
+      sector_counters[SCCounter::SectorHelpingReusePTE]++;
+    }
   }
 
   // update prefetcher on load instruction
@@ -1289,6 +1317,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // make sure Partial Tag is adjusted based in subtag width here
     if(sector_write)
     {
+      int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
+      xlog.log(current_cycle, NAME, "sector-write", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
       sector_counters[SCCounter::SectorWrite]++;
       uint64_t page_addr = handle_pkt.v_address >> LOG2_PAGE_SIZE;
       int pte_offset = page_addr & 0x7;
