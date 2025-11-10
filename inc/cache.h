@@ -438,7 +438,7 @@ public:
     
     xlog = logger(true);
     debugLog = logger(false);
-    dlog = logger(true);
+    dlog = logger(false);
     dataflow = logger(false);
     dassert = logger(true);
 

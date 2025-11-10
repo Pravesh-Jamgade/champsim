@@ -1002,12 +1002,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   //     l2cache->add_rq(&newPacket);
   // }
 
-  //// Test Sector Lookup
-  if(cache_is[CACHE_ID::IS_STLB])
-  {
-    auto res = ((CACHE*)l2cache)->sector_peek_singleline(handle_pkt);
-    cout << "STLB Testing Sector, addr, " << intToHex(handle_pkt.address) << ", vaddr, " << intToHex(handle_pkt.v_address) << ", data, " << intToHex(handle_pkt.data) <<", "<< res.first << ", " << intToHex(res.second) << '\n';
-  }
+  // //// Test Sector Lookup
+  // if(cache_is[CACHE_ID::IS_STLB])
+  // {
+  //   auto res = ((CACHE*)l2cache)->sector_peek_singleline(handle_pkt);
+  //   cout << "STLB Testing Sector, addr, " << intToHex(handle_pkt.address) << ", vaddr, " << intToHex(handle_pkt.v_address) << ", data, " << intToHex(handle_pkt.data) <<", "<< res.first << ", " << intToHex(res.second) << '\n';
+  // }
 
   // Part Testing Victima
   // //// Test Victima Lookup
@@ -1331,6 +1331,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // make sure Partial Tag is adjusted based in subtag width here
     if(sector_write)
     {
+      fill_block.sectorHolder.clear();
       sector_counters[SCCounter::SectorWrite]++;
       int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
       if(sector_overwrite)
@@ -1338,6 +1339,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         sector_counters[SCCounter::SectorOverwrite]++;
         for(auto entry: cache_block_data_for_sector.second)
         {
+          if(!entry.first) continue;
+
+          xlog.log(current_cycle, NAME, "sector-overwrite", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
+
           fill_block.sectorHolder.insert(entry, NUM_SET);
         }
       }
@@ -1347,16 +1352,24 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         uint64_t page_addr = handle_pkt.v_address >> LOG2_PAGE_SIZE;
         int pte_offset = page_addr & 0x7;
         pair<bool, PTEHolder> insertPTE = cache_block_data_for_sector.second[pte_offset];
+        xlog.log(current_cycle, NAME, "sector-insert", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
         fill_block.sectorHolder.insert(insertPTE, NUM_SET);
       }
 
-      xlog.log(current_cycle, NAME, "sector-write", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
     }
     else if(pom_cache_write)
     {
       auto [tag, set_index, offset_index] = pomtlb->split_address(handle_pkt.address);
       pomtlb->pom_counters[POMFLAG::POM_SUCCESS]++;
       pomtlb->pomblock_occupancy[func_valid_pompte_count(handle_pkt)]++;
+
+      int usage = 0;
+      for(auto entry: fill_block.page_table_entries)
+      {
+        if(entry.first) usage++;
+      }
+
+      // // dlog.log(current_cycle, NAME, "Test Size addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), "size", fill_block.page_table_entries.size(), usage, '\n');
       // for(int i=0; i< 8; i++)
       // {
       //   cout << "index - " << i << " " << intToHex(get<0>(fill_block.pomtlb_lines[i])) << " - " << intToHex(get<1>(fill_block.pomtlb_lines[i])) << '\n';

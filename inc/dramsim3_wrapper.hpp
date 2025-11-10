@@ -44,7 +44,7 @@ public:
             numPPages = (DRAM_CHANNELS * DRAM_RANKS * DRAM_BANKS 
                                 * DRAM_ROWS * DRAM_COLUMNS * BLOCK_SIZE) / PAGE_SIZE;
             procPageAccess = new bool[numPPages]{false};
-            dlog = logger(true);
+            dlog = logger(false);
             xlog = logger(true);
             data_page = pt_page = 0;
             data_page_faulted = pt_page_faulted = 0;

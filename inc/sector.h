@@ -103,6 +103,13 @@ struct DirectMap
         }
         return usage;
     }
+
+    void clear(){
+        for(auto& sl: slots)
+        {
+            sl = Entry();
+        }
+    }
 };
 
 struct LRU8
@@ -188,7 +195,7 @@ struct AssociativeMap
         uint64_t pte_offset = Indexer::get_index(virt_page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
 
-        cout << "Sector-INSERT addr, " << intToHex(virt_page_addr) << ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
+        cout << "Sector-INSERT "  << ", vaddr, " << intToHex(virt_page_addr) << ", pte, " << intToHex(pte.second.page_address)<< ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
         
         repl.insert(slots, combinedTag, pte.second.page_address);
         dump();
@@ -213,6 +220,13 @@ struct AssociativeMap
             if(!sl.valid)   return true;
         }
         return false;
+    }
+
+    void clear(){
+        for(auto& sl: slots)
+        {
+            sl = Entry();
+        }
     }
 
     // void dump() {dumper::dump(slots);}
@@ -264,6 +278,7 @@ struct SectorModel : ISector {
     void insert(uint64_t page_addr, uint64_t pte, int num_sets) override {
         impl.insert(page_addr, pte, num_sets);
     }
+    
     void dump() override { impl.dump(); }
 
     // Optional: expose raw impl if you ever need it
@@ -298,6 +313,11 @@ class SectorHolder
 
       int get_occupancy(){
         return std::visit([&](auto& s){ return s.get_occupancy();}, sector_);
+      }
+
+      void clear()
+      {
+        return std::visit([&](auto& s){ s.clear(); }, sector_);
       }
       
       bool isSpaceAvailable(uint64_t addr){
