@@ -24,7 +24,7 @@ extern int KNOB_TRANSLATION_QUEUE;
 extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_VICTIMA, KNOB_EXTEND_VICTIMA, KNOB_HASH_CACHE_MAX_LIMIT;
 extern int KNOB_SMT_ENABLE;
-extern int KNOB_ENABLE_SWAT_WAYS, KNOB_ENABLE_IDEAL_SWAT;
+extern int KNOB_ENABLE_SWAT_WAYS, KNOB_ENABLE_SWAT_WAYS_OVERWRITE, KNOB_ENABLE_IDEAL_SWAT;
 
 // illusiong of stored cache line by 8byte granularity
 extern list<pair<string, uint64_t>> hash_cache;
@@ -174,9 +174,9 @@ void CACHE::handle_fill()
     // if true then write to normal line otherswise to sector line
     bool write_to_normal_line = true;
     if(is_SWAT_enable) 
-    write_to_normal_line = process_page_table->is_translation_block_full(cpuid, fill_mshr->address, fill_mshr->translation_level);
+      write_to_normal_line = process_page_table->is_translation_block_full(cpuid, fill_mshr->address, fill_mshr->translation_level);
     
-    // Victima PTW brought Translation Cache block
+      // Victima PTW brought Translation Cache block
     bool is_Victima_enable = (KNOB_VICTIMA && fill_mshr->vflag[VF::victima_stlbevict_ptw]);
     
     // We are using VPN for indexing into L2 cache
@@ -411,7 +411,7 @@ void CACHE::handle_read()
       if(!is_tlb)
       {
         auto [pomtag, pomset, pomoff] = pomtlb->split_address(handle_pkt.address);
-        dlog.log(current_cycle, NAME, "POM cache hit", "addr", intToHex(handle_pkt.address), "data", intToHex(get<0>(hit_block->pomtlb_lines[pomoff])), intToHex(get<1>(hit_block->pomtlb_lines[pomoff])), '\n');
+        dlog.log(current_cycle, NAME, "POM cache hit", "addr", intToHex(handle_pkt.address), "data", intToHex(hit_block->page_table_entries[pomoff].first), intToHex(hit_block->page_table_entries[pomoff].second.page_address), '\n');
       }
     }
 
@@ -424,8 +424,10 @@ void CACHE::handle_read()
       // it was sector requets packet but we got normal-cache line
       if(hit_block->sectorHolder.is_sector_line)
       {
+        xlog.log(current_cycle, NAME, "sectopr-lookup-handleread, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address),'\n');
+
         // lookup PTE at the offset
-        auto res = hit_block->sectorHolder.lookup(handle_pkt.address, NUM_SET);
+        auto res = hit_block->sectorHolder.lookup(handle_pkt.address >> LOG2_PAGE_SIZE, NUM_SET);
         hit = hit && res.hit;
 
         // // Sector Hit Verification #1
@@ -463,7 +465,11 @@ void CACHE::handle_read()
       }
 
       if(KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]) victima_counters[VC::L2_READ_MISS]++;
-      if(KNOB_ENABLE_SWAT_WAYS && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]) sector_counters[SCCounter::SctrPkt_L2_READ_MISS]++;
+      if(KNOB_ENABLE_SWAT_WAYS && cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
+      {
+        dlog.log(current_cycle, NAME, "sector-miss", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct-read", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+        sector_counters[SCCounter::SctrPkt_L2_READ_MISS]++;
+      }
       cacheDataModel->rd_queue[Basic::MISS]++;
     }
 
@@ -541,8 +547,9 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
           && cache_is[CACHE_ID::IS_L2] 
           && handle_pkt.vflag[VF::victima])
   {
-    auto res = hit_block.sectorHolder.lookup(handle_pkt.address, NUM_SET);
+    auto res = hit_block.sectorHolder.lookup(handle_pkt.address >> LOG2_PAGE_SIZE, NUM_SET);
     handle_pkt.data = res.value;
+    xlog.log(current_cycle, NAME, "sectopr-lookup-readlikehit, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data),'\n');
   }
   else if(KNOB_VICTIMA
           && cache_is[CACHE_ID::IS_L2]
@@ -559,7 +566,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // data is our mapped pte for this vaddr
     uint64_t phy_page = handle_pkt.data>> LOG2_PAGE_SIZE;
 
-    xlog.log(current_cycle, NAME, "sector-hit-reason", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
+    xlog.log(current_cycle, NAME, "sector-readlikehit", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
     hit_block.sectorHolder.dump();
 
     auto findPTE = pte_map_hist.find({virt_page, cpu_id});
@@ -925,13 +932,18 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // sector line to be written, it can have at most between 1 to 7 PTE
   bool sector_write = KNOB_ENABLE_SWAT_WAYS && cache_id==CACHE_ID::IS_L2 && fill_block.sectorHolder.is_sector_line  && handle_pkt.translation_level==1 && handle_pkt.type==TRANSLATION;
   bool sector_overwrite = false;
-  pair<int, vector<pair<bool, uint64_t>>> cache_block_data_for_sector;
+  pair<int, vector<pair<bool, PTEHolder>>> cache_block_data_for_sector;
   if(sector_write)
   {
     int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
     cache_block_data_for_sector = process_page_table->get_cacheblock_data(cpu_id, handle_pkt.address, handle_pkt.translation_level);
-    // if partial tag of incomming packet and existing cache block mathches then we simply update single PTE otherwise overwite sector line
-    sector_overwrite = !(Indexer::get_partialTag(handle_pkt.v_address >> LOG2_PAGE_SIZE, NUM_SET) == fill_block.address && fill_block.valid);
+
+    // Design Point: Overwrite Sector When Sector.occupancy < IncommingBlock.occupancy
+    sector_overwrite =  fill_block.valid
+                        && KNOB_ENABLE_SWAT_WAYS_OVERWRITE
+                        && (Indexer::get_partialTag(handle_pkt.v_address >> LOG2_PAGE_SIZE, NUM_SET) 
+                                  != fill_block.address) 
+                        && fill_block.sectorHolder.get_occupancy() < cache_block_data_for_sector.first;
   }
 
   // Position matters
@@ -990,12 +1002,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   //     l2cache->add_rq(&newPacket);
   // }
 
-  // //// Test Sector Lookup
-  // if(cache_is[CACHE_ID::IS_STLB])
-  // {
-  //   auto res = ((CACHE*)l2cache)->sector_peek_singleline(handle_pkt);
-  //   cout << "STLB Testing Sector, addr, " << intToHex(handle_pkt.address) << ", vaddr, " << intToHex(handle_pkt.v_address) << ", data, " << intToHex(handle_pkt.data) <<", "<< res.first << ", " << intToHex(res.second) << '\n';
-  // }
+  //// Test Sector Lookup
+  if(cache_is[CACHE_ID::IS_STLB])
+  {
+    auto res = ((CACHE*)l2cache)->sector_peek_singleline(handle_pkt);
+    cout << "STLB Testing Sector, addr, " << intToHex(handle_pkt.address) << ", vaddr, " << intToHex(handle_pkt.v_address) << ", data, " << intToHex(handle_pkt.data) <<", "<< res.first << ", " << intToHex(res.second) << '\n';
+  }
 
   // Part Testing Victima
   // //// Test Victima Lookup
@@ -1305,6 +1317,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.vp_2_pp_map.clear();
     fill_block.translation_level_if_pagetable_block = (handle_pkt.type == TRANSLATION) ? handle_pkt.translation_level: -1;
     
+    fill_block.page_table_entries = handle_pkt.page_table_entries;
+
     // Part Testing Victima
     // // writing victima block
     // if(fill_block.victima_block)
@@ -1317,36 +1331,30 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // make sure Partial Tag is adjusted based in subtag width here
     if(sector_write)
     {
-      int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
-      xlog.log(current_cycle, NAME, "sector-write", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
       sector_counters[SCCounter::SectorWrite]++;
-      uint64_t page_addr = handle_pkt.v_address >> LOG2_PAGE_SIZE;
-      int pte_offset = page_addr & 0x7;
-
+      int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
       if(sector_overwrite)
       {
-        cacheDataModel->sector_block_occupancy->add_data_freq(cache_block_data_for_sector.first, 1);
         sector_counters[SCCounter::SectorOverwrite]++;
-        fill_block.sectorHolder.overwrite(page_addr, cache_block_data_for_sector.second, NUM_SET);
-        
-        // // Sector Hit Verification #2
-        // if(fill_block.sectorHolder.is_sector_line)
-        // {
-        //   dlog.log(current_cycle, "Test SectorWrite", NAME, "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "type", (int)fill_block.dtype, "block-tag", intToHex(fill_block.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), "way", way, "overwrite", sector_overwrite, "invalid-block", fill_block.valid, "#pte", cache_block_data_for_sector.first, '\n');
-
-        //   auto res = sector_peek_singleline(handle_pkt);
-        // }
+        for(auto entry: cache_block_data_for_sector.second)
+        {
+          fill_block.sectorHolder.insert(entry, NUM_SET);
+        }
       }
       else
       {
         sector_counters[SCCounter::SectorInsert]++;
-        fill_block.sectorHolder.insert(page_addr, cache_block_data_for_sector.second[pte_offset], NUM_SET);
+        uint64_t page_addr = handle_pkt.v_address >> LOG2_PAGE_SIZE;
+        int pte_offset = page_addr & 0x7;
+        pair<bool, PTEHolder> insertPTE = cache_block_data_for_sector.second[pte_offset];
+        fill_block.sectorHolder.insert(insertPTE, NUM_SET);
       }
+
+      xlog.log(current_cycle, NAME, "sector-write", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
     }
     else if(pom_cache_write)
     {
       auto [tag, set_index, offset_index] = pomtlb->split_address(handle_pkt.address);
-      fill_block.pomtlb_lines = handle_pkt.pomtlb_entry;
       pomtlb->pom_counters[POMFLAG::POM_SUCCESS]++;
       pomtlb->pomblock_occupancy[func_valid_pompte_count(handle_pkt)]++;
       // for(int i=0; i< 8; i++)
@@ -1365,19 +1373,19 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     //   debugLog.log("Eval", "status", first_it, "pte", intToHex(second_it.page_address), '\n');
     // }
     
-    // Independent, for basecache
-    // track the valid bits of each of PTE whenever a cache block corresponding to PT is brought in
-    if(handle_pkt.type == TRANSLATION && !is_tlb)
-    {
-      int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
-      auto pt_meta = process_page_table->get_cacheblock_usage(cpu_id, handle_pkt.address, handle_pkt.translation_level, "filllike_miss");
-      fill_block.valid_ptes = pt_meta.second;
-      if(pt_meta.first != __builtin_popcount(pt_meta.second))
-      {
-        dassert.log("Error: pte_count != valid_pte_bits", pt_meta.first, pt_meta.second, '\n');
-        exit(-1);
-      }
-    }
+    // // Independent, for basecache
+    // // track the valid bits of each of PTE whenever a cache block corresponding to PT is brought in
+    // if(handle_pkt.type == TRANSLATION && !is_tlb)
+    // {
+    //   int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
+    //   auto pt_meta = process_page_table->get_cacheblock_usage(cpu_id, handle_pkt.address, handle_pkt.translation_level, "filllike_miss");
+    //   fill_block.valid_ptes = pt_meta.second;
+    //   if(pt_meta.first != __builtin_popcount(pt_meta.second))
+    //   {
+    //     dassert.log("Error: pte_count != valid_pte_bits", pt_meta.first, pt_meta.second, '\n');
+    //     exit(-1);
+    //   }
+    // }
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
@@ -2057,7 +2065,7 @@ void CACHE::return_data(PACKET* packet)
   }
 
   // retriving POM TLB, if it hits in POMTLB (which will happen for second request to same page)
-  mshr_entry->pomtlb_entry = packet->pomtlb_entry;
+  mshr_entry->page_table_entries = packet->page_table_entries;
 
   // cout << "Verify: " << intToHex(get<0>(mshr_entry->pomtlb_entry)) << ", " << intToHex(get<1>(mshr_entry->pomtlb_entry)) << '\n';
   
@@ -2369,9 +2377,9 @@ void CACHE::func_prepare_victima_packet(PACKET& handle_pkt, PACKET& newPacket)
 int CACHE::func_valid_pompte_count(const PACKET& handle_pkt)
 {
   int count = 0;
-  for(auto ele: handle_pkt.pomtlb_entry)
+  for(auto ele: handle_pkt.page_table_entries)
   {
-    if(get<0>(ele) == 0 || get<1>(ele))
+    if(ele.first)
     {
       count++;
     }

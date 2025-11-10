@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 #include <cstdint>
 #include "util.h"
+#include "pagetable.h"
 #include <variant>
 using namespace std;
 
@@ -67,29 +68,17 @@ struct DirectMap
     }
 
     // update at index even if it is valid
-    void insert(uint64_t page_addr, pair<bool, uint64_t> pte, int NUM_SET)
+    void insert(pair<bool, PTEHolder> pte, int NUM_SET)
     {
         if(pte.first == false)
             return;
-        int index = Indexer::get_index(page_addr);
+
+        uint64_t virt_page_addr = pte.second.virt_page_address;
+
+        int index = Indexer::get_index(virt_page_addr);
         slots[index].valid = true;
-        slots[index].pte = pte.second;
-        slots[index].subTag = Indexer::get_subTag(page_addr, NUM_SET);
-    }
-
-    void overwrite(uint64_t page_addr, vector<pair<bool, uint64_t>> ptes, int NUM_SET)
-    {
-        for(int i=0; i< 8; i++)
-        {
-            pair<bool, uint64_t> pte = ptes[i];
-            if(pte.first == false)
-                continue;
-
-            int index = Indexer::get_index(page_addr);
-            slots[index].valid = true;
-            slots[index].pte = pte.second;
-            slots[index].subTag = Indexer::get_subTag(page_addr, NUM_SET);
-        }
+        slots[index].pte = pte.second.page_address;
+        slots[index].subTag = Indexer::get_subTag(virt_page_addr, NUM_SET);
     }
 
     bool isSpaceAvailable(uint64_t page_addr)
@@ -103,6 +92,16 @@ struct DirectMap
     {
         for(int i=0; i< slots.size(); i++)
             cout << "i="<<i <<", "<< intToHex(slots[i].subTag) <<", "<< intToHex(slots[i].pte) << '\n';
+    }
+
+    int get_occupancy()
+    {
+        int usage = 0;
+        for(auto sl : slots)
+        {
+            if(sl.valid) usage++;
+        }
+        return usage;
     }
 };
 
@@ -173,32 +172,37 @@ struct AssociativeMap
         uint64_t subTag = Indexer::get_subTag(page_addr, NUM_SET);
         uint64_t pte_offset = Indexer::get_index(page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
+
+        cout << "Sector-LOOKUP addr, " << intToHex(page_addr) << ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
         return repl.lookup(slots, combinedTag);
     }
 
-    void insert(uint64_t page_addr, pair<bool, uint64_t> pte, int NUM_SET)
+    void insert(pair<bool, PTEHolder> pte, int NUM_SET)
     {
         if(pte.first == false)
             return;
         
-        uint64_t subTag = Indexer::get_subTag(page_addr, NUM_SET);
-        uint64_t pte_offset = Indexer::get_index(page_addr);
+        uint64_t virt_page_addr = pte.second.virt_page_address >> LOG2_PAGE_SIZE;
+
+        uint64_t subTag = Indexer::get_subTag(virt_page_addr, NUM_SET);
+        uint64_t pte_offset = Indexer::get_index(virt_page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
-        repl.insert(slots, combinedTag, pte.second);
+
+        cout << "Sector-INSERT addr, " << intToHex(virt_page_addr) << ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
+        
+        repl.insert(slots, combinedTag, pte.second.page_address);
+        dump();
+        
     }
 
-    void overwrite(uint64_t page_addr, vector<pair<bool, uint64_t>> ptes, int NUM_SET)
+    int get_occupancy()
     {
-        for(int i=0; i< 8; i++)
+        int usage = 0;
+        for(auto sl : slots)
         {
-            pair<bool, uint64_t> pte = ptes[i];
-            if(pte.first == false)
-                continue;
-            uint64_t subTag = Indexer::get_subTag(page_addr, NUM_SET);
-            uint64_t pte_offset = Indexer::get_index(page_addr);
-            uint64_t combinedTag = (subTag << 3) | pte_offset;
-            repl.insert(slots, combinedTag, pte.second);
+            if(sl.valid) usage++;
         }
+        return usage;
     }
 
     // if invalid slot available
@@ -285,18 +289,17 @@ class SectorHolder
       LookupResultU64 lookup(uint64_t addr, int num_sets) {
         return std::visit([&](auto& s){ return s.lookup(addr, num_sets); }, sector_);
       }
-      void insert(uint64_t addr, pair<bool, uint64_t> pte, int num_sets) {
-        std::visit([&](auto& s){ s.insert(addr, pte, num_sets); }, sector_);
+      void insert(pair<bool, PTEHolder> pte, int num_sets) {
+        std::visit([&](auto& s){ s.insert(pte, num_sets); }, sector_);
       }
       void dump() {
         std::visit([&](auto & s){ s.dump(); }, sector_);
       }
-      
-      void overwrite(uint64_t addr, vector<pair<bool, uint64_t>> ptes, int num_sets)
-      {
-        std::visit([&](auto &s) { s.overwrite(addr, ptes, num_sets); }, sector_);
-      }
 
+      int get_occupancy(){
+        return std::visit([&](auto& s){ return s.get_occupancy();}, sector_);
+      }
+      
       bool isSpaceAvailable(uint64_t addr){
         return std::visit
         (

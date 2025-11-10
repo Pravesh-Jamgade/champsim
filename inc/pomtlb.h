@@ -4,6 +4,8 @@
 #include "champsim_constants.h"
 #include "logger.h"
 #include "vmem.h"
+#include "pagetable.h"
+
 using namespace std;
 
 #define POMSETS 256
@@ -13,8 +15,8 @@ using namespace std;
 
 static logger pom_logger(false);
 
-
-struct PTELookup { bool hit; uint64_t value; array<tuple<uint64_t, uint64_t>, 8> ptes;};
+class PTEHolder;
+// struct PTELookup { bool hit; uint64_t value; array<tuple<uint64_t, uint64_t>, 8> ptes;};
 
 enum POMFLAG
 {
@@ -189,9 +191,11 @@ void dump_pom(const SETS (&tbl)[CPUS], std::ostream& os = std::cout,
     }   
 
     // get POM-TLB line
-    PTELookup getPOMTLBLine(int process_id, uint64_t pte_address, uint64_t virt_address)  
+    pair<bool, vector<pair<bool, PTEHolder>>> getPOMTLBLine(int process_id, uint64_t pte_address, uint64_t virt_address)  
     {
-        PTELookup retPTE;
+        pair<int, vector<pair<bool, PTEHolder>>> retData;
+        vector<pair<bool, PTEHolder>> all_pte(8);
+
         auto [tag, set_index, pte_offset] = split_address(pte_address);
 
         // array of sets
@@ -208,36 +212,45 @@ void dump_pom(const SETS (&tbl)[CPUS], std::ostream& os = std::cout,
             // found tag
             if(way_tag == tag)
             {
-                // update lru of other ways
-                for(auto& [other_way_tag, other_ptes, other_lru]: all_ways)
-                {
-                    // avoid the same entry
-                    // check if we have less lru value than matched one
-                    if(other_way_tag != way_tag && other_lru < lru)
-                    {
-                        other_lru++;
-                    }       
-                }
+                //// *** use lookup to increment LRU distance *** ////
+                // // update lru of other ways
+                // for(auto& [other_way_tag, other_ptes, other_lru]: all_ways)
+                // {
+                //     // avoid the same entry
+                //     // check if we have less lru value than matched one
+                //     if(other_way_tag != way_tag && other_lru < lru)
+                //     {
+                //         other_lru++;
+                //     }       
+                // }
                 
+                int usage=0;
                 for(int i=0; i< 8; i++)
                 {
-                    retPTE.ptes[i] = ptes[i];
+                    if(get<0>(ptes[i])!=0 && get<1>(ptes[i])!=0)
+                    {
+                        PTEHolder retPTE;
+                        usage++;
+                        retPTE.virt_page_address = get<0>(ptes[i]);
+                        retPTE.page_address = get<1>(ptes[i]);
+                        all_pte[i] = make_pair(true, retPTE);
+                    }
                 }
 
-                retPTE.hit = true;
-                retPTE.value = pp;
+                pair<int, vector<pair<bool, PTEHolder>>> retData;
+                retData = make_pair(true, all_pte);
 
                 pom_logger.log("POM hit", intToHex(pte_address), intToHex(virt_address), "vpage", intToHex(vp), "PTE", intToHex(pp), '\n');
                 // reset our lru
                 lru = 0;
 
-                return retPTE;
+                return retData;
             }
         }
 
         pom_logger.log("POM miss", intToHex(pte_address), intToHex(virt_address), '\n');
 
-        return {false, 0, {}};
+        return make_pair(false, all_pte);
     }
 
     // our POM-TLB "x" sets and 4 ways

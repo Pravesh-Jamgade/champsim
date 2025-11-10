@@ -64,7 +64,7 @@ extern int KNOB_LIVE_INPUT;
 extern int KNOB_ENABLE_LOG;
 extern int KNOB_ENABLE_MFOE_V2;
 extern int KNOB_ENABLE_CTX;
-extern int KNOB_ENABLE_SWAT_WAYS, KNOB_ENABLE_IDEAL_SWAT;
+extern int KNOB_ENABLE_SWAT_WAYS, KNOB_ENABLE_SWAT_WAYS_OVERWRITE, KNOB_ENABLE_IDEAL_SWAT;
 
 std::vector<tracereader*> traces;
 
@@ -567,6 +567,7 @@ int main(int argc, char** argv)
   KNOB_POMTLB = iniReader->GetInteger("POMTLB", "ENABLE_POMTLB", 0);
   KNOB_ENABLE_SWAT_WAYS = iniReader->GetInteger("SWAT", "ENABLE_SWAT_WAYS", 0);
   KNOB_ENABLE_IDEAL_SWAT = iniReader->GetInteger("SWAT", "ENABLE_IDEAL_SWAT", 0);
+  KNOB_ENABLE_SWAT_WAYS_OVERWRITE = iniReader->GetInteger("SWAT", "ENABLE_SWAT_WAYS_OVERWRITE", 0);
 
   std::cout << "Extra settings:\n";
   iniReader->print();

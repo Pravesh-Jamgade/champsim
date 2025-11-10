@@ -44,6 +44,7 @@ class PTEHolder
 {
     public:
     uint64_t page_address = UINT64_MAX;
+    uint64_t virt_page_address = UINT64_MAX;
     int dram_accesses_during_ptw = 0;
     int number_of_ptw = 0;
 
@@ -71,7 +72,7 @@ class CacheBlock
         valid_cacheblock = true;
     }
 
-    void insertAtCacheBlockPTE(uint64_t pte, int index)
+    void insertAtCacheBlockPTE(uint64_t pte, int index, uint64_t virt_page)
     {
         if(list_pte[index].page_address != UINT64_MAX)
         {
@@ -80,6 +81,7 @@ class CacheBlock
         }
 
         list_pte[index].page_address = pte;
+        list_pte[index].virt_page_address = virt_page;
     }
 
     // if value != UINT64_MAX: valid else fault ? and PTE
@@ -102,14 +104,14 @@ class Page
         this->page_number = page_number;
     }
 
-    void insertAtPage(uint64_t pte, int cache_block_id, int pte_offset)
+    void insertAtPage(uint64_t pte, int cache_block_id, int pte_offset, uint64_t virt_page)
     {
         auto foundCacheBlock = list_cacheblocks.find(cache_block_id);
         if(foundCacheBlock == list_cacheblocks.end())
         {
             list_cacheblocks[cache_block_id] = CacheBlock(pt_level, cache_block_id);
         }
-        list_cacheblocks[cache_block_id].insertAtCacheBlockPTE(pte, pte_offset);        
+        list_cacheblocks[cache_block_id].insertAtCacheBlockPTE(pte, pte_offset, virt_page);        
     }
 
     pair<bool, PTEHolder> get_pte(int cache_block_id, int pte_offset)
@@ -136,7 +138,7 @@ class PageTableTracker
         this->pt_level = pt_level;
     }
 
-    void insertAtPageTable(uint64_t pte_address, uint64_t pte_value, int pt_level)
+    void insertAtPageTable(uint64_t pte_address, uint64_t pte_value, int pt_level, uint64_t virt_address)
     {
         int page_number = (pte_address >> LOG2_PAGE_SIZE); // 12-bit page number within 4MB range
         int cache_block_id = (pte_address >> LOG2_BLOCK_SIZE) & 0x3F; // 6-bit cache block id within page
@@ -147,7 +149,7 @@ class PageTableTracker
         {
             list_pages[page_number] = Page(pt_level, page_number);
         }
-        list_pages[page_number].insertAtPage(pte_value, cache_block_id, pte_offset);
+        list_pages[page_number].insertAtPage(pte_value, cache_block_id, pte_offset, virt_address);
     }
 
     pair<bool, PTEHolder> get_pte(uint64_t pte_address)
@@ -182,7 +184,7 @@ class PageTableLevelTracker
             list_pages_tables_levels[i] = PageTableTracker(i);
     }
 
-    void insertAtPageTableLevel(uint64_t pte_address, uint64_t pte_value, int pt_level)
+    void insertAtPageTableLevel(uint64_t pte_address, uint64_t pte_value, int pt_level, uint64_t virt_address)
     {
         if(pt_level < 1 || pt_level >= list_pages_tables_levels.size())
         {
@@ -190,7 +192,7 @@ class PageTableLevelTracker
             exit(-1);
         }
         auto& pagetable = list_pages_tables_levels[pt_level];
-        pagetable.insertAtPageTable(pte_address, pte_value, pt_level);
+        pagetable.insertAtPageTable(pte_address, pte_value, pt_level, virt_address);
     }
 
     pair<bool, PTEHolder> get_pte(uint64_t pte_address, int pt_level)
@@ -232,14 +234,14 @@ class ProcessPageTable
 
     // TODO: we are not handling ASID here hence using CPU id instead of ASID
     // In future, we can extend this to handle ASID as well hence porcess_id is either ASID or CPU id
-    void insert(int process_id, uint64_t pte_address, uint64_t pte_value, int pt_level)
+    void insert(int process_id, uint64_t pte_address, uint64_t pte_value, int pt_level, uint64_t virt_address)
     {
         if(process_id < 0)
         {
             pagetable_logger.log("Error: invalid process/cpu id for inserting a pte", "addr", intToHex(pte_address), "pte_value", intToHex(pte_value), "pt_level", pt_level, '\n');
             exit(-1);
         }
-        process_to_pagetable_levels_tracker[process_id].insertAtPageTableLevel(pte_address, pte_value, pt_level);
+        process_to_pagetable_levels_tracker[process_id].insertAtPageTableLevel(pte_address, pte_value, pt_level, virt_address);
     }
 
     // true -> pte found,       false -> page-fault
@@ -266,7 +268,7 @@ class ProcessPageTable
     }
 
     // True->page_found and False->page_not_found
-    pair<bool, PTEHolder> operate_pagetable(int process_id, uint64_t pte_address, int pt_level)
+    pair<bool, PTEHolder> operate_pagetable(int process_id, uint64_t pte_address, int pt_level, uint64_t virt_address)
     {
         auto result_pte = get_pte(process_id, pte_address, pt_level);
 
@@ -282,7 +284,7 @@ class ProcessPageTable
         uint64_t new_page_addr = vmem.func_allocate_page();
         // pagetable_logger.log("InsertPTE", "cpu", process_id, "addr", intToHex(pte_address), "pt_level", pt_level, "fault", !result_pte.first, "newalloc", intToHex(new_page_addr), '\n');
 
-        insert(process_id, pte_address, new_page_addr, pt_level);
+        insert(process_id, pte_address, new_page_addr, pt_level, virt_address);
         result_pte = get_pte(process_id, pte_address, pt_level);
         // oboviously not entry would be there, hence explicitly return "false" as we just created this entry
         return {false, result_pte.second};
@@ -335,7 +337,7 @@ class ProcessPageTable
     }
 
     // number of valid PTE and which pte are valid
-    pair<int, vector<pair<bool, uint64_t>>> get_cacheblock_data(int process_id, uint64_t pte_address, int pt_level, string caller="")
+    pair<int, vector<pair<bool, PTEHolder>>> get_cacheblock_data(int process_id, uint64_t pte_address, int pt_level, string caller="")
     {
         int usage = 0;
         Page page = getpage(process_id, pte_address, pt_level);
@@ -347,7 +349,7 @@ class ProcessPageTable
             exit(-1);
         }
 
-        vector<pair<bool, uint64_t>> pte_list(8);
+        vector<pair<bool, PTEHolder>> pte_list(8);
         CacheBlock cache_block = page.list_cacheblocks[cache_block_id];
         for(int i=0; i<8; i++)
         {
@@ -356,7 +358,7 @@ class ProcessPageTable
             {
                 usage++;
             }
-            pte_list[i] = {pte.first, pte.second.page_address};
+            pte_list[i] = pte;
         }
 
         // pagetable_logger.log( "CacheBlockUsage", "cpu", process_id, "addr", intToHex(pte_address), "cb", cache_block_id, "pt_level", pt_level, "usage", usage, "valid_bits", bitset<8>(valid_bits), '\n');

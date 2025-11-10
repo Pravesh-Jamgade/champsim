@@ -12,6 +12,7 @@
 
 class MemoryRequestProducer;
 class LSQ_ENTRY;
+class PTEHolder;
 
 enum SF
 {   
@@ -125,7 +126,9 @@ public:
   bool page_fault = 0;
 
   uint64_t pom_address = 0;
-  array<tuple<uint64_t, uint64_t>, 8> pomtlb_entry;
+
+  // pair of isValidPTE and PTEValue
+  vector<pair<bool, PTEHolder>> page_table_entries;
 
   // We need this to understand when do the "existing_sector_block" get replenished with "new_sector_block"
   bool block_hit_pte_miss = false;
