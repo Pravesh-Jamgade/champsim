@@ -149,6 +149,7 @@ class PageTableTracker
         {
             list_pages[page_number] = Page(pt_level, page_number);
         }
+
         list_pages[page_number].insertAtPage(pte_value, cache_block_id, pte_offset, virt_address);
     }
 
@@ -241,6 +242,7 @@ class ProcessPageTable
             pagetable_logger.log("Error: invalid process/cpu id for inserting a pte", "addr", intToHex(pte_address), "pte_value", intToHex(pte_value), "pt_level", pt_level, '\n');
             exit(-1);
         }
+
         process_to_pagetable_levels_tracker[process_id].insertAtPageTableLevel(pte_address, pte_value, pt_level, virt_address);
     }
 

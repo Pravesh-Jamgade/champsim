@@ -25,7 +25,7 @@
 #include "pomtlb.h"
 #include "sector.h"
 
-set<tuple<uint64_t, int>> pte_map_hist;
+map<tuple<uint64_t, int>, PageMetaData> pagemetadata_tracker;
 ProcessPageTable* process_page_table;
 POMTLB* pomtlb;
 map<tuple<uint64_t, int>, PTWC> ptw_pred;
@@ -70,6 +70,7 @@ std::vector<tracereader*> traces;
 
 void print_ptw_freq_and_cost();
 void print_sector_stats();
+void print_tblock_stats();
 
 uint64_t champsim::deprecated_clock_cycle::operator[](std::size_t cpu_idx)
 {
@@ -863,9 +864,64 @@ pomtlb->print_stats();
 
 print_sector_stats();
 
+print_tblock_stats();
+
 cout << "\nDone!\n";
 
   return 0;
+}
+
+void print_tblock_stats()
+{
+  logger dlog = logger(true);
+  dlog.log("=========================================================\n");
+  dlog.log("The miss at TLB triggered the second access to same tblock. This counter tells us whether the second miss is localized with same tblock we brought upon first access\n");
+  
+  array<int, 8> freq[CACHE_ID::IS_L1I];
+
+  for(int i=0; i< CACHE_ID::IS_L1I; i++)
+  {
+    for(int j=0; j< 8; j++)
+    {
+      freq[i][j] = 0;
+    }
+  }
+
+  // for(auto printstat: pagemetadata_tracker)
+  // {
+  //   for(auto entry: printstat.second.access_freq_of_all_valid_pte_upon_second_tlbmiss)
+  //   {
+  //     dlog.log("cache-i", entry.first, '\n');
+  //     for(int i=0; i< entry.second.size(); i++)
+  //     {
+  //         dlog.log("pte-index", i, entry.second.at(i), '\n');
+  //     }
+  //   }
+  // }
+
+  for(auto printstat: pagemetadata_tracker)
+  {
+    for(auto entry: printstat.second.access_freq_of_all_valid_pte_upon_second_tlbmiss)
+    {
+      // dlog.log("cache-i", entry.first, '\n');
+      for(int i=0; i< entry.second.size(); i++)
+      {
+          // dlog.log("pte-index", i, entry.second.at(i), '\n');
+          freq[entry.first][i] += entry.second.at(i);
+      }
+    }
+  }
+
+  for(int i=0; i< CACHE_ID::IS_L1I; i++)
+  {
+    dlog.log("cache ", hit_where_str[i],'\n');
+    for(int j=0; j< 8; j++)
+    {
+      dlog.log("index-", j, freq[i][j], '\n');
+    }
+  }
+  dlog.log("=========================================================\n");
+
 }
 
 void print_sector_stats()

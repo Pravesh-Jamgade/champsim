@@ -10,14 +10,13 @@
 #include "user.h"
 #include "ptw.h"
 #include "pomtlb.h"
+#include "pagemetadata.h"
 
 #ifndef SANITY_CHECK
 #define NDEBUG
 #endif
 
 #define SHARED 3
-
-extern set<tuple<uint64_t, int>> pte_map_hist;
 
 // Extra configguration
 extern int KNOB_TRANSLATION_QUEUE;
@@ -39,7 +38,7 @@ extern uint64_t POM_CPU_KEY;
 extern POMTLB* pomtlb;
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
-
+extern map<tuple<uint64_t, int>, PageMetaData> pagemetadata_tracker;
 /*
 ** SWAT **
 1. Test translation cache block occupancy
@@ -430,6 +429,10 @@ void CACHE::handle_read()
         auto res = hit_block->sectorHolder.lookup(handle_pkt.address >> LOG2_PAGE_SIZE, NUM_SET);
         hit = hit && res.hit;
 
+        cout << "******* Verify Lookup *********\n";
+        cout << NAME << ", Lookup, " << intToHex(handle_pkt.address) << ", vaddr, " << intToHex(handle_pkt.v_address) << '\n';
+        hit_block->sectorHolder.dump();
+
         // // Sector Hit Verification #1
         // dlog.log(current_cycle, "sector hit", intToHex(hit_block->address), '\n');
         // hit_block->sectorHolder.dump();
@@ -568,15 +571,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     xlog.log(current_cycle, NAME, "sector-readlikehit", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
     hit_block.sectorHolder.dump();
-
-    auto findPTE = pte_map_hist.find({virt_page, cpu_id});
-    if(findPTE != pte_map_hist.end())
-    {
-      // stlb miss
-      // pte is requested and used earlier in past
-      // pinned sector reuse hit
-      sector_counters[SCCounter::SectorHelpingReusePTE]++;
-    }
   }
 
   // update prefetcher on load instruction
@@ -614,6 +608,18 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
   if(cache_is[IS_L2])
   {
+    // found tblock and cpu key in history, that means it is not the first time this block has been seen
+    // this is second miss at TLB and now it is doing lookup for tblock to get the PTE
+    if(handle_pkt.type == TRANSLATION && handle_pkt.translation_level == 1)
+    {
+      auto findMap = pagemetadata_tracker.find({handle_pkt.v_address >> (3+LOG2_PAGE_SIZE), handle_pkt.cpu});
+      if(findMap != pagemetadata_tracker.end())
+      {
+        int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+        pagemetadata_tracker[{handle_pkt.v_address >> LOG2_BLOCK_SIZE, cpu_id}].update_second_access(handle_pkt.v_address, cache_id);
+      }
+    }
+
     translation_pollution->countPollution(get_set(handle_pkt.type, handle_pkt.address), 
                     PollutionEntry
                     (
@@ -1151,7 +1157,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         }
       }
       ////////////////////////     End SOTA      /////////////////////////////////////
-
       
       // track pollution && Test page table for being evicted cache_block
       {
@@ -1182,7 +1187,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           cacheDataModel->cache_stat[CacheStat::Prefetch_Writeback]++;
         cacheDataModel->cache_stat[CacheStat::Total_Writeback]++;
       }
-      else
+
+      // valid blocks are overwritten, equivalent to dropped
       {
         // tracking type of cache block being dropped
         if(fill_block.came_from_request == LOAD)
@@ -1212,7 +1218,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       cacheDataModel->hist_set_conflict_events[set]++;
       track_reuse = true;
     }
-
 
     // counting the number of times set has seen conflict and as a result a dirty block is sent-back
     // it needs infinit FA cache to keep history
@@ -1270,7 +1275,6 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         cacheDataModel->category_of_misses[MISS::CONF]++;
       }
     }
-
 
     if(track_reuse)
     {
@@ -1356,6 +1360,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         fill_block.sectorHolder.insert(insertPTE, NUM_SET);
       }
 
+      cacheDataModel->sector_block_occupancy->add_data_freq(fill_block.sectorHolder.get_occupancy(), 1);
     }
     else if(pom_cache_write)
     {
@@ -1363,13 +1368,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       pomtlb->pom_counters[POMFLAG::POM_SUCCESS]++;
       pomtlb->pomblock_occupancy[func_valid_pompte_count(handle_pkt)]++;
 
-      int usage = 0;
-      for(auto entry: fill_block.page_table_entries)
-      {
-        if(entry.first) usage++;
-      }
-
       // // dlog.log(current_cycle, NAME, "Test Size addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), "size", fill_block.page_table_entries.size(), usage, '\n');
+      // int usage = 0;
+      // for(auto entry: fill_block.page_table_entries)
+      // {
+      //   if(entry.first) usage++;
+      // }
       // for(int i=0; i< 8; i++)
       // {
       //   cout << "index - " << i << " " << intToHex(get<0>(fill_block.pomtlb_lines[i])) << " - " << intToHex(get<1>(fill_block.pomtlb_lines[i])) << '\n';
@@ -1386,19 +1390,19 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     //   debugLog.log("Eval", "status", first_it, "pte", intToHex(second_it.page_address), '\n');
     // }
     
-    // // Independent, for basecache
-    // // track the valid bits of each of PTE whenever a cache block corresponding to PT is brought in
-    // if(handle_pkt.type == TRANSLATION && !is_tlb)
-    // {
-    //   int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
-    //   auto pt_meta = process_page_table->get_cacheblock_usage(cpu_id, handle_pkt.address, handle_pkt.translation_level, "filllike_miss");
-    //   fill_block.valid_ptes = pt_meta.second;
-    //   if(pt_meta.first != __builtin_popcount(pt_meta.second))
-    //   {
-    //     dassert.log("Error: pte_count != valid_pte_bits", pt_meta.first, pt_meta.second, '\n');
-    //     exit(-1);
-    //   }
-    // }
+    // Independent, for basecache
+    // track the valid bits of each of PTE whenever a cache block corresponding to PT is brought in
+    if(handle_pkt.type == TRANSLATION && !is_tlb)
+    {
+      int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
+      auto pt_meta = process_page_table->get_cacheblock_usage(cpu_id, handle_pkt.address, handle_pkt.translation_level, "filllike_miss");
+      fill_block.valid_ptes = pt_meta.second;
+      if(pt_meta.first != __builtin_popcount(pt_meta.second))
+      {
+        dassert.log("Error: pte_count != valid_pte_bits", pt_meta.first, pt_meta.second, '\n');
+        exit(-1);
+      }
+    }
   }
 
   if (warmup_complete[handle_pkt.cpu] && (handle_pkt.cycle_enqueued != 0))
@@ -1506,7 +1510,7 @@ uint32_t CACHE::get_set(int type, uint64_t address, bool victima)
   int offset = use_offset(type);
   if((KNOB_ENABLE_SWAT_WAYS || KNOB_VICTIMA) && victima && cache_is[IS_L2])
   {
-    offset = LOG2_PAGE_SIZE + 3;//3;
+    offset = KNOB_ENABLE_SWAT_WAYS + 3 + LOG2_PAGE_SIZE;//3;
   }
   return ((address >> offset) & bitmask(lg2(NUM_SET)));
 }

@@ -11,12 +11,13 @@
 #include "vmem.h"
 #include "logger.h"
 #include "pomtlb.h"
+#include "pagemetadata.h"
 
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_POMTLB;
 extern ProcessPageTable* process_page_table;
 extern POMTLB* pomtlb;
-extern set<tuple<uint64_t, int>> pte_map_hist;
+extern map<tuple<uint64_t, int>, PageMetaData> pagemetadata_tracker;
 
 // tuple[POM_PP, VP, thread_id] and PP
 namespace dramsim3 {
@@ -45,7 +46,7 @@ public:
                                 * DRAM_ROWS * DRAM_COLUMNS * BLOCK_SIZE) / PAGE_SIZE;
             procPageAccess = new bool[numPPages]{false};
             dlog = logger(false);
-            xlog = logger(true);
+            xlog = logger(false);
             data_page = pt_page = 0;
             data_page_faulted = pt_page_faulted = 0;
         }
@@ -98,6 +99,24 @@ public:
                     pomtlb->insertPOMEntry(cpu_no, packet->pom_address, packet->data, packet->v_address);
                 }
 
+                // leaf PTE
+                if(packet->translation_level == 1)
+                {
+                    uint64_t page = packet->v_address >> LOG2_PAGE_SIZE;
+                    uint64_t tblock = page >> 3;
+                    auto checkPage = pagemetadata_tracker.find({tblock, cpu_no});
+                    if(checkPage == pagemetadata_tracker.end())
+                    {
+                        int cache_block_id = tblock & 0x3F; // 6-bit cache block id within page
+                        int pte_offset = page & 0x7; // 3-bit offset within cache block
+                        pagemetadata_tracker[{tblock,  cpu_no}] = PageMetaData(cache_block_id, pte_offset);
+                    }
+                    else
+                    {
+                        pagemetadata_tracker[{tblock, cpu_no}].tblock_reaccessed_more_than_once_from_dram++;
+                    }
+                }
+
                 // // to verify retrieved PTE and cache block it belongs to
                 // for(auto entry: pt_cache_block.second)
                 // {
@@ -111,7 +130,6 @@ public:
             // Test: leaf pt request, record VP and PP
             if(packet->translation_level == 1 && packet->type ==TRANSLATION && should_record)
             {
-                pte_map_hist.insert({packet->v_address >> 12, cpu_no});
                 xlog.log(current_cycle, "DRAM", "addr", intToHex(packet->address), "vaddr", intToHex(packet->v_address), "data", intToHex(packet->data), "cpu", cpu_no, '\n');
             }
 
@@ -320,6 +338,24 @@ public:
                     pomtlb->insertPOMEntry(cpu_no, rq_pkt->pom_address, rq_pkt->data, rq_pkt->v_address);
                 }
 
+                // leaf PTE
+                if(rq_pkt->translation_level == 1)
+                {
+                    uint64_t page = rq_pkt->v_address >> LOG2_PAGE_SIZE;
+                    uint64_t tblock = page >> 3;
+                    auto checkPage = pagemetadata_tracker.find({tblock, cpu_no});
+                    if(checkPage == pagemetadata_tracker.end())
+                    {
+                        int cache_block_id = tblock & 0x3F; // 6-bit cache block id within page
+                        int pte_offset = page & 0x7; // 3-bit offset within cache block
+                        pagemetadata_tracker[{tblock,  cpu_no}] = PageMetaData(cache_block_id, pte_offset);
+                    }
+                    else
+                    {
+                        pagemetadata_tracker[{tblock, cpu_no}].tblock_reaccessed_more_than_once_from_dram++;
+                    }
+                }
+
                 // // To verify result of retrived PTE and the cache-block it belongs to
                 // for(auto entry: pt_cache_block.second)
                 // {
@@ -334,7 +370,6 @@ public:
             if(rq_pkt->translation_level == 1 && rq_pkt->type ==TRANSLATION && should_record)
             {
                 // record requests
-                pte_map_hist.insert({rq_pkt->v_address >> 12, cpu_no});
                 xlog.log(current_cycle, "DRAM", "addr", intToHex(rq_pkt->address), "vaddr", intToHex(rq_pkt->v_address), "data", intToHex(rq_pkt->data), "cpu", cpu_no, '\n');
             }
 

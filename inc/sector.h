@@ -40,8 +40,8 @@ struct Indexer
     // page address
     static int get_index(uint64_t addr) { return (addr & 0x7ULL);}
     // page address, no_of_bits_in_set
-    static int get_subTag(uint64_t addr, int num_sets) { return ( (addr >> (3+get_num_bits(num_sets))) & get_mask(KNOB_ENABLE_SWAT_WAYS) ); }
-    static int get_partialTag(uint64_t addr, int num_sets) { return (addr >> (lg2(KNOB_ENABLE_SWAT_WAYS) + lg2(num_sets) + 3) ) ; }
+    static int get_subTag(uint64_t addr, int num_sets) { return ( (addr >> 3) & get_mask(KNOB_ENABLE_SWAT_WAYS) ); }
+    static int get_partialTag(uint64_t addr, int num_sets) { return (addr >> (lg2(num_sets) + lg2(KNOB_ENABLE_SWAT_WAYS) + 3) ) ; }
 };
 
 struct DirectMap
