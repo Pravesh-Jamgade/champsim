@@ -130,6 +130,11 @@ void CACHE::handle_fill()
         cacheDataModel->mshr_queue[Basic::ACCESS]++;
         continue;
       }
+      else if(is_tlb && fill_mshr->pomflag[POM_MISS]==false)// pom hit
+      {
+        // we need to use same VA, so that DTLB can recognize when we return from POM TLB hit
+        fill_mshr->address = fill_mshr->v_address;
+      }
     }
 
     // for victima packet returning data at STLB, if it was a miss then insert new request in STLB otherwise fine
@@ -975,6 +980,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         return false;
       }
     }
+
+    // its a POMTLB hit, which brought us a PTE
+
     
     dlog.log(current_cycle, NAME, "insertPOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
 
@@ -2062,6 +2070,8 @@ void CACHE::return_data(PACKET* packet)
       std::cerr << " v_address: " << packet->v_address;
       std::cerr << " address: " << (packet->address >> use_offset(packet->type)) << std::dec;
       std::cerr << " event: " << packet->event_cycle << " current: " << current_cycle << std::endl;
+      // testing pom exp, did not found mshr entry at DTLB
+      std::cerr << " pom, " << packet->pomflag[POM::POM] << ", pom2ptw, " << packet->pomflag[POM::POM_TO_PTW] << ", pom2ptw_fini, " << packet->pomflag[POM::POM_TO_PTW_FINI] <<", pom_miss, " << packet->pomflag[POM::POM_MISS] << std::endl;
       assert(0);
     }
 
