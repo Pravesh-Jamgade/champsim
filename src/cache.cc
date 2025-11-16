@@ -448,19 +448,19 @@ void CACHE::handle_read()
       }
     }
 
-    // testing why L2 showing 99% miss rate
-    if(cache_is[CACHE_ID::IS_L2])
-    {
-      debugLog.log(current_cycle, NAME, "Request", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "victima", handle_pkt.vflag[VF::victima], "hit", hit, "s", set, '\n');
-      for(auto it = block.begin() + (set * NUM_WAY); 
-          it != block.begin() + (set * NUM_WAY + way); 
-          ++it)
-      {
-        int dist = distance(it, block.begin() + (set * NUM_WAY));
-        debugLog.log("w",  dist, "addr", intToHex(it->address), "vaddr", intToHex(it->v_address), "v", it->valid, "instr", it->instr_id, '\n');
-      }
-      debugLog.log('\n');
-    }
+    // // testing why L2 showing 99% miss rate
+    // if(cache_is[CACHE_ID::IS_L2])
+    // {
+    //   debugLog.log(current_cycle, NAME, "Request", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "victima", handle_pkt.vflag[VF::victima], "hit", hit, "s", set, '\n');
+    //   for(auto it = block.begin() + (set * NUM_WAY); 
+    //       it != block.begin() + (set * NUM_WAY + way); 
+    //       ++it)
+    //   {
+    //     int dist = distance(it, block.begin() + (set * NUM_WAY));
+    //     debugLog.log("w",  dist, "addr", intToHex(it->address), "vaddr", intToHex(it->v_address), "v", it->valid, "instr", it->instr_id, '\n');
+    //   }
+    //   debugLog.log('\n');
+    // }
 
     if (hit) // HIT
     {
