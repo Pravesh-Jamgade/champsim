@@ -446,10 +446,10 @@ public:
       collect_pte[i] = ThreadBucket();
     }
     
-    xlog = logger(true);
+    xlog = logger(false);
     debugLog = logger(false);
-    dlog = logger(true);
-    dataflow = logger(true);
+    dlog = logger(false);
+    dataflow = logger(false);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
