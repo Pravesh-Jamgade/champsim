@@ -180,7 +180,7 @@ struct AssociativeMap
         uint64_t pte_offset = Indexer::get_index(page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
 
-        cout << "Sector-LOOKUP addr, " << intToHex(page_addr) << ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
+        // cout << "Sector-LOOKUP addr, " << intToHex(page_addr) << ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
         return repl.lookup(slots, combinedTag);
     }
 
@@ -195,10 +195,10 @@ struct AssociativeMap
         uint64_t pte_offset = Indexer::get_index(virt_page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
 
-        cout << "Sector-INSERT "  << ", vaddr, " << intToHex(virt_page_addr) << ", pte, " << intToHex(pte.second.page_address)<< ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
+        // cout << "Sector-INSERT "  << ", vaddr, " << intToHex(virt_page_addr) << ", pte, " << intToHex(pte.second.page_address)<< ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
         
         repl.insert(slots, combinedTag, pte.second.page_address);
-        dump();
+        // dump();
         
     }
 

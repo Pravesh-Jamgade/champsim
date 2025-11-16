@@ -190,10 +190,10 @@ void CACHE::handle_fill()
     uint64_t address_tobe_used = (use_vaddr_for_indexing? fill_mshr->v_address: fill_mshr->address);
 
     // if victima block then use virt-address to find set/way
-    uint32_t set = get_set(fill_mshr->type, address_tobe_used, 1);
+    uint32_t set = get_set(fill_mshr->type, address_tobe_used, fill_mshr->vflag[VF::victima]);
 
     // if it is hit implies, Transltion cache block is already there, its PTE might not be valid one thats why it brought from lower level
-    uint32_t way = get_way(fill_mshr->type, address_tobe_used, set, fill_mshr->thread_id, 1);
+    uint32_t way = get_way(fill_mshr->type, address_tobe_used, set, fill_mshr->thread_id, fill_mshr->vflag[VF::victima]);
 
     auto set_begin = std::next(std::begin(block), set * NUM_WAY);
     auto set_end = std::next(set_begin, NUM_WAY);
@@ -448,6 +448,20 @@ void CACHE::handle_read()
       }
     }
 
+    // testing why L2 showing 99% miss rate
+    if(cache_is[CACHE_ID::IS_L2])
+    {
+      debugLog.log(current_cycle, NAME, "Request", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "victima", handle_pkt.vflag[VF::victima], "hit", hit, "s", set, '\n');
+      for(auto it = block.begin() + (set * NUM_WAY); 
+          it != block.begin() + (set * NUM_WAY + way); 
+          ++it)
+      {
+        int dist = distance(it, block.begin() + (set * NUM_WAY));
+        debugLog.log("w",  dist, "addr", intToHex(it->address), "vaddr", intToHex(it->v_address), "v", it->valid, "instr", it->instr_id, '\n');
+      }
+      debugLog.log('\n');
+    }
+
     if (hit) // HIT
     {
       readlike_hit(set, way, handle_pkt);
@@ -606,6 +620,21 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
   func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE], handle_pkt.vflag[VF::victima]);
 
+  if(cache_is[CACHE_ID::IS_L2])
+  {
+    // found tblock and cpu key in history, that means it is not the first time this block has been seen
+    // this is second miss at TLB and now it is doing lookup for tblock to get the PTE
+    if(handle_pkt.type == TRANSLATION && handle_pkt.translation_level == 1)
+    {
+      int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+      auto findMap = pagemetadata_tracker.find({handle_pkt.v_address >> (3+LOG2_PAGE_SIZE), cpu_id});
+      if(findMap != pagemetadata_tracker.end())
+      {
+        pagemetadata_tracker[{handle_pkt.v_address >> LOG2_BLOCK_SIZE, cpu_id}].update_second_access(handle_pkt.v_address, cache_id);
+      }
+    }
+  }
+
   dataflow.log(current_cycle, NAME, "hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), '\n');    
 }
 
@@ -613,18 +642,6 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 {
   if(cache_is[IS_L2])
   {
-    // found tblock and cpu key in history, that means it is not the first time this block has been seen
-    // this is second miss at TLB and now it is doing lookup for tblock to get the PTE
-    if(handle_pkt.type == TRANSLATION && handle_pkt.translation_level == 1)
-    {
-      auto findMap = pagemetadata_tracker.find({handle_pkt.v_address >> (3+LOG2_PAGE_SIZE), handle_pkt.cpu});
-      if(findMap != pagemetadata_tracker.end())
-      {
-        int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
-        pagemetadata_tracker[{handle_pkt.v_address >> LOG2_BLOCK_SIZE, cpu_id}].update_second_access(handle_pkt.v_address, cache_id);
-      }
-    }
-
     translation_pollution->countPollution(get_set(handle_pkt.type, handle_pkt.address), 
                     PollutionEntry
                     (
@@ -1308,7 +1325,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.dirty = (handle_pkt.type == WRITEBACK || (handle_pkt.type == RFO && handle_pkt.to_return.empty()));
 
     // Transform cacheblock to victima cache block if it is brought in by victima PTW
-    fill_block.address = (cache_is[CACHE_ID::IS_L2] && (KNOB_ENABLE_SWAT_WAYS) || (KNOB_VICTIMA && handle_pkt.vflag[VF::victima_stlbevict_ptw])) ? handle_pkt.v_address : handle_pkt.address;
+    bool index_using_va = cache_is[CACHE_ID::IS_L2] && ((KNOB_ENABLE_SWAT_WAYS && handle_pkt.vflag[VF::victima]) || (KNOB_VICTIMA && handle_pkt.vflag[VF::victima_stlbevict_ptw])); 
+    fill_block.address = index_using_va ? handle_pkt.v_address : handle_pkt.address;
     // Keep the original physical address together so that we can use it for our trick to lookup into Page Table to get all 8 PTE if needed by
     // future STLB miss and hit on this victima cache block
     fill_block.original_pagetable_cacheblock_address = handle_pkt.address;
@@ -1330,6 +1348,10 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     fill_block.translation_level_if_pagetable_block = (handle_pkt.type == TRANSLATION) ? handle_pkt.translation_level: -1;
     
     fill_block.page_table_entries = handle_pkt.page_table_entries;
+
+    // if(fill_block.valid && fill_block.translation_level_if_pagetable_block==-1 && set == 351)
+    if(cache_id==IS_L2)
+    debugLog.log(current_cycle, NAME, "Insert", "set", set, "way", way, "addr", intToHex(fill_block.address), intToHex(fill_block.v_address), "sector", fill_block.sectorHolder.is_sector_line, "victima", handle_pkt.vflag[VF::victima], "Request", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "instr", handle_pkt.instr_id, '\n');
 
     // Part Testing Victima
     // // writing victima block

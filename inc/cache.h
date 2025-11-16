@@ -268,6 +268,16 @@ public:
         }
       }
     }
+
+    // // testing veriyf sector
+    // for(int i=0; i< NUM_SET; i++)
+    // {
+    //   for(int j=0; j< NUM_WAY; j++)
+    //   {
+    //     debugLog.log(block[i *NUM_WAY + j].sectorHolder.is_sector_line, " ");
+    //   }
+    //   debugLog.log('\n');
+    // }
   }
 
   void print_logs()
@@ -438,8 +448,8 @@ public:
     
     xlog = logger(true);
     debugLog = logger(false);
-    dlog = logger(false);
-    dataflow = logger(false);
+    dlog = logger(true);
+    dataflow = logger(true);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
