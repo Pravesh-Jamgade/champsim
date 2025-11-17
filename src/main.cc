@@ -448,6 +448,9 @@ void signal_handler(int signal)
 // Function to be called upon program termination
 void on_exit_handler() {
   std::cout << "Invoking handler due to program exit." << std::endl;
+
+  backtracklog.print_logs();
+  
   // process_page_table->printTree();
   // for(auto entry: ptw_pred)
   // {
@@ -867,8 +870,6 @@ pomtlb->print_stats();
 print_sector_stats();
 
 print_tblock_stats();
-
-backtracklog.print_logs();
 
 cout << "\nDone!\n";
 

@@ -136,11 +136,6 @@ void CACHE::handle_fill()
         cacheDataModel->mshr_queue[Basic::ACCESS]++;
         continue;
       }
-      else if(is_tlb && fill_mshr->pomflag[POM_MISS]==false)// pom hit
-      {
-        // we need to use same VA, so that DTLB can recognize when we return from POM TLB hit
-        fill_mshr->address = fill_mshr->v_address;
-      }
     }
 
     // for victima packet returning data at STLB, if it was a miss then insert new request in STLB otherwise fine
@@ -1969,7 +1964,7 @@ void CACHE::return_data(PACKET* packet)
   backtracklog.track(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "h", hit_where_str[handle_pkt.hit_where], "data", intToHex(packet->data), '\n');    
 
   // packet return to STLB, make sure POM address is changed to v_address
-  if(KNOB_POMTLB && packet->pomflag[POM::POM] && cache_is[CACHE_ID::IS_STLB])
+  if(KNOB_POMTLB && packet->pomflag[POM::POM] && (cache_is[IS_DTLB] || cache_is[IS_ITLB]))
   {
     packet->address = packet->v_address;
   }
