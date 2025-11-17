@@ -128,19 +128,21 @@ class CacheDataModel
         // initalize histogram for reuse distance
         {
             vector<pair<int,int>> exception_bounds;
-            exception_bounds.push_back({0, 0});
-            exception_bounds.push_back({50, 100});
-            exception_bounds.push_back({101, 150});
-            exception_bounds.push_back({151, 200});
-            exception_bounds.push_back({201, 0x7fffffff});
-            recall_distance = new Hist(1,5,8,exception_bounds);
+            exception_bounds.push_back({1e3, 1e4});
+            exception_bounds.push_back({1e5, 1e6});
+            recall_distance = new Hist(1, 49, 10, exception_bounds);
         }
 
         {
             vector<pair<int,int>> exception_bounds;
             exception_bounds.push_back({1, 1});
-            exception_bounds.push_back({100, 100000});
-            page_reuse_hist = new Hist(2, 5, 10, exception_bounds);
+            exception_bounds.push_back({2, 2});
+            exception_bounds.push_back({3, 3});
+            exception_bounds.push_back({4, 4});
+            exception_bounds.push_back({5, 5});
+            exception_bounds.push_back({1e3, 1e4});
+            exception_bounds.push_back({1e5, 1e6});
+            page_reuse_hist = new Hist(1, 49, 10, exception_bounds);
         }
 
         {
