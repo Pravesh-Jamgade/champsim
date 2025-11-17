@@ -24,7 +24,9 @@
 #include "pagetable.h"
 #include "pomtlb.h"
 #include "sector.h"
+#include "backtracklog.h"
 
+BacktrackLog backtracklog(true);
 map<tuple<uint64_t, int>, PageMetaData> pagemetadata_tracker;
 ProcessPageTable* process_page_table;
 POMTLB* pomtlb;
@@ -865,6 +867,8 @@ pomtlb->print_stats();
 print_sector_stats();
 
 print_tblock_stats();
+
+backtracklog.print_logs();
 
 cout << "\nDone!\n";
 

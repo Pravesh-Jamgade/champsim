@@ -11,6 +11,7 @@
 #include "ptw.h"
 #include "pomtlb.h"
 #include "pagemetadata.h"
+#include "backtracklog.h"
 
 #ifndef SANITY_CHECK
 #define NDEBUG
@@ -39,6 +40,7 @@ extern POMTLB* pomtlb;
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 extern map<tuple<uint64_t, int>, PageMetaData> pagemetadata_tracker;
+extern BacktrackLog backtracklog;
 /*
 ** SWAT **
 1. Test translation cache block occupancy
@@ -53,6 +55,7 @@ void CACHE::handle_fill()
     if(fill_mshr->thread_id==-1 && fill_mshr->type != PREFETCH)
     {
       dassert.log("handle_fill: thread_id == -1 and request != PREFETCH", "instr", fill_mshr->instr_id, "addr", intToHex(fill_mshr->address), "v_addr", intToHex(fill_mshr->v_address), "type", fill_mshr->type, "NAME", NAME, "victima", fill_mshr->vflag[VF::victima], "pom", fill_mshr->pomflag[POM::POM], "\n");
+      backtracklog.track("handle_fill: thread_id == -1 and request != PREFETCH", "instr", fill_mshr->instr_id, "addr", intToHex(fill_mshr->address), "v_addr", intToHex(fill_mshr->v_address), "type", fill_mshr->type, "NAME", NAME, "victima", fill_mshr->vflag[VF::victima], "pom", fill_mshr->pomflag[POM::POM], "\n");
       exit(-1);
     }
 
@@ -63,6 +66,7 @@ void CACHE::handle_fill()
     }
 
     dataflow.log(current_cycle, NAME, "fill", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), "data", intToHex(fill_mshr->data), "h", hit_where_str[fill_mshr->hit_where], '\n');    
+    backtracklog.track(current_cycle, NAME, "fill", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), "data", intToHex(fill_mshr->data), "h", hit_where_str[fill_mshr->hit_where], '\n');    
 
     // order matters
     // No write - hence No tracking of PTE
@@ -103,6 +107,7 @@ void CACHE::handle_fill()
           newPacket.pomflag[POM::POM_TO_PTW] = true;
 
           dlog.log(current_cycle, NAME, "POM->PTW", "instr", newPacket.instr_id, "th", newPacket.thread_id, "tran", (newPacket.type==TRANSLATION), "level", (int)newPacket.translation_level, "pom", newPacket.pomflag[POM::POM], "addr", intToHex(newPacket.address), "vaddr", intToHex(newPacket.v_address), '\n');
+          backtracklog.track(current_cycle, NAME, "POM->PTW", "instr", newPacket.instr_id, "th", newPacket.thread_id, "tran", (newPacket.type==TRANSLATION), "level", (int)newPacket.translation_level, "pom", newPacket.pomflag[POM::POM], "addr", intToHex(newPacket.address), "vaddr", intToHex(newPacket.v_address), '\n');
 
           add_rq(&newPacket);
           
@@ -120,6 +125,7 @@ void CACHE::handle_fill()
       else if(!is_tlb && fill_mshr->pomflag[POM_MISS])
       {
         dlog.log(current_cycle, NAME, "POM Miss", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "pom", fill_mshr->pomflag[POM::POM], "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->address), '\n');
+        backtracklog.track(current_cycle, NAME, "POM Miss", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "pom", fill_mshr->pomflag[POM::POM], "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->address), '\n');
 
         func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
         func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
@@ -150,6 +156,7 @@ void CACHE::handle_fill()
         }
 
         dlog.log(current_cycle, NAME, "sendSectorPacket-2", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "special-cacheline", fill_mshr->vflag[VF::victima], "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), '\n');
+        backtracklog.track(current_cycle, NAME, "sendSectorPacket-2", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "special-cacheline", fill_mshr->vflag[VF::victima], "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), '\n');
 
         // Sector failed, now request for PTW
         fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
@@ -213,6 +220,7 @@ void CACHE::handle_fill()
       {
         // find correct sector line
         dassert.log("It should not happen, it is decided to write-at-sector but selected block is normal\n");
+        backtracklog.track("It should not happen, it is decided to write-at-sector but selected block is normal\n");
         exit(1);
       }
     }
@@ -224,6 +232,7 @@ void CACHE::handle_fill()
         if(way<NUM_WAY && block[set*NUM_WAY+way].sectorHolder.is_sector_line && write_to_normal_line)
         {
           dassert.log("It should bot happen, it is decided to write-at-normal line but selected block is normal\n");
+          backtracklog.track("It should bot happen, it is decided to write-at-normal line but selected block is normal\n");
           exit(1);
         }
 
@@ -281,6 +290,7 @@ void CACHE::handle_writeback()
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
     {
       dassert.log("handle_writeback: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
+      backtracklog.track("handle_writeback: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
       exit(-1);
     }
 
@@ -365,10 +375,12 @@ void CACHE::handle_read()
     if(handle_pkt.thread_id==-1 && handle_pkt.type != PREFETCH)
     {
       dassert.log("handle_read: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
+      backtracklog.track("handle_read: thread_id == -1 and request != PREFETCH", "instr", handle_pkt.instr_id, "addr", intToHex(handle_pkt.address), "v_addr", intToHex(handle_pkt.v_address), "type", handle_pkt.type, "NAME", NAME, "victima", handle_pkt.vflag[VF::victima], "pom", handle_pkt.pomflag[POM::POM], "\n");
       exit(-1);
     }
 
     dataflow.log(current_cycle, NAME, "read", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+    backtracklog.track(current_cycle, NAME, "read", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
@@ -416,6 +428,7 @@ void CACHE::handle_read()
       {
         auto [pomtag, pomset, pomoff] = pomtlb->split_address(handle_pkt.address);
         dlog.log(current_cycle, NAME, "POM cache hit", "addr", intToHex(handle_pkt.address), "data", intToHex(hit_block->page_table_entries[pomoff].first), intToHex(hit_block->page_table_entries[pomoff].second.page_address), '\n');
+        backtracklog.track(current_cycle, NAME, "POM cache hit", "addr", intToHex(handle_pkt.address), "data", intToHex(hit_block->page_table_entries[pomoff].first), intToHex(hit_block->page_table_entries[pomoff].second.page_address), '\n');
       }
     }
 
@@ -428,7 +441,7 @@ void CACHE::handle_read()
       // it was sector requets packet but we got normal-cache line
       if(hit_block->sectorHolder.is_sector_line)
       {
-        xlog.log(current_cycle, NAME, "sectopr-lookup-handleread, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address),'\n');
+        dlog.log(current_cycle, NAME, "sectopr-lookup-handleread, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address),'\n');
 
         // lookup PTE at the offset
         auto res = hit_block->sectorHolder.lookup(handle_pkt.address >> LOG2_PAGE_SIZE, NUM_SET);
@@ -470,6 +483,7 @@ void CACHE::handle_read()
       if(KNOB_ENABLE_SWAT_WAYS && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]) 
       {
         dlog.log(current_cycle, NAME, "sector-hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct-read", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+        backtracklog.track(current_cycle, NAME, "sector-hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct-read", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
         sector_counters[SCCounter::SctrPkt_L2_READ_HIT]++;
         if(hit_block->sectorHolder.is_sector_line)
         {
@@ -490,6 +504,7 @@ void CACHE::handle_read()
       if(KNOB_ENABLE_SWAT_WAYS && cache_is[IS_L2] && handle_pkt.vflag[VF::victima])
       {
         dlog.log(current_cycle, NAME, "sector-miss", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct-read", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+        backtracklog.track(current_cycle, NAME, "sector-miss", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct-read", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
         sector_counters[SCCounter::SctrPkt_L2_READ_MISS]++;
       }
       cacheDataModel->rd_queue[Basic::MISS]++;
@@ -571,7 +586,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   {
     auto res = hit_block.sectorHolder.lookup(handle_pkt.address >> LOG2_PAGE_SIZE, NUM_SET);
     handle_pkt.data = res.value;
-    xlog.log(current_cycle, NAME, "sectopr-lookup-readlikehit, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data),'\n');
+    dlog.log(current_cycle, NAME, "sectopr-lookup-readlikehit, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data),'\n');
   }
   else if(KNOB_VICTIMA
           && cache_is[CACHE_ID::IS_L2]
@@ -588,7 +603,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // data is our mapped pte for this vaddr
     uint64_t phy_page = handle_pkt.data>> LOG2_PAGE_SIZE;
 
-    xlog.log(current_cycle, NAME, "sector-readlikehit", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
+    dlog.log(current_cycle, NAME, "sector-readlikehit", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
     hit_block.sectorHolder.dump();
   }
 
@@ -636,6 +651,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   }
 
   dataflow.log(current_cycle, NAME, "hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), '\n');    
+  backtracklog.track(current_cycle, NAME, "hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), '\n');    
 }
 
 bool CACHE::readlike_miss(PACKET& handle_pkt)
@@ -701,7 +717,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   // usercode
   if (mshr_entry != MSHR.end() && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) // miss already inflight
   {
-    dataflow.log(current_cycle, NAME, "merge-mshr", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", handle_pkt.type==TRANSLATION, "level", handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+    dataflow.log(current_cycle, NAME, "merge-mshr", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", handle_pkt.type==TRANSLATION, "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+    backtracklog.track(current_cycle, NAME, "merge-mshr", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", handle_pkt.type==TRANSLATION, "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
 
     // update fill location
     mshr_entry->fill_level = std::min(mshr_entry->fill_level, handle_pkt.fill_level);
@@ -824,10 +841,12 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
         if(newPacket.address == 0)
         {
           dassert.log(current_cycle, NAME, "SendVictimaFail", '\n');
+          backtracklog.track(current_cycle, NAME, "SendVictimaFail", '\n');
         }
         int status = l2cache->add_rq(&newPacket);
 
         dlog.log(current_cycle, NAME, "sendSectorPacket-1", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct-read", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+        backtracklog.track(current_cycle, NAME, "sendSectorPacket-1", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "direct-read", handle_pkt.vflag[VF::victima], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
       }
         
     }
@@ -850,6 +869,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       pomtlb->pom_counters[POMFLAG::POM_FIRST_REQ]++;
 
       dlog.log(current_cycle, NAME, "sendPOMPacket-1", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+      backtracklog.track(current_cycle, NAME, "sendPOMPacket-1", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
     }
 
     // Allocate an MSHR
@@ -907,6 +927,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       {
         if(KNOB_POMTLB && handle_pkt.pomflag[POM::POM_TO_PTW])
         dlog.log(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+        backtracklog.track(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
 
         lower_level->add_rq(&handle_pkt);
       }
@@ -945,6 +966,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   global_reuse[tag] = global_access_count;
 
   dataflow.log(current_cycle, NAME, "miss", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+  backtracklog.track(current_cycle, NAME, "miss", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
 
   return true;
 }
@@ -990,6 +1012,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       if(handle_pkt.pomflag[POM::POM_MISS])
       {
         dlog.log(current_cycle, NAME, "removePOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+        backtracklog.track(current_cycle, NAME, "removePOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
 
         handle_pkt.pomflag[POM::POM_MISS] = false;
         // We wont remove this MSHR and reuse this to send out PTW and then reset its event_cycle to avoid re-entering to fill
@@ -1002,6 +1025,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
     
     dlog.log(current_cycle, NAME, "insertPOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+    backtracklog.track(current_cycle, NAME, "insertPOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
 
     pom_cache_write = true;
   }
@@ -1154,6 +1178,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
             victima_counters[VC::VICTIMA_PTW_COUNT]++;
 
             dlog.log(current_cycle, NAME, "evict", "instr", fill_block.instr_id, "th",fill_block.instr_id, "tran", 1, "level", 0, "forced-ptw", 1, "addr", intToHex(fill_block.address), "vaddr", intToHex(fill_block.v_address), "data", intToHex(fill_block.data), '\n');
+            backtracklog.track(current_cycle, NAME, "evict", "instr", fill_block.instr_id, "th",fill_block.instr_id, "tran", 1, "level", 0, "forced-ptw", 1, "addr", intToHex(fill_block.address), "vaddr", intToHex(fill_block.v_address), "data", intToHex(fill_block.data), '\n');
           }
 
           // tracking
@@ -1375,7 +1400,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         {
           if(!entry.first) continue;
 
-          xlog.log(current_cycle, NAME, "sector-overwrite", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
+          dlog.log(current_cycle, NAME, "sector-overwrite", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
+          backtracklog.track(current_cycle, NAME, "sector-overwrite", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
 
           fill_block.sectorHolder.insert(entry, NUM_SET);
         }
@@ -1386,7 +1412,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         uint64_t page_addr = handle_pkt.v_address >> LOG2_PAGE_SIZE;
         int pte_offset = page_addr & 0x7;
         pair<bool, PTEHolder> insertPTE = cache_block_data_for_sector.second[pte_offset];
-        xlog.log(current_cycle, NAME, "sector-insert", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
+        backtracklog.track(current_cycle, NAME, "sector-insert", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
         fill_block.sectorHolder.insert(insertPTE, NUM_SET);
       }
 
@@ -1430,6 +1456,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       if(pt_meta.first != __builtin_popcount(pt_meta.second))
       {
         dassert.log("Error: pte_count != valid_pte_bits", pt_meta.first, pt_meta.second, '\n');
+        backtracklog.track("Error: pte_count != valid_pte_bits", pt_meta.first, pt_meta.second, '\n');
         exit(-1);
       }
     }
@@ -1465,7 +1492,8 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   if(!is_tlb)
     cacheDataModel->block_type_counters[fill_block.dtype]++;
 
-  dataflow.log(current_cycle, NAME, "fill-complete", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+    dataflow.log(current_cycle, NAME, "fill-complete", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+    backtracklog.track(current_cycle, NAME, "fill-complete", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
   
     // Invoking PTW for eviction
     //  // Part Testing Victima
@@ -1656,6 +1684,7 @@ int CACHE::add_rq(PACKET* packet)
   if(packet->address == 0)
   {
     dassert.log("add_rq Address Zero Packet", "instr", packet->instr_id, "addr", intToHex(packet->address), "v_addr", intToHex(packet->v_address), "type", (int)packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
+    backtracklog.track("add_rq Address Zero Packet", "instr", packet->instr_id, "addr", intToHex(packet->address), "v_addr", intToHex(packet->v_address), "type", (int)packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
     exit(-1);
   }
   RQ_ACCESS++;
@@ -1673,6 +1702,7 @@ int CACHE::add_rq(PACKET* packet)
   
   if (found_wq != WQ.end()) {
     dlog.log(current_cycle, NAME, "hit-WQ", "instr", packet->instr_id, "th", packet->thread_id, "tran", packet->type==TRANSLATION, "level", packet->translation_level, "addr", intToHex(packet->address), "vaddr", intToHex(packet->v_address), '\n');
+    backtracklog.track(current_cycle, NAME, "hit-WQ", "instr", packet->instr_id, "th", packet->thread_id, "tran", packet->type==TRANSLATION, "level", packet->translation_level, "addr", intToHex(packet->address), "vaddr", intToHex(packet->v_address), '\n');
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;)
     packet->hit_where = CACHE_ID::WQ;
     packet->data = found_wq->data;
@@ -1855,6 +1885,7 @@ int CACHE::add_pq(PACKET* packet)
   if(packet->address == 0)
   {
     dassert.log("add_pq Address Zero Packet", "instr", packet->instr_id, "addr", intToHex(packet->address), "v_addr", intToHex(packet->v_address), "type", packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
+    backtracklog.track("add_pq Address Zero Packet", "instr", packet->instr_id, "addr", intToHex(packet->address), "v_addr", intToHex(packet->v_address), "type", packet->type, "NAME", NAME, "victima", packet->vflag[VF::victima], "pom", packet->pomflag[POM::POM], "\n");
     exit(-1);
   }
 
@@ -1875,6 +1906,7 @@ int CACHE::add_pq(PACKET* packet)
 
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;)
     dlog.log(current_cycle, NAME, "hit-WQ", "instr", packet->instr_id, "th", packet->thread_id, "tran", packet->type==TRANSLATION, "level", packet->translation_level, "addr", intToHex(packet->address), "vaddr", intToHex(packet->v_address), '\n');
+    backtracklog.track(current_cycle, NAME, "hit-WQ", "instr", packet->instr_id, "th", packet->thread_id, "tran", packet->type==TRANSLATION, "level", packet->translation_level, "addr", intToHex(packet->address), "vaddr", intToHex(packet->v_address), '\n');
 
     packet->data = found_wq->data;
     for (auto ret : packet->to_return)
@@ -1934,6 +1966,7 @@ void CACHE::return_data(PACKET* packet)
   PACKET handle_pkt = *packet;
 
   dataflow.log(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "h", hit_where_str[handle_pkt.hit_where], "data", intToHex(packet->data), '\n');    
+  backtracklog.track(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "h", hit_where_str[handle_pkt.hit_where], "data", intToHex(packet->data), '\n');    
 
   // packet return to STLB, make sure POM address is changed to v_address
   if(KNOB_POMTLB && packet->pomflag[POM::POM] && cache_is[CACHE_ID::IS_STLB])
@@ -2093,6 +2126,7 @@ void CACHE::return_data(PACKET* packet)
     if (mshr_entry == MSHR.end()) {
 
       dassert.log(current_cycle, NAME, "MSHR entry not found", packet->instr_id, intToHex(packet->address), intToHex(packet->v_address), "type", (int)packet->type, "translation_level", (int)packet->translation_level,  "h", hit_where_str[packet->hit_where], '\n');
+      backtracklog.track(current_cycle, NAME, "MSHR entry not found", packet->instr_id, intToHex(packet->address), intToHex(packet->v_address), "type", (int)packet->type, "translation_level", (int)packet->translation_level,  "h", hit_where_str[packet->hit_where], '\n');
       std::cerr << "[" << NAME << "_MSHR] " << __func__ << " instr_id: " << packet->instr_id << " cannot find a matching entry!";
       std::cerr << " address: " << std::hex << packet->address;
       std::cerr << " v_address: " << packet->v_address;

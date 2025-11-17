@@ -446,7 +446,6 @@ public:
       collect_pte[i] = ThreadBucket();
     }
     
-    xlog = logger(false);
     debugLog = logger(false);
     dlog = logger(false);
     dataflow = logger(false);

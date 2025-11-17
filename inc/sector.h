@@ -11,7 +11,7 @@ using namespace std;
 
 extern int KNOB_ENABLE_SWAT_WAYS;
 
-static logger dlog(true);
+static logger dlog(false);
 
 struct LookupResultU64 { bool hit; uint64_t value; };
 

@@ -12,12 +12,14 @@
 #include "logger.h"
 #include "pomtlb.h"
 #include "pagemetadata.h"
+#include "backtracklog.h"
 
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_POMTLB;
 extern ProcessPageTable* process_page_table;
 extern POMTLB* pomtlb;
 extern map<tuple<uint64_t, int>, PageMetaData> pagemetadata_tracker;
+extern BacktrackLog backtracklog;
 
 // tuple[POM_PP, VP, thread_id] and PP
 namespace dramsim3 {
@@ -64,6 +66,7 @@ public:
             if(KNOB_POMTLB && packet->pomflag[POM::POM] && !packet->pomflag[POM::POM_TO_PTW])
             {
                 dlog.log(current_cycle, "DRAM-POM-Request, level", (int)packet->translation_level, intToHex(packet->address), intToHex(packet->v_address), intToHex(packet->data), "pom", packet->pomflag[POM::POM], "pommiss", packet->pomflag[POM::POM_MISS], "pomtoptw", packet->pomflag[POM::POM_TO_PTW], '\n');
+                backtracklog.track(current_cycle, "DRAM-POM-Request, level", (int)packet->translation_level, intToHex(packet->address), intToHex(packet->v_address), intToHex(packet->data), "pom", packet->pomflag[POM::POM], "pommiss", packet->pomflag[POM::POM_MISS], "pomtoptw", packet->pomflag[POM::POM_TO_PTW], '\n');
 
                 pair<bool, uint64_t> result = pomtlb->lookupPOMEntry(cpu_no, packet->address, packet->v_address);
                 pair<bool, vector<pair<bool, PTEHolder>>> pomtlb_line = pomtlb->getPOMTLBLine(cpu_no, packet->address, packet->v_address);
@@ -80,6 +83,7 @@ public:
 
                     packet->page_table_entries = pomtlb_line.second;
                     dlog.log(current_cycle, "DRAM-POM-HIT, level", (int)packet->translation_level, intToHex(packet->address), intToHex(packet->v_address), intToHex(packet->data), "pom", packet->pomflag[POM::POM], "pommiss", packet->pomflag[POM::POM_MISS], "pomtoptw", packet->pomflag[POM::POM_TO_PTW], '\n');
+                    backtracklog.track(current_cycle, "DRAM-POM-HIT, level", (int)packet->translation_level, intToHex(packet->address), intToHex(packet->v_address), intToHex(packet->data), "pom", packet->pomflag[POM::POM], "pommiss", packet->pomflag[POM::POM_MISS], "pomtoptw", packet->pomflag[POM::POM_TO_PTW], '\n');
                 }
             }
             else if(packet->type == TRANSLATION)
