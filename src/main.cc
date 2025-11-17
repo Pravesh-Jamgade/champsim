@@ -449,7 +449,7 @@ void signal_handler(int signal)
 void on_exit_handler() {
   std::cout << "Invoking handler due to program exit." << std::endl;
 
-  backtracklog.print_logs();
+  // backtracklog.print_logs();
   
   // process_page_table->printTree();
   // for(auto entry: ptw_pred)
