@@ -5,10 +5,13 @@
 #include <cstdint>
 #include "util.h"
 #include "pagetable.h"
+#include "logger.h"
 #include <variant>
 using namespace std;
 
 extern int KNOB_ENABLE_SWAT_WAYS;
+
+static logger dlog(true);
 
 struct LookupResultU64 { bool hit; uint64_t value; };
 
@@ -139,7 +142,7 @@ struct LRU8
         slots[index].pte = pte;
         slots[index].age = timeTick;
         slots[index].valid = true;
-        // cout << "id, " << index << ", subTag, " << intToHex(subTag) << ", pte, " << intToHex(pte) << ", timeTick, " << timeTick << '\n';
+        dlog.log("id", index,"subTag", intToHex(subTag), "pte", intToHex(pte), "timeTick", timeTick,'\n');
     }
 
     template<class EntryArr>
@@ -180,7 +183,7 @@ struct AssociativeMap
         uint64_t pte_offset = Indexer::get_index(page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
 
-        cout << "Sector-LOOKUP addr, " << intToHex(page_addr) << ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
+        dlog.log("Sector-LOOKUP addr", intToHex(page_addr), "subTag", intToHex(combinedTag), "from", intToHex(subTag),"pte_off", intToHex(pte_offset), "\n"); 
         return repl.lookup(slots, combinedTag);
     }
 
@@ -194,11 +197,11 @@ struct AssociativeMap
         uint64_t subTag = Indexer::get_subTag(virt_page_addr, NUM_SET);
         uint64_t pte_offset = Indexer::get_index(virt_page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
-
-        cout << "Sector-INSERT "  << ", vaddr, " << intToHex(virt_page_addr) << ", pte, " << intToHex(pte.second.page_address)<< ", subTag, " << intToHex(combinedTag) << ", from," << intToHex(subTag) << ", pte_off, " << intToHex(pte_offset) << "\n"; 
+        
+        dlog.log("Sector-INSERT",  "vaddr", intToHex(virt_page_addr), "pte", intToHex(pte.second.page_address) , "subTag", intToHex(combinedTag), "from", intToHex(subTag), "pte_off", intToHex(pte_offset), "\n"); 
         
         repl.insert(slots, combinedTag, pte.second.page_address);
-        dump();
+        // dump();
         
     }
 

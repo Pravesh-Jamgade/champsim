@@ -111,10 +111,6 @@ public:
                         int pte_offset = page & 0x7; // 3-bit offset within cache block
                         pagemetadata_tracker[{tblock,  cpu_no}] = PageMetaData(cache_block_id, pte_offset);
                     }
-                    else
-                    {
-                        pagemetadata_tracker[{tblock, cpu_no}].tblock_reaccessed_more_than_once_from_dram++;
-                    }
                 }
 
                 // // to verify retrieved PTE and cache block it belongs to
@@ -349,10 +345,6 @@ public:
                         int cache_block_id = tblock & 0x3F; // 6-bit cache block id within page
                         int pte_offset = page & 0x7; // 3-bit offset within cache block
                         pagemetadata_tracker[{tblock,  cpu_no}] = PageMetaData(cache_block_id, pte_offset);
-                    }
-                    else
-                    {
-                        pagemetadata_tracker[{tblock, cpu_no}].tblock_reaccessed_more_than_once_from_dram++;
                     }
                 }
 
