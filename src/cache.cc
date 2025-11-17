@@ -1935,8 +1935,14 @@ void CACHE::return_data(PACKET* packet)
 
   dataflow.log(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "h", hit_where_str[handle_pkt.hit_where], "data", intToHex(packet->data), '\n');    
 
+  // packet return to STLB, make sure POM address is changed to v_address
+  if(KNOB_POMTLB && packet->pomflag[POM::POM] && cache_is[CACHE_ID::IS_STLB])
+  {
+    packet->address = packet->v_address;
+  }
+
   // check MSHR information
-  bool check_thread_id = NAME.find("PTW") != string::npos || (KNOB_VICTIMA && cache_is[IS_L2] && packet->vflag[VF::victima]);
+  bool check_thread_id = ((KNOB_VICTIMA || KNOB_ENABLE_SWAT_WAYS) && cache_is[IS_L2] && packet->vflag[VF::victima]);
 
   auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(packet->address, use_offset(packet->type), packet->thread_id, is_tlb || check_thread_id) );
   auto first_unreturned = std::find_if(MSHR.begin(), MSHR.end(), [](auto x) { return x.event_cycle == std::numeric_limits<uint64_t>::max(); });
