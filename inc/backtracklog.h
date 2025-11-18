@@ -25,7 +25,7 @@ private:
 
         // store in history
         history.push_back(line);
-        if (history.size() > BACKTRACK_LOG_SIZE) {
+        if (history.size() > KNOB_ENABLE_LOG) {
             history.erase(history.begin()); // simple ring behaviour
         }
     }
