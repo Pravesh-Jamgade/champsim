@@ -5,8 +5,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#define  BACKTRACK_LOG_SIZE 1000000
 
+extern int KNOB_ENABLE_LOG;
 class BacktrackLog
 {
 private:
@@ -32,7 +32,7 @@ private:
 
 public:
     BacktrackLog() = default;
-    explicit BacktrackLog(bool enable) : flag(enable) {}
+    explicit BacktrackLog(int hist_len) : flag(hist_len > 0) {}
 
     template<typename... Args>
     void track(const Args&... args)

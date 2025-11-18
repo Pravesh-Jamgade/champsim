@@ -26,7 +26,7 @@
 #include "sector.h"
 #include "backtracklog.h"
 
-BacktrackLog backtracklog(true);
+BacktrackLog backtracklog;
 map<tuple<uint64_t, int>, PageMetaData> pagemetadata_tracker;
 ProcessPageTable* process_page_table;
 POMTLB* pomtlb;
@@ -449,7 +449,7 @@ void signal_handler(int signal)
 void on_exit_handler() {
   std::cout << "Invoking handler due to program exit." << std::endl;
 
-  // backtracklog.print_logs();
+  backtracklog.print_logs();
   
   // process_page_table->printTree();
   // for(auto entry: ptw_pred)
@@ -631,6 +631,8 @@ int main(int argc, char** argv)
   pomtlb = new POMTLB();
   if(process_page_table != nullptr)
     process_page_table->init();
+  
+  backtracklog = BacktrackLog(KNOB_ENABLE_LOG);
 
   printf("Simulator Configuration\n%s", instantiation_code);
 
