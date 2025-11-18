@@ -12,27 +12,24 @@ class BacktrackLog
 private:
     std::vector<std::string> history;
     bool flag = false;
+    int head = 0;
 
-    // internal helper: actually logs and stores
     template<typename... Args>
     void log(const Args&... args)
     {
         std::ostringstream oss;
-        // fold expression to print all args separated by space
         ((oss << args << ' '), ...);
-
-        std::string line = oss.str();
-
-        // store in history
-        history.push_back(line);
-        if (history.size() > KNOB_ENABLE_LOG) {
-            history.erase(history.begin()); // simple ring behaviour
-        }
+        history[head] = oss.str();      // overwrite
+        head = (head + 1) % KNOB_ENABLE_LOG;
     }
 
 public:
     BacktrackLog() = default;
-    explicit BacktrackLog(int hist_len) : flag(hist_len > 0) {}
+    explicit BacktrackLog(int hist_len) : flag(hist_len > 0) {
+        history.resize(KNOB_ENABLE_LOG);
+        cout << "Log Setting:\nLog Enable, " << flag << '\n';
+        cout << "Log History Size, " << history.size() << '\n';
+    }
 
     template<typename... Args>
     void track(const Args&... args)
@@ -43,9 +40,14 @@ public:
 
     void print_logs()
     {
-        for(auto entry: history)
+        for(int i=head; i< KNOB_ENABLE_LOG; i++)
         {
-            std::cout << entry;
+            cout << history[i];
+        }
+
+        for(int i=0; i< head; i++)
+        {
+            cout << history[i];
         }
     }
 };
