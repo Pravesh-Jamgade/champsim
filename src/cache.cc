@@ -437,6 +437,7 @@ void CACHE::handle_read()
       if(hit_block->sectorHolder.is_sector_line)
       {
         dlog.log(current_cycle, NAME, "sectopr-lookup-handleread, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address),'\n');
+        backtracklog.track(current_cycle, NAME, "sectopr-lookup-handleread, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address),'\n');
 
         // lookup PTE at the offset
         auto res = hit_block->sectorHolder.lookup(handle_pkt.address >> LOG2_PAGE_SIZE, NUM_SET);
@@ -582,6 +583,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     auto res = hit_block.sectorHolder.lookup(handle_pkt.address >> LOG2_PAGE_SIZE, NUM_SET);
     handle_pkt.data = res.value;
     dlog.log(current_cycle, NAME, "sectopr-lookup-readlikehit, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data),'\n');
+    backtracklog.track(current_cycle, NAME, "sectopr-lookup-readlikehit, addr, ", intToHex(handle_pkt.address), ", vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data),'\n');
   }
   else if(KNOB_VICTIMA
           && cache_is[CACHE_ID::IS_L2]
@@ -599,6 +601,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     uint64_t phy_page = handle_pkt.data>> LOG2_PAGE_SIZE;
 
     dlog.log(current_cycle, NAME, "sector-readlikehit", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
+    backtracklog.track(current_cycle, NAME, "sector-readlikehit", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
     // hit_block.sectorHolder.dump();
   }
 
