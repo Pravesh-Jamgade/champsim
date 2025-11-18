@@ -442,9 +442,9 @@ void CACHE::handle_read()
         auto res = hit_block->sectorHolder.lookup(handle_pkt.address >> LOG2_PAGE_SIZE, NUM_SET);
         hit = hit && res.hit;
 
-        cout << "******* Verify Lookup *********\n";
-        cout << NAME << ", Lookup, " << intToHex(handle_pkt.address) << ", vaddr, " << intToHex(handle_pkt.v_address) << '\n';
-        hit_block->sectorHolder.dump();
+        // cout << "******* Verify Lookup *********\n";
+        // cout << NAME << ", Lookup, " << intToHex(handle_pkt.address) << ", vaddr, " << intToHex(handle_pkt.v_address) << '\n';
+        // hit_block->sectorHolder.dump();
 
         // // Sector Hit Verification #1
         // dlog.log(current_cycle, "sector hit", intToHex(hit_block->address), '\n');
@@ -599,7 +599,7 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     uint64_t phy_page = handle_pkt.data>> LOG2_PAGE_SIZE;
 
     dlog.log(current_cycle, NAME, "sector-readlikehit", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), intToHex(handle_pkt.data), cpu_id, '\n');
-    hit_block.sectorHolder.dump();
+    // hit_block.sectorHolder.dump();
   }
 
   // update prefetcher on load instruction
