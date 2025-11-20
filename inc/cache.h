@@ -35,12 +35,6 @@ public:
 
   map<tuple<uint64_t, int>, uint64_t> record_stlbmiss;
 
-  // 16 threads
-  // 8 possible offsets
-  // corresponding PTE
-  ThreadBucket collect_pte[16];
-  // std::mt19937 rng(42);
-
   vector<vector<PollutionEntry>> global_set_history;
 
   // translation pollution
@@ -95,7 +89,8 @@ public:
   MemoryRequestConsumer *l2cache, *l1cache;
   CacheDataModel* cacheDataModel;
   // track working set for counting capacity misses
-  unordered_map<uint64_t, bitset<64>> page_to_block;
+  // vaddress, cpuid -- bitset
+  map<tuple<uint64_t, int>, bitset<64>> page_to_block;
 
   bool cache_is[CACHE_ID_END] = {false};
   CACHE_ID cache_id = CACHE_ID::CACHE_ID_END;
@@ -186,7 +181,7 @@ public:
   void func_track_evicted_pte(uint64_t v_addr, uint64_t p_addr);
 
   // track accessed page and its blocks for tracking capacity misses
-  void func_track_workingset(uint64_t addr);
+  void func_track_workingset(uint64_t addr, int cpuid);
 
   // track mshr waiting period for packet
   void func_track_missfulfill_access_latency(uint64_t enq_cycle);
@@ -422,6 +417,8 @@ public:
           cout << '\n';
       }
     }
+  
+    cacheDataModel->func_page_block_reuse_helper(NAME);
   }
 
 #include "cache_modules.inc"
@@ -440,11 +437,6 @@ public:
   {
 
     block.resize(NUM_WAY * NUM_SET);
-
-    for(int i=0; i< 16; i++)
-    {
-      collect_pte[i] = ThreadBucket();
-    }
     
     debugLog = logger(false);
     dlog = logger(false);

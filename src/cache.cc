@@ -39,7 +39,7 @@ extern uint64_t POM_CPU_KEY;
 extern POMTLB* pomtlb;
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
-extern map<tuple<uint64_t, int>, PageMetaData> pagemetadata_tracker;
+extern map<tuple<uint64_t, int>, TblockMetaData> tblockmetadata_tracker;
 extern BacktrackLog backtracklog;
 /*
 ** SWAT **
@@ -259,7 +259,7 @@ void CACHE::handle_fill()
       else sector_counters[SectorChoiceNormal]++;
     }
     
-    func_track_workingset(fill_mshr->address);
+    func_track_workingset(fill_mshr->v_address, cpuid);
     func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
     func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
 
@@ -632,22 +632,6 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
     prefetch_hit_histo[set*NUM_WAY+way][READ_HIT]++;
 
   func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE], handle_pkt.vflag[VF::victima]);
-
-  if(cache_is[CACHE_ID::IS_L2])
-  {
-    // found tblock and cpu key in history, that means it is not the first time this block has been seen
-    // this is second miss at TLB and now it is doing lookup for tblock to get the PTE
-    if(handle_pkt.type == TRANSLATION && handle_pkt.translation_level == 1)
-    {
-      int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
-      auto findMap = pagemetadata_tracker.find({handle_pkt.v_address >> (3+LOG2_PAGE_SIZE), cpu_id});
-      if(findMap != pagemetadata_tracker.end())
-      {
-        pagemetadata_tracker[{handle_pkt.v_address >> LOG2_BLOCK_SIZE, cpu_id}].update_second_access(handle_pkt.v_address, cache_id);
-      }
-    }
-  }
-
   dataflow.log(current_cycle, NAME, "hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), '\n');    
   backtracklog.track(current_cycle, NAME, "hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), '\n');    
 }
@@ -951,8 +935,12 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   }
 
   uint64_t tag = target_addr & ~((1 << (LOG2_BLOCK_SIZE + lg2(NUM_SET))) - 1);
+
   if(is_tlb)
+  {
+    // global reuse tracking
     tag = target_addr & ~(PAGE_SIZE-1);
+  }
   
   auto g_it = global_reuse.find(tag);
   if(global_reuse.end() != g_it)
@@ -1074,17 +1062,14 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // test if we do have have this costly block as Victima-block available in L2-cache, if not then test can we add PTW request
   bool sendVictimaPTWRequest = false;
 
-  if(cache_is[IS_STLB] && fill_block.valid)
+  if(KNOB_VICTIMA && cache_is[IS_STLB])
   {
-    if(KNOB_VICTIMA)
+    // // initiate PTW when RQ has occupancy & TLB block is absent
+    if(lower_level->get_occupancy(1,0) != lower_level->get_size(1,0))
     {
-      // // initiate PTW when RQ has occupancy & TLB block is absent
-      if(lower_level->get_occupancy(1,0) != lower_level->get_size(1,0))
-      {
-        // refet PTW-CP
-        int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
-        sendVictimaPTWRequest = victima_lookup(handle_pkt.v_address, cpu_id);
-      }
+      // refet PTW-CP
+      int cpu_id = (handle_pkt.cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id);
+      sendVictimaPTWRequest = victima_lookup(handle_pkt.v_address, cpu_id);
     }
   }
 
@@ -1238,6 +1223,23 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       // valid blocks are overwritten, equivalent to dropped
       {
+
+        if(!is_tlb)
+        {
+          // found tblock and cpu key in history, that means it is not the first time this block has been seen
+          // this is second miss at TLB and now it is doing lookup for tblock to get the PTE
+          if(fill_block.came_from_request == TRANSLATION && fill_block.translation_level_if_pagetable_block == 1)
+          {
+            int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+            // tblock + cpuid
+            auto findMap = tblockmetadata_tracker.find({fill_block.v_address >> (3+LOG2_PAGE_SIZE), cpu_id});
+            if(findMap != tblockmetadata_tracker.end())
+            {
+              findMap->second.update_eviction(cache_id);
+            }
+          }
+        }
+
         // tracking type of cache block being dropped
         if(fill_block.came_from_request == LOAD)
           cacheDataModel->cache_stat[CacheStat::Load_Drop]++;
@@ -1271,8 +1273,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // it needs infinit FA cache to keep history
     // cacheDataModel->category_of_misses[MISS::CAP]++;
     // count Capacity misses
-    uint64_t page = handle_pkt.address & ~(PAGE_SIZE-1);
-    auto page_it = page_to_block.find(page);
+    uint64_t page = handle_pkt.v_address & ~(PAGE_SIZE-1);
+    int cpuid = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+    auto page_it = page_to_block.find({page, cpuid});
     if(page_it!=page_to_block.end())
     {
       if(is_tlb)
@@ -1281,7 +1284,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       }
       else
       {
-        uint64_t cache_block_index = (handle_pkt.address > 6) & 0x3f;
+        uint64_t cache_block_index = (handle_pkt.address >> 6) & 0x3f;
         if(page_it->second.test(cache_block_index))
           cacheDataModel->category_of_misses[MISS::CAP]++;
         else cacheDataModel->category_of_misses[MISS::COM]++;
@@ -1293,25 +1296,31 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     }
 
     // Track reuse count and not distance
-    if(is_tlb)
     {
-      uint64_t pageAddr = handle_pkt.address & ~(PAGE_SIZE-1);
-      bool foundPageInHistory = page_to_block.find(pageAddr) != page_to_block.end();
-      cacheDataModel->page_reuse_hist->add_data_freq(pageAddr, foundPageInHistory);
-    }
-    else
-    {
-      uint64_t pageAddr = handle_pkt.address & ~(PAGE_SIZE-1);
-      // remove 6b block offset and then take 6b mask for block number within page
-      uint64_t cache_block_index = (handle_pkt.address > 6) & 0x3f;
-      // remove 6b block offset, gives cache_block address
-      uint64_t cache_block_addr = handle_pkt.address > 6;
+      uint64_t pageAddr = handle_pkt.v_address & ~(PAGE_SIZE-1);
+      auto foundPageIt = page_to_block.find({pageAddr, cpuid});
 
-      auto foundPageIt = page_to_block.find(pageAddr);
-      if(foundPageIt != page_to_block.end())
+      if(is_tlb)
       {
-        bool foundBlockInHistory =  foundPageIt->second.test(cache_block_index);
-        cacheDataModel->page_reuse_hist->add_data_freq(cache_block_addr, foundBlockInHistory);
+        // page seen earlier
+        if(foundPageIt != page_to_block.end())
+        {
+          cacheDataModel->page_reuse_helper_for_hist[{pageAddr, cpuid}]++;
+        }
+      }
+      else
+      {
+        
+        // remove 6b block offset and then take 6b mask for block number within page
+        uint64_t cache_block_index = (handle_pkt.v_address >> 6) & 0x3f;
+        // remove 6b block offset, gives cache_block address
+        uint64_t cache_block_addr = handle_pkt.v_address >> 6;
+
+        if(foundPageIt != page_to_block.end())
+        {
+          bool foundBlockInHistory =  foundPageIt->second.test(cache_block_index);
+          cacheDataModel->page_reuse_helper_for_hist[{cache_block_addr, cpuid}] += foundBlockInHistory;
+        }
       }
     }
 
@@ -1490,9 +1499,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   if(!is_tlb)
     cacheDataModel->block_type_counters[fill_block.dtype]++;
 
-    dataflow.log(current_cycle, NAME, "fill-complete", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
-    backtracklog.track(current_cycle, NAME, "fill-complete", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
-  
+  dataflow.log(current_cycle, NAME, "fill-complete", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+  backtracklog.track(current_cycle, NAME, "fill-complete", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+
     // Invoking PTW for eviction
     //  // Part Testing Victima
     // if(KNOB_VICTIMA)
@@ -2168,6 +2177,23 @@ void CACHE::return_data(PACKET* packet)
   // entries
   std::iter_swap(mshr_entry, first_unreturned);
 
+   // We are in caches
+   if(!is_tlb && !mshr_entry->page_fault)
+   {
+     // found tblock and cpu key in history, that means it is not the first time this block has been seen
+     // this is second miss at TLB and now it is doing lookup for tblock to get the PTE
+     if(handle_pkt.type == TRANSLATION && handle_pkt.translation_level == 1)
+     {
+       int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+       // tblock + cpuid
+       auto findMap = tblockmetadata_tracker.find({handle_pkt.v_address >> (3+LOG2_PAGE_SIZE), cpu_id});
+       if(findMap != tblockmetadata_tracker.end())
+       {
+         findMap->second.update_second_access(handle_pkt.v_address, handle_pkt.hit_where);
+       }
+     }
+   }
+
   // track hit where for each at these structure
   cacheDataModel->readmiss_hitwhere[mshr_entry->hit_where]++;
 }
@@ -2300,18 +2326,19 @@ pair<bool, PTEHolder> CACHE::victima_peek_singleline(const PACKET handle_pkt)
 }
 
 // track accessed page and its blocks for tracking capacity misses
-void CACHE::func_track_workingset(uint64_t addr)
+// vaddress, cpuid
+void CACHE::func_track_workingset(uint64_t addr, int cpuid)
 {
   uint64_t page = addr & ~(PAGE_SIZE-1);
   
-  auto page_it = page_to_block.find(page);
+  auto page_it = page_to_block.find({page, cpuid});
   if(page_it == page_to_block.end())
-    page_to_block[page] = bitset<64>(0);
+    page_to_block[{page, cpuid}] = bitset<64>(0);
   
   if(!is_tlb)
   {
     uint64_t cache_block_index = (addr > 6) & 0x3f;
-    page_to_block[page].set(cache_block_index, 1);
+    page_to_block[{page, cpuid}].set(cache_block_index, 1);
   }
 }
 

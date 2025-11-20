@@ -183,6 +183,8 @@ class CacheDataModel
     // reuse distance hitogram object
     Hist* recall_distance;
 
+    // cacheblock, cpu -- freq
+    map<tuple<uint64_t, int>, uint64_t> page_reuse_helper_for_hist;
     Hist* page_reuse_hist;
 
     // miss recorded to fulfill mshr
@@ -201,6 +203,23 @@ class CacheDataModel
     // type of cache blocks
     int block_type_counters[DataType::DataType_end] = {0};
     string data_type_str[DataType::DataType_end] = {"Data", "PTE", "PMD", "PUD", "PGD", "PRE", "INV"};
+
+    void func_page_block_reuse_helper(string NAME)
+    {
+        for(auto entry: page_reuse_helper_for_hist)
+        {
+            // reuse value of page/cache-block
+            int data = entry.second;
+            // frequency of such page/cache-blocks
+            page_reuse_hist->add_data_freq(data, 1);
+        }
+
+        cout << "====================================================\n";
+        cout << NAME << " Page or Block Reuse \n";
+        page_reuse_hist->print_histogram("page-or-block-reuse");
+        cout << "====================================================\n";
+
+    }
 
     void print_stats()
     {
@@ -290,9 +309,6 @@ class CacheDataModel
         //     cout << entry.first << ", " << setw(5) << entry.second << '\n';
 
         cout << tag << "non-conflict sets, " << no_of_nonconflict_sets << '\n';
-
-        cout << tag << "Page reuse\n";
-        page_reuse_hist->print_histogram(tag);
         
         cout << tag << "Recall distance BucketBounds and Frequency\n";
         recall_distance->print_histogram(tag);

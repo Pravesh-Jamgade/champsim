@@ -18,7 +18,7 @@ extern int KNOB_SMT_ENABLE;
 extern int KNOB_POMTLB;
 extern ProcessPageTable* process_page_table;
 extern POMTLB* pomtlb;
-extern map<tuple<uint64_t, int>, PageMetaData> pagemetadata_tracker;
+extern map<tuple<uint64_t, int>, TblockMetaData> tblockmetadata_tracker;
 extern BacktrackLog backtracklog;
 
 // tuple[POM_PP, VP, thread_id] and PP
@@ -108,12 +108,12 @@ public:
                 {
                     uint64_t page = packet->v_address >> LOG2_PAGE_SIZE;
                     uint64_t tblock = page >> 3;
-                    auto checkPage = pagemetadata_tracker.find({tblock, cpu_no});
-                    if(checkPage == pagemetadata_tracker.end())
+                    auto checkPage = tblockmetadata_tracker.find({tblock, cpu_no});
+                    if(checkPage == tblockmetadata_tracker.end())
                     {
                         int cache_block_id = tblock & 0x3F; // 6-bit cache block id within page
                         int pte_offset = page & 0x7; // 3-bit offset within cache block
-                        pagemetadata_tracker[{tblock,  cpu_no}] = PageMetaData(cache_block_id, pte_offset);
+                        tblockmetadata_tracker[{tblock,  cpu_no}] = TblockMetaData(cache_block_id, pte_offset);
                     }
                 }
 
@@ -343,12 +343,12 @@ public:
                 {
                     uint64_t page = rq_pkt->v_address >> LOG2_PAGE_SIZE;
                     uint64_t tblock = page >> 3;
-                    auto checkPage = pagemetadata_tracker.find({tblock, cpu_no});
-                    if(checkPage == pagemetadata_tracker.end())
+                    auto checkPage = tblockmetadata_tracker.find({tblock, cpu_no});
+                    if(checkPage == tblockmetadata_tracker.end())
                     {
                         int cache_block_id = tblock & 0x3F; // 6-bit cache block id within page
                         int pte_offset = page & 0x7; // 3-bit offset within cache block
-                        pagemetadata_tracker[{tblock,  cpu_no}] = PageMetaData(cache_block_id, pte_offset);
+                        tblockmetadata_tracker[{tblock,  cpu_no}] = TblockMetaData(cache_block_id, pte_offset);
                     }
                 }
 
