@@ -603,26 +603,26 @@ void PageTableWalker::print_deadlock()
   }
 }
 
-void PageTableWalker::victima_update(uint64_t addr, int cpu, int signal, int hit_where)
+void PageTableWalker::victima_update(uint64_t vaddr, int cpu, int signal, int hit_where)
 {
-  uint64_t page = addr & ~(PAGE_SIZE-1);
-  tuple<uint64_t, int> key{page, cpu};
+  uint64_t key = vaddr >> (LOG2_PAGE_SIZE);
+  tuple<uint64_t, int> completeKey{key, cpu};
 
-  auto found = ptw_pred.find(key);
+  auto found = ptw_pred.find(completeKey);
 
   if(found == ptw_pred.end())
   {
-    ptw_pred[key] = {0,0,0};
+    ptw_pred[completeKey] = {0,0,0};
   }
 
   // freq: how many times PTW is initiated ?
   if(signal == PageFeature::PTW_Freq)
   {
-    ptw_pred[key].freq+=1;
+    ptw_pred[completeKey].freq+=1;
   }
   // cost: how many times PTW has accessed DRAM ?
   else if(signal == PageFeature::PTW_Cost && hit_where == CACHE_ID::IS_DRAM)
   {
-    ptw_pred[key].cost+= 1;
+    ptw_pred[completeKey].cost+= 1;
   }
 }

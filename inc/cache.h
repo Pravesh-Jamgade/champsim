@@ -224,21 +224,27 @@ public:
     cacheDataModel = new CacheDataModel(NAME, cpu, NUM_WAY);
   }
 
+  // Keep it consistent with victima_update() at ptw.cc
+  // for alternative purpose we are using "did we saw pte before ?"
   bool victima_lookup(uint64_t addr, int cpu)
   {
-    uint64_t page = addr & ~(PAGE_SIZE-1);
-    auto found = ptw_pred.find({page,cpu});
-    if(found != ptw_pred.end())
-    {
-      int cost = found->second.cost;
-      int freq = found->second.freq;
-      return (freq >= 2 && freq <= 15 && cost >=2);
-    }
+    // uint64_t page = addr & ~(PAGE_SIZE-1);
+    // auto found = ptw_pred.find({page,cpu});
+    // if(found != ptw_pred.end())
+    // {
+    //   int cost = found->second.cost;
+    //   int freq = found->second.freq;
+    //   return (freq >= 2 && freq <= 15 && cost >=2);
+    // }
 
-    dassert.log("Error !, Victima lookup not found page", "addr", intToHex(addr), "page", intToHex(page), "th", cpu, '\n');
-    // page not there
-    exit(-1);
-    return false;
+    // dassert.log("Error !, Victima lookup not found page", "addr", intToHex(addr), "page", intToHex(page), "th", cpu, '\n');
+    // // page not there
+    // exit(-1);
+
+    // return false;
+
+    uint64_t page = addr >> (LOG2_PAGE_SIZE);
+    return func_lookup_eviction_data(page, cpu);
   }
 
   int add_to_cluster(PACKET* packet);

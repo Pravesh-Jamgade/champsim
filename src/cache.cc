@@ -12,6 +12,7 @@
 #include "pomtlb.h"
 #include "pagemetadata.h"
 #include "backtracklog.h"
+#include "evictiontracker.h"
 
 #ifndef SANITY_CHECK
 #define NDEBUG
@@ -1223,6 +1224,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       // valid blocks are overwritten, equivalent to dropped
       {
+        int cpu_id = KNOB_SMT_ENABLE * fill_block.cpu + fill_block.thread_id;
 
         if(!is_tlb)
         {
@@ -1230,13 +1232,16 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           // this is second miss at TLB and now it is doing lookup for tblock to get the PTE
           if(fill_block.came_from_request == TRANSLATION && fill_block.translation_level_if_pagetable_block == 1)
           {
-            int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
             // tblock + cpuid
             auto findMap = tblockmetadata_tracker.find({fill_block.v_address >> (3+LOG2_PAGE_SIZE), cpu_id});
             if(findMap != tblockmetadata_tracker.end())
             {
               findMap->second.update_eviction(cache_id);
             }
+          }
+          else // on tlb overwritten or eviction
+          {
+            func_track_eviction_data(fill_block.v_address >> (LOG2_PAGE_SIZE), cpu_id);
           }
         }
 
