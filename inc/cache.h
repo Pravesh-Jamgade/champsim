@@ -19,6 +19,7 @@
 #include <bitset>
 #include "pollution.h"
 #include "sector.h"
+#include "evictiontracker.h"
 
 extern int KNOB_ENABLE_LOG;
 extern int KNOB_ENABLE_SWAT_WAYS;
@@ -33,7 +34,7 @@ class CACHE : public champsim::operable, public MemoryRequestConsumer, public Me
 {
 public:
 
-  map<tuple<uint64_t, int>, uint64_t> record_stlbmiss;
+  PTEEvictionTracker pte_eviction_tracker_obj;
 
   vector<vector<PollutionEntry>> global_set_history;
 
@@ -244,7 +245,7 @@ public:
     // return false;
 
     uint64_t page = addr >> (LOG2_PAGE_SIZE);
-    return func_lookup_eviction_data(page, cpu);
+    return pte_eviction_tracker_obj.func_lookup_eviction_data(page, cpu);
   }
 
   int add_to_cluster(PACKET* packet);
@@ -448,6 +449,8 @@ public:
     dlog = logger(false);
     dataflow = logger(false);
     dassert = logger(true);
+
+    pte_eviction_tracker_obj = PTEEvictionTracker();
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
 

@@ -1241,7 +1241,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
           }
           else // on tlb overwritten or eviction
           {
-            func_track_eviction_data(fill_block.v_address >> (LOG2_PAGE_SIZE), cpu_id);
+            pte_eviction_tracker_obj.func_track_eviction_data(fill_block.v_address >> (LOG2_PAGE_SIZE), cpu_id);
           }
         }
 
