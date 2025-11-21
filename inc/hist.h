@@ -53,10 +53,7 @@ class Hist
 
                 // if data is within bucket_boundry, sumup its frequcny in final histogram
                 if(bound.first <= data.first && data.first <= bound.second)
-                {
-                    // i'th bucket of histogram
                     hist_distance[i] += data.second;
-                }
             }
         }
         // print histogram
@@ -84,9 +81,7 @@ class Hist
                 {
                     auto bound = hits_bounds[bucket];
                     if (bound.first <= data.first && data.first <= bound.second)
-                    {
                         bucket_by_column[col][bucket] += data.second;
-                    }
                 }
             }
         }
