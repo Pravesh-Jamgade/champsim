@@ -27,7 +27,6 @@
 #include "backtracklog.h"
 
 BacktrackLog backtracklog;
-map<tuple<uint64_t, int>, TblockMetaData> tblockmetadata_tracker;
 ProcessPageTable* process_page_table;
 POMTLB* pomtlb;
 map<tuple<uint64_t, int>, PTWC> ptw_pred;
@@ -871,82 +870,9 @@ pomtlb->print_stats();
 
 print_sector_stats();
 
-print_tblock_stats();
-
 cout << "\nDone!\n";
 
   return 0;
-}
-
-void print_tblock_stats()
-{
-  logger dlog = logger(true);
-  dlog.log("=========================================================\n");
-  dlog.log("The miss at TLB triggered the second access to same tblock.\n");
-
-  vector<pair<int,int>> exception_bounds;
-  exception_bounds.push_back({1, 1});
-  exception_bounds.push_back({2, 50});
-  exception_bounds.push_back({50, 100});
-  exception_bounds.push_back({101, 150});
-  exception_bounds.push_back({151, 200});
-  exception_bounds.push_back({200, 499});
-  exception_bounds.push_back({500, 1e7});
-
-  Hist tblock_reaccess_hist = Hist(1,10,5, exception_bounds);
-  // eviction of tblock histogram
-  Hist tblock_eviction_hist = Hist(1,10,5, exception_bounds);
-
-  map<int, Hist> tblock_reaccess_by_level_hist;
-  map<int, Hist> tblock_eviction_by_level_hist;
-
-  for(auto level: {IS_L1D, IS_L1I, IS_L2, IS_DRAM})
-  {
-    tblock_reaccess_by_level_hist[level] = Hist(1,10,5, exception_bounds);
-    tblock_eviction_by_level_hist[level] = Hist(1,10,5, exception_bounds);
-  }
-
-  for(auto tblock_entry: tblockmetadata_tracker)
-  {
-    // total eviction count of tblock
-    tblock_eviction_hist.add_data_freq(tblock_entry.second.tblock_evicted, 1);
-
-    // total eviction count by cache-level
-    for(auto by_level: tblock_entry.second.tblock_eviction_cache_loc)
-      tblock_eviction_by_level_hist[by_level.first].add_data_freq(by_level.second, 1);
-  
-    ////////////////////////////////////////////////////////////////////////////////
-
-    // total re-access count
-    tblock_reaccess_hist.add_data_freq(tblock_entry.second.tblock_reaccessed_more_than_once, 1);
-
-    // total re-access count by cache-level
-    for(auto by_level: tblock_entry.second.tblock_reaccessed_cache_loc)
-      tblock_reaccess_by_level_hist[by_level.first].add_data_freq(by_level.second, 1);
-  
-  }
-
-  dlog.log("Tblock re-access histogram\n");
-  tblock_reaccess_hist.print_histogram("tblock-reacesss");
-  
-  for(auto level: {IS_L1D, IS_L1I, IS_L2, IS_LLC, IS_DRAM})
-  {
-    dlog.log("Tblock re-access by cache-level histogram: ",  hit_where_str[level], '\n');
-    tblock_reaccess_by_level_hist[level].print_histogram("tblock-reaccess-by-level");
-  }  
-
-  dlog.log("Tblock eviction histogram\n");
-  tblock_eviction_hist.print_histogram("tblock-evictions");
-
-  for(auto level: {IS_L1D, IS_L1I, IS_L2, IS_LLC, IS_DRAM})
-  {
-    dlog.log("Tblock eviction by cache-level histogram: ",  hit_where_str[level], '\n');
-    tblock_eviction_by_level_hist[level].print_histogram("tblock-eviction-by-level");
-  } 
-
-  
-  dlog.log("=========================================================\n");
-
 }
 
 void print_sector_stats()

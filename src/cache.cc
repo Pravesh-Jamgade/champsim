@@ -12,7 +12,6 @@
 #include "pomtlb.h"
 #include "pagemetadata.h"
 #include "backtracklog.h"
-#include "evictiontracker.h"
 
 #ifndef SANITY_CHECK
 #define NDEBUG
@@ -40,7 +39,6 @@ extern uint64_t POM_CPU_KEY;
 extern POMTLB* pomtlb;
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
-extern map<tuple<uint64_t, int>, TblockMetaData> tblockmetadata_tracker;
 extern BacktrackLog backtracklog;
 /*
 ** SWAT **
@@ -260,7 +258,7 @@ void CACHE::handle_fill()
       else sector_counters[SectorChoiceNormal]++;
     }
     
-    func_track_workingset(fill_mshr->v_address, cpuid);
+    func_track_workingset(fill_mshr->v_address, cpuid, fill_mshr->dtype);
     func_track_miss_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE]);
     func_track_missfulfill_access_latency(fill_mshr->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_MSHR]);
 
@@ -1225,24 +1223,16 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       // valid blocks are overwritten, equivalent to dropped
       {
         int cpu_id = KNOB_SMT_ENABLE * fill_block.cpu + fill_block.thread_id;
-
+        
         if(!is_tlb)
         {
-          // found tblock and cpu key in history, that means it is not the first time this block has been seen
-          // this is second miss at TLB and now it is doing lookup for tblock to get the PTE
-          if(fill_block.came_from_request == TRANSLATION && fill_block.translation_level_if_pagetable_block == 1)
-          {
-            // tblock + cpuid
-            auto findMap = tblockmetadata_tracker.find({fill_block.v_address >> (3+LOG2_PAGE_SIZE), cpu_id});
-            if(findMap != tblockmetadata_tracker.end())
-            {
-              findMap->second.update_eviction(cache_id);
-            }
-          }
-          else // on tlb overwritten or eviction
-          {
-            pte_eviction_tracker_obj.func_track_eviction_data(fill_block.v_address >> (LOG2_PAGE_SIZE), cpu_id);
-          }
+          // track evicted cache line
+          cacheDataModel->eviction_tracker_obj.func_track_eviction_data(fill_block.v_address >> (LOG2_BLOCK_SIZE), cpu_id);
+        }
+        else
+        {
+          // track evicted pte
+          cacheDataModel->eviction_tracker_obj.func_track_eviction_data(fill_block.v_address >> (LOG2_PAGE_SIZE), cpu_id);
         }
 
         // tracking type of cache block being dropped
@@ -1278,65 +1268,45 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // it needs infinit FA cache to keep history
     // cacheDataModel->category_of_misses[MISS::CAP]++;
     // count Capacity misses
-    uint64_t page = handle_pkt.v_address & ~(PAGE_SIZE-1);
-    int cpuid = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
-    auto page_it = page_to_block.find({page, cpuid});
-    if(page_it!=page_to_block.end())
     {
+      uint64_t page_addr = handle_pkt.v_address & ~(PAGE_SIZE-1);
+      uint64_t cache_block_addr = handle_pkt.v_address >> 6;
+      int cpuid = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+
       if(is_tlb)
       {
-        cacheDataModel->category_of_misses[MISS::CAP]++;
-      }
-      else
-      {
-        uint64_t cache_block_index = (handle_pkt.address >> 6) & 0x3f;
-        if(page_it->second.test(cache_block_index))
+        auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(page_addr, cpuid);
+        if(entry_found) {
           cacheDataModel->category_of_misses[MISS::CAP]++;
-        else cacheDataModel->category_of_misses[MISS::COM]++;
-      }
-    }
-    else // if never seen before in history
-    {
-      cacheDataModel->category_of_misses[MISS::COM]++;
-    }
-
-    // Track reuse count and not distance
-    {
-      uint64_t pageAddr = handle_pkt.v_address & ~(PAGE_SIZE-1);
-      auto foundPageIt = page_to_block.find({pageAddr, cpuid});
-
-      if(is_tlb)
-      {
-        // page seen earlier
-        if(foundPageIt != page_to_block.end())
-        {
-          cacheDataModel->page_reuse_helper_for_hist[{pageAddr, cpuid}]++;
         }
+        // if never seen before in history
+        else{
+          cacheDataModel->category_of_misses[MISS::COM]++;
+        }
+        
       }
       else
       {
-        
-        // remove 6b block offset and then take 6b mask for block number within page
-        uint64_t cache_block_index = (handle_pkt.v_address >> 6) & 0x3f;
-        // remove 6b block offset, gives cache_block address
-        uint64_t cache_block_addr = handle_pkt.v_address >> 6;
+        auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(cache_block_addr, cpuid);
+        if(entry_found) {
+          cacheDataModel->category_of_misses[MISS::CAP]++;
+        }
+        // if never seen before in history
+        else{
+          cacheDataModel->category_of_misses[MISS::COM]++;
+        }
+      }
 
-        if(foundPageIt != page_to_block.end())
+      // count Conflict misses
+      {
+        auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, use_offset(handle_pkt.type), handle_pkt.thread_id, is_tlb));
+        if(it!=fa_array.end())
         {
-          bool foundBlockInHistory =  foundPageIt->second.test(cache_block_index);
-          cacheDataModel->page_reuse_helper_for_hist[{cache_block_addr, cpuid}] += foundBlockInHistory;
+          cacheDataModel->category_of_misses[MISS::CONF]++;
         }
       }
     }
-
-    // count Conflict misses
-    {
-      auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, use_offset(handle_pkt.type), handle_pkt.thread_id, is_tlb));
-      if(it!=fa_array.end())
-      {
-        cacheDataModel->category_of_misses[MISS::CONF]++;
-      }
-    }
+    
 
     if(track_reuse)
     {
@@ -2178,29 +2148,12 @@ void CACHE::return_data(PACKET* packet)
     std::cout << " event: " << mshr_entry->event_cycle << " current: " << current_cycle << std::endl;
   });
 
+  // track hit where for each at these structure
+  cacheDataModel->readmiss_hitwhere[mshr_entry->hit_where]++;
+
   // Order this entry after previously-returned entries, but before non-returned
   // entries
   std::iter_swap(mshr_entry, first_unreturned);
-
-   // We are in caches
-   if(!is_tlb && !mshr_entry->page_fault)
-   {
-     // found tblock and cpu key in history, that means it is not the first time this block has been seen
-     // this is second miss at TLB and now it is doing lookup for tblock to get the PTE
-     if(handle_pkt.type == TRANSLATION && handle_pkt.translation_level == 1)
-     {
-       int cpu_id = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
-       // tblock + cpuid
-       auto findMap = tblockmetadata_tracker.find({handle_pkt.v_address >> (3+LOG2_PAGE_SIZE), cpu_id});
-       if(findMap != tblockmetadata_tracker.end())
-       {
-         findMap->second.update_second_access(handle_pkt.v_address, handle_pkt.hit_where);
-       }
-     }
-   }
-
-  // track hit where for each at these structure
-  cacheDataModel->readmiss_hitwhere[mshr_entry->hit_where]++;
 }
 
 uint32_t CACHE::get_occupancy(uint8_t queue_type, uint64_t address)
@@ -2332,18 +2285,20 @@ pair<bool, PTEHolder> CACHE::victima_peek_singleline(const PACKET handle_pkt)
 
 // track accessed page and its blocks for tracking capacity misses
 // vaddress, cpuid
-void CACHE::func_track_workingset(uint64_t addr, int cpuid)
+void CACHE::func_track_workingset(uint64_t addr, int cpuid, DataType dtype)
 {
-  uint64_t page = addr & ~(PAGE_SIZE-1);
+  uint64_t page_addr = addr & ~(PAGE_SIZE-1);
+  uint64_t cache_block_addr = addr >> 6;
   
-  auto page_it = page_to_block.find({page, cpuid});
-  if(page_it == page_to_block.end())
-    page_to_block[{page, cpuid}] = bitset<64>(0);
-  
-  if(!is_tlb)
+  if(is_tlb)
   {
-    uint64_t cache_block_index = (addr > 6) & 0x3f;
-    page_to_block[{page, cpuid}].set(cache_block_index, 1);
+    auto [page_it, found_page] =  cacheDataModel->fill_tracker_obj.func_track_fill_data(page_addr, cpuid, dtype);
+  }
+  else
+  { 
+    // check if block is there 
+    auto [block_it, found_block] =  cacheDataModel->fill_tracker_obj.func_track_fill_data(cache_block_addr, cpuid, dtype);
+    cacheDataModel->page_reuse_helper_for_hist[{cache_block_addr, cpuid}] += found_block;
   }
 }
 

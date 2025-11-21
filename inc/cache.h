@@ -19,7 +19,6 @@
 #include <bitset>
 #include "pollution.h"
 #include "sector.h"
-#include "evictiontracker.h"
 
 extern int KNOB_ENABLE_LOG;
 extern int KNOB_ENABLE_SWAT_WAYS;
@@ -33,9 +32,6 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
-
-  PTEEvictionTracker pte_eviction_tracker_obj;
-
   vector<vector<PollutionEntry>> global_set_history;
 
   // translation pollution
@@ -89,9 +85,6 @@ public:
 
   MemoryRequestConsumer *l2cache, *l1cache;
   CacheDataModel* cacheDataModel;
-  // track working set for counting capacity misses
-  // vaddress, cpuid -- bitset
-  map<tuple<uint64_t, int>, bitset<64>> page_to_block;
 
   bool cache_is[CACHE_ID_END] = {false};
   CACHE_ID cache_id = CACHE_ID::CACHE_ID_END;
@@ -182,7 +175,7 @@ public:
   void func_track_evicted_pte(uint64_t v_addr, uint64_t p_addr);
 
   // track accessed page and its blocks for tracking capacity misses
-  void func_track_workingset(uint64_t addr, int cpuid);
+  void func_track_workingset(uint64_t addr, int cpuid, DataType dtype);
 
   // track mshr waiting period for packet
   void func_track_missfulfill_access_latency(uint64_t enq_cycle);
@@ -245,7 +238,7 @@ public:
     // return false;
 
     uint64_t page = addr >> (LOG2_PAGE_SIZE);
-    return pte_eviction_tracker_obj.func_lookup_eviction_data(page, cpu);
+    return cacheDataModel->eviction_tracker_obj.func_lookup_eviction_data(page, cpu);
   }
 
   int add_to_cluster(PACKET* packet);
@@ -449,8 +442,6 @@ public:
     dlog = logger(false);
     dataflow = logger(false);
     dassert = logger(true);
-
-    pte_eviction_tracker_obj = PTEEvictionTracker();
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));
 

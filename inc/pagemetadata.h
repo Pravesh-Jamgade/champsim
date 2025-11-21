@@ -15,15 +15,12 @@ class TblockMetaData
     logger dlog = logger(true);
     int index_of_tblock_upon_init_access_within_page = -1;
     int index_of_pte_upon_init_access_within_tblock = -1;
-    int tblock_reaccessed_more_than_once = 0;
-    map<int, int> tblock_reaccessed_cache_loc;
+    int tblock_accesses = 0;
+    map<int, int> tblock_accesses_cache_loc;
     map<int, int> tblock_eviction_cache_loc;
 
-    // TODO
-    int re_access_disatnce_by_mem_ref_counting = 0;
-
     int tblock_evicted = 0;
-    // should be same as "tblock_reaccessed_more_than_once"
+    // should be same as "tblock_accesses"
     int tlb_reuse = 0;
 
     TblockMetaData(){}
@@ -31,18 +28,15 @@ class TblockMetaData
     // block, pte init for first access which cause the block to brought in
     TblockMetaData(int init_block, int init_pte, int mem_ref=0): 
         index_of_tblock_upon_init_access_within_page(init_block), 
-        index_of_pte_upon_init_access_within_tblock(init_pte),
-        // TODO
-        re_access_disatnce_by_mem_ref_counting(mem_ref)
+        index_of_pte_upon_init_access_within_tblock(init_pte)
     {}
 
     // number of times tblock is reused
     void update_second_access(uint64_t virt_address, int cache_id)
     {
-        int pte_offset = (virt_address >> LOG2_PAGE_SIZE) & 0x7; // 3-bit offset within tblock
         // number of times tblock is reused
-        tblock_reaccessed_more_than_once++;
-        tblock_reaccessed_cache_loc[cache_id]++;
+        tblock_accesses++;
+        tblock_accesses_cache_loc[cache_id]++;
     }
 
     void update_eviction(int cache_id)
@@ -55,7 +49,7 @@ class TblockMetaData
     {
         // cout << "============================================================\n";
         // cout << "           TBlock          \n";
-        // cout << "tblock reused, " << tblock_reaccessed_more_than_once << '\n';
+        // cout << "tblock reused, " << tblock_accesses << '\n';
         // cout << "tblock re-accessed for evicted PTE from stlb\n";
         // for(auto entry: tblock_reaccessed_init_pte)
         // {

@@ -74,7 +74,6 @@ class Hist
                 {
                     // i'th bucket of histogram
                     hist_distance[i] += data.second;
-                    break;
                 }
             }
         }

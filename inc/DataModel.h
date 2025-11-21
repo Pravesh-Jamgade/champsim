@@ -87,6 +87,49 @@ enum MISS
     MISS_END
 };
 
+// We need this to see if block is evicted earlier.
+// It is different that accessed again.
+// Victima starts PTW when PTE is evicted. I have another tracker which updates
+// its history upon fill, hence looking up that history upon eviction will hit in history
+// but i need to see if its been evicted already hence i am using eviction history
+class EvictionTracker
+{
+public:
+
+using Key = std::tuple<uint64_t, int>;
+    std::map<Key, int> pte_eviction_tracker;
+    EvictionTracker();
+
+    std::pair<std::map<Key, int>::iterator, bool>
+    func_track_eviction_data(uint64_t v_addr, int cpuid);
+
+    bool func_lookup_eviction_data(uint64_t v_addr, int cpuid);
+};
+
+class FillTracker
+{
+    public:
+    struct data {
+        bool valid=false;
+        int type=DataType::INVALID;
+        int fills = 0;
+    };
+    using Key = std::tuple<uint64_t, int>;
+    // track working set for counting capacity misses
+    // vaddress, cpuid -- bitset
+    map<Key, data> page_and_cache_block_tracker;
+
+    FillTracker();
+    
+    // True --> inserted because it is not found, False --> not-inserted as already exists
+    std::pair<std::map<Key, data>::iterator, bool> 
+    func_track_fill_data(uint64_t v_addr, int cpuid, DataType dtype);
+ 
+    std::pair<std::map<Key, data>::iterator, bool>  
+    func_lookup_fill_data(uint64_t v_addr, int cpuid);     
+};
+
+
 class CacheDataModel
 {
     public:
@@ -100,6 +143,9 @@ class CacheDataModel
 
     CacheDataModel(string name, uint32_t cpu, uint32_t NUM_WAY):name(name), cpu(cpu)
     {
+        eviction_tracker_obj = EvictionTracker();
+        fill_tracker_obj = FillTracker();
+
         for(int i=0; i< REJECTED; i++)
         {
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
@@ -135,14 +181,15 @@ class CacheDataModel
 
         {
             vector<pair<int,int>> exception_bounds;
-            exception_bounds.push_back({1, 1});
-            exception_bounds.push_back({2, 2});
-            exception_bounds.push_back({3, 3});
-            exception_bounds.push_back({4, 4});
-            exception_bounds.push_back({5, 5});
-            exception_bounds.push_back({1e3, 1e4});
-            exception_bounds.push_back({1e5, 1e6});
-            page_reuse_hist = new Hist(1, 49, 10, exception_bounds);
+            exception_bounds.push_back({1,1});
+            exception_bounds.push_back({2,2});
+            exception_bounds.push_back({3,3});
+            exception_bounds.push_back({4,4});
+            exception_bounds.push_back({5,5});
+            exception_bounds.push_back({6,6});
+            exception_bounds.push_back({7,7});
+            exception_bounds.push_back({8,8});
+            sector_block_occupancy = new Hist(0,0,0,exception_bounds);
         }
 
         {
@@ -155,7 +202,28 @@ class CacheDataModel
             exception_bounds.push_back({6,6});
             exception_bounds.push_back({7,7});
             exception_bounds.push_back({8,8});
-            sector_block_occupancy = new Hist(0,0,0,exception_bounds);
+            exception_bounds.push_back({50,100});
+            exception_bounds.push_back({101,150});
+            exception_bounds.push_back({151,200});
+            exception_bounds.push_back({201, 10000});
+            page_reuse_hist = new Hist(2, 5, 10, exception_bounds);
+        }
+
+        {
+            vector<pair<int,int>> exception_bounds;
+            exception_bounds.push_back({1,1});
+            exception_bounds.push_back({2,2});
+            exception_bounds.push_back({3,3});
+            exception_bounds.push_back({4,4});
+            exception_bounds.push_back({5,5});
+            exception_bounds.push_back({6,6});
+            exception_bounds.push_back({7,7});
+            exception_bounds.push_back({8,8});
+            exception_bounds.push_back({50,100});
+            exception_bounds.push_back({101,150});
+            exception_bounds.push_back({151,200});
+            exception_bounds.push_back({201, 10000});
+            eviction_hist = new Hist(2,5,10,exception_bounds);
         }
     }
 
@@ -200,12 +268,29 @@ class CacheDataModel
 
     Hist* sector_block_occupancy;
 
+    EvictionTracker eviction_tracker_obj;
+    Hist* eviction_hist;
+
+    FillTracker fill_tracker_obj;
+    Hist* fill_hist;
+
     // type of cache blocks
     int block_type_counters[DataType::DataType_end] = {0};
     string data_type_str[DataType::DataType_end] = {"Data", "PTE", "PMD", "PUD", "PGD", "PRE", "INV"};
 
     void func_page_block_reuse_helper(string NAME)
     {
+
+        for(auto entry: eviction_tracker_obj.pte_eviction_tracker)
+        {
+            eviction_hist->add_data_freq(entry.second, 1);
+        }
+
+        cout << "****************************************************\n";
+        cout << NAME << " Page or Block Repeated Evictions \n";
+        eviction_hist->print_histogram("page-or-block-repeated-eviction");
+        cout << "****************************************************\n";
+
         for(auto entry: page_reuse_helper_for_hist)
         {
             // reuse value of page/cache-block
@@ -215,10 +300,9 @@ class CacheDataModel
         }
 
         cout << "====================================================\n";
-        cout << NAME << " Page or Block Reuse \n";
+        cout << NAME << " Page or Block Repeated Fills for Use \n";
         page_reuse_hist->print_histogram("page-or-block-reuse");
         cout << "====================================================\n";
-
     }
 
     void print_stats()
@@ -349,7 +433,6 @@ class CacheDataModel
 
         cout << "\n" << tag << " sector block occupancy\n";
         sector_block_occupancy->print_histogram(tag);
-        cout << '\n';
     }
 };
 
