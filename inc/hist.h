@@ -40,6 +40,9 @@ class Hist
 
     void print_histogram(string tag)
     {
+        // reset histogram buckets before accumulating data frequencies
+        std::fill(hist_distance.begin(), hist_distance.end(), 0);
+
         // data is reuse_distance and its corresponding frequecny
         for(auto data: data_freq)
         {
