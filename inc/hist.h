@@ -46,9 +46,6 @@ class Hist
         // data is reuse_distance and its corresponding frequecny
         for(auto data: data_freq)
         {
-            int best_bucket = -1;
-            int best_span = std::numeric_limits<int>::max();
-
             // look for bounds to which this reuse distance belongs to
             for(int i=0; i< hits_bounds.size(); i++)
             {
@@ -56,18 +53,8 @@ class Hist
 
                 // if data is within bucket_boundry, sumup its frequcny in final histogram
                 if(bound.first <= data.first && data.first <= bound.second)
-                {
-                    int span = bound.second - bound.first;
-                    if (span < best_span)
-                    {
-                        best_span = span;
-                        best_bucket = i;
-                    }
-                }
+                    hist_distance[i] += data.second;
             }
-
-            if (best_bucket >= 0)
-                hist_distance[best_bucket] += data.second;
         }
         // print histogram
         for(int i=0; i< hits_bounds.size(); i++)
@@ -90,25 +77,12 @@ class Hist
         {
             for (const auto& data : data_by_column[col])
             {
-                int best_bucket = -1;
-                int best_span = std::numeric_limits<int>::max();
-
                 for (size_t bucket = 0; bucket < hits_bounds.size(); ++bucket)
                 {
                     auto bound = hits_bounds[bucket];
                     if (bound.first <= data.first && data.first <= bound.second)
-                    {
-                        int span = bound.second - bound.first;
-                        if (span < best_span)
-                        {
-                            best_span = span;
-                            best_bucket = static_cast<int>(bucket);
-                        }
-                    }
+                        bucket_by_column[col][bucket] += data.second;
                 }
-
-                if (best_bucket >= 0)
-                    bucket_by_column[col][best_bucket] += data.second;
             }
         }
 
