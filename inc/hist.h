@@ -37,28 +37,6 @@ class Hist
         hist_distance.resize(hits_bounds.size(), 0);
     }
 
-    vector<int>& precompute()
-    {
-        // data is reuse_distance and its corresponding frequecny
-        for(auto data: data_freq)
-        {
-            // look for bounds to which this reuse distance belongs to
-            for(int i=0; i< hits_bounds.size(); i++)
-            {
-                pair<int,int> bound = hits_bounds[i];
-
-                // if data is within bucket_boundry, sumup its frequcny in final histogram
-                if(bound.first <= data.first && data.first <= bound.second)
-                {
-                    // i'th bucket of histogram; not using actual freq values here; rather increamenting 1 to count occurence only
-                    hist_distance[i] += 1;
-                    break;
-                }
-            }
-        }
-        return hist_distance;
-    }
-
     void print_histogram(string tag)
     {
         // data is reuse_distance and its corresponding frequecny

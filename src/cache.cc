@@ -2298,7 +2298,6 @@ void CACHE::func_track_workingset(uint64_t addr, int cpuid, DataType dtype)
   { 
     // check if block is there 
     auto [block_it, found_block] =  cacheDataModel->fill_tracker_obj.func_track_fill_data(cache_block_addr, cpuid, dtype);
-    cacheDataModel->page_reuse_helper_for_hist[{cache_block_addr, cpuid}] += found_block;
   }
 }
 

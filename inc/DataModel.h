@@ -110,9 +110,9 @@ class FillTracker
 {
     public:
     struct data {
-        bool valid=false;
         int type=DataType::INVALID;
         int fills = 0;
+        int fill_dtype[DataType::DataType_end] = {0};
     };
     using Key = std::tuple<uint64_t, int>;
     // track working set for counting capacity misses
@@ -280,26 +280,21 @@ class CacheDataModel
 
     void func_page_block_reuse_helper(string NAME)
     {
-
+        cout << "====================================================\n";
         for(auto entry: eviction_tracker_obj.pte_eviction_tracker)
         {
             eviction_hist->add_data_freq(entry.second, 1);
         }
-
-        cout << "****************************************************\n";
         cout << NAME << " Page or Block Repeated Evictions \n";
         eviction_hist->print_histogram("page-or-block-repeated-eviction");
-        cout << "****************************************************\n";
 
-        for(auto entry: page_reuse_helper_for_hist)
+        for(auto entry: fill_tracker_obj.page_and_cache_block_tracker)
         {
             // reuse value of page/cache-block
-            int data = entry.second;
+            int data = entry.second.fills;
             // frequency of such page/cache-blocks
             page_reuse_hist->add_data_freq(data, 1);
         }
-
-        cout << "====================================================\n";
         cout << NAME << " Page or Block Repeated Fills for Use \n";
         page_reuse_hist->print_histogram("page-or-block-reuse");
         cout << "====================================================\n";
