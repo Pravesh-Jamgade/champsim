@@ -1,6 +1,7 @@
 #ifndef HIST_H
 #define HIST_H
 #include<bits/stdc++.h>
+#include <iomanip>
 using namespace std;
 
 class Hist
@@ -60,6 +61,46 @@ class Hist
         {
             pair<int,int> bound = hits_bounds[i];
             cout << bound.first << " - " << bound.second << ", " <<  hist_distance[i] << '\n';
+        }
+        cout << '\n';
+    }
+
+    template <typename Container>
+    void print_histogram_matrix(const string& tag, const vector<string>& column_labels, const Container& data_by_column)
+    {
+        if (hits_bounds.empty() || column_labels.empty())
+            return;
+
+        vector<vector<int>> bucket_by_column(column_labels.size(), vector<int>(hits_bounds.size(), 0));
+
+        for (size_t col = 0; col < column_labels.size(); ++col)
+        {
+            for (const auto& data : data_by_column[col])
+            {
+                for (size_t bucket = 0; bucket < hits_bounds.size(); ++bucket)
+                {
+                    auto bound = hits_bounds[bucket];
+                    if (bound.first <= data.first && data.first <= bound.second)
+                    {
+                        bucket_by_column[col][bucket] += data.second;
+                    }
+                }
+            }
+        }
+
+        cout << tag << " histogram bucket-by-type\n";
+        cout << left << setw(18) << "Bucket";
+        for (const auto& label : column_labels)
+            cout << setw(12) << label;
+        cout << '\n';
+
+        for (size_t bucket = 0; bucket < hits_bounds.size(); ++bucket)
+        {
+            auto bound = hits_bounds[bucket];
+            cout << left << setw(18) << (to_string(bound.first) + " - " + to_string(bound.second));
+            for (size_t col = 0; col < column_labels.size(); ++col)
+                cout << setw(12) << bucket_by_column[col][bucket];
+            cout << '\n';
         }
         cout << '\n';
     }
