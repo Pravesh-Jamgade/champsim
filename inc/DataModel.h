@@ -1,5 +1,6 @@
 #ifndef DATAMODEL_H
 #define DATAMODEL_H
+#include <array>
 #include <iostream>
 #include "user.h"
 #include "hist.h"
@@ -207,6 +208,7 @@ class CacheDataModel
             exception_bounds.push_back({151,200});
             exception_bounds.push_back({201, 10000});
             page_reuse_hist = new Hist(2, 5, 10, exception_bounds);
+            fill_hist = new Hist(2, 5, 10, exception_bounds);
         }
 
         {
@@ -297,6 +299,23 @@ class CacheDataModel
         }
         cout << NAME << " Page or Block Repeated Fills for Use \n";
         page_reuse_hist->print_histogram("page-or-block-reuse");
+
+        array<map<int, int>, DataType::DataType_end> dtype_reuse_freq;
+        for (auto entry : fill_tracker_obj.page_and_cache_block_tracker)
+        {
+            for (int dtype = 0; dtype < DataType::DataType_end; ++dtype)
+            {
+                int fills = entry.second.fill_dtype[dtype];
+                if (fills > 0)
+                {
+                    dtype_reuse_freq[dtype][fills]++;
+                }
+            }
+        }
+
+        vector<string> dtype_labels(data_type_str, data_type_str + DataType::DataType_end);
+        cout << NAME << " Page or Block Repeated Fills for Use by Dtype \n";
+        fill_hist->print_histogram_matrix("page-or-block-reuse-dtype", dtype_labels, dtype_reuse_freq);
         cout << "====================================================\n";
     }
 
