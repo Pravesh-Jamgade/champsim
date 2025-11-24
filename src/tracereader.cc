@@ -1,6 +1,7 @@
 #include "tracereader.h"
 
 #include <cassert>
+#include <chrono>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -79,9 +80,20 @@ ooo_model_instr tracereader::read_single_instr()
   }
   else
   {
+    auto stall_start = std::chrono::steady_clock::now();
+    constexpr std::chrono::seconds stall_timeout(5);
+
     while (buf->tail == buf->head) {
       usleep(10); // buffer empty
+
+      if (std::chrono::steady_clock::now() - stall_start > stall_timeout) {
+        std::cerr << "Live trace producer inactive for " << stall_timeout.count()
+                  << "s; aborting to avoid hang." << std::endl;
+        assert(0);
+      }
     }
+
+    stall_start = std::chrono::steady_clock::now();
     input_instr* te = (input_instr*)&buf->buffer[buf->tail];
     __sync_synchronize(); // memory barrier
     buf->tail = (buf->tail + 1) % TRACE_BUF_CAP;
