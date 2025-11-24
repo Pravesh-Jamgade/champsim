@@ -243,13 +243,14 @@ void CACHE::handle_fill()
       return;
     }
 
-    if (way != NUM_WAY) {
-      // update processed packets
+    // Return data to the requester even if the block is bypassed (way == NUM_WAY).
+    // Previously, bypassed fills would skip return_data, leaving the upper level
+    // (e.g., L1D) permanently waiting on the MSHR entry.
+    if (way != NUM_WAY)
       fill_mshr->data = block[set * NUM_WAY + way].data;
 
-      for (auto ret : fill_mshr->to_return)
-        ret->return_data(&(*fill_mshr));
-    }
+    for (auto ret : fill_mshr->to_return)
+      ret->return_data(&(*fill_mshr));
     
     if(is_SWAT_enable)
     {
@@ -916,9 +917,11 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       else
       {
         if(KNOB_POMTLB && handle_pkt.pomflag[POM::POM_TO_PTW])
-        dlog.log(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
-        backtracklog.track(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
-
+        {
+          dlog.log(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+          backtracklog.track(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
+        }
+        
         lower_level->add_rq(&handle_pkt);
       }
     }

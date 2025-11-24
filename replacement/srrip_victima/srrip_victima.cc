@@ -17,9 +17,9 @@ uint32_t CACHE::find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const
   // look for the maxRRPV line && make sure we dont give out sector line
   auto begin = std::next(std::begin(block), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
-  auto victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV && x.sectorHolder.is_sector_line == false; }); // hijack the lru field
+  auto victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV;}); // hijack the lru field
 
-  // not found
+  // search until we get maxRRPV value block
   while (victim == end) 
   {
     // increase lru
@@ -27,31 +27,45 @@ uint32_t CACHE::find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const
     {
       it->lru++;
     }
-    // test again && make sure we dont give out sector line
-    victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV && x.sectorHolder.is_sector_line == false; });
+    victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV;});
   }
 
-  // for SWAT, we dont setup victima_block flag so we are safe 
+  // found victima_block, reduce srrip value once
+  if(victim->victima_block)
+  {
+    victim->lru--;
+  }
 
-  // found
+  // Try to get normal block if possible
   int k_times = 5;
   while(k_times--)
   {
-    // it is not a victima_block then return victim_candidate
+    // if normal block then simply return
     if(!victim->victima_block)
     {
       return std::distance(begin, victim);
     }
 
-    // it is victima_block reduce its lru value so that it donest get capured again as a lru candidate
-    victim->lru--;
+    // if victima block then try k times to get normal block
     for (auto it = begin; it != end; ++it)
     {
-      if(it == victim) continue;
+      if(it->victima_block) continue;
       if(it->lru >= maxRRPV) continue;
       it->lru++;
     }
+
     victim = std::find_if(begin, end, [](BLOCK x) {return x.lru == maxRRPV;});
+  }
+
+  // search until we get maxRRPV value block
+  while (victim == end) 
+  {
+    // increase lru
+    for (auto it = begin; it != end; ++it)
+    {
+      it->lru++;
+    }
+    victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV;});
   }
 
   return std::distance(begin, victim);
