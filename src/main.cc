@@ -394,6 +394,7 @@ void overwrite_cache()
 void signal_handler(int signal)
 {
   cout << "Caught signal: " << signal << endl;
+  cout << "Program aborted. Cleaning up...\n";
 
   for(int i=0; i< NUM_CPUS; i++)
   {
@@ -441,39 +442,30 @@ void signal_handler(int signal)
     (*it)->impl_replacement_final_stats();
 
 
-  exit(1);
-}
-
-// Function to be called upon program termination
-void on_exit_handler() {
-  std::cout << "Invoking handler due to program exit." << std::endl;
-
   backtracklog.print_logs();
-  
-  // process_page_table->printTree();
-  // for(auto entry: ptw_pred)
-  // {
-  //   int freq = entry.second.freq;
-  //   int cost = entry.second.cost;
-  //   cout << intToHex(get<0>(entry.first)) << ", " << get<1>(entry.first) << ", "<< freq << ", " << cost << '\n';
-  // }
+
+  exit(signal);
 }
 
+void register_signal(int signal)
+{
+  struct sigaction sa;
+  sa.sa_handler = signal_handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  if (sigaction(signal, &sa, NULL) == -1) {
+    perror("sigaction");
+    std::exit(EXIT_FAILURE);
+  }
+}
 
 int main(int argc, char** argv)
 {
-  // interrupt signal hanlder
-  struct sigaction sigIntHandler;
-  sigIntHandler.sa_handler = signal_handler;
-  sigemptyset(&sigIntHandler.sa_mask);
-  sigIntHandler.sa_flags = 0;
-  sigaction(SIGINT, &sigIntHandler, NULL);
-
-  if (std::atexit(on_exit_handler) != 0) {
-        std::cerr << "Failed to register exit handler." << std::endl;
-        return EXIT_FAILURE;
-    }
-
+  // Register the signal handler for SIGABRT
+  register_signal(SIGABRT);
+  register_signal(SIGSEGV);
+  register_signal(SIGINT);
+  register_signal(SIGTERM);
   
   // initialize knobs
   uint8_t show_heartbeat = 1;

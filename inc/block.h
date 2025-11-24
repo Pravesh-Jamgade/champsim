@@ -43,7 +43,7 @@ enum VF
   INVALIDATE_PACKET,
   victima_stlbevict_ptw,
 
-  sector_retry,
+  sector_ptw,
   VF_END
 };
 

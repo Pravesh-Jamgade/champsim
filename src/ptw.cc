@@ -207,6 +207,7 @@ void PageTableWalker::handle_read()
 
       // "victima_stlbevict_ptw" we are updating it here, the same packet will be use as MSHR entry. For next iteration of PTW, we would need to use same flag value. Hence test the ptw_level and flag.
       packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level == 1 && handle_pkt.vflag[VF::victima_stlbevict_ptw]);
+      packet.vflag[VF::sector_ptw] = (ptw_level == 1 && handle_pkt.vflag[VF::sector_ptw]);
   
       int rq_index = lower_level->add_rq(&packet);
       if (rq_index == -2)
@@ -230,6 +231,7 @@ void PageTableWalker::handle_read()
       
       // "victima_stlbevict_ptw" we are updating it here, the same packet will be use as MSHR entry. For next iteration of PTW, we would need to use same flag value. Hence test the ptw_level and flag.
       packet.vflag[VF::victima_stlbevict_ptw] = handle_pkt.vflag[VF::victima_stlbevict_ptw];
+      packet.vflag[VF::sector_ptw] = handle_pkt.vflag[VF::sector_ptw];
       packet.pomflag[POM::POM_TO_PTW] = handle_pkt.pomflag[POM::POM_TO_PTW];
       
       auto it = MSHR.insert(std::end(MSHR), packet);
@@ -422,6 +424,7 @@ void PageTableWalker::handle_fill()
             packet.translation_level = ptw_level;
             packet.thread_id = fill_mshr->thread_id;
             packet.vflag[VF::victima_stlbevict_ptw] = (ptw_level==1 && fill_mshr->vflag[VF::victima_stlbevict_ptw]);// if level=1 then only translation cache-block to tlb-block at L2
+            packet.vflag[VF::sector_ptw] = (ptw_level==1 && fill_mshr->vflag[VF::sector_ptw]);// if level=1 then only translation cache-block to tlb-block at L2
             packet.psc_state = PSC_STATE::QUEUED;
             packet.page_table_base_address = addr;
             packet.pom_address = fill_mshr->pom_address;

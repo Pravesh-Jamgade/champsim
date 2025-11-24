@@ -417,8 +417,6 @@ public:
           cout << '\n';
       }
     }
-  
-    cacheDataModel->func_page_block_reuse_helper(NAME);
   }
 
 #include "cache_modules.inc"

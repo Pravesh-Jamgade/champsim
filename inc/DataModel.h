@@ -115,6 +115,7 @@ class FillTracker
         int fills = 0;
         int fill_dtype[DataType::DataType_end] = {0};
     };
+    
     using Key = std::tuple<uint64_t, int>;
     // track working set for counting capacity misses
     // vaddress, cpuid -- bitset
@@ -295,27 +296,28 @@ class CacheDataModel
             // reuse value of page/cache-block
             int data = entry.second.fills;
             // frequency of such page/cache-blocks
+            if(data>0)
             page_reuse_hist->add_data_freq(data, 1);
         }
         cout << NAME << " Page or Block Repeated Fills for Use \n";
         page_reuse_hist->print_histogram("page-or-block-reuse");
 
-        array<map<int, int>, DataType::DataType_end> dtype_reuse_freq;
-        for (auto entry : fill_tracker_obj.page_and_cache_block_tracker)
-        {
-            for (int dtype = 0; dtype < DataType::DataType_end; ++dtype)
-            {
-                int fills = entry.second.fill_dtype[dtype];
-                if (fills > 0)
-                {
-                    dtype_reuse_freq[dtype][fills]++;
-                }
-            }
-        }
-
-        vector<string> dtype_labels(data_type_str, data_type_str + DataType::DataType_end);
-        cout << NAME << " Page or Block Repeated Fills for Use by Dtype \n";
-        fill_hist->print_histogram_matrix("page-or-block-reuse-dtype", dtype_labels, dtype_reuse_freq);
+        // array<map<int, int>, DataType::DataType_end> dtype_reuse_freq;
+        // for (auto entry : fill_tracker_obj.page_and_cache_block_tracker)
+        // {
+        //     for (int dtype = 0; dtype < DataType::DataType_end; ++dtype)
+        //     {
+        //         int fills = entry.second.fill_dtype[dtype];
+        //         if (fills > 0)
+        //         {
+        //             dtype_reuse_freq[dtype][fills]++;
+        //         }
+        //     }
+        // }
+        
+        // vector<string> dtype_labels(data_type_str, data_type_str + DataType::DataType_end);
+        // cout << NAME << " Page or Block Repeated Fills for Use by Dtype \n";
+        // fill_hist->print_histogram_matrix("page-or-block-reuse-dtype", dtype_labels, dtype_reuse_freq);
         cout << "====================================================\n";
     }
 
@@ -446,7 +448,11 @@ class CacheDataModel
         cout << '\n';
 
         cout << "\n" << tag << " sector block occupancy\n";
+        if(name.find("STLB") != string::npos)
         sector_block_occupancy->print_histogram(tag);
+
+        cout << "\n";
+        func_page_block_reuse_helper(name);
     }
 };
 

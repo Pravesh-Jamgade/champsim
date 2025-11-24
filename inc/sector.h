@@ -54,16 +54,17 @@ struct DirectMap
         bool valid=false; 
         uint64_t pte=0;
         uint64_t subTag=0;
+        int tid = -1;
     };
 
     array<Entry, 8> slots{};
     
     // page address
-    LookupResultU64 lookup(uint64_t page_addr, int NUM_SET)
+    LookupResultU64 lookup(uint64_t page_addr, int NUM_SET, int tid)
     {
         int index = Indexer::get_index(page_addr);
         uint64_t subTag = Indexer::get_subTag(page_addr, NUM_SET);
-        if(slots[index].valid && slots[index].subTag==subTag)
+        if(slots[index].valid && slots[index].subTag==subTag && slots[index].tid == tid)
         {
             return {true, slots[index].pte};
         }
@@ -71,7 +72,7 @@ struct DirectMap
     }
 
     // update at index even if it is valid
-    void insert(pair<bool, PTEHolder> pte, int NUM_SET)
+    void insert(pair<bool, PTEHolder> pte, int NUM_SET, int tid)
     {
         if(pte.first == false)
             return;
@@ -82,6 +83,7 @@ struct DirectMap
         slots[index].valid = true;
         slots[index].pte = pte.second.page_address;
         slots[index].subTag = Indexer::get_subTag(virt_page_addr, NUM_SET);
+        slots[index].tid = tid;
     }
 
     bool isSpaceAvailable(uint64_t page_addr)
@@ -134,7 +136,7 @@ struct LRU8
     }
 
     template<class EntryArr>
-    void insert(EntryArr& slots, uint64_t subTag, uint64_t pte)
+    void insert(EntryArr& slots, uint64_t subTag, uint64_t pte, int tid)
     {
         timeTick++;
         int index = victim(slots);
@@ -142,15 +144,16 @@ struct LRU8
         slots[index].pte = pte;
         slots[index].age = timeTick;
         slots[index].valid = true;
-        dlog.log("id", index,"subTag", intToHex(subTag), "pte", intToHex(pte), "timeTick", timeTick,'\n');
+        slots[index].tid = tid;
+        dlog.log("id", index,"subTag", intToHex(subTag), "pte", intToHex(pte), "tid", tid, "timeTick", timeTick, "tid", tid,'\n');
     }
 
     template<class EntryArr>
-    LookupResultU64 lookup(EntryArr& slots, uint64_t subTag)
+    LookupResultU64 lookup(EntryArr& slots, uint64_t subTag, int tid)
     {
         for(int i=0; i< 8; i++)
         {
-            if(slots[i].valid && slots[i].subTag == subTag)
+            if(slots[i].valid && slots[i].subTag == subTag && slots[i].tid == tid)
             {
                 timeTick++;
                 slots[i].age = timeTick;
@@ -171,23 +174,24 @@ struct AssociativeMap
         uint64_t pte=0;
         uint64_t subTag=0;
         uint64_t age=0;
+        int tid=-1;
     };
 
     int timeTick=0;
     array<Entry, 8> slots;
     ReplacementManager    repl; 
 
-    LookupResultU64 lookup(uint64_t page_addr, int NUM_SET)
+    LookupResultU64 lookup(uint64_t page_addr, int NUM_SET, int tid)
     {
         uint64_t subTag = Indexer::get_subTag(page_addr, NUM_SET);
         uint64_t pte_offset = Indexer::get_index(page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
 
-        dlog.log("Sector-LOOKUP addr", intToHex(page_addr), "subTag", intToHex(combinedTag), "from", intToHex(subTag),"pte_off", intToHex(pte_offset), "\n"); 
-        return repl.lookup(slots, combinedTag);
+        dlog.log("Sector-LOOKUP addr", intToHex(page_addr), "subTag", intToHex(combinedTag), "from", intToHex(subTag),"pte_off", intToHex(pte_offset), "tid", tid, "\n"); 
+        return repl.lookup(slots, combinedTag, tid);
     }
 
-    void insert(pair<bool, PTEHolder> pte, int NUM_SET)
+    void insert(pair<bool, PTEHolder> pte, int NUM_SET, int tid)
     {
         if(pte.first == false)
             return;
@@ -198,9 +202,9 @@ struct AssociativeMap
         uint64_t pte_offset = Indexer::get_index(virt_page_addr);
         uint64_t combinedTag = (subTag << 3) | pte_offset;
         
-        dlog.log("Sector-INSERT",  "vaddr", intToHex(virt_page_addr), "pte", intToHex(pte.second.page_address) , "subTag", intToHex(combinedTag), "from", intToHex(subTag), "pte_off", intToHex(pte_offset), "\n"); 
+        dlog.log("Sector-INSERT",  "vaddr", intToHex(virt_page_addr), "pte", intToHex(pte.second.page_address) , "subTag", intToHex(combinedTag), "from", intToHex(subTag), "pte_off", intToHex(pte_offset), "tid", tid, "\n"); 
         
-        repl.insert(slots, combinedTag, pte.second.page_address);
+        repl.insert(slots, combinedTag, pte.second.page_address, tid);
         // dump();
         
     }
@@ -236,7 +240,7 @@ struct AssociativeMap
     void dump()
     {
         for(int i=0; i< slots.size(); i++)
-            cout << "i="<<i <<", "<< intToHex(slots[i].subTag) <<", "<< intToHex(slots[i].pte) << '\n';
+            cout << "i="<<i <<", "<< intToHex(slots[i].subTag) <<", "<< intToHex(slots[i].pte) <<", " << "tid, " << slots[i].tid << '\n';
     }
 };
 
@@ -260,34 +264,9 @@ struct SectorDesignSelector<SectorDesingChoice::ASSOCIATIVE>
     using type = AssociativeMap<LRU8>;
 };
 
-// ---- Type-erased interface so callers can use one uniform API ----
-struct ISector {
-    virtual ~ISector() {}
-    virtual LookupResultU64 lookup(uint64_t page_addr, int num_sets) = 0;
-    virtual void            insert(uint64_t page_addr, uint64_t pte, int num_sets) = 0;
-    virtual void            dump() = 0;
-};
 
 // Model adapter for any concrete sector that implements the same API
-template <class Impl>
-struct SectorModel : ISector {
-    Impl impl;
-    std::unique_ptr<ISector> clone() const override {
-        return std::unique_ptr<ISector>(new SectorModel<Impl>(*this)); // copies Impl
-      }
-    LookupResultU64 lookup(uint64_t page_addr, int num_sets) override {
-        return impl.lookup(page_addr, num_sets);
-    }
-    void insert(uint64_t page_addr, uint64_t pte, int num_sets) override {
-        impl.insert(page_addr, pte, num_sets);
-    }
-    
-    void dump() override { impl.dump(); }
 
-    // Optional: expose raw impl if you ever need it
-    Impl&       raw()       { return impl; }
-    const Impl& raw() const { return impl; }
-};
 
 class SectorHolder 
 {
@@ -304,11 +283,11 @@ class SectorHolder
         return h;                       // copyable/movable
       }
     
-      LookupResultU64 lookup(uint64_t addr, int num_sets) {
-        return std::visit([&](auto& s){ return s.lookup(addr, num_sets); }, sector_);
+      LookupResultU64 lookup(uint64_t addr, int num_sets, int tid) {
+        return std::visit([&](auto& s){ return s.lookup(addr, num_sets, tid); }, sector_);
       }
-      void insert(pair<bool, PTEHolder> pte, int num_sets) {
-        std::visit([&](auto& s){ s.insert(pte, num_sets); }, sector_);
+      void insert(pair<bool, PTEHolder> pte, int num_sets, int tid) {
+        std::visit([&](auto& s){ s.insert(pte, num_sets, tid); }, sector_);
       }
       void dump() {
         std::visit([&](auto & s){ s.dump(); }, sector_);
