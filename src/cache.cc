@@ -233,6 +233,10 @@ void CACHE::handle_fill()
         
         way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                           fill_mshr->type);
+        if(way == NUM_WAY)
+        {
+          exit(-1);
+        }
       }
     }
     
@@ -921,7 +925,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
           dlog.log(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
           backtracklog.track(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
         }
-        
+
         lower_level->add_rq(&handle_pkt);
       }
     }
