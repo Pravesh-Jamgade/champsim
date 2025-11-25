@@ -116,6 +116,17 @@ void CACHE::handle_fill()
           cacheDataModel->mshr_queue_stalls[Stall::OP_FAIL_PENALTY]++;
           continue;
         }
+        // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
+        else if(fill_mshr->pomflag[POM::POM_MISS])
+        {
+          dlog.log(current_cycle, NAME, "removePOM", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "pom", fill_mshr->pomflag[POM::POM], "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), '\n');
+          backtracklog.track(current_cycle, NAME, "removePOM", "instr", fill_mshr->instr_id, "th", fill_mshr->thread_id, "tran", (fill_mshr->type==TRANSLATION), "level", (int)fill_mshr->translation_level, "pom", fill_mshr->pomflag[POM::POM], "addr", intToHex(fill_mshr->address), "vaddr", intToHex(fill_mshr->v_address), '\n');
+  
+          fill_mshr->pomflag[POM::POM_MISS] = false;
+          // We wont remove this MSHR and reuse this to send out PTW and then reset its event_cycle to avoid re-entering to fill
+          fill_mshr->pomflag[POM::POM_TO_PTW] = true;
+          continue;
+        }
       }
       // avoid to write POM_MISS packet since we dont have mapping in POMTLB and it will be a empty block hence dont write
       else if(!is_tlb && fill_mshr->pomflag[POM_MISS])
@@ -1007,31 +1018,13 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   bool pom_cache_write = false; 
   if(KNOB_POMTLB && handle_pkt.pomflag[POM::POM])
   {
-    if(cache_is[IS_STLB])
-    {
-      // remove this MSHR, add new request to STLB RQ with status POM_TO_PTW to avoid another POM request but prefer PTW request this time 
-      if(handle_pkt.pomflag[POM::POM_MISS])
-      {
-        dlog.log(current_cycle, NAME, "removePOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
-        backtracklog.track(current_cycle, NAME, "removePOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
-
-        handle_pkt.pomflag[POM::POM_MISS] = false;
-        // We wont remove this MSHR and reuse this to send out PTW and then reset its event_cycle to avoid re-entering to fill
-        handle_pkt.pomflag[POM::POM_TO_PTW] = true;
-        return false;
-      }
-    }
-
     // its a POMTLB hit, which brought us a PTE
-
-    
     dlog.log(current_cycle, NAME, "insertPOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "set", set, "way", way, '\n');
     backtracklog.track(current_cycle, NAME, "insertPOM", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "set", set, "way", way, '\n');
-
     pom_cache_write = true;
   }
   
-  //// POM Test: Phase 1
+  // // POM Test: Phase 1
   // // POM Testing: for POMTLB hit at DRAM, this will bring POMTLB lines to data cache
   // // // Test POM caching at POMTLB: test will give seg-fault, but we can verify it does hit in POMTLB
   // // // And brings POMTLB entry to data-caches
