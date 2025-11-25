@@ -88,8 +88,7 @@ public:
 
   vector<uint64_t> CR3_addr;
   uint64_t POMTLB_baseaddr;
-  vector<uint64_t> asid;
-
+  
   // std::map<std::pair<uint64_t, std::size_t>, uint64_t> page_table;
   list<PagingStructureCache*> pscl_array;
 

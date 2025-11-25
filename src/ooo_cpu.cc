@@ -6,11 +6,14 @@
 #include "cache.h"
 #include "champsim.h"
 #include "instruction.h"
+#include "rng.h"
 
 #define DEADLOCK_CYCLE 1000000
 
+extern int KNOB_ADDRESS_RANDOMIZATION;
 extern uint8_t warmup_complete[NUM_CPUS];
 extern uint8_t MAX_INSTR_DESTINATIONS;
+extern vector<uint64_t> asid;
 
 void O3_CPU::operate()
 {
@@ -40,6 +43,24 @@ void O3_CPU::initialize_core()
   // BRANCH PREDICTOR & BTB
   impl_branch_predictor_initialize();
   impl_btb_initialize();
+  
+  for(int thread=0; thread< KNOB_SMT_ENABLE; thread++)
+  {
+    // Fisher-Yates shuffle, simultaneously initializing array to m_address_randomization_table[i] = i
+    // See http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_.22inside-out.22_algorithm
+    // By using the app_id as a random seed, we get an app_id-specific pseudo-random permutation of 0..255
+
+    int id = KNOB_SMT_ENABLE  * cpu + thread;
+    uint64_t state = asid[id];
+
+    m_address_randomization_table[0] = 0;
+    for(unsigned int i = 1; i < 256; ++i)
+    {
+        uint8_t j = rng_next(state) % (i + 1);
+        m_address_randomization_table[i] = m_address_randomization_table[j];
+        m_address_randomization_table[j] = i;
+    }
+  }
 }
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
@@ -707,7 +728,15 @@ void O3_CPU::add_load_queue(champsim::circular_buffer<ooo_model_instr>::iterator
   rob_it->lq_index[data_index] = lq_it;
   rob_it->source_added[data_index] = 1;
   lq_it->instr_id = rob_it->instr_id;
-  lq_it->virtual_address = rob_it->source_memory[data_index];
+
+  // Address Randomization
+  uint64_t old_virt_addr = rob_it->source_memory[data_index];
+  uint64_t virt_page = remapAddress(old_virt_addr >> LOG2_PAGE_SIZE);
+  uint64_t new_virt_addr = (virt_page << LOG2_PAGE_SIZE) | (old_virt_addr & (PAGE_SIZE-1));
+
+  // cout << "aslr: " << intToHex(old_virt_addr) << "-->" << intToHex(new_virt_addr) << '\n';
+
+  lq_it->virtual_address = KNOB_ADDRESS_RANDOMIZATION==1 ? new_virt_addr: old_virt_addr;
   lq_it->ip = rob_it->ip;
   lq_it->rob_index = rob_it;
   lq_it->asid[0] = rob_it->asid[0];
@@ -742,7 +771,15 @@ void O3_CPU::add_store_queue(champsim::circular_buffer<ooo_model_instr>::iterato
   // add it to the store queue
   rob_it->sq_index[data_index] = sq_it;
   sq_it->instr_id = rob_it->instr_id;
-  sq_it->virtual_address = rob_it->destination_memory[data_index];
+
+  // Address Randomization
+  uint64_t old_virt_addr = rob_it->destination_memory[data_index];
+  uint64_t virt_page = remapAddress(old_virt_addr >> LOG2_PAGE_SIZE);
+  uint64_t new_virt_addr = (virt_page << LOG2_PAGE_SIZE) | (old_virt_addr & (PAGE_SIZE-1));
+
+  // cout << "aslr: " << intToHex(old_virt_addr) << "-->" << intToHex(new_virt_addr) << '\n';
+
+  sq_it->virtual_address = KNOB_ADDRESS_RANDOMIZATION==1 ? new_virt_addr: old_virt_addr;
   sq_it->ip = rob_it->ip;
   sq_it->rob_index = rob_it;
   sq_it->asid[0] = rob_it->asid[0];

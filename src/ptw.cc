@@ -68,19 +68,6 @@ void PageTableWalker::_overwrite()
 
   pscl_array.reverse();
 
-  std::random_device rd;
-  std::mt19937_64 engine(rd());
-  std::uniform_int_distribution<uint64_t> dist;
-
-  // supporting 16 threads
-  for(int i=0; i< 16; i++)
-  {
-    uint64_t random_64bit_num = dist(engine);
-    uint64_t mask = (1ULL << 48) - 1;
-    random_64bit_num = random_64bit_num & mask;
-    asid.push_back(random_64bit_num);
-  }
-
   POMTLB_baseaddr = vmem.func_allocate_page();
   POM_CPU_KEY = (POMTLB_baseaddr >> LOG2_PAGE_SIZE) & ((1ULL << 16) - 1);
   cout << NAME << ", POMTLB_baseaddr= " << std::hex << POMTLB_baseaddr << std::dec << ", POM_CPU_KEY= " << POM_CPU_KEY << '\n';

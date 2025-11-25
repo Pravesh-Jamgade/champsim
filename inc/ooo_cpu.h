@@ -33,6 +33,8 @@ class O3_CPU : public champsim::operable
 public:
   uint32_t cpu = 0;
 
+  uint8_t m_address_randomization_table[256];
+
   // instruction
   uint64_t instr_unique_id = 0, completed_executions = 0, begin_sim_cycle = 0, begin_sim_instr = 0, last_sim_cycle = 0, last_sim_instr = 0,
            finish_sim_cycle = 0, finish_sim_instr = 0, instrs_to_read_this_cycle = 0, instrs_to_fetch_this_cycle = 0,
@@ -132,6 +134,22 @@ public:
   void print_deadlock() override;
 
   int prefetch_code_line(uint64_t pf_v_addr);
+
+  uint64_t remapAddress(uint64_t va_page)
+  {
+    // va is the virtual address shifted right by the page size
+    // By randomly remapping the lower 24 bits of va_page, addresses will be distributed
+    // over a 1<<(16+3*8) = 64 GB range which should avoid artificial set contention in all cache levels.
+    // Of course we want the remapping to be invertible so we never map different incoming addresses
+    // onto the same outgoing address. This is guaranteed since m_address_randomization_table
+    // contains each 0..255 number only once.
+    uint64_t result = va_page;
+    uint8_t *array = (uint8_t *)&result;
+    array[0] = m_address_randomization_table[array[0]];
+    array[1] = m_address_randomization_table[array[1]];
+    array[2] = m_address_randomization_table[array[2]];
+    return result;
+  }
 
   void o3_setup()
   {

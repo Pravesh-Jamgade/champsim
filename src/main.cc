@@ -32,6 +32,7 @@ POMTLB* pomtlb;
 map<tuple<uint64_t, int>, PTWC> ptw_pred;
 uint64_t POM_CPU_KEY = 123456789;
 vector<int> sector_counters(SCCounter::SCCounter_End, 0);
+vector<uint64_t> asid;
 
 uint8_t warmup_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
@@ -66,6 +67,7 @@ extern int KNOB_ENABLE_LOG;
 extern int KNOB_ENABLE_MFOE_V2;
 extern int KNOB_ENABLE_CTX;
 extern int KNOB_ENABLE_SWAT_WAYS, KNOB_ENABLE_SWAT_WAYS_OVERWRITE, KNOB_ENABLE_IDEAL_SWAT;
+extern int KNOB_ADDRESS_RANDOMIZATION;
 
 std::vector<tracereader*> traces;
 
@@ -565,6 +567,7 @@ int main(int argc, char** argv)
   KNOB_ENABLE_SWAT_WAYS = iniReader->GetInteger("SWAT", "ENABLE_SWAT_WAYS", 0);
   KNOB_ENABLE_IDEAL_SWAT = iniReader->GetInteger("SWAT", "ENABLE_IDEAL_SWAT", 0);
   KNOB_ENABLE_SWAT_WAYS_OVERWRITE = iniReader->GetInteger("SWAT", "ENABLE_SWAT_WAYS_OVERWRITE", 0);
+  KNOB_ADDRESS_RANDOMIZATION = iniReader->GetInteger("SIMULATOR", "ENABLE_ADDRESS_RANDOMIZATION", 0);
 
   std::cout << "Extra settings:\n";
   iniReader->print();
@@ -623,6 +626,17 @@ int main(int argc, char** argv)
   if(process_page_table != nullptr)
     process_page_table->init();
   
+  // supporting 16 threads, asid for each
+  std::random_device rd;
+  std::mt19937_64 engine(rd());
+  std::uniform_int_distribution<uint64_t> dist;
+  for(int i=0; i< 16; i++)
+  {
+    uint64_t random_64bit_num = dist(engine);
+    uint64_t mask = (1ULL << 48) - 1;
+    random_64bit_num = random_64bit_num & mask;
+    asid.push_back(random_64bit_num);
+  }
   backtracklog = BacktrackLog(KNOB_ENABLE_LOG);
 
   printf("Simulator Configuration\n%s", instantiation_code);

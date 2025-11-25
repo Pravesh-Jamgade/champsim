@@ -40,6 +40,7 @@ extern POMTLB* pomtlb;
 extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 extern BacktrackLog backtracklog;
+extern vector<uint64_t> asid;
 /*
 ** SWAT **
 1. Test translation cache block occupancy
@@ -861,7 +862,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       // generate phy address for POMTLB
       PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
       uint64_t pomtlb_base = ptw->get_pomtlb_baseaddr();
-      pomtlb_base += (handle_pkt.address ^ ptw->asid[handle_pkt.thread_id]);
+      pomtlb_base += (handle_pkt.address ^ asid[handle_pkt.thread_id]);
       // update address to pomtlb address
       handle_pkt.address = pomtlb_base;
       int cpu_id = cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id;
@@ -1032,7 +1033,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
   // {
   //     PageTableWalker* ptw = (PageTableWalker*)lower_level->getObject();
   //     uint64_t pomtlb_base = ptw->get_pomtlb_baseaddr();
-  //     pomtlb_base += (handle_pkt.address ^ ptw->asid[handle_pkt.thread_id]);
+  //     pomtlb_base += (handle_pkt.address ^ asid[handle_pkt.thread_id]);
 
   //     PACKET newPacket = handle_pkt;
   //     newPacket.address = pomtlb_base;
