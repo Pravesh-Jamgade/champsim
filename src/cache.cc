@@ -1238,12 +1238,12 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
         if(!is_tlb)
         {
           // track evicted cache line
-          cacheDataModel->eviction_tracker_obj.func_track_eviction_data(fill_block.v_address >> (LOG2_BLOCK_SIZE), cpu_id);
+          cacheDataModel->eviction_tracker_obj.func_track_eviction_data(fill_block.v_address >> (LOG2_BLOCK_SIZE), cpu_id, fill_block.dtype);
         }
         else
         {
           // track evicted pte
-          cacheDataModel->eviction_tracker_obj.func_track_eviction_data(fill_block.v_address >> (LOG2_PAGE_SIZE), cpu_id);
+          cacheDataModel->eviction_tracker_obj.func_track_eviction_data(fill_block.v_address >> (LOG2_PAGE_SIZE), cpu_id, fill_block.dtype);
         }
 
         // tracking type of cache block being dropped

@@ -8,7 +8,6 @@ FillTracker::func_track_fill_data(uint64_t v_addr, int cpuid, DataType dtype)
     data d;
     d.fills = 1;
     d.type = dtype;
-    d.fill_dtype[dtype] = 1;
 
     Key key{v_addr, cpuid};
     auto it = page_and_cache_block_tracker.find(key);
@@ -19,7 +18,6 @@ FillTracker::func_track_fill_data(uint64_t v_addr, int cpuid, DataType dtype)
     }
     // page or block found
     ++(it->second.fills);
-    ++(it->second.fill_dtype[dtype]);
     return {it, false};
 }
 

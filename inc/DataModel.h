@@ -5,6 +5,7 @@
 #include "user.h"
 #include "hist.h"
 #include <iomanip>
+#include <string>
 
 using namespace std;
 
@@ -96,13 +97,17 @@ enum MISS
 class EvictionTracker
 {
 public:
+    struct data {
+        int type=DataType::INVALID;
+        int evicts = 0;
+    };
 
 using Key = std::tuple<uint64_t, int>;
-    std::map<Key, int> pte_eviction_tracker;
+    std::map<Key, data> pte_eviction_tracker;
     EvictionTracker();
 
-    std::pair<std::map<Key, int>::iterator, bool>
-    func_track_eviction_data(uint64_t v_addr, int cpuid);
+    std::pair<std::map<Key, data>::iterator, bool>
+    func_track_eviction_data(uint64_t v_addr, int cpuid, DataType dtype);
 
     bool func_lookup_eviction_data(uint64_t v_addr, int cpuid);
 };
@@ -113,7 +118,6 @@ class FillTracker
     struct data {
         int type=DataType::INVALID;
         int fills = 0;
-        int fill_dtype[DataType::DataType_end] = {0};
     };
     
     using Key = std::tuple<uint64_t, int>;
@@ -209,6 +213,7 @@ class CacheDataModel
             exception_bounds.push_back({151,200});
             exception_bounds.push_back({201, 10000});
             page_reuse_hist = new Hist(2, 5, 10, exception_bounds);
+            tblock_reuse_hist = new Hist(2, 5, 10, exception_bounds);
             fill_hist = new Hist(2, 5, 10, exception_bounds);
         }
 
@@ -257,6 +262,7 @@ class CacheDataModel
     // cacheblock, cpu -- freq
     map<tuple<uint64_t, int>, uint64_t> page_reuse_helper_for_hist;
     Hist* page_reuse_hist;
+    Hist* tblock_reuse_hist;
 
     // miss recorded to fulfill mshr
     Hist* miss_fulfilled_latency;
@@ -286,10 +292,12 @@ class CacheDataModel
         cout << "====================================================\n";
         for(auto entry: eviction_tracker_obj.pte_eviction_tracker)
         {
-            eviction_hist->add_data_freq(entry.second, 1);
+            eviction_hist->add_data_freq(entry.second.evicts, 1);
         }
         cout << NAME << " Page or Block Repeated Evictions \n";
         eviction_hist->print_histogram("page-or-block-repeated-eviction");
+
+        bool is_in_cache = NAME.find("TLB") == string::npos;
 
         for(auto entry: fill_tracker_obj.page_and_cache_block_tracker)
         {
@@ -298,26 +306,21 @@ class CacheDataModel
             // frequency of such page/cache-blocks
             if(data>0)
             page_reuse_hist->add_data_freq(data, 1);
+
+            if(is_in_cache && entry.second.type== 1)
+                tblock_reuse_hist->add_data_freq(data, 1);
+            
         }
         cout << NAME << " Page or Block Repeated Fills for Use \n";
         page_reuse_hist->print_histogram("page-or-block-reuse");
 
-        // array<map<int, int>, DataType::DataType_end> dtype_reuse_freq;
-        // for (auto entry : fill_tracker_obj.page_and_cache_block_tracker)
-        // {
-        //     for (int dtype = 0; dtype < DataType::DataType_end; ++dtype)
-        //     {
-        //         int fills = entry.second.fill_dtype[dtype];
-        //         if (fills > 0)
-        //         {
-        //             dtype_reuse_freq[dtype][fills]++;
-        //         }
-        //     }
-        // }
+        if(is_in_cache)
+        {
+            cout << NAME << " tblock Repeated Fills for Use \n";
+            tblock_reuse_hist->print_histogram("tblock-reuse");
+        }
         
-        // vector<string> dtype_labels(data_type_str, data_type_str + DataType::DataType_end);
-        // cout << NAME << " Page or Block Repeated Fills for Use by Dtype \n";
-        // fill_hist->print_histogram_matrix("page-or-block-reuse-dtype", dtype_labels, dtype_reuse_freq);
+
         cout << "====================================================\n";
     }
 
