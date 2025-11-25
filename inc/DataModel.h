@@ -102,25 +102,24 @@ public:
         int evicts = 0;
     };
 
-using Key = std::tuple<uint64_t, int>;
+using Key = std::tuple<uint64_t, int, int>;
     std::map<Key, data> pte_eviction_tracker;
     EvictionTracker();
 
     std::pair<std::map<Key, data>::iterator, bool>
     func_track_eviction_data(uint64_t v_addr, int cpuid, DataType dtype);
 
-    bool func_lookup_eviction_data(uint64_t v_addr, int cpuid);
+    bool func_lookup_eviction_data(uint64_t v_addr, int cpuid, DataType dtype);
 };
 
 class FillTracker
 {
     public:
     struct data {
-        int type=DataType::INVALID;
         int fills = 0;
     };
     
-    using Key = std::tuple<uint64_t, int>;
+    using Key = std::tuple<uint64_t, int, DataType>;
     // track working set for counting capacity misses
     // vaddress, cpuid -- bitset
     map<Key, data> page_and_cache_block_tracker;
@@ -132,7 +131,7 @@ class FillTracker
     func_track_fill_data(uint64_t v_addr, int cpuid, DataType dtype);
  
     std::pair<std::map<Key, data>::iterator, bool>  
-    func_lookup_fill_data(uint64_t v_addr, int cpuid);     
+    func_lookup_fill_data(uint64_t v_addr, int cpuid, DataType dtype);     
 };
 
 
@@ -307,7 +306,7 @@ class CacheDataModel
             if(data>0)
             page_reuse_hist->add_data_freq(data, 1);
 
-            if(is_in_cache && entry.second.type== 1)
+            if(is_in_cache && get<2>(entry.first)== 1)
                 tblock_reuse_hist->add_data_freq(data, 1);
             
         }

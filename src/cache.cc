@@ -1124,6 +1124,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.ip = 0;
       writeback_packet.type = WRITEBACK;
       writeback_packet.thread_id = fill_block.thread_id;
+      writeback_packet.dtype = fill_block.dtype;
 
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)
@@ -1286,7 +1287,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
 
       if(is_tlb)
       {
-        auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(page_addr, cpuid);
+        auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(page_addr, cpuid, DataType::PTE);
         if(entry_found) {
           cacheDataModel->category_of_misses[MISS::CAP]++;
         }
@@ -1298,7 +1299,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       }
       else
       {
-        auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(cache_block_addr, cpuid);
+        auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(cache_block_addr, cpuid, handle_pkt.dtype);
         if(entry_found) {
           cacheDataModel->category_of_misses[MISS::CAP]++;
         }
@@ -2286,7 +2287,7 @@ void CACHE::func_track_workingset(uint64_t addr, int cpuid, DataType dtype)
   
   if(is_tlb)
   {
-    auto [page_it, found_page] =  cacheDataModel->fill_tracker_obj.func_track_fill_data(page_addr, cpuid, dtype);
+    auto [page_it, found_page] =  cacheDataModel->fill_tracker_obj.func_track_fill_data(page_addr, cpuid, DataType::PTE);
   }
   else
   { 

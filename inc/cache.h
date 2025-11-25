@@ -238,7 +238,7 @@ public:
     // return false;
 
     uint64_t page = addr >> (LOG2_PAGE_SIZE);
-    return cacheDataModel->eviction_tracker_obj.func_lookup_eviction_data(page, cpu);
+    return cacheDataModel->eviction_tracker_obj.func_lookup_eviction_data(page, cpu, DataType::PTE);
   }
 
   int add_to_cluster(PACKET* packet);

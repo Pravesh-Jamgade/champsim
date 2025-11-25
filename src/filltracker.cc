@@ -7,9 +7,8 @@ FillTracker::func_track_fill_data(uint64_t v_addr, int cpuid, DataType dtype)
 {
     data d;
     d.fills = 1;
-    d.type = dtype;
 
-    Key key{v_addr, cpuid};
+    Key key{v_addr, cpuid, dtype};
     auto it = page_and_cache_block_tracker.find(key);
     // page or block not found
     if (it == page_and_cache_block_tracker.end()) {
@@ -22,9 +21,9 @@ FillTracker::func_track_fill_data(uint64_t v_addr, int cpuid, DataType dtype)
 }
 
 std::pair<std::map<FillTracker::Key, FillTracker::data>::iterator, bool> 
-FillTracker::func_lookup_fill_data(uint64_t v_addr, int cpuid)
+FillTracker::func_lookup_fill_data(uint64_t v_addr, int cpuid, DataType dtype)
 {
-    Key key{v_addr, cpuid};
+    Key key{v_addr, cpuid, dtype};
     auto it = page_and_cache_block_tracker.find(key);
     return {it, it != page_and_cache_block_tracker.end()};
 }
