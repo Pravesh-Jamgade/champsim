@@ -238,7 +238,8 @@ public:
     // return false;
 
     uint64_t page = addr >> (LOG2_PAGE_SIZE);
-    return cacheDataModel->eviction_tracker_obj.func_lookup_eviction_data(page, cpu, DataType::PTE);
+    // for TLB data type is invalid
+    return cacheDataModel->eviction_tracker_obj.func_lookup_eviction_over_threshold(page, cpu, DataType::INVALID);
   }
 
   int add_to_cluster(PACKET* packet);

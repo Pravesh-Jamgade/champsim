@@ -23,3 +23,12 @@ bool EvictionTracker::func_lookup_eviction_data(uint64_t v_addr, int cpuid, Data
     Key key{v_addr, cpuid, dtype};
     return pte_eviction_tracker.find(key) != pte_eviction_tracker.end();
 }
+
+bool EvictionTracker::func_lookup_eviction_over_threshold(uint64_t v_addr, int cpuid, DataType dtype)
+{
+    Key key{v_addr, cpuid, dtype};
+    auto foundEntry = pte_eviction_tracker.find(key);
+    if(foundEntry == pte_eviction_tracker.end())
+        return false;
+    return foundEntry->second.evicts > 2;
+}

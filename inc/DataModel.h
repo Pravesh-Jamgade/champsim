@@ -110,6 +110,7 @@ using Key = std::tuple<uint64_t, int, int>;
     func_track_eviction_data(uint64_t v_addr, int cpuid, DataType dtype);
 
     bool func_lookup_eviction_data(uint64_t v_addr, int cpuid, DataType dtype);
+    bool func_lookup_eviction_over_threshold(uint64_t v_addr, int cpuid, DataType dtype);
 };
 
 class FillTracker
