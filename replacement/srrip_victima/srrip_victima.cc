@@ -17,54 +17,42 @@ uint32_t CACHE::find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const
   // look for the maxRRPV line && make sure we dont give out sector line
   auto begin = std::next(std::begin(block), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
-  auto victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV;}); // hijack the lru field
 
-  // search until we get maxRRPV value block
-  while (victim == end) 
-  {
-    // increase lru
-    for (auto it = begin; it != end; ++it)
-    {
-      it->lru++;
-    }
-    victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV;});
-  }
-
-  // found victima_block, reduce srrip value once
-  if(victim->victima_block)
-  {
-    victim->lru--;
-  }
-
-  // Try to get normal block if possible
+  // Try to get NormalBlock if possible
   int k_times = 5;
   while(k_times--)
   {
-    // if normal block then simply return
-    if(!victim->victima_block)
-    {
-      return std::distance(begin, victim);
-    }
-
     // if victima block then try k times to get normal block
     for (auto it = begin; it != end; ++it)
     {
+      // VictimaBlock
       if(it->victima_block) continue;
+      // NormalBlock
       if(it->lru >= maxRRPV) continue;
       it->lru++;
     }
 
-    victim = std::find_if(begin, end, [](BLOCK x) {return x.lru == maxRRPV;});
+    auto victim = std::find_if(begin, end, [](BLOCK x) {return x.lru == maxRRPV;});
+
+    // if NormalBlock then simply return
+    for(; victim != end; victim++)
+    {
+      if(!victim->victima_block)
+        return std::distance(begin, victim);
+    }
   }
 
   // search until we get maxRRPV value block
+  auto victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV;});
   while (victim == end) 
   {
     // increase lru
     for (auto it = begin; it != end; ++it)
     {
+      if(it->lru >= maxRRPV) break;
       it->lru++;
     }
+
     victim = std::find_if(begin, end, [](BLOCK x) { return x.lru == maxRRPV;});
   }
 

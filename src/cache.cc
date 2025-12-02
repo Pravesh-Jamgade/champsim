@@ -245,10 +245,6 @@ void CACHE::handle_fill()
         
         way = impl_replacement_find_victim(fill_mshr->cpu, fill_mshr->instr_id, set, &block.data()[set * NUM_WAY], fill_mshr->ip, fill_mshr->address,
                                           fill_mshr->type);
-        if(way == NUM_WAY)
-        {
-          exit(-1);
-        }
       }
     }
     
