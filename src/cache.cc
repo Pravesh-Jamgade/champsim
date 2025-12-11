@@ -396,7 +396,7 @@ void CACHE::handle_read()
     uint32_t set = get_set(handle_pkt.type, handle_pkt.address, handle_pkt.vflag[VF::victima]);
     uint32_t way = get_way(handle_pkt.type, handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
    
-    bool hit = way < NUM_WAY;
+    bool hit = check_if_it_is_hit(set, way, handle_pkt);
     
     // if victima lookup is hit, then check whether valid PTE is present in block. If not, that means it is not page-faulted yet.
     BLOCK* hit_block = &block[set * NUM_WAY + way];
@@ -646,6 +646,10 @@ void CACHE::readlike_hit(std::size_t set, std::size_t way, PACKET& handle_pkt)
   if(hit_block.came_from_request == PREFETCH)
     prefetch_hit_histo[set*NUM_WAY+way][READ_HIT]++;
 
+
+  // if(cache_id == IS_STLB)
+  //   cout << "Readlike Hit, " << NAME << ", " << current_cycle << ", addr, " << intToHex(handle_pkt.address) << ", instr, " << handle_pkt.instr_id << '\n'; 
+
   func_track_hit_access_latency(handle_pkt.type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE], handle_pkt.vflag[VF::victima]);
   dataflow.log(current_cycle, NAME, "hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), '\n');    
   backtracklog.track(current_cycle, NAME, "hit", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "data", intToHex(handle_pkt.data), '\n');    
@@ -707,12 +711,18 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
   });
 
   // check mshr
+  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, use_offset(handle_pkt.type), handle_pkt.thread_id, false));
+  bool found_mshr_entry = mshr_entry != MSHR.end();
+  
+  // check thread; dont check if it is a PREFETCH packet
   bool check_thread_id = is_tlb || (KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]);
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, use_offset(handle_pkt.type), handle_pkt.thread_id, check_thread_id));
+  if(found_mshr_entry && check_thread_id && handle_pkt.type != PREFETCH)
+    found_mshr_entry = (mshr_entry->thread_id == handle_pkt.thread_id);
+
   bool mshr_full = (MSHR.size() == MSHR_SIZE);
 
   // usercode
-  if (mshr_entry != MSHR.end() && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) // miss already inflight
+  if (found_mshr_entry && !(cache_is[CACHE_ID::IS_STLB] &&  KNOB_STLB_DO_NOT_TRACK_MISS)) // miss already inflight
   {
     dataflow.log(current_cycle, NAME, "merge-mshr", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", handle_pkt.type==TRANSLATION, "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
     backtracklog.track(current_cycle, NAME, "merge-mshr", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", handle_pkt.type==TRANSLATION, "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
@@ -1365,9 +1375,9 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     
     fill_block.page_table_entries = handle_pkt.page_table_entries;
 
-    // if(fill_block.valid && fill_block.translation_level_if_pagetable_block==-1 && set == 351)
-    if(cache_id==IS_L2)
-    debugLog.log(current_cycle, NAME, "Insert", "set", set, "way", way, "addr", intToHex(fill_block.address), intToHex(fill_block.v_address), "sector", fill_block.sectorHolder.is_sector_line, "victima", handle_pkt.vflag[VF::victima], "Request", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "instr", handle_pkt.instr_id, '\n');
+    // // if(fill_block.valid && fill_block.translation_level_if_pagetable_block==-1 && set == 351)
+    // if(cache_id==IS_L2)
+    // debugLog.log(current_cycle, NAME, "Insert", "set", set, "way", way, "addr", intToHex(fill_block.address), intToHex(fill_block.v_address), "sector", fill_block.sectorHolder.is_sector_line, "victima", handle_pkt.vflag[VF::victima], "Request", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "instr", handle_pkt.instr_id, '\n');
 
     // Part Testing Victima
     // // writing victima block
@@ -1587,7 +1597,8 @@ uint32_t CACHE::get_way(int type, uint64_t address, uint32_t set, int th, bool v
 
   auto begin = std::next(block.begin(), set * NUM_WAY);
   auto end = std::next(begin, NUM_WAY);
-  return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, offset, th, (is_tlb || (cache_is[IS_L2]&&victima)) )));
+  bool check_thread = (is_tlb || (cache_is[IS_L2]&&victima));
+  return std::distance(begin, std::find_if(begin, end, eq_addr<BLOCK>(address, offset, th,  check_thread)));
 }
 
 uint64_t CACHE::use_offset(int type)
@@ -1616,6 +1627,8 @@ int CACHE::invalidate_entry(uint64_t inval_addr)
 
 int CACHE::add_rq(PACKET* packet)
 {
+
+
   #ifdef TQ
   if(KNOB_TRANSLATION_QUEUE && packet->type == TRANSLATION)
   {
@@ -1662,7 +1675,7 @@ int CACHE::add_rq(PACKET* packet)
     RQ_TO_CACHE++;
     return TQ.occupancy();
   }
-  #endif
+  #endif  
 
   cacheDataModel->rd_queue[Basic::REQUESTED]++;
   // assert(packet->address != 0);
@@ -2444,4 +2457,22 @@ int CACHE::func_valid_pompte_count(const PACKET& handle_pkt)
     }
   }
   return count;
+}
+
+// if thread match then hit, otherwise if block is brought in by PREFETCH then dont check thread id
+// check_tid : set True for TLB, victima_l2 or sector caches 
+bool CACHE::check_if_it_is_hit(uint32_t set, uint32_t way, PACKET packet)
+{             
+  bool test = (packet.vflag[VF::victima] && cache_is[IS_L2]) ||   //victima at L2 --> same for sector
+              (is_tlb); // is a tlb
+
+  bool hit = way < NUM_WAY;
+  bool is_prefetch = block[set * NUM_WAY + way].came_from_request == PREFETCH;
+  if(test && is_prefetch)
+  {
+    int block_tid = block[set * NUM_WAY + way].thread_id;
+    hit = hit && (packet.thread_id == block_tid || is_prefetch);
+  }
+  
+  return hit;
 }

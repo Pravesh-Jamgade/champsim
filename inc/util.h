@@ -47,7 +47,8 @@ struct eq_addr {
   bool operator()(const argument_type& test)
   {
     is_valid<argument_type> validtest;
-    return validtest(test) && ((test.address >> shamt) == (val >> shamt)) && (is_tlb ? (test.thread_id == thread_id || test.thread_id == -1): 1);
+    
+    return validtest(test) && ((test.address >> shamt) == (val >> shamt)); //&& (is_tlb ? (test.thread_id == thread_id || test.thread_id == -1): 1
   }
 };
 

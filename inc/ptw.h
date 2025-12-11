@@ -68,6 +68,7 @@ public:
   };
 
   logger debugLog;
+  logger dataflowLog;
   logger dlog;
   Track track;
 

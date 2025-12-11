@@ -190,6 +190,8 @@ public:
 
   CacheBlock* func_test_page_table(BLOCK& fill_block);
 
+  bool check_if_it_is_hit(uint32_t set, uint32_t way, PACKET packet);
+
   int get_pte_offset(uint64_t addr)
   {
     return ((addr >> 3) & 0x7);
@@ -437,7 +439,7 @@ public:
 
     block.resize(NUM_WAY * NUM_SET);
     
-    debugLog = logger(false);
+    debugLog = logger(true);
     dlog = logger(false);
     dataflow = logger(false);
     dassert = logger(true);

@@ -44,16 +44,21 @@ tracereader::tracereader(uint8_t cpu, std::string _ts, bool live_trace) : cpu(cp
       decomp_program = "gzip";
     else if (last_dot[1] == 'x') // xz
       decomp_program = "xz";
+    else if (last_dot[1] == 'z') // for zip
+      decomp_program = "unzip";
     else {
       std::cout << "ChampSim does not support traces other than gz or xz compression!" << std::endl;
       assert(0);
     }
-
     trace_open(trace_string);
   }
   else
   {
-    trace_open(trace_string, 1);
+    trace_file = popen(trace_string.c_str(), "r");
+    if (trace_file == NULL) {
+      std::cerr << std::endl << "*** CANNOT OPEN TRACE FILE: " << trace_string << " ***" << std::endl;
+      assert(0);
+    }
   }
   
 }
@@ -80,27 +85,38 @@ ooo_model_instr tracereader::read_single_instr()
   }
   else
   {
-    auto stall_start = std::chrono::steady_clock::now();
-    constexpr std::chrono::seconds stall_timeout(5);
-
-    while (buf->tail == buf->head) {
-      usleep(10); // buffer empty
-
-      if (std::chrono::steady_clock::now() - stall_start > stall_timeout) {
-        std::cerr << "Live trace producer inactive for " << stall_timeout.count()
-                  << "s; aborting to avoid hang." << std::endl;
-        assert(0);
-      }
+    while (!fread(&trace_read_instr, sizeof(T), 1, trace_file)) {
+      // reached end of file for this trace
+      std::cout << "*** Reached end of trace: " << trace_string << std::endl;
+  
+      // close the trace file and re-open it
+      close();
+      trace_open(trace_string);
+      
     }
-
-    stall_start = std::chrono::steady_clock::now();
-    input_instr* te = (input_instr*)&buf->buffer[buf->tail];
-    __sync_synchronize(); // memory barrier
-    buf->tail = (buf->tail + 1) % TRACE_BUF_CAP;
-    // copy the instruction into the performance model's instruction format
-    ooo_model_instr retval(cpu, *te);
-    instr_count++;
+    ooo_model_instr retval(cpu, trace_read_instr);
     return retval;
+    // auto stall_start = std::chrono::steady_clock::now();
+    // constexpr std::chrono::seconds stall_timeout(5);
+
+    // while (buf->tail == buf->head) {
+    //   usleep(10); // buffer empty
+
+    //   if (std::chrono::steady_clock::now() - stall_start > stall_timeout) {
+    //     std::cerr << "Live trace producer inactive for " << stall_timeout.count()
+    //               << "s; aborting to avoid hang." << std::endl;
+    //     assert(0);
+    //   }
+    // }
+
+    // stall_start = std::chrono::steady_clock::now();
+    // input_instr* te = (input_instr*)&buf->buffer[buf->tail];
+    // __sync_synchronize(); // memory barrier
+    // buf->tail = (buf->tail + 1) % TRACE_BUF_CAP;
+    // // copy the instruction into the performance model's instruction format
+    // ooo_model_instr retval(cpu, *te);
+    // instr_count++;
+    // return retval;
   }
 }
 

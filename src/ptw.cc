@@ -32,7 +32,8 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       llcObject(llc)
 {
 
-  debugLog = logger(false);
+  debugLog = logger(true);
+  dataflowLog = logger(false);
   dlog = logger(false);
   ptw_datamodel = new PTWDataModel(cpu);
   fill_counters.resize(5);
@@ -90,7 +91,7 @@ void PageTableWalker::handle_read()
       continue;
     }
 
-    debugLog.log(current_cycle, NAME, "Retry-With-PTW", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "pom", handle_pkt.pomflag[POM::POM], "pommiss", handle_pkt.pomflag[POM::POM_MISS], "pom_to_ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "pom_to_ptw_fini", handle_pkt.pomflag[POM::POM_TO_PTW_FINI], '\n');
+    dataflowLog.log(current_cycle, NAME, "Retry-With-PTW", intToHex(handle_pkt.address), intToHex(handle_pkt.v_address), "pom", handle_pkt.pomflag[POM::POM], "pommiss", handle_pkt.pomflag[POM::POM_MISS], "pom_to_ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "pom_to_ptw_fini", handle_pkt.pomflag[POM::POM_TO_PTW_FINI], '\n');
 
     // CR3_addr.push_back(vmem.get_pte_pa(cpu * KNOB_SMT_ENABLE + handle_pkt.thread_id, 0, vmem.pt_levels).first);
 
@@ -136,7 +137,7 @@ void PageTableWalker::handle_read()
         if (auto check_addr = pscl->check_hit(next_pt_addr, handle_pkt.v_address, handle_pkt.thread_id); check_addr.has_value()) 
         {
           // if(handle_pkt.vflag[victima_stlbevict_ptw])
-          debugLog.log("PSC-Hit", current_cycle, "level-"+to_string(ptw_level),"VP", intToHex(handle_pkt.v_address), "next_pte_addr", intToHex(next_pt_addr), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
+          dataflowLog.log("PSC-Hit", current_cycle, "level-"+to_string(ptw_level),"VP", intToHex(handle_pkt.v_address), "next_pte_addr", intToHex(next_pt_addr), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, '\n');
 
           miss_at_root = false;
           ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
@@ -201,7 +202,7 @@ void PageTableWalker::handle_read()
         return;
       
       // // if(handle_pkt.vflag[victima_stlbevict_ptw])
-      debugLog.log("PTW-sent", current_cycle,  "level-"+to_string(ptw_level),"VP", intToHex(packet.v_address), "next_pte_addr", intToHex(packet.address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, "pomtoptw", packet.pomflag[POM::POM_TO_PTW], "original_pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], '\n');
+      dataflowLog.log("PTW-sent", current_cycle,  "level-"+to_string(ptw_level),"VP", intToHex(packet.v_address), "next_pte_addr", intToHex(packet.address), "instr", handle_pkt.instr_id, "t", handle_pkt.thread_id, "pomtoptw", packet.pomflag[POM::POM_TO_PTW], "original_pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], '\n');
 
       // Track PTW
       if(track.stop == 0)
@@ -340,7 +341,7 @@ void PageTableWalker::handle_fill()
 
         if(fill_mshr->state == State::PTW_FILL)
         {
-          debugLog.log("PTW-fill", current_cycle, "level-"+to_string((int)fill_mshr->translation_level),"VP", intToHex(fill_mshr->v_address), "next_pte_addr", intToHex(addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, "hw", hit_where_str[fill_mshr->hit_where], "ori_pom2ptw", fill_mshr->pomflag[POM::POM_TO_PTW], '\n');
+          dataflowLog.log("PTW-fill", current_cycle, "level-"+to_string((int)fill_mshr->translation_level),"VP", intToHex(fill_mshr->v_address), "next_pte_addr", intToHex(addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, "hw", hit_where_str[fill_mshr->hit_where], "ori_pom2ptw", fill_mshr->pomflag[POM::POM_TO_PTW], '\n');
 
           ptw_datamodel->matrix_cache_to_ptwlevel_hits[fill_mshr->translation_level][fill_mshr->hit_where]++;
           fill_counters[fill_mshr->translation_level]++;
@@ -379,7 +380,7 @@ void PageTableWalker::handle_fill()
             if (auto check_addr = pscl->check_hit(next_pt_addr, fill_mshr->v_address, fill_mshr->thread_id); check_addr.has_value()) 
             {
               // if(fill_mshr->vflag[victima_stlbevict_ptw])
-              debugLog.log( "PSC-Hit", current_cycle,"level-"+to_string(ptw_level), "VP", intToHex(fill_mshr->v_address), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, '\n');
+              dataflowLog.log( "PSC-Hit", current_cycle,"level-"+to_string(ptw_level), "VP", intToHex(fill_mshr->v_address), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, '\n');
               ptw_datamodel->queue_psc_hit_metric[ptw_level]++;
               next_pt_addr = check_addr.value();
 
@@ -422,7 +423,7 @@ void PageTableWalker::handle_fill()
             if (rq_index != -2) 
             {
               // if(fill_mshr->vflag[victima_stlbevict_ptw])
-              debugLog.log("PTW-sent", current_cycle, "level-"+to_string(ptw_level),"VA", intToHex(fill_mshr->v_address), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, "pom_to_ptw", packet.pomflag[POM::POM_TO_PTW], "original_pom2ptw", fill_mshr->pomflag[POM::POM_TO_PTW], '\n');
+              dataflowLog.log("PTW-sent", current_cycle, "level-"+to_string(ptw_level),"VA", intToHex(fill_mshr->v_address), "next_pte_addr", intToHex(next_pt_addr), "instr", fill_mshr->instr_id, "t", fill_mshr->thread_id, "pom_to_ptw", packet.pomflag[POM::POM_TO_PTW], "original_pom2ptw", fill_mshr->pomflag[POM::POM_TO_PTW], '\n');
               fill_mshr->event_cycle = std::numeric_limits<uint64_t>::max();
               fill_mshr->page_table_base_address = addr;
 

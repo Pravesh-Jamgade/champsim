@@ -577,18 +577,47 @@ int main(int argc, char** argv)
 
   if(KNOB_LIVE_INPUT)
   {
-    traces.push_back(get_tracereader<input_instr>(trace_shared_buff, traces.size(), knob_cloudsuite, true));
-    cout << "[Log]Trace Reading, " << trace_shared_buff << '\n';
-    // reading memoryhog trace
-    // one trace already read via live input from pintool, hence KNOB_SMT_ENABLE-1
-    int get_trace_index = optind;
-    for(int trace_id=1; trace_id < KNOB_SMT_ENABLE; trace_id++)
-    {
-      traces.push_back(get_tracereader<input_instr>(argv[get_trace_index], traces.size(), knob_cloudsuite));
-      cout << "[Log]Trace Reading, " << argv[get_trace_index] << '\n';
+    // ** Old live trace feeder style via external python process ** //
 
-      get_trace_index++;
+    // traces.push_back(get_tracereader<input_instr>(trace_shared_buff, traces.size(), knob_cloudsuite, true));
+    // cout << "[Log]Trace Reading, " << trace_shared_buff << '\n';
+    // // reading memoryhog trace
+    // // one trace already read via live input from pintool, hence KNOB_SMT_ENABLE-1
+    // int get_trace_index = optind;
+    // for(int trace_id=1; trace_id < KNOB_SMT_ENABLE; trace_id++)
+    // {
+    //   traces.push_back(get_tracereader<input_instr>(argv[get_trace_index], traces.size(), knob_cloudsuite));
+    //   cout << "[Log]Trace Reading, " << argv[get_trace_index] << '\n';
+
+    //   get_trace_index++;
+    // }
+
+    // ** Newer Approach ** //
+    // Read Pintool input
+    string input_str = "";
+    vector<string> input_traces_list;
+    int index = 0;
+    for(int i=optind; i< argc; i++)
+    {
+      // separator hit
+      if(string(argv[i]) == "X")
+      {
+        index++;
+        cout << "Trace source " << index << " : " << input_str << '\n'; 
+        traces.push_back(get_tracereader<input_instr>(input_str, traces.size(), knob_cloudsuite, 1));
+        input_traces_list.push_back(input_str);
+        input_str = "";
+        continue;
+      }
+      
+      input_str += " "  + string(argv[i]);
     }
+
+    for(int i=0; i< index; i++)
+    {
+      cout << "Log: " << input_traces_list[i] << '\n';
+    }
+    
   }
   else
   {
@@ -612,7 +641,6 @@ int main(int argc, char** argv)
       }
     }
   }
-  
 
   if (traces.size() != total_cores) {
     printf("\n*** Not enough traces for the configured number of cores ***\n\n");

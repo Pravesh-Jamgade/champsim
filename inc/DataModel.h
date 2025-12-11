@@ -168,7 +168,14 @@ class CacheDataModel
             exception_bounds.push_back({50, 100});
             exception_bounds.push_back({101, 150});
             exception_bounds.push_back({151, 200});
-            exception_bounds.push_back({201, 0x7fffffff});
+            exception_bounds.push_back({201, 250});
+            exception_bounds.push_back({251, 300});
+            exception_bounds.push_back({301, 350});
+            exception_bounds.push_back({351, 400});
+            exception_bounds.push_back({401, 450});
+            exception_bounds.push_back({451, 500});
+            exception_bounds.push_back({500, 550});
+            exception_bounds.push_back({551, 0x7fffffff});
 
             hit_access_latency = new Hist(1,5,8,exception_bounds);
             victima_access_latency_at_l2 = new Hist(1,5,8,exception_bounds);
@@ -208,10 +215,18 @@ class CacheDataModel
             exception_bounds.push_back({6,6});
             exception_bounds.push_back({7,7});
             exception_bounds.push_back({8,8});
-            exception_bounds.push_back({50,100});
-            exception_bounds.push_back({101,150});
-            exception_bounds.push_back({151,200});
-            exception_bounds.push_back({201, 10000});
+            
+            exception_bounds.push_back({50, 100});
+            exception_bounds.push_back({101, 150});
+            exception_bounds.push_back({151, 200});
+            exception_bounds.push_back({201, 250});
+            exception_bounds.push_back({251, 300});
+            exception_bounds.push_back({301, 350});
+            exception_bounds.push_back({351, 400});
+            exception_bounds.push_back({401, 450});
+            exception_bounds.push_back({451, 500});
+            exception_bounds.push_back({500, 550});
+            exception_bounds.push_back({551, 0x7fffffff});
             page_reuse_hist = new Hist(2, 5, 10, exception_bounds);
             tblock_reuse_hist = new Hist(2, 5, 10, exception_bounds);
             fill_hist = new Hist(2, 5, 10, exception_bounds);
@@ -227,10 +242,18 @@ class CacheDataModel
             exception_bounds.push_back({6,6});
             exception_bounds.push_back({7,7});
             exception_bounds.push_back({8,8});
-            exception_bounds.push_back({50,100});
-            exception_bounds.push_back({101,150});
-            exception_bounds.push_back({151,200});
-            exception_bounds.push_back({201, 10000});
+
+            exception_bounds.push_back({50, 100});
+            exception_bounds.push_back({101, 150});
+            exception_bounds.push_back({151, 200});
+            exception_bounds.push_back({201, 250});
+            exception_bounds.push_back({251, 300});
+            exception_bounds.push_back({301, 350});
+            exception_bounds.push_back({351, 400});
+            exception_bounds.push_back({401, 450});
+            exception_bounds.push_back({451, 500});
+            exception_bounds.push_back({500, 550});
+            exception_bounds.push_back({551, 0x7fffffff});
             eviction_hist = new Hist(2,5,10,exception_bounds);
         }
     }
