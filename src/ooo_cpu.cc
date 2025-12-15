@@ -40,6 +40,8 @@ void O3_CPU::operate()
 
 void O3_CPU::initialize_core()
 {
+  dlog = logger(true);
+
   // BRANCH PREDICTOR & BTB
   impl_branch_predictor_initialize();
   impl_btb_initialize();
@@ -59,6 +61,28 @@ void O3_CPU::initialize_core()
         uint8_t j = rng_next(state) % (i + 1);
         m_address_randomization_table[i] = m_address_randomization_table[j];
         m_address_randomization_table[j] = i;
+    }
+  }
+}
+
+void O3_CPU::func_verify_instr(ooo_model_instr arch_instr, int thread)
+{
+  if(arch_instr.is_memory)
+  {
+    bool found_addr = 0;
+    for(int i=0; i< MAX_INSTR_DESTINATIONS; i++)
+    {
+      if(arch_instr.destination_memory[i] > 0)
+        found_addr = 1;
+      
+      if(arch_instr.source_memory[i] > 0)
+        found_addr = 1;
+    }
+
+    if(found_addr == 0)
+    {
+      dlog.log(NAME, "memory instruction but no address found", arch_instr.is_memory, arch_instr.instr_id, intToHex(arch_instr.instruction_pa), '\n');
+      exit(1);
     }
   }
 }
@@ -274,6 +298,8 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
     arch_instr.num_reg_ops = 0;
   }
 
+  func_verify_instr(arch_instr);
+
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
 
@@ -294,7 +320,13 @@ void O3_CPU::do_check_dib(ooo_model_instr& instr)
   // Check DIB to see if we recently fetched this line
   auto dib_set_begin = std::next(DIB.begin(), ((instr.ip >> lg2(dib_window)) % dib_set) * dib_way);
   auto dib_set_end = std::next(dib_set_begin, dib_way);
-  auto way = std::find_if(dib_set_begin, dib_set_end, eq_addr<dib_t::value_type>(instr.ip, lg2(dib_window), instr.thread_id, true));
+  auto way = std::find_if(dib_set_begin, dib_set_end, [instr, this](auto& entry)
+  {
+    size_t shamt = log2(this->dib_window);
+    uint64_t a = instr.ip >> shamt;
+    uint64_t b = entry.address >> shamt;
+    return entry.valid && (entry.thread_id == instr.thread_id) && (a == b);
+  });// eq_addr<dib_t::value_type>(instr.ip, lg2(dib_window), instr.thread_id, true));
 
   if (way != dib_set_end) {
     // The cache line is in the L0, so we can mark this as complete
@@ -343,8 +375,6 @@ void O3_CPU::do_translate_fetch(champsim::circular_buffer<ooo_model_instr>::iter
   trace_packet.asid[1] = 0;
   trace_packet.to_return = {&ITLB_bus};
   trace_packet.thread_id = begin->thread_id;
-
-  assert(trace_packet.thread_id != -1);
 
   for (; begin != end; ++begin)
     trace_packet.instr_depend_on_me.push_back(begin);
@@ -476,7 +506,14 @@ void O3_CPU::do_dib_update(const ooo_model_instr& instr)
   // Search DIB to see if we need to add this instruction
   auto dib_set_begin = std::next(DIB.begin(), ((instr.ip >> lg2(dib_window)) % dib_set) * dib_way);
   auto dib_set_end = std::next(dib_set_begin, dib_way);
-  auto way = std::find_if(dib_set_begin, dib_set_end, eq_addr<dib_t::value_type>(instr.ip, lg2(dib_window), instr.thread_id, true));
+
+  auto way = std::find_if(dib_set_begin, dib_set_end, [instr, this](auto& entry)
+  {
+    size_t shamt = log2(this->dib_window);
+    uint64_t a = instr.ip >> shamt;
+    uint64_t b = entry.address >> shamt;
+    return entry.valid && (entry.thread_id == instr.thread_id) && (a == b);
+  });// eq_addr<dib_t::value_type>(instr.ip, lg2(dib_window), instr.thread_id, true));
 
   // If we did not find the entry in the DIB, find a victim
   if (way == dib_set_end) {
@@ -957,7 +994,6 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.lq_index_depend_on_me = {lq_it};
   data_packet.thread_id = lq_it->rob_index->thread_id;
 
-  assert(data_packet.thread_id!=-1);
   int rq_index = L1D_bus.lower_level->add_rq(&data_packet);
 
   if (rq_index != -2)
@@ -1159,7 +1195,6 @@ void O3_CPU::retire_rob()
         data_packet.asid[1] = sq_it->asid[1];
         data_packet.thread_id = sq_it->rob_index->thread_id;
 
-        assert(data_packet.thread_id!=-1);
         auto result = L1D_bus.lower_level->add_wq(&data_packet);
         if (result != -2) {
           ROB.front().destination_memory[i] = 0;

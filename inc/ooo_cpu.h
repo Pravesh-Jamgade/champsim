@@ -31,6 +31,9 @@ public:
 class O3_CPU : public champsim::operable
 {
 public:
+
+  logger dlog;
+  
   uint32_t cpu = 0;
 
   uint8_t m_address_randomization_table[256];
@@ -134,6 +137,8 @@ public:
   void print_deadlock() override;
 
   int prefetch_code_line(uint64_t pf_v_addr);
+
+  void func_verify_instr(ooo_model_instr arch_instr, int thread);
 
   uint64_t remapAddress(uint64_t va_page)
   {
