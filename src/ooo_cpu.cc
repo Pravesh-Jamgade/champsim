@@ -65,7 +65,7 @@ void O3_CPU::initialize_core()
   }
 }
 
-void O3_CPU::func_verify_instr(ooo_model_instr arch_instr, int thread)
+void O3_CPU::func_verify_instr(ooo_model_instr arch_instr)
 {
   if(arch_instr.is_memory)
   {
