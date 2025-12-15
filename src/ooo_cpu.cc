@@ -406,6 +406,10 @@ void O3_CPU::fetch_instruction()
   // line that initiated the translation
   auto l1i_req_begin =
       std::find_if(IFETCH_BUFFER.begin(), IFETCH_BUFFER.end(), [](const ooo_model_instr& x) { return x.translated == COMPLETED && !x.fetched; });
+
+  if(l1i_req_begin == IFETCH_BUFFER.end())
+    return;
+    
   uint64_t find_addr = l1i_req_begin->instruction_pa;
   auto l1i_req_end = std::find_if(l1i_req_begin, IFETCH_BUFFER.end(),
                                   [find_addr](const ooo_model_instr& x) { return (find_addr >> LOG2_BLOCK_SIZE) != (x.instruction_pa >> LOG2_BLOCK_SIZE); });
