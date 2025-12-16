@@ -854,6 +854,8 @@ int main(int argc, char** argv)
         
         cout << " instructions: " << ooo_cpu[i]->num_retired[th] - ooo_cpu[i]->begin_sim_instr
              << " cycles: " << ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle << endl;
+
+        cout << " null-pressure: " << ooo_cpu[i]->invalid_instr_count << '\n';
       }
       
       for (auto it = caches.rbegin(); it != caches.rend(); ++it)
