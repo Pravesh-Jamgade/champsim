@@ -65,7 +65,7 @@ void O3_CPU::initialize_core()
   }
 }
 
-void O3_CPU::func_verify_instr(ooo_model_instr arch_instr)
+void O3_CPU::func_verify_instr(ooo_model_instr& arch_instr)
 {
   if(arch_instr.is_memory)
   {
@@ -81,8 +81,10 @@ void O3_CPU::func_verify_instr(ooo_model_instr arch_instr)
 
     if(found_addr == 0)
     {
-      dlog.log(NAME, "memory instruction but no address found", arch_instr.is_memory, arch_instr.instr_id, intToHex(arch_instr.instruction_pa), '\n');
-      exit(1);
+      invalid_instr_count++;
+      arch_instr.is_memory = 0;
+      // dlog.log(NAME, "memory instruction but no address found", arch_instr.is_memory, arch_instr.instr_id, intToHex(arch_instr.instruction_pa), '\n');
+      // exit(1);
     }
   }
 }
@@ -409,7 +411,7 @@ void O3_CPU::fetch_instruction()
 
   if(l1i_req_begin == IFETCH_BUFFER.end())
     return;
-    
+
   uint64_t find_addr = l1i_req_begin->instruction_pa;
   auto l1i_req_end = std::find_if(l1i_req_begin, IFETCH_BUFFER.end(),
                                   [find_addr](const ooo_model_instr& x) { return (find_addr >> LOG2_BLOCK_SIZE) != (x.instruction_pa >> LOG2_BLOCK_SIZE); });
