@@ -65,26 +65,42 @@ void O3_CPU::initialize_core()
   }
 }
 
-void O3_CPU::func_verify_instr(ooo_model_instr& arch_instr)
+void O3_CPU::func_verify_instr(ooo_model_instr* arch_instr)
 {
-  if(arch_instr.is_memory)
+  if(arch_instr->is_memory)
   {
-    bool found_addr = 0;
+    bool found_src_addr = 0;
+    bool found_dst_addr = 0;
     for(int i=0; i< MAX_INSTR_DESTINATIONS; i++)
     {
-      if(arch_instr.destination_memory[i] > 0)
-        found_addr = 1;
-      
-      if(arch_instr.source_memory[i] > 0)
-        found_addr = 1;
+      if(arch_instr->destination_memory[i] > 0)
+      {
+        found_dst_addr =1;
+        break;
+      }
     }
 
-    if(found_addr == 0)
+    for(int i=0; i< NUM_INSTR_SOURCES; i++)
     {
-      invalid_instr_count++;
-      arch_instr.is_memory = 0;
-      // dlog.log(NAME, "memory instruction but no address found", arch_instr.is_memory, arch_instr.instr_id, intToHex(arch_instr.instruction_pa), '\n');
-      // exit(1);
+      if(arch_instr->source_memory[i] > 0)
+      {
+        found_src_addr =1;
+        break;
+      }
+    }
+
+    if(found_dst_addr)
+    {
+
+    }
+    else if(found_src_addr)
+    {
+
+    }
+    else
+    {
+      dlog.log("memory but no address found\n");
+      exit(0);
     }
   }
 }
@@ -300,7 +316,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
     arch_instr.num_reg_ops = 0;
   }
 
-  func_verify_instr(arch_instr);
+  func_verify_instr(&arch_instr);
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);

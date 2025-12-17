@@ -139,7 +139,7 @@ public:
 
   int prefetch_code_line(uint64_t pf_v_addr);
 
-  void func_verify_instr(ooo_model_instr& arch_instr);
+  void func_verify_instr(ooo_model_instr* arch_instr);
 
   uint64_t remapAddress(uint64_t va_page)
   {
