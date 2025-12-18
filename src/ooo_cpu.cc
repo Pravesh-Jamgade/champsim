@@ -95,11 +95,11 @@ void O3_CPU::func_verify_instr(ooo_model_instr* arch_instr)
 
     if(found_dst_addr)
     {
-      dlog.log("instr", arch_instr->instr_id, "dst_mem_addr", intToHex(mem_value), "ip", intToHex(arch_instr->ip), '\n');
+      dlog.log("instr", arch_instr->instr_id, "dst_mem_addr", intToHex(mem_value), "ip", intToHex(arch_instr->ip), "is_branch", arch_instr->is_branch, '\n');
     }
     else if(found_src_addr)
     {
-      dlog.log("instr", arch_instr->instr_id, "src_mem_addr", intToHex(mem_value), "ip", intToHex(arch_instr->ip), '\n');
+      dlog.log("instr", arch_instr->instr_id, "src_mem_addr", intToHex(mem_value), "ip", intToHex(arch_instr->ip), "is_branch", arch_instr->is_branch, '\n');
     }
     else
     {
