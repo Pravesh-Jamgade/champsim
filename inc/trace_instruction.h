@@ -27,19 +27,32 @@ struct context_instr {
   char context = '0'; 
 };
 
+// struct input_instr {
+//   // instruction pointer or PC (Program Counter)
+//   uint64_t ip = 0;
+
+//   // branch info
+//   unsigned char is_branch = 0;
+//   unsigned char branch_taken = 0;
+
+//   unsigned char destination_registers[NUM_INSTR_DESTINATIONS] = {}; // output registers
+//   unsigned char source_registers[NUM_INSTR_SOURCES] = {};           // input registers
+
+//   uint64_t destination_memory[NUM_INSTR_DESTINATIONS] = {}; // output memory
+//   uint64_t source_memory[NUM_INSTR_SOURCES] = {};           // input memory
+// };
+
 struct input_instr {
-  // instruction pointer or PC (Program Counter)
-  unsigned long long ip = 0;
+  uint64_t ip = 0;
 
-  // branch info
-  unsigned char is_branch = 0;
-  unsigned char branch_taken = 0;
+  uint8_t is_branch = 0;
+  uint8_t branch_taken = 0;
 
-  unsigned char destination_registers[NUM_INSTR_DESTINATIONS] = {}; // output registers
-  unsigned char source_registers[NUM_INSTR_SOURCES] = {};           // input registers
+  uint8_t destination_registers[NUM_INSTR_DESTINATIONS] = {};
+  uint8_t source_registers[NUM_INSTR_SOURCES] = {};
 
-  unsigned long long destination_memory[NUM_INSTR_DESTINATIONS] = {}; // output memory
-  unsigned long long source_memory[NUM_INSTR_SOURCES] = {};           // input memory
+  uint64_t destination_memory[NUM_INSTR_DESTINATIONS] = {};
+  uint64_t source_memory[NUM_INSTR_SOURCES] = {};
 };
 
 struct cloudsuite_instr {
