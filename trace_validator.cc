@@ -15,7 +15,19 @@ namespace {
 struct MemoryPresence {
   bool has_destination = false;
   bool has_source = false;
+
+  uint64_t src_addr = 0;
+  uint64_t dst_addr = 0;
 };
+
+
+ // Convert integer to hex string
+ std::string intToHex(uint64_t value) {
+  std::ostringstream oss;
+  oss << std::hex << std::uppercase << value;
+  return oss.str();
+}
+
 
 void print_usage(const char* argv0)
 {
@@ -34,15 +46,17 @@ MemoryPresence detect_memory_fields(const ooo_model_instr& instr)
   MemoryPresence presence;
 
   for (int i = 0; i < NUM_INSTR_DESTINATIONS; i++) {
-    if (instr.destination_memory[i] != 0) {
+    if (instr.destination_memory[i] > 0) {
       presence.has_destination = true;
+      presence.dst_addr = instr.destination_memory[i];
       break;
     }
   }
 
   for (int i = 0; i < NUM_INSTR_SOURCES; i++) {
-    if (instr.source_memory[i] != 0) {
+    if (instr.source_memory[i] > 0) {
       presence.has_source = true;
+      presence.src_addr = instr.source_memory[i];
       break;
     }
   }
@@ -132,7 +146,9 @@ int main(int argc, char** argv)
   }
 
   const std::string trace_command = join_command(argc, argv, optind);
-  std::unique_ptr<tracereader> trace(get_tracereader<input_instr>(trace_command, 0, false, false));
+
+  std::cout << "Trace Command: " << trace_command << '\n';
+  std::unique_ptr<tracereader> trace(get_tracereader<input_instr>(trace_command, 0, false, true));
 
   std::size_t instructions_seen = 0;
   std::size_t instructions_with_memory = 0;
@@ -147,14 +163,8 @@ int main(int argc, char** argv)
     const bool has_memory = presence.has_destination || presence.has_source;
 
     if (has_memory) {
-      instructions_with_memory++;
-    } else {
-      instructions_without_memory++;
-      if (missing_examples.size() < 10)
-        missing_examples.push_back(instr);
-      if (verbose_missing) {
-        std::cout << "[Missing] #" << instructions_seen << " ip=0x" << std::hex << instr.ip << std::dec << '\n';
-      }
+     std::cout << "APP id, " << instr.id << ", ip, " << intToHex(instr.ip) << ", src(" << presence.has_source << ", " << intToHex(presence.src_addr) << "), dst(" << presence.has_destination << ", " << intToHex(presence.dst_addr) << "), size, " << sizeof(input_instr) << ", offsetIP, " << offsetof(input_instr, ip)  << '\n';
+     fflush(stdout);
     }
 
     if (report_interval > 0 && instructions_seen % report_interval == 0) {

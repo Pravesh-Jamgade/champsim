@@ -67,46 +67,7 @@ void O3_CPU::initialize_core()
 
 void O3_CPU::func_verify_instr(ooo_model_instr* arch_instr)
 {
-  if(arch_instr->is_memory)
-  {
-    
-    uint64_t mem_value = 0;
-    bool found_src_addr = 0;
-    bool found_dst_addr = 0;
-    for(int i=0; i< MAX_INSTR_DESTINATIONS; i++)
-    {
-      if(arch_instr->destination_memory[i] > 0)
-      {
-        mem_value = arch_instr->destination_memory[i];
-        found_dst_addr =1;
-        break;
-      }
-    }
-
-    for(int i=0; i< NUM_INSTR_SOURCES; i++)
-    {
-      if(arch_instr->source_memory[i] > 0)
-      {
-        mem_value = arch_instr->source_memory[i];
-        found_src_addr =1;
-        break;
-      }
-    }
-
-    if(found_dst_addr)
-    {
-      dlog.log("instr", arch_instr->instr_id, "dst_mem_addr", intToHex(mem_value), "ip", intToHex(arch_instr->ip), "is_branch", arch_instr->is_branch, '\n');
-    }
-    else if(found_src_addr)
-    {
-      dlog.log("instr", arch_instr->instr_id, "src_mem_addr", intToHex(mem_value), "ip", intToHex(arch_instr->ip), "is_branch", arch_instr->is_branch, '\n');
-    }
-    else
-    {
-      dlog.log("memory but no address found\n");
-      exit(0);
-    }
-  }
+  
 }
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
@@ -320,7 +281,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
     arch_instr.num_reg_ops = 0;
   }
 
-  func_verify_instr(&arch_instr);
+  // func_verify_instr(&arch_instr);
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
@@ -379,7 +340,7 @@ void O3_CPU::translate_fetch()
   
   uint64_t find_addr = itlb_req_begin->ip;
 
-  dlog.log("translate_fetch", "instr", itlb_req_begin->instr_id, "ip", intToHex(find_addr), '\n');
+  // dlog.log("translate_fetch", "instr", itlb_req_begin->instr_id, "ip", intToHex(find_addr), '\n');
   auto itlb_req_end = std::find_if(itlb_req_begin, IFETCH_BUFFER.end(),
                                    [find_addr](const ooo_model_instr& x) { return (find_addr >> LOG2_PAGE_SIZE) != (x.ip >> LOG2_PAGE_SIZE); });
   if (itlb_req_end != IFETCH_BUFFER.end() || itlb_req_begin == IFETCH_BUFFER.begin()) {
@@ -440,7 +401,7 @@ void O3_CPU::fetch_instruction()
 
   uint64_t find_addr = l1i_req_begin->instruction_pa;
 
-  dlog.log("fetch", "instr", l1i_req_begin->instr_id, "pa", intToHex(l1i_req_begin->instruction_pa), '\n');
+  // dlog.log("fetch", "instr", l1i_req_begin->instr_id, "pa", intToHex(l1i_req_begin->instruction_pa), '\n');
 
   auto l1i_req_end = std::find_if(l1i_req_begin, IFETCH_BUFFER.end(),
                                   [find_addr](const ooo_model_instr& x) { return (find_addr >> LOG2_BLOCK_SIZE) != (x.instruction_pa >> LOG2_BLOCK_SIZE); });

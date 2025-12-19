@@ -85,14 +85,25 @@ ooo_model_instr tracereader::read_single_instr()
   }
   else
   {
-    while (!fread(&trace_read_instr, sizeof(T), 1, trace_file)) {
-      // reached end of file for this trace
-      std::cout << "*** Reached end of trace: " << trace_string << std::endl;
-  
-      // close the trace file and re-open it
+    for (;;) {
+      size_t n = fread(&trace_read_instr, sizeof(T), 1, trace_file);
+      if (n == 1) break;
+    
+      if (feof(trace_file)) {
+        std::cerr << "EOF from trace\n";
+      }
+      if (ferror(trace_file)) {
+        std::cerr << "ERROR from trace\n";
+        perror("fread");
+      }
+    
       close();
-      trace_open(trace_string);
-      
+      trace_file = popen(trace_string.c_str(), "r");
+      if (trace_file == NULL) {
+        std::cerr << std::endl << "*** CANNOT OPEN TRACE FILE: " << trace_string << " ***" << std::endl;
+        assert(0);
+      }
+      usleep(100000);
     }
     ooo_model_instr retval(cpu, trace_read_instr);
     return retval;

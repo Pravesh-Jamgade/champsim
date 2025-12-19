@@ -26,7 +26,6 @@
 #define BRANCH_OTHER 7
 
 struct ooo_model_instr {
-
   char context = 'x';
   int thread_id = -1;
   uint64_t instr_id = 0, ip = 0, event_cycle = 0;
