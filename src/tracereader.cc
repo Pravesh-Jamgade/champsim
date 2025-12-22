@@ -91,6 +91,7 @@ ooo_model_instr tracereader::read_single_instr()
     
       if (feof(trace_file)) {
         std::cerr << "EOF from trace\n";
+        // exit(0);
       }
       if (ferror(trace_file)) {
         std::cerr << "ERROR from trace\n";

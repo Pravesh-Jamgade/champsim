@@ -26,7 +26,8 @@
 #define BRANCH_OTHER 7
 
 struct ooo_model_instr {
-  char context = 'x';
+  // 1 for store, 2 for load
+  uint32_t id = 0;
   int thread_id = -1;
   uint64_t instr_id = 0, ip = 0, event_cycle = 0;
 
@@ -71,9 +72,9 @@ struct ooo_model_instr {
 
     asid[0] = cpu;
     asid[1] = cpu;
-    context =instr.context;
+    id =instr.id;
   }
-
+  
   ooo_model_instr(uint8_t cpu, input_instr instr)
   {
     std::copy(std::begin(instr.destination_registers), std::end(instr.destination_registers), std::begin(this->destination_registers));

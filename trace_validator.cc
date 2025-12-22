@@ -13,6 +13,8 @@
 namespace {
 
 struct MemoryPresence {
+  // 1 for store and 2 for load
+  uint32_t is_st_or_load = 0;
   bool has_destination = false;
   bool has_source = false;
 
@@ -41,7 +43,7 @@ void print_usage(const char* argv0)
   std::cout << "  -h, --help                Show this message\n";
 }
 
-MemoryPresence detect_memory_fields(const ooo_model_instr& instr)
+MemoryPresence detect_memory_fields(const ooo_model_instr& instr, std::string cmd)
 {
   MemoryPresence presence;
 
@@ -61,6 +63,27 @@ MemoryPresence detect_memory_fields(const ooo_model_instr& instr)
     }
   }
 
+  // Mismatch
+  // load addr found but instr is marked store type OR store address found but instr us marked load type
+  if((presence.has_source && instr.id==1))
+  {
+    std::cout << "cmd: " << cmd << ", Mismatch: "  << "has_source, " << presence.has_source << ", st/ld" << instr.id << ", addr, " << intToHex(presence.src_addr) << '\n'; 
+    exit(0);
+  }
+  else if((presence.has_destination && instr.id==2))
+  {
+    std::cout << "cmd: " << cmd << ", Mismatch: "  << "has_source, " << presence.has_destination << ", st/ld" << instr.id << ", addr, " << intToHex(presence.dst_addr) << '\n'; 
+    exit(0);
+  }
+
+  if(instr.ip < 0)
+  {
+    std::cout << "ip == 0 \n";
+    if(presence.has_source) std::cout << "cmd: " << cmd  << ", " << presence.has_source << ", st/ld" << instr.id << ", addr, " << intToHex(presence.src_addr) << '\n'; 
+    else if(presence.has_destination) std::cout << "cmd: " << cmd  << ", "<< presence.has_destination<< ", st/ld" << instr.id << ", addr, " << intToHex(presence.dst_addr) << '\n'; 
+    else std::cout << "non-mem instr\n";
+    exit(0);
+  }
   return presence;
 }
 
@@ -74,31 +97,6 @@ std::string join_command(int argc, char** argv, int start_index)
   }
 
   return builder.str();
-}
-
-void print_missing_examples(const std::vector<ooo_model_instr>& missing)
-{
-  if (missing.empty())
-    return;
-
-  std::cout << "\nFirst " << missing.size() << " instructions without memory fields:\n";
-  for (std::size_t i = 0; i < missing.size(); i++) {
-    const auto& instr = missing[i];
-    std::cout << "  [" << i + 1 << "] ip=0x" << std::hex << instr.ip << std::dec;
-    std::cout << " dest_mem=(";
-    for (int dest = 0; dest < NUM_INSTR_DESTINATIONS; dest++) {
-      if (dest > 0)
-        std::cout << ", ";
-      std::cout << instr.destination_memory[dest];
-    }
-    std::cout << ") src_mem=(";
-    for (int src = 0; src < NUM_INSTR_SOURCES; src++) {
-      if (src > 0)
-        std::cout << ", ";
-      std::cout << instr.source_memory[src];
-    }
-    std::cout << ")\n";
-  }
 }
 
 } // namespace
@@ -148,7 +146,7 @@ int main(int argc, char** argv)
   const std::string trace_command = join_command(argc, argv, optind);
 
   std::cout << "Trace Command: " << trace_command << '\n';
-  std::unique_ptr<tracereader> trace(get_tracereader<input_instr>(trace_command, 0, false, true));
+  std::unique_ptr<tracereader> trace(get_tracereader<context_instr>(trace_command, 0, false, true));
 
   std::size_t instructions_seen = 0;
   std::size_t instructions_with_memory = 0;
@@ -158,26 +156,13 @@ int main(int argc, char** argv)
   while (limit == 0 || instructions_seen < limit) {
     const ooo_model_instr instr = trace->get();
     instructions_seen++;
-
-    MemoryPresence presence = detect_memory_fields(instr);
-    const bool has_memory = presence.has_destination || presence.has_source;
-
-    if (has_memory) {
-     std::cout << "APP id, " << instr.id << ", ip, " << intToHex(instr.ip) << ", src(" << presence.has_source << ", " << intToHex(presence.src_addr) << "), dst(" << presence.has_destination << ", " << intToHex(presence.dst_addr) << "), size, " << sizeof(input_instr) << ", offsetIP, " << offsetof(input_instr, ip)  << '\n';
-     fflush(stdout);
-    }
-
-    if (report_interval > 0 && instructions_seen % report_interval == 0) {
-      std::cout << "[Progress] checked " << instructions_seen << " instructions (with memory: " << instructions_with_memory
-                << ", without memory: " << instructions_without_memory << ")\n";
-    }
+    MemoryPresence ret = detect_memory_fields(instr, trace_command);
+    if(ret.has_source || ret.has_destination)
+      instructions_with_memory++;
+    else instructions_without_memory++;
   }
 
-  std::cout << "\nFinished reading " << instructions_seen << " instructions from live trace command: \"" << trace_command << "\"\n";
-  std::cout << "Instructions with memory fields:    " << instructions_with_memory << '\n';
-  std::cout << "Instructions missing memory fields: " << instructions_without_memory << '\n';
+  std::cout << "CMD: " << trace_command << "total, " << instructions_seen << ", with_mem, " << instructions_with_memory << ", without_mem, " << instructions_without_memory << '\n';
 
-  print_missing_examples(missing_examples);
-
-  return instructions_without_memory == 0 ? 0 : 1;
+  return 0;
 }
