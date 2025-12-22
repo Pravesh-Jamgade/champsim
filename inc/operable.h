@@ -36,6 +36,7 @@ public:
   virtual void operate() = 0;
   virtual void print_deadlock() {}
   virtual void _overwrite() {}
+  virtual void _reset() {}
   virtual void _context_switch(int thread_id) {}
 };
 

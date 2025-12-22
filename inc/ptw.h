@@ -136,6 +136,13 @@ public:
     }
   }
 
+  void _reset() 
+  {
+    printf("[Warmup Complete] Reset %s datamodel\n", NAME.c_str());
+    delete ptw_datamodel;
+    ptw_datamodel = new PTWDataModel(cpu);
+  }
+
   uint64_t get_pomtlb_baseaddr() {
     return POMTLB_baseaddr;
   } 

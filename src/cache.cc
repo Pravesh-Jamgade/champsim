@@ -25,6 +25,7 @@ extern int KNOB_STLB_DO_NOT_TRACK_MISS;
 extern int KNOB_VICTIMA, KNOB_EXTEND_VICTIMA, KNOB_HASH_CACHE_MAX_LIMIT;
 extern int KNOB_SMT_ENABLE;
 extern int KNOB_ENABLE_SWAT_WAYS, KNOB_ENABLE_SWAT_WAYS_OVERWRITE, KNOB_ENABLE_IDEAL_SWAT;
+extern int KNOB_IDEAL_CACHE;
 
 // illusiong of stored cache line by 8byte granularity
 extern list<pair<string, uint64_t>> hash_cache;
@@ -388,6 +389,22 @@ void CACHE::handle_read()
 
     dataflow.log(current_cycle, NAME, "read", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
     backtracklog.track(current_cycle, NAME, "read", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
+    
+    // remove this entry from RQ
+    if(KNOB_IDEAL_CACHE == cache_id)
+    {
+      pair<bool, PTEHolder> result = process_page_table->operate_pagetable(cpu_no, handle_pkt.address, 1, handle_pkt.v_address);
+      handle_pkt.data = result.second.page_address;
+      for(auto ret : handle_pkt.to_return)
+        ret->return_data(&handle_pkt);
+      
+      RQ.pop_front();
+      reads_available_this_cycle--;
+      cacheDataModel->rd_queue[Basic::HIT]++;
+      cacheDataModel->rd_queue[Basic::ACCESS]++;
+      return;
+    }
+    
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
@@ -396,7 +413,7 @@ void CACHE::handle_read()
     uint32_t set = get_set(handle_pkt.type, handle_pkt.address, handle_pkt.vflag[VF::victima]);
     uint32_t way = get_way(handle_pkt.type, handle_pkt.address, set, handle_pkt.thread_id, handle_pkt.vflag[VF::victima]);
    
-    bool hit = check_if_it_is_hit(set, way, handle_pkt);
+    bool hit = way < NUM_WAY;
     
     // if victima lookup is hit, then check whether valid PTE is present in block. If not, that means it is not page-faulted yet.
     BLOCK* hit_block = &block[set * NUM_WAY + way];
@@ -1714,7 +1731,8 @@ int CACHE::add_rq(PACKET* packet)
   }
 
   // check for duplicates in the read queue
-  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, use_offset(packet->type), packet->thread_id, is_tlb || check_thread_id) );
+  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, use_offset(packet->type), packet->thread_id, check_thread_id) );
+
   if (found_rq != RQ.end()) {
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
 
@@ -2467,11 +2485,14 @@ bool CACHE::check_if_it_is_hit(uint32_t set, uint32_t way, PACKET packet)
               (is_tlb); // is a tlb
 
   bool hit = way < NUM_WAY;
+
   bool is_prefetch = block[set * NUM_WAY + way].came_from_request == PREFETCH;
-  if(test && is_prefetch)
+  if(is_prefetch) return hit;
+
+  if(test)
   {
     int block_tid = block[set * NUM_WAY + way].thread_id;
-    hit = hit && (packet.thread_id == block_tid || is_prefetch);
+    hit = hit && (packet.thread_id == block_tid);
   }
   
   return hit;

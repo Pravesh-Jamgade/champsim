@@ -214,8 +214,9 @@ public:
     }
   }
 
-  void reset_datamodel()
+  void _reset()
   {
+    printf("[Warmup Complete] Reset %s datamodel\n", NAME.c_str());
     delete cacheDataModel;
     cacheDataModel = new CacheDataModel(NAME, cpu, NUM_WAY);
   }

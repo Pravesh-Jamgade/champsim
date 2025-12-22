@@ -67,7 +67,8 @@ extern int KNOB_ENABLE_LOG;
 extern int KNOB_ENABLE_MFOE_V2;
 extern int KNOB_ENABLE_CTX;
 extern int KNOB_ENABLE_SWAT_WAYS, KNOB_ENABLE_SWAT_WAYS_OVERWRITE, KNOB_ENABLE_IDEAL_SWAT;
-extern int KNOB_ADDRESS_RANDOMIZATION;
+extern int KNOB_ADDRESS_RANDOMIZATION, KNOB_IDEAL_CACHE;
+
 
 std::vector<tracereader*> traces;
 
@@ -293,7 +294,7 @@ void reset_cache_stats(uint32_t cpu, CACHE* cache)
   cache->WQ_FORWARD = 0;
   cache->WQ_FULL = 0;
 
-  cache->reset_datamodel();
+  cache->_reset();
 }
 
 void finish_warmup()
@@ -335,6 +336,16 @@ void finish_warmup()
 
     for (auto it = caches.rbegin(); it != caches.rend(); ++it)
       reset_cache_stats(i, *it);
+
+
+    for(auto op: operables)
+    {
+      if(op->NAME.find("PTW") != string::npos)
+      {
+        op->_reset();
+      }
+    }
+    
   }
   cout << endl;
 
@@ -568,6 +579,7 @@ int main(int argc, char** argv)
   KNOB_ENABLE_IDEAL_SWAT = iniReader->GetInteger("SWAT", "ENABLE_IDEAL_SWAT", 0);
   KNOB_ENABLE_SWAT_WAYS_OVERWRITE = iniReader->GetInteger("SWAT", "ENABLE_SWAT_WAYS_OVERWRITE", 0);
   KNOB_ADDRESS_RANDOMIZATION = iniReader->GetInteger("SIMULATOR", "ENABLE_ADDRESS_RANDOMIZATION", 0);
+  KNOB_IDEAL_CACHE = iniReader->GetInteger("SIMULATOR", "ENABLE_IDEAL_CACHE", 77777);
 
   std::cout << "Extra settings:\n";
   iniReader->print();
