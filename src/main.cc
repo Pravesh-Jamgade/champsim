@@ -616,7 +616,7 @@ int main(int argc, char** argv)
       {
         index++;
         cout << "Trace source " << index << " : " << input_str << '\n'; 
-        traces.push_back(get_tracereader<input_instr>(input_str, traces.size(), knob_cloudsuite, 1));
+        traces.push_back(get_tracereader<context_instr>(input_str, traces.size(), knob_cloudsuite, 1));
         input_traces_list.push_back(input_str);
         input_str = "";
         continue;
