@@ -65,9 +65,20 @@ void O3_CPU::initialize_core()
   }
 }
 
-void O3_CPU::func_verify_instr(ooo_model_instr* arch_instr)
+void O3_CPU::func_verify_instr(ooo_model_instr* instr)
 {
-  
+  if(instr->is_memory)
+  {
+    if(instr->id <= 0)
+    {
+      dlog.log("X Invalid memory instruction id ", instr->id, " at ip ", instr->ip, "\n");
+    }
+  }
+
+  if(instr->ip == 0)
+  {
+    dlog.log("Y Invalid memory instruction id ", instr->id, " at ip ", instr->ip, "\n");
+  }
 }
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
@@ -281,7 +292,7 @@ void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
     arch_instr.num_reg_ops = 0;
   }
 
-  // func_verify_instr(&arch_instr);
+  func_verify_instr(&arch_instr);
 
   // Add to IFETCH_BUFFER
   IFETCH_BUFFER.push_back(arch_instr);
