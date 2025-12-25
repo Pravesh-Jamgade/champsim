@@ -72,7 +72,7 @@ struct ooo_model_instr {
 
     asid[0] = cpu;
     asid[1] = cpu;
-    id =instr.id;
+    this->id =instr.id;
   }
   
   ooo_model_instr(uint8_t cpu, input_instr instr)

@@ -12,17 +12,6 @@
 
 namespace {
 
-struct MemoryPresence {
-  // 1 for store and 2 for load
-  uint32_t is_st_or_load = 0;
-  bool has_destination = false;
-  bool has_source = false;
-
-  uint64_t src_addr = 0;
-  uint64_t dst_addr = 0;
-};
-
-
  // Convert integer to hex string
  std::string intToHex(uint64_t value) {
   std::ostringstream oss;
@@ -43,49 +32,6 @@ void print_usage(const char* argv0)
   std::cout << "  -h, --help                Show this message\n";
 }
 
-MemoryPresence detect_memory_fields(const ooo_model_instr& instr, std::string cmd)
-{
-  MemoryPresence presence;
-
-  for (int i = 0; i < NUM_INSTR_DESTINATIONS; i++) {
-    if (instr.destination_memory[i] > 0) {
-      presence.has_destination = true;
-      presence.dst_addr = instr.destination_memory[i];
-      break;
-    }
-  }
-
-  for (int i = 0; i < NUM_INSTR_SOURCES; i++) {
-    if (instr.source_memory[i] > 0) {
-      presence.has_source = true;
-      presence.src_addr = instr.source_memory[i];
-      break;
-    }
-  }
-
-  // Mismatch
-  // load addr found but instr is marked store type OR store address found but instr us marked load type
-  if((presence.has_source && instr.id==1))
-  {
-    std::cout << "cmd: " << cmd << ", Mismatch: "  << "has_source, " << presence.has_source << ", st/ld" << instr.id << ", addr, " << intToHex(presence.src_addr) << '\n'; 
-    exit(0);
-  }
-  else if((presence.has_destination && instr.id==2))
-  {
-    std::cout << "cmd: " << cmd << ", Mismatch: "  << "has_source, " << presence.has_destination << ", st/ld" << instr.id << ", addr, " << intToHex(presence.dst_addr) << '\n'; 
-    exit(0);
-  }
-
-  if(instr.ip < 0)
-  {
-    std::cout << "ip == 0 \n";
-    if(presence.has_source) std::cout << "cmd: " << cmd  << ", " << presence.has_source << ", st/ld" << instr.id << ", addr, " << intToHex(presence.src_addr) << '\n'; 
-    else if(presence.has_destination) std::cout << "cmd: " << cmd  << ", "<< presence.has_destination<< ", st/ld" << instr.id << ", addr, " << intToHex(presence.dst_addr) << '\n'; 
-    else std::cout << "non-mem instr\n";
-    exit(0);
-  }
-  return presence;
-}
 
 std::string join_command(int argc, char** argv, int start_index)
 {
@@ -149,20 +95,40 @@ int main(int argc, char** argv)
   std::unique_ptr<tracereader> trace(get_tracereader<context_instr>(trace_command, 0, false, true));
 
   std::size_t instructions_seen = 0;
-  std::size_t instructions_with_memory = 0;
-  std::size_t instructions_without_memory = 0;
-  std::vector<ooo_model_instr> missing_examples;
+  std::size_t invalid_instr = 0;
+  std::size_t mem_instr = 0;
+  
 
   while (limit == 0 || instructions_seen < limit) {
     const ooo_model_instr instr = trace->get();
     instructions_seen++;
-    MemoryPresence ret = detect_memory_fields(instr, trace_command);
-    if(ret.has_source || ret.has_destination)
-      instructions_with_memory++;
-    else instructions_without_memory++;
+    if(instr.ip == 0)
+    {
+      invalid_instr++;
+      continue;
+    }
+
+    bool is_mem = 0;
+    for(int i=0; i< NUM_INSTR_DESTINATIONS; i++)
+    {
+      if(instr.destination_memory[i] > 0)
+      {
+        is_mem = 1;
+      }
+    }
+
+    for(int i=0; i< NUM_INSTR_SOURCES; i++)
+    {
+      if(instr.source_memory[i] > 0)
+      {
+        is_mem = 1;
+      }
+    }
+
+    if(is_mem) mem_instr++;
   }
 
-  std::cout << "CMD: " << trace_command << "total, " << instructions_seen << ", with_mem, " << instructions_with_memory << ", without_mem, " << instructions_without_memory << '\n';
+  std::cout << "CMD: " << trace_command << "total, " << instructions_seen << ", invalid, " << invalid_instr << ", mem_instr, " << mem_instr << '\n';
 
   return 0;
 }

@@ -90,7 +90,7 @@ ooo_model_instr tracereader::read_single_instr()
       if (n == 1) break;
     
       if (feof(trace_file)) {
-        std::cerr << "EOF from trace\n";
+        // std::cerr << "EOF from trace\n";
         // exit(0);
       }
       if (ferror(trace_file)) {
@@ -104,7 +104,7 @@ ooo_model_instr tracereader::read_single_instr()
         std::cerr << std::endl << "*** CANNOT OPEN TRACE FILE: " << trace_string << " ***" << std::endl;
         assert(0);
       }
-      usleep(100000);
+      usleep(100);
     }
     ooo_model_instr retval(cpu, trace_read_instr);
     return retval;
