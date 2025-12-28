@@ -390,21 +390,6 @@ void CACHE::handle_read()
     dataflow.log(current_cycle, NAME, "read", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
     backtracklog.track(current_cycle, NAME, "read", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
     
-    // remove this entry from RQ
-    if(KNOB_IDEAL_CACHE == cache_id)
-    {
-      pair<bool, PTEHolder> result = process_page_table->operate_pagetable(cpu_no, handle_pkt.address, 1, handle_pkt.v_address);
-      handle_pkt.data = result.second.page_address;
-      for(auto ret : handle_pkt.to_return)
-        ret->return_data(&handle_pkt);
-      
-      RQ.pop_front();
-      reads_available_this_cycle--;
-      cacheDataModel->rd_queue[Basic::HIT]++;
-      cacheDataModel->rd_queue[Basic::ACCESS]++;
-      return;
-    }
-    
     // A (hopefully temporary) hack to know whether to send the evicted paddr or
     // vaddr to the prefetcher
     ever_seen_data |= (handle_pkt.v_address != handle_pkt.ip);
@@ -442,6 +427,21 @@ void CACHE::handle_read()
       {
         hit = false;
       }
+    }
+
+    // remove this entry from RQ
+    if(KNOB_IDEAL_CACHE == cache_id && hit == false)
+    {
+      pair<bool, PTEHolder> result = process_page_table->operate_pagetable(cpu_no, handle_pkt.address, 1, handle_pkt.v_address);
+      handle_pkt.data = result.second.page_address;
+      for(auto ret : handle_pkt.to_return)
+        ret->return_data(&handle_pkt);
+      
+      RQ.pop_front();
+      reads_available_this_cycle--;
+      cacheDataModel->rd_queue[Basic::HIT]++;
+      cacheDataModel->rd_queue[Basic::ACCESS]++;
+      return;
     }
 
     if(KNOB_POMTLB 
