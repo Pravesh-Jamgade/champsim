@@ -30,10 +30,11 @@ public:
   template <typename T>
   ooo_model_instr read_live_single_instr();
 
+  bool read_header_or_die();
+
   virtual ooo_model_instr get() = 0;
 };
 
-template<typename T>
 tracereader* get_tracereader(std::string fname, uint8_t cpu, bool is_cloudsuite, bool live_traces=false);
 
 

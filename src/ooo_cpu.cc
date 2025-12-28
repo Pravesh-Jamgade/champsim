@@ -71,12 +71,13 @@ void O3_CPU::func_verify_instr(ooo_model_instr* instr)
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
 {
-  // invalid instruction
-  if(arch_instr.id == 0 || arch_instr.ip == 0)
-  {
-    return;
-  }
   instrs_to_read_this_cycle--;
+
+  // // invalid instruction
+  // if(arch_instr.id == 0 || arch_instr.ip == 0)
+  // {
+  //   return;
+  // }
 
   arch_instr.instr_id = instr_unique_id;
   arch_instr.thread_id = thread;

@@ -7,6 +7,7 @@
 #include <set>
 #include <tuple>
 #include <vector>
+#include <cstddef>
 
 // reserve 1MB of space
 #define VMEM_RESERVE_CAPACITY 1048576

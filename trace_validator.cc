@@ -92,7 +92,7 @@ int main(int argc, char** argv)
   const std::string trace_command = join_command(argc, argv, optind);
 
   std::cout << "Trace Command: " << trace_command << '\n';
-  std::unique_ptr<tracereader> trace(get_tracereader<context_instr>(trace_command, 0, false, true));
+  std::unique_ptr<tracereader> trace(get_tracereader(trace_command, 0, false, true));
 
   std::size_t instructions_seen = 0;
   std::size_t invalid_instr = 0;
@@ -105,7 +105,9 @@ int main(int argc, char** argv)
     if(instr.ip == 0)
     {
       invalid_instr++;
-      continue;
+      std::cout << "Exit: " << trace_command << "total, " << instructions_seen << ", invalid, " << invalid_instr << ", mem_instr, " << mem_instr << '\n';
+      
+      exit(0);
     }
 
     bool is_mem = 0;

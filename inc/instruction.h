@@ -27,7 +27,7 @@
 
 struct ooo_model_instr {
   // 1 for store, 2 for load
-  uint32_t id = 0;
+  uint32_t record_size = 0;
   int thread_id = -1;
   uint64_t instr_id = 0, ip = 0, event_cycle = 0;
 
@@ -72,7 +72,7 @@ struct ooo_model_instr {
 
     asid[0] = cpu;
     asid[1] = cpu;
-    this->id =instr.id;
+    this->record_size =instr.record_size;
   }
   
   ooo_model_instr(uint8_t cpu, input_instr instr)

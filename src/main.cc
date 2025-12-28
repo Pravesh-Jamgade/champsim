@@ -616,7 +616,7 @@ int main(int argc, char** argv)
       {
         index++;
         cout << "Trace source " << index << " : " << input_str << '\n'; 
-        traces.push_back(get_tracereader<context_instr>(input_str, traces.size(), knob_cloudsuite, 1));
+        traces.push_back(get_tracereader(input_str, traces.size(), knob_cloudsuite, 1));
         input_traces_list.push_back(input_str);
         input_str = "";
         continue;
@@ -636,7 +636,7 @@ int main(int argc, char** argv)
     for (int i = optind; i < argc; i++) 
     {
       cout << "[Log]Trace Reading, " << argv[i] << '\n';
-      traces.push_back(get_tracereader<input_instr>(argv[i], traces.size(), knob_cloudsuite));
+      traces.push_back(get_tracereader(argv[i], traces.size(), knob_cloudsuite));
       if(KNOB_SMT_ENABLE>0)
       {
         if(traces.size() > total_cores)

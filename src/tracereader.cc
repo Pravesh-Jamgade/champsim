@@ -85,50 +85,88 @@ ooo_model_instr tracereader::read_single_instr()
   }
   else
   {
-    for (;;) {
-      size_t n = fread(&trace_read_instr, sizeof(T), 1, trace_file);
-      if (n == 1) break;
-    
+    context_instr h{};
+    for (;;) 
+    {
+      int max_read_retry = 5;
+      int read_again = 0;
+      bool bad_magic = false;
+      bool bad_size = false;
+      bool trace_end = false;
+
+      size_t n = fread(&h, sizeof(T), 1, trace_file);
+
+      h = context_instr();
+      if (fread(&h, sizeof(h), 1, trace_file) != 1) {
+        std::cerr << "Failed to read trace header\n";
+        std::exit(1);
+      }
+
+      if(h.magic != MAGIC) {
+        std::cerr << "Bad magic: stream not aligned / stdout contaminated\nRead again counter, " << read_again << '\n';
+        bad_magic = true;
+      }
+
+      if (h.record_size != sizeof(context_instr)) {
+        std::cerr << "Record size mismatch: producer=" << h.record_size
+                  << " consumer=" << sizeof(context_instr) << "\n";
+        bad_size = true;
+      }
+
       if (feof(trace_file)) {
-        // std::cerr << "EOF from trace\n";
-        // exit(0);
+        // producer ended cleanly: restart
+        std::cerr << "producer ended cleanly: restart\n";
+        close(); // pclose
+        trace_file = popen(trace_string.c_str(), "r");
+        if (!trace_file) { perror("popen"); std::exit(1); }
+        continue;              // retry read
       }
-      if (ferror(trace_file)) {
-        std::cerr << "ERROR from trace\n";
-        perror("fread");
+      else if (ferror(trace_file)) {
+        std::cerr << "not-eof --> read error/corruption\n";
+      // not EOF => real error/corruption
+        perror("fread"); 
+      } 
+      else
+      {
+        if(bad_magic)
+        {
+          std::cerr << "Bad magic\n";
+        }
+        if(bad_size)
+        {
+          std::cerr << "Bad record size\n";
+        }
+        if(trace_end)
+        {
+          std::cerr << "Trace end\n";
+        }
+
+        std::cerr << "Read retry\n";
+        while(read_again < max_read_retry)
+        {
+          read_again++;
+          if (fread(&h, sizeof(h), 1, trace_file) != 1) {
+            std::cerr << "Failed to read trace header\n";
+            std::exit(1);
+          }
+
+          if(h.magic != MAGIC) {
+            std::cerr << "Read retry, still bad magic , " << read_again << '\n';
+          }
+          else {
+            ooo_model_instr retval(cpu, h);
+            return retval;
+          }
+        }
+
+        std::cerr << "failed stopping\n";
+        exit(1);
       }
     
-      close();
-      trace_file = popen(trace_string.c_str(), "r");
-      if (trace_file == NULL) {
-        std::cerr << std::endl << "*** CANNOT OPEN TRACE FILE: " << trace_string << " ***" << std::endl;
-        assert(0);
-      }
-      usleep(100);
+      std::exit(1);
     }
-    ooo_model_instr retval(cpu, trace_read_instr);
+    ooo_model_instr retval(cpu, h);
     return retval;
-    // auto stall_start = std::chrono::steady_clock::now();
-    // constexpr std::chrono::seconds stall_timeout(5);
-
-    // while (buf->tail == buf->head) {
-    //   usleep(10); // buffer empty
-
-    //   if (std::chrono::steady_clock::now() - stall_start > stall_timeout) {
-    //     std::cerr << "Live trace producer inactive for " << stall_timeout.count()
-    //               << "s; aborting to avoid hang." << std::endl;
-    //     assert(0);
-    //   }
-    // }
-
-    // stall_start = std::chrono::steady_clock::now();
-    // input_instr* te = (input_instr*)&buf->buffer[buf->tail];
-    // __sync_synchronize(); // memory barrier
-    // buf->tail = (buf->tail + 1) % TRACE_BUF_CAP;
-    // // copy the instruction into the performance model's instruction format
-    // ooo_model_instr retval(cpu, *te);
-    // instr_count++;
-    // return retval;
   }
 }
 
@@ -195,7 +233,6 @@ public:
   }
 };
 
-template <typename T>
 class input_tracereader : public tracereader
 {
   ooo_model_instr last_instr;
@@ -207,7 +244,7 @@ public:
   
   ooo_model_instr get()
   {
-    ooo_model_instr trace_read_instr = read_single_instr<T>();
+    ooo_model_instr trace_read_instr = read_single_instr<input_instr>();
 
     if (!initialized) {
       last_instr = trace_read_instr;
@@ -222,15 +259,40 @@ public:
   }
 };
 
-template<typename T>
+class context_tracereader : public tracereader
+{
+  ooo_model_instr last_instr;
+  bool initialized = false;
+
+public:
+  context_tracereader(uint8_t cpu, std::string _tn, bool live_traces) : tracereader(cpu, _tn, live_traces) {}
+
+  
+  ooo_model_instr get()
+  {
+    ooo_model_instr trace_read_instr = read_single_instr<context_instr>();
+
+    if (!initialized) {
+      last_instr = trace_read_instr;
+      initialized = true;
+    }
+      
+    last_instr.branch_target = trace_read_instr.ip;
+    ooo_model_instr retval = last_instr;
+
+    last_instr = trace_read_instr;
+    return retval;
+  }
+};
+
 tracereader* get_tracereader(std::string fname, uint8_t cpu, bool is_cloudsuite, bool live_traces)
 {
   if (is_cloudsuite) {
     return new cloudsuite_tracereader(cpu, fname);
-  } else {
-    return new input_tracereader<T>(cpu, fname, live_traces);
+  } else if(live_traces){
+    return new context_tracereader(cpu, fname, live_traces);
+  }
+  else {
+    return new input_tracereader(cpu, fname, live_traces);
   }
 }
-
-template tracereader* get_tracereader<context_instr>(std::string fname, uint8_t cpu, bool is_cloudsuite, bool live_traces=false);
-template tracereader* get_tracereader<input_instr>(std::string fname, uint8_t cpu, bool is_cloudsuite, bool live_traces=false);
