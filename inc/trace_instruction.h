@@ -2,6 +2,7 @@
 #define TRACE_INSTRUCTION_H
 
 #include <limits>
+#define MAGIC 0x544C425452414345ULL
 
 // instruction format
 const int NUM_INSTR_DESTINATIONS_SPARC = 4;
@@ -10,21 +11,18 @@ const int NUM_INSTR_SOURCES = 4;
 
 class LSQ_ENTRY;
 
-//// 1 for store, 2 for load
-//uint32_t id = 0;
+// uint32_t id = 0;// 1 for store , 2 for load
 struct context_instr {
-  // 1 for store, 2 for load
-  uint32_t id = 0;
-  uint64_t ip = 0;
-
-  uint8_t is_branch = 0;
-  uint8_t branch_taken = 0;
-
-  uint8_t destination_registers[NUM_INSTR_DESTINATIONS] = {};
-  uint8_t source_registers[NUM_INSTR_SOURCES] = {};
 
   uint64_t destination_memory[NUM_INSTR_DESTINATIONS] = {};
   uint64_t source_memory[NUM_INSTR_SOURCES] = {};
+  uint64_t ip = 0;
+  uint64_t magic = 0;
+  uint32_t record_size = 0;// 1 for store , 2 for load
+  uint8_t is_branch = 0;
+  uint8_t branch_taken = 0;
+  uint8_t destination_registers[NUM_INSTR_DESTINATIONS] = {};
+  uint8_t source_registers[NUM_INSTR_SOURCES] = {};
 };
 
 // struct input_instr {
