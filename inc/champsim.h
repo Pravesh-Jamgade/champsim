@@ -34,6 +34,7 @@
 using namespace std;
 
 extern uint8_t warmup_complete[NUM_CPUS];
+extern bool cpu_wait[NUM_CPUS];
 
 namespace champsim
 {

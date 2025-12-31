@@ -31,6 +31,8 @@ struct ooo_model_instr {
   int thread_id = -1;
   uint64_t instr_id = 0, ip = 0, event_cycle = 0;
 
+  bool wait = false;
+
   bool is_branch = 0, is_memory = 0, branch_taken = 0, branch_mispredicted = 0, source_added[NUM_INSTR_SOURCES] = {},
        destination_added[NUM_INSTR_DESTINATIONS_SPARC] = {};
 
@@ -69,6 +71,7 @@ struct ooo_model_instr {
     this->ip = instr.ip;
     this->is_branch = instr.is_branch;
     this->branch_taken = instr.branch_taken;
+    this->wait = instr.wait;
 
     asid[0] = cpu;
     asid[1] = cpu;

@@ -19,6 +19,7 @@ struct context_instr {
   uint64_t ip = 0;
   uint64_t magic = 0;
   uint32_t record_size = 0;// 1 for store , 2 for load
+  uint8_t wait = 0;
   uint8_t is_branch = 0;
   uint8_t branch_taken = 0;
   uint8_t destination_registers[NUM_INSTR_DESTINATIONS] = {};
