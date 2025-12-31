@@ -502,6 +502,8 @@ class PTWDataModel
             queue_basic_metric[i] = 0;
         }
         page_fault = vector<uint64_t>(5,0);
+
+        init_histograms();
     }
 
     PTWDataModel(uint32_t cpu): cpu(cpu)
@@ -512,6 +514,8 @@ class PTWDataModel
         }
         page_fault = vector<uint64_t>(5,0);
         matrix_cache_to_ptwlevel_hits = vector<vector<uint64_t>>(PSCL_END, vector<uint64_t>(CACHE_ID_END+1, 0));
+
+        init_histograms();
     }
 
     // count psc level hit count. If hit in pscl5, says we have base address for next_level. And we dont need separate memory access
@@ -539,8 +543,40 @@ class PTWDataModel
 
     map<CACHE_ID, int> readmiss_hitwhere;
     vector<vector<uint64_t>> matrix_cache_to_ptwlevel_hits;
- 
+
     uint32_t cpu =0;
+
+    // histogram tracker for RQ waiting period
+    Hist* rq_wait_latency = nullptr;
+    vector<map<int, int>> rq_wait_latency_by_level;
+
+    void init_histograms()
+    {
+        vector<pair<int,int>> exception_bounds;
+        exception_bounds.push_back({50, 100});
+        exception_bounds.push_back({101, 150});
+        exception_bounds.push_back({151, 200});
+        exception_bounds.push_back({201, 250});
+        exception_bounds.push_back({251, 300});
+        exception_bounds.push_back({301, 350});
+        exception_bounds.push_back({351, 400});
+        exception_bounds.push_back({401, 450});
+        exception_bounds.push_back({451, 500});
+        exception_bounds.push_back({500, 550});
+        exception_bounds.push_back({551, 0x7fffffff});
+
+        rq_wait_latency = new Hist(1, 5, 8, exception_bounds);
+        rq_wait_latency_by_level = vector<map<int, int>>(PSCLevel::PSCL_END);
+    }
+
+    void track_rq_wait_latency(uint64_t wait_cycle, uint8_t translation_level)
+    {
+        if(rq_wait_latency)
+            rq_wait_latency->add_data_freq(static_cast<int>(wait_cycle), 1);
+
+        if(translation_level < rq_wait_latency_by_level.size())
+            rq_wait_latency_by_level[translation_level][static_cast<int>(wait_cycle)]++;
+    }
 
     void print_stats()
     {
@@ -625,8 +661,24 @@ class PTWDataModel
             }
             cout << '\n';
         }
-        
+
         cout << '\n';
+
+        if(rq_wait_latency)
+        {
+            cout << tag << "PTW RQ waiting period histogram\n";
+            rq_wait_latency->print_histogram(tag + "ptw-rq-wait-latency");
+
+            vector<string> level_labels;
+            vector<map<int,int>> level_data;
+            for(size_t level = 1; level < rq_wait_latency_by_level.size(); ++level)
+            {
+                level_labels.push_back("L" + to_string(level));
+                level_data.push_back(rq_wait_latency_by_level[level]);
+            }
+
+            rq_wait_latency->print_histogram_matrix(tag + "ptw-rq-wait-latency", level_labels, level_data);
+        }
 
     }
 

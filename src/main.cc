@@ -36,6 +36,7 @@ vector<uint64_t> asid;
 
 uint8_t warmup_complete[NUM_CPUS] = {}, all_warmup_complete = 0, all_simulation_complete = 0,
         MAX_INSTR_DESTINATIONS = NUM_INSTR_DESTINATIONS, knob_cloudsuite = 0, knob_low_bandwidth = 0;
+bool cpu_wait[NUM_CPUS] = {};
 
 
 vector<uint8_t> simulation_complete;
