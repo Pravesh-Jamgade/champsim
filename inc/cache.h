@@ -442,7 +442,7 @@ public:
     
     debugLog = logger(true);
     dlog = logger(false);
-    dataflow = logger(false);
+    dataflow = logger(true);
     dassert = logger(true);
 
     global_set_history = vector<vector<PollutionEntry>>(NUM_SET, vector<PollutionEntry>(4*NUM_WAY));

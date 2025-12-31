@@ -8,6 +8,8 @@
 #include "cache.h"
 #include "victima.h"
 #include "pagetable.h"
+#include "backtracklog.h"
+
 // Extra configguration
 extern int KNOB_TTP;
 extern int KNOB_SMT_ENABLE;
@@ -21,6 +23,7 @@ extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 extern ProcessPageTable* process_page_table;
 extern uint64_t POM_CPU_KEY;
+extern BacktrackLog backtracklog;
 
 PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, uint32_t v2, uint32_t v3, uint32_t v4, uint32_t v5, uint32_t v6, uint32_t v7,
                                  uint32_t v8, uint32_t v9, uint32_t v10, uint32_t v11, uint32_t v12, uint32_t v13, unsigned latency, MemoryRequestConsumer* ll, CACHE* llc)
@@ -32,7 +35,6 @@ PageTableWalker::PageTableWalker(string v1, uint32_t cpu, unsigned fill_level, u
       llcObject(llc)
 {
 
-  debugLog = logger(true);
   dataflowLog = logger(false);
   dlog = logger(false);
   ptw_datamodel = new PTWDataModel(cpu);
@@ -445,6 +447,10 @@ void PageTableWalker::operate()
 {
   handle_fill();
   handle_read();
+
+  if(warmup_complete[cpu]){
+    dataflowLog = logger(true);
+  }
   RQ.operate();
 }
 
@@ -454,7 +460,7 @@ int PageTableWalker::add_rq(PACKET* packet)
   assert(packet->address != 0);
 
   // check for duplicates in the read queue
-  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE, packet->thread_id, false));
+  auto found_rq = std::find_if(RQ.begin(), RQ.end(), eq_addr<PACKET>(packet->address, LOG2_PAGE_SIZE, packet->thread_id, true));
   // assert(found_rq == RQ.end()); // Duplicate request should not be sent.
   
   if(found_rq != RQ.end())
@@ -473,6 +479,8 @@ int PageTableWalker::add_rq(PACKET* packet)
   RQ.push_back(*packet);
 
   ptw_datamodel->queue_basic_metric[Basic::ADDED]++;
+
+  backtracklog.track(current_cycle, NAME, "Add-RQ", "instr", packet->instr_id, intToHex(packet->address), intToHex(packet->v_address), '\n');
 
   return RQ.occupancy();
 }
@@ -556,7 +564,7 @@ std::optional<uint64_t> PagingStructureCache::check_hit(uint64_t address, uint64
   auto set_idx = (vaddr >> vmem.shamt(level - 1)) & bitmask(lg2(NUM_SET));
   auto set_begin = std::next(std::begin(block), set_idx * NUM_WAY);
   auto set_end = std::next(set_begin, NUM_WAY);
-  auto hit_block = std::find_if(set_begin, set_end, eq_addr<block_t>{address, vmem.shamt(level - 1)});
+  auto hit_block = std::find_if(set_begin, set_end, eq_addr<block_t>{address, vmem.shamt(level - 1), thread_id, false});
 
   if (hit_block != set_end)
   {

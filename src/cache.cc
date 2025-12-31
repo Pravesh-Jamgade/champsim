@@ -727,15 +727,10 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
     std::cout << " cycle: " << current_cycle << std::endl;
   });
 
+  bool check_thread_id = (is_tlb || ((KNOB_VICTIMA || KNOB_ENABLE_SWAT_WAYS) && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]));
   // check mshr
-  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, use_offset(handle_pkt.type), handle_pkt.thread_id, false));
+  auto mshr_entry = std::find_if(MSHR.begin(), MSHR.end(), eq_addr<PACKET>(handle_pkt.address, use_offset(handle_pkt.type), handle_pkt.thread_id, check_thread_id));
   bool found_mshr_entry = mshr_entry != MSHR.end();
-  
-  // check thread; dont check if it is a PREFETCH packet
-  bool check_thread_id = is_tlb || (KNOB_VICTIMA && cache_is[IS_L2] && handle_pkt.vflag[VF::victima]);
-  if(found_mshr_entry && check_thread_id && handle_pkt.type != PREFETCH)
-    found_mshr_entry = (mshr_entry->thread_id == handle_pkt.thread_id);
-
   bool mshr_full = (MSHR.size() == MSHR_SIZE);
 
   // usercode
@@ -919,6 +914,9 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       if(sendVictimaPacket)
       {
         int status = l2cache->add_rq(&newPacket);
+        dataflow.log(current_cycle, NAME, "VictimaSentL2", "instr", newPacket.instr_id, "th", newPacket.thread_id, "tran", (newPacket.type==TRANSLATION), "level", (int)newPacket.translation_level, "addr", intToHex(newPacket.address), "vaddr", intToHex(newPacket.v_address), '\n');    
+
+        backtracklog.track(current_cycle, NAME, "sendVictima", "instr", newPacket.instr_id, "th", newPacket.thread_id, "tran", (newPacket.type==TRANSLATION), "level", (int)newPacket.translation_level,"addr", intToHex(newPacket.address), "vaddr", intToHex(newPacket.v_address), "victima", newPacket.vflag[VF::victima], "victima_dumy", newPacket.vflag[VF::victima_dumy], "AP", newPacket.vflag[VF::PACKET_AP_RECV], "DP", newPacket.vflag[VF::PACKET_DP_RECV], "ptw_copy", newPacket.vflag[VF::ptw_copy], '\n');
       }
 
       // // Parallel PTW and Sector Packet
@@ -955,11 +953,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       }
       else
       {
-        if(KNOB_POMTLB && handle_pkt.pomflag[POM::POM_TO_PTW])
-        {
-          dlog.log(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
-          backtracklog.track(current_cycle, NAME, "sendPOMPacket-2", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "pom", handle_pkt.pomflag[POM::POM], "pom2ptw", handle_pkt.pomflag[POM::POM_TO_PTW], "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');
-        }
+        if(sendVictimaPacket)
+        dataflow.log(current_cycle, NAME, "VictimaSentPTW", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), '\n');    
 
         lower_level->add_rq(&handle_pkt);
       }
@@ -1553,7 +1548,6 @@ void CACHE::operate()
 {
   operate_writes();
   operate_reads();
-
   impl_prefetcher_cycle_operate();
 }
 
@@ -1981,6 +1975,21 @@ void CACHE::return_data(PACKET* packet)
 {
   PACKET handle_pkt = *packet;
 
+  // if(packet->vflag[VF::ptw_copy] && cache_is[IS_STLB])
+  // {
+  //   cout << "STLB return, " << intToHex(packet->address) <<','
+  //       << " v_addr, " << intToHex(packet->v_address) << ','
+  //       << " data, " << intToHex(packet->data)  << ','
+  //       << " type, " << (int)packet->type << ','
+  //       << "instr_id, " << packet->instr_id << ','
+  //       << " AP," << (int)packet->vflag[VF::PACKET_AP_RECV]  << ','
+  //       << " DP," << (int)packet->vflag[VF::PACKET_DP_RECV]  << ','
+  //       << " ptw_copy," << (int)packet->vflag[VF::ptw_copy]  << ','
+  //       << " victima," << (int)packet->vflag[VF::victima]  << ','
+  //       << " victima_dumy," << (int)packet->vflag[VF::victima_dumy]  << ','
+  //       << '\n';
+  // }
+
   dataflow.log(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "h", hit_where_str[handle_pkt.hit_where], "data", intToHex(packet->data), '\n');    
   backtracklog.track(current_cycle, NAME, "return", "instr", handle_pkt.instr_id, "th", handle_pkt.thread_id, "tran", (handle_pkt.type==TRANSLATION), "level", (int)handle_pkt.translation_level, "addr", intToHex(handle_pkt.address), "vaddr", intToHex(handle_pkt.v_address), "h", hit_where_str[handle_pkt.hit_where], "data", intToHex(packet->data), '\n');    
 
@@ -2087,6 +2096,8 @@ void CACHE::return_data(PACKET* packet)
     }
     else if(packet->vflag[VF::PACKET_AP_RECV])
     {
+      backtracklog.track(current_cycle, NAME, "return-victima", "instr", packet->instr_id, "th", packet->thread_id, "addr", intToHex(packet->address), "vaddr", intToHex(packet->v_address), "data", intToHex(packet->data), packet->vflag[VF::victima], packet->vflag[VF::victima_dumy], packet->vflag[VF::PACKET_AP_RECV], packet->vflag[VF::PACKET_DP_RECV], '\n');    
+
       //case1
       if(packet->vflag[VF::victima])// victima L2
       {
@@ -2110,6 +2121,8 @@ void CACHE::return_data(PACKET* packet)
     }
     else if(packet->vflag[VF::PACKET_DP_RECV])
     {
+      backtracklog.track(current_cycle, NAME, "return-victima", "instr", packet->instr_id, "th", packet->thread_id, "addr", intToHex(packet->address), "vaddr", intToHex(packet->v_address), "data", intToHex(packet->data), "victima", packet->vflag[VF::victima], "victima_dumy", packet->vflag[VF::victima_dumy], "AP", packet->vflag[VF::PACKET_AP_RECV], "DP", packet->vflag[VF::PACKET_DP_RECV], "ptw_copy", packet->vflag[VF::ptw_copy], '\n');    
+
       //case3
       if(packet->vflag[VF::victima])
       {
