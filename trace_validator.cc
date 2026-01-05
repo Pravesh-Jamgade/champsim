@@ -128,6 +128,7 @@ int main(int argc, char** argv)
     }
 
     if(is_mem) mem_instr++;
+    std::cout << "window, " << instr.window_id << ", wait, " << instr.wait << ", ip, " << intToHex(instr.ip) << '\n'; 
   }
 
   std::cout << "CMD: " << trace_command << "total, " << instructions_seen << ", invalid, " << invalid_instr << ", mem_instr, " << mem_instr << '\n';

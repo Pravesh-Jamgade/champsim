@@ -590,46 +590,69 @@ int main(int argc, char** argv)
 
   if(KNOB_LIVE_INPUT)
   {
-    // ** Old live trace feeder style via external python process ** //
+     // reading memoryhog trace
+     // one trace already read via live input from pintool, hence KNOB_SMT_ENABLE-1
+     int get_trace_index = optind;
+     for(int trace_id=0; trace_id < KNOB_SMT_ENABLE && get_trace_index < argc; trace_id++)
+     {
+        if(trace_id == 0)
+        {
+          // reading shared buffer
+          traces.push_back(get_tracereader(argv[get_trace_index], traces.size(), knob_cloudsuite, true));
+          cout << "[Log]Trace Reading, " << argv[get_trace_index] << '\n';
+        }
+        else
+        {
+          // reading stored traces
+          traces.push_back(get_tracereader(argv[get_trace_index], traces.size(), knob_cloudsuite));
+          cout << "[Log]Trace Reading, " << argv[get_trace_index] << '\n';
+        }
+ 
+       get_trace_index++;
+     }
+     
+    // // ** Old live trace feeder style via external python process ** //
 
-    // traces.push_back(get_tracereader<input_instr>(trace_shared_buff, traces.size(), knob_cloudsuite, true));
+    // // reading shared buffer
+    // traces.push_back(get_tracereader(trace_shared_buff, traces.size(), knob_cloudsuite, true));
     // cout << "[Log]Trace Reading, " << trace_shared_buff << '\n';
     // // reading memoryhog trace
     // // one trace already read via live input from pintool, hence KNOB_SMT_ENABLE-1
     // int get_trace_index = optind;
-    // for(int trace_id=1; trace_id < KNOB_SMT_ENABLE; trace_id++)
+    // for(int trace_id=1; trace_id < KNOB_SMT_ENABLE && get_trace_index < argc; trace_id++)
     // {
-    //   traces.push_back(get_tracereader<input_instr>(argv[get_trace_index], traces.size(), knob_cloudsuite));
+    //   // reading stored traces
+    //   traces.push_back(get_tracereader(argv[get_trace_index], traces.size(), knob_cloudsuite));
     //   cout << "[Log]Trace Reading, " << argv[get_trace_index] << '\n';
 
     //   get_trace_index++;
     // }
 
-    // ** Newer Approach ** //
-    // Read Pintool input
-    string input_str = "";
-    vector<string> input_traces_list;
-    int index = 0;
-    for(int i=optind; i< argc; i++)
-    {
-      // separator hit
-      if(string(argv[i]) == "X")
-      {
-        index++;
-        cout << "Trace source " << index << " : " << input_str << '\n'; 
-        traces.push_back(get_tracereader(input_str, traces.size(), knob_cloudsuite, 1));
-        input_traces_list.push_back(input_str);
-        input_str = "";
-        continue;
-      }
+    // // ** Newer Approach ** //
+    // // Read Pintool input
+    // string input_str = "";
+    // vector<string> input_traces_list;
+    // int index = 0;
+    // for(int i=optind; i< argc; i++)
+    // {
+    //   // separator hit
+    //   if(string(argv[i]) == "X")
+    //   {
+    //     index++;
+    //     cout << "Trace source " << index << " : " << input_str << '\n'; 
+    //     traces.push_back(get_tracereader(trace_shared_buff, traces.size(), knob_cloudsuite, 1));
+    //     input_traces_list.push_back(input_str);
+    //     input_str = "";
+    //     continue;
+    //   }
       
-      input_str += " "  + string(argv[i]);
-    }
+    //   input_str += " "  + string(argv[i]);
+    // }
 
-    for(int i=0; i< index; i++)
-    {
-      cout << "Log: " << input_traces_list[i] << '\n';
-    }
+    // for(int i=0; i< index; i++)
+    // {
+    //   cout << "Log: " << input_traces_list[i] << '\n';
+    // }
     
   }
   else
