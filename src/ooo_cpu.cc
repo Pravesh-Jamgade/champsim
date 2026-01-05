@@ -17,6 +17,9 @@ extern vector<uint64_t> asid;
 
 void O3_CPU::operate()
 {
+  if (cpu_wait[cpu])
+    return;
+
   instrs_to_read_this_cycle = std::min((std::size_t)FETCH_WIDTH, IFETCH_BUFFER.size() - IFETCH_BUFFER.occupancy());
 
   retire_rob();                    // retire
@@ -71,6 +74,11 @@ void O3_CPU::func_verify_instr(ooo_model_instr* instr)
 
 void O3_CPU::init_instruction(ooo_model_instr arch_instr, int thread)
 {
+  if (arch_instr.wait) {
+    cpu_wait[cpu] = true;
+    return;
+  }
+
   instrs_to_read_this_cycle--;
 
   // // invalid instruction

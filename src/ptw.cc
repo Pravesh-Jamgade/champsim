@@ -80,9 +80,12 @@ void PageTableWalker::handle_read()
 {
   int reads_this_cycle = MAX_READ;
 
-  while (reads_this_cycle > 0 && RQ.has_ready() && std::size(MSHR) != MSHR_SIZE) 
+  while (reads_this_cycle > 0 && RQ.has_ready() && std::size(MSHR) != MSHR_SIZE)
   {
     PACKET& handle_pkt = RQ.front();
+
+    uint64_t rq_wait_latency = current_cycle - handle_pkt.type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE];
+    ptw_datamodel->track_rq_wait_latency(rq_wait_latency, handle_pkt.translation_level);
 
     if(handle_pkt.psc_state == PSC_STATE::QUEUED)
     {
@@ -445,6 +448,9 @@ void PageTableWalker::handle_fill()
 
 void PageTableWalker::operate()
 {
+  if (cpu_wait[cpu])
+    return;
+
   handle_fill();
   handle_read();
 
@@ -474,6 +480,8 @@ int PageTableWalker::add_rq(PACKET* packet)
     ptw_datamodel->queue_basic_metric[Basic::REJECTED]++;
     return -2; // cannot handle this request
   }
+
+  packet->type_cycle_enqueued[CYCLE_ENQ::TS_ADD_QUEUE] = current_cycle;
 
   // if there is no duplicate, add it to RQ
   RQ.push_back(*packet);
