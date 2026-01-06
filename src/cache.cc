@@ -1299,42 +1299,40 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
     // counting the number of times set has seen conflict and as a result a dirty block is sent-back
     // it needs infinit FA cache to keep history
     // cacheDataModel->category_of_misses[MISS::CAP]++;
-    // count Capacity misses
-    {
-      uint64_t page_addr = handle_pkt.v_address & ~(PAGE_SIZE-1);
-      uint64_t cache_block_addr = handle_pkt.v_address >> 6;
-      int cpuid = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
+      // count miss types (mutually exclusive)
+      {
+        uint64_t page_addr = handle_pkt.v_address & ~(PAGE_SIZE-1);
+        uint64_t cache_block_addr = handle_pkt.v_address >> 6;
+        int cpuid = KNOB_SMT_ENABLE * handle_pkt.cpu + handle_pkt.thread_id;
 
-      if(is_tlb)
-      {
-        auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(page_addr, cpuid, DataType::PTE);
-        if(entry_found) {
-          cacheDataModel->category_of_misses[MISS::CAP]++;
-        }
-        // if never seen before in history
-        else{
-          cacheDataModel->category_of_misses[MISS::COM]++;
-        }
-        
-      }
-      else
-      {
-        auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(cache_block_addr, cpuid, handle_pkt.dtype);
-        if(entry_found) {
-          cacheDataModel->category_of_misses[MISS::CAP]++;
-        }
-        // if never seen before in history
-        else{
-          cacheDataModel->category_of_misses[MISS::COM]++;
-        }
-      }
-
-      // count Conflict misses
-      {
-        auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, use_offset(handle_pkt.type), handle_pkt.thread_id, is_tlb));
-        if(it!=fa_array.end())
+        bool seen_before = false;
+        if (is_tlb)
         {
-          cacheDataModel->category_of_misses[MISS::CONF]++;
+          auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(page_addr, cpuid, DataType::PTE);
+          seen_before = entry_found;
+        }
+        else
+        {
+          auto [entry_it, entry_found] = cacheDataModel->fill_tracker_obj.func_lookup_fill_data(cache_block_addr, cpuid, handle_pkt.dtype);
+          seen_before = entry_found;
+        }
+
+        if (!seen_before)
+        {
+          cacheDataModel->category_of_misses[MISS::COM]++;
+        }
+        else
+        {
+          auto it = std::find_if(fa_array.begin(), fa_array.end(), eq_addr<BLOCK>(handle_pkt.address, use_offset(handle_pkt.type), handle_pkt.thread_id, is_tlb));
+
+          if (it != fa_array.end())
+          {
+            cacheDataModel->category_of_misses[MISS::CONF]++;
+          }
+          else
+          {
+            cacheDataModel->category_of_misses[MISS::CAP]++;
+          }
         }
       }
     }

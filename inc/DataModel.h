@@ -145,6 +145,8 @@ class CacheDataModel
         {
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
         }
+
+        category_of_misses.fill(0);
     }
 
     CacheDataModel(string name, uint32_t cpu, uint32_t NUM_WAY):name(name), cpu(cpu)
@@ -157,9 +159,7 @@ class CacheDataModel
             rd_queue[i] = wr_queue[i] = pf_queue[i] = mshr_queue[i] = 0;
         }
 
-        category_of_misses = (int*)malloc(sizeof(int*) *  4);
-        for(int i=0; i< 5; i++)
-            category_of_misses[i] = 0;
+        category_of_misses.fill(0);
 
 
         // initalize histogram for access latency
@@ -273,7 +273,7 @@ class CacheDataModel
     uint64_t adv_stats[AdvStat::ADVSTAT_END] = {0};
     uint64_t cache_stat[CacheStat::CacheStat_End] = {0};    
 
-    int* category_of_misses;
+    std::array<uint64_t, MISS::MISS_END> category_of_misses{};
     map<uint64_t,uint64_t> hist_set_conflict_events;  
     map<int, int> hist_recall_distance;
 
